@@ -1,0 +1,27 @@
+[*]
+[*] GTKWave Analyzer v3.3.111 (w)1999-2020 BSI
+[*] Tue Jul 12 19:17:38 2022
+[*]
+[dumpfile] "/home/farhad/Courses/zerotoasic/p2.1/cocotb/pwm.vcd"
+[dumpfile_mtime] "Tue Jul 12 19:15:27 2022"
+[dumpfile_size] 2035981
+[savefile] "/home/farhad/Courses/zerotoasic/p2.1/cocotb/pwm.gtkw"
+[timestart] 0
+[size] 1920 1029
+[pos] -1 -420
+*-23.000000 1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[sst_width] 37
+[signals_width] 170
+[sst_expanded] 0
+[sst_vpaned_height] 292
+@28
+pwm.clk
+@8025
+pwm.counter[7:0]
+@24
+pwm.level[7:0]
+@28
+pwm.out
+pwm.reset
+[pattern_trace] 1
+[pattern_trace] 0
