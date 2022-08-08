@@ -26,12 +26,4 @@ module pwm #(
     else
         assign out = (reset) ? 0 : (counter < level) ? 0 : 1;
 
-    `ifdef COCOTB_SIM
-    initial begin
-    $dumpfile ("pwm.vcd");
-    $dumpvars (0, pwm);
-    #1;
-    end
-    `endif
 endmodule
-
