@@ -1,19 +1,22 @@
-# Set the following parameters for your project:
 
+NAM = rgb_mixer
+
+SINGLE = False
+
+# Set the following parameters for your project:
 # In this example we have a verilog file at verilog/pwm.v
 # FILE is the address to your main verilog file
-FILE = src/rgb_mixer
+FILE = src/$(NAM)
 
 # PREFIX is the prefix for the verilog file
-PREFIX = rgb_mixer
+PREFIX = $(NAM)
 
 # TOPLEVEL is the name of the toplevel module in your Verilog file
-TOPLEVEL = rgb_mixer
+TOPLEVEL = $(NAM)
 
 # MODULE is the basename of the Python test file
-MODULE = test.test_rgb_mixer
+MODULE = test.test_$(NAM)
 
-SINGLE = f
 
 IGNORE = 'register_file.v\|alu.v'
 
@@ -45,19 +48,40 @@ tes:
 # 	iverilog -o sim_build/sim.vvp -s rgb_mixer -s dump -g2012 src/rgb_mixer.v test/dump.v src/ $(DIRLIST_FULL)
 # 	PYTHONOPTIMIZE=0 MODULE=test.test_rgb_mixer vvp -M $$(cocotb-config --prefix)/cocotb/libs -m libcocotbvpi_icarus sim_build/sim.vvp
 # 	! grep failure results.xml
+# CFLAGS=-g
+# export CFLAGS
+# target:
+# 	$(MAKE) -C target
+module: delete
+	$(MAKE)
+# sim:
+# 	$(MAKE) delete
+# 	$(MAKE)
+# 	$(MAKE) gtkwave
 
+formal:
+	sby -f properties.sby
+	gtkwave properties/engine_0/trace0.vcd $(PREFIX).gtkw
 
+show_synth_full_svg:
+	yosys -p "read_verilog $(FILE).v; hierarchy -top $(TOPLEVEL) -libdir src/; synth ; show -prefix show_synth/$(PREFIX) -format svg -viewer inkscape -colors 2 -width -signed $(TOPLEVEL)"
 
+show_synth_svg:
+	yosys -p "read_verilog $(FILE).v; hierarchy -top $(TOPLEVEL) -libdir src/; proc; extract -map ${DIRLIST}; opt -full ; show -prefix show_synth/$(PREFIX) -format svg -viewer inkscape -colors 2 -width -signed $(TOPLEVEL)"
 
 show_synth_png:
 	yosys -p "read_verilog $(FILE).v; hierarchy -top $(TOPLEVEL) -libdir src/; proc; extract -map ${DIRLIST}; opt -full ; show -prefix show_synth/$(PREFIX) -format png -viewer gwenview -colors 2 -width -signed $(TOPLEVEL)"
+
 show_synth_dot:
 	yosys -p "read_verilog $(FILE).v; hierarchy -top $(TOPLEVEL) -libdir src/; proc; extract -map ${DIRLIST}; opt -full ; show -prefix show_synth/$(PREFIX) -colors 2 -width -signed -long $(TOPLEVEL)"
+	# yosys -p "read_verilog $(FILE).v; hierarchy -top $(TOPLEVEL) -libdir src/; synth -coarse ; show -prefix show_synth/$(PREFIX) -colors 2 -width -signed -long $(TOPLEVEL)"
 	# Show waveforms after simulation with gtkwave
-gtkwave:
+gtkwave: module
 	gtkwave $(PREFIX).vcd $(PREFIX).gtkw
+gtkwave_good:
+	gtkwave $(PREFIX)_good.vcd $(PREFIX).gtkw
 
 # Delete simulation files
 delete:
-	rm -rf sim_build/ test/__pycache__/ $(PREFIX).vcd results.xml
-	rm show_synth/*
+	rm -rf sim_build/ test/__pycache__/ $(PREFIX).vcd results.xml properties/
+	rm -f show_synth/*
