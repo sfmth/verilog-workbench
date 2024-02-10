@@ -133,3 +133,28 @@ delete:
 	rm -rf sim_build/ test/__pycache__/ $(PREFIX).vcd results.xml properties/
 	rm -f show_synth/*
 
+
+lint: 
+	@echo -e '\n' $(Yellow)$(bold) '==>' $(Green)$(bold)Checking for Warnings \& Errors$(Color_Off) '\n'
+	verilator --lint-only -Wall -Wno-COMBDLY -Wno-INCABSPATH src/$(PREFIX).v
+
+
+synth:
+	@echo -e '\n' $(Yellow)$(bold) '==>' $(Green)$(bold)Synthesizing the design$(Color_Off) '\n'
+	# yosys -D LEDS_NR=6 -p "read_verilog src/$(PREFIX).v; synth_gowin -json fpga/$(PREFIX).json"
+	yosys -D LEDS_NR=6 -p "read_verilog $(FILE).v; hierarchy -top $(TOPLEVEL) -libdir src/; synth_gowin -json fpga/$(PREFIX).json"
+	
+
+pnr: synth
+	@echo -e '\n' $(Yellow)$(bold) '==>' $(Green)$(bold)Running Place and Route$(Color_Off) '\n'
+	nextpnr-gowin --json fpga/$(PREFIX).json --write fpga/pnr$(PREFIX).json --device GW1NR-LV9QN88PC6/I5 --family GW1N-9C --cst src/io.cst
+
+pack: pnr
+	@echo -e '\n' $(Yellow)$(bold) '==>' $(Green)$(bold)Compiling the final binary file$(Color_Off) '\n'
+	gowin_pack -d GW1N-9C -o fpga/pack.fs fpga/pnr$(PREFIX).json
+
+flash_fpga: pack
+	@echo -e '\n' $(Yellow)$(bold) '==>' $(Green)$(bold)Flashing the binary file onto the FPGA board$(Color_Off) '\n'
+	openFPGALoader -b tangnano9k fpga/pack.fs
+
+
