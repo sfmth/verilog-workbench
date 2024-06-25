@@ -82,6 +82,13 @@ For the project to work you would have to install these things first:
 * [GTKWave](http://gtkwave.sourceforge.net/)
 * [Yosys](https://yosyshq.net/yosys/download.html)
 
+Debian 12 Bookworm:
+```
+$ sudo apt install iverilog yosys gtkwave verilator
+# WARNING: Using "--break-system-packages" could break your system. it is recommended to use a python venv instead
+$ pip install --break-system-packages cocotb
+```
+
 ### Installation
 
 1. Clone the repo
