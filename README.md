@@ -84,9 +84,10 @@ For the project to work you would have to install these things first:
 
 Debian 12 Bookworm:
 ```
-$ sudo apt install iverilog yosys gtkwave verilator
+$ sudo apt install iverilog yosys gtkwave verilator imagemagick geeqie
 # WARNING: Using "--break-system-packages" could break your system. it is recommended to use a python venv instead
 $ pip install --break-system-packages cocotb
+# make sure ~/.local/bin/ is in your PATH
 ```
 
 ### Installation
