@@ -1,0 +1,7 @@
+
+# docker
+.docker/
+
+# Local agent state
+.codex/
+.agents/

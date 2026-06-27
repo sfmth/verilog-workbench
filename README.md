@@ -82,12 +82,12 @@ For the project to work you would have to install these things first:
 * [GTKWave](http://gtkwave.sourceforge.net/)
 * [Yosys](https://yosyshq.net/yosys/download.html)
 
-Debian 12 Bookworm:
+
+Ubuntu 26.04 LTS:
 ```
-$ sudo apt install iverilog yosys gtkwave verilator imagemagick geeqie
-# WARNING: Using "--break-system-packages" could break your system. it is recommended to use a python venv instead
-$ pip install --break-system-packages cocotb
-# make sure ~/.local/bin/ is in your PATH
+$ sudo apt update && sudo apt upgrade && sudo apt install iverilog yosys gtkwave verilator imagemagick nodejs npm geeqie git make python3 python3-pip libpython3-dev
+$ pip install --break-system-packages cocotb==1.7.2 && export PATH=$PATH:~/.local/bin/
+$ sudo npm install -g netlistsvg
 ```
 
 ### Installation
@@ -97,7 +97,11 @@ $ pip install --break-system-packages cocotb
    git clone https://github.com/sfmth/verilog-workbench/ && cd verilog-workbench
    ```
 
-
+2. Test:
+```
+$ make show_synth_human NAM=encoder
+$ make gtwave NAM=encoder
+```
 
 
 <!-- USAGE EXAMPLES -->
