@@ -75,13 +75,6 @@ To get a local copy up and running follow these simple steps.
 
 ### Prerequisites
 
-For the project to work you would have to install these things first:
-
-* [Icarus Verilog](https://steveicarus.github.io/iverilog/usage/installation.html)
-* [Cocotb](https://docs.cocotb.org/en/stable/install.html)
-* [GTKWave](http://gtkwave.sourceforge.net/)
-* [Yosys](https://yosyshq.net/yosys/download.html)
-
 
 Ubuntu 26.04 LTS:
 ```
