@@ -139,22 +139,40 @@ lint:
 	verilator --lint-only -Wall -Wno-COMBDLY -Wno-INCABSPATH src/$(PREFIX).v
 
 
-synth:
-	@echo -e '\n' $(Yellow)$(bold) '==>' $(Green)$(bold)Synthesizing the design$(Color_Off) '\n'
-	# yosys -D LEDS_NR=6 -p "read_verilog src/$(PREFIX).v; synth_gowin -json fpga/$(PREFIX).json"
-	yosys -D LEDS_NR=6 -p "read_verilog $(FILE).v; hierarchy -top $(TOPLEVEL) -libdir src/; synth_gowin -json fpga/$(PREFIX).json"
-	
+# ---- Gowin (Tang Nano 9K) ----
 
-pnr: synth
-	@echo -e '\n' $(Yellow)$(bold) '==>' $(Green)$(bold)Running Place and Route$(Color_Off) '\n'
+synth_gowin:
+	@echo -e '\n' $(Yellow)$(bold) '==>' $(Green)$(bold)Synthesizing the design [Gowin]$(Color_Off) '\n'
+	yosys -D LEDS_NR=6 -p "read_verilog $(FILE).v; hierarchy -top $(TOPLEVEL) -libdir src/; synth_gowin -json fpga/$(PREFIX).json"
+
+pnr_gowin: synth_gowin
+	@echo -e '\n' $(Yellow)$(bold) '==>' $(Green)$(bold)Running Place and Route [Gowin]$(Color_Off) '\n'
 	nextpnr-gowin --json fpga/$(PREFIX).json --write fpga/pnr$(PREFIX).json --device GW1NR-LV9QN88PC6/I5 --family GW1N-9C --cst src/io.cst
 
-pack: pnr
-	@echo -e '\n' $(Yellow)$(bold) '==>' $(Green)$(bold)Compiling the final binary file$(Color_Off) '\n'
+pack_gowin: pnr_gowin
+	@echo -e '\n' $(Yellow)$(bold) '==>' $(Green)$(bold)Compiling the final binary file [Gowin]$(Color_Off) '\n'
 	gowin_pack -d GW1N-9C -o fpga/pack.fs fpga/pnr$(PREFIX).json
 
-flash_fpga: pack
-	@echo -e '\n' $(Yellow)$(bold) '==>' $(Green)$(bold)Flashing the binary file onto the FPGA board$(Color_Off) '\n'
+flash_gowin: pack_gowin
+	@echo -e '\n' $(Yellow)$(bold) '==>' $(Green)$(bold)Flashing the binary file onto the FPGA board [Gowin]$(Color_Off) '\n'
 	openFPGALoader -b tangnano9k fpga/pack.fs
+
+# ---- iCE40 (iCEBreaker) ----
+
+synth_ice40:
+	@echo -e '\n' $(Yellow)$(bold) '==>' $(Green)$(bold)Synthesizing the design [iCE40]$(Color_Off) '\n'
+	yosys -D LEDS_NR=6 -p "read_verilog $(FILE).v; hierarchy -top $(TOPLEVEL) -libdir src/; synth_ice40 -json fpga/$(PREFIX).json"
+
+pnr_ice40: synth_ice40
+	@echo -e '\n' $(Yellow)$(bold) '==>' $(Green)$(bold)Running Place and Route [iCE40]$(Color_Off) '\n'
+	nextpnr-ice40 --up5k --package sg48 --json fpga/$(PREFIX).json --pcf src/io.pcf --asc fpga/$(PREFIX).asc
+
+pack_ice40: pnr_ice40
+	@echo -e '\n' $(Yellow)$(bold) '==>' $(Green)$(bold)Compiling the final binary file [iCE40]$(Color_Off) '\n'
+	icepack fpga/$(PREFIX).asc fpga/$(PREFIX).bin
+
+flash_ice40: pack_ice40
+	@echo -e '\n' $(Yellow)$(bold) '==>' $(Green)$(bold)Flashing the binary file onto the FPGA board [iCE40]$(Color_Off) '\n'
+	openFPGALoader -b ice40_generic fpga/$(PREFIX).bin
 
 

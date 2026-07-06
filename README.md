@@ -65,6 +65,10 @@ This project aims to ease the setup of your verilog projects by providing you wi
 * `Cocotb` To verify your verilog code by writing python testbenches
 * `GTKWave` To view the input or outpot waveforms of your design 
 * `Yosys` To synthesize your design into actual hardware and view it
+* `nextpnr-ice40` / `nextpnr-gowin` For place and route on iCE40 or Gowin FPGAs
+* `IceStorm (icepack)` To pack iCE40 bitstreams
+* `Apicula (gowin_pack)` To pack Gowin bitstreams
+* `openFPGALoader` To flash FPGA boards
 
 
 
@@ -78,8 +82,8 @@ To get a local copy up and running follow these simple steps.
 
 Ubuntu 26.04 LTS:
 ```
-$ sudo apt update && sudo apt upgrade && sudo apt install iverilog yosys gtkwave verilator imagemagick nodejs npm geeqie git make python3 python3-pip libpython3-dev
-$ pip install --break-system-packages cocotb==1.7.2 && export PATH=$PATH:~/.local/bin/
+$ sudo apt update && sudo apt upgrade && sudo apt install iverilog yosys gtkwave verilator imagemagick nodejs npm geeqie git make python3 python3-pip libpython3-dev nextpnr-ice40 nextpnr-gowin fpga-icestorm openfpgaloader
+$ pip install --break-system-packages cocotb==1.7.2 apycula && export PATH=$PATH:~/.local/bin/
 $ sudo npm install -g netlistsvg
 ```
 

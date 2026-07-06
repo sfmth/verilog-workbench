@@ -40,7 +40,7 @@ WORKDIR /home/docker/verilog-workbench
 
 CMD ["/bin/bash"]
 
-RUN sudo apt update -y && sudo apt upgrade -y && sudo apt install -y iverilog yosys gtkwave verilator imagemagick nodejs npm geeqie git make python3 python3-pip libpython3-dev
-RUN pip install --break-system-packages cocotb==1.7.2 && export PATH=$PATH:~/.local/bin/
+RUN sudo apt update -y && sudo apt upgrade -y && sudo apt install -y iverilog yosys gtkwave verilator imagemagick nodejs npm geeqie git make python3 python3-pip libpython3-dev nextpnr-ice40 nextpnr-gowin fpga-icestorm openfpgaloader
+RUN pip install --break-system-packages cocotb==1.7.2 apycula && export PATH=$PATH:~/.local/bin/
 RUN sudo npm install -g netlistsvg
 RUN git clone https://github.com/sfmth/verilog-workbench/
