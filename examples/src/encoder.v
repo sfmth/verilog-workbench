@@ -41,12 +41,4 @@ module encoder #(
         end
     end
 
-	`ifdef COCOTB_SIM
-    initial begin
-    $dumpfile ("encoder.vcd");
-    $dumpvars (0, encoder);
-    #1;
-    end
-    `endif
-
 endmodule

@@ -5,3 +5,11 @@
 # Local agent state
 .codex/
 .agents/
+
+# Verilog Work Bench output
+.vwb/
+.vwb.json
+
+# Python
+__pycache__/
+*.py[cod]

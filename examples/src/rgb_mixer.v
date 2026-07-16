@@ -53,11 +53,4 @@ module rgb_mixer (
     //pwm stage b
     pwm pwm_2(clk, reset, pwm2_out, enc2);
 
-    `ifdef COCOTB_SIM
-    initial begin
-    $dumpfile ("rgb_mixer.vcd");
-    $dumpvars (0, rgb_mixer);
-    #1;
-    end
-    `endif
 endmodule

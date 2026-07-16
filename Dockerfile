@@ -1,4 +1,4 @@
-FROM ubuntu:latest
+FROM ubuntu:26.04
 
 ARG USERNAME=docker
 ARG USER_UID=1000
@@ -8,6 +8,7 @@ ARG DEBIAN_FRONTEND=noninteractive
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         bash \
+        boolector \
         ca-certificates \
         dbus-x11 \
         libgl1 \
@@ -23,6 +24,7 @@ RUN apt-get update \
         sudo \
         x11-apps \
         xauth \
+        z3 \
     && rm -rf /var/lib/apt/lists/* \
     && if ! getent group ${USER_GID} >/dev/null; then \
         if getent group ${USERNAME} >/dev/null; then groupmod --gid ${USER_GID} ${USERNAME}; else groupadd --gid ${USER_GID} ${USERNAME}; fi; \
@@ -35,12 +37,39 @@ RUN apt-get update \
     && chmod 0440 /etc/sudoers.d/${USERNAME}
 
 ENV HOME=/home/docker
+ENV PATH="/home/docker/.local/bin:${PATH}"
 USER ${USER_UID}:${USER_GID}
 WORKDIR /home/docker/verilog-workbench
 
-CMD ["/bin/bash"]
-
-RUN sudo apt update -y && sudo apt upgrade -y && sudo apt install -y iverilog yosys gtkwave verilator imagemagick nodejs npm geeqie git make python3 python3-pip libpython3-dev nextpnr-ice40 nextpnr-gowin fpga-icestorm openfpgaloader
-RUN pip install --break-system-packages cocotb==1.7.2 apycula && export PATH=$PATH:~/.local/bin/
+RUN sudo apt-get update \
+    && sudo apt-get install -y --no-install-recommends \
+        fpga-icestorm \
+        geeqie \
+        git \
+        graphviz \
+        gtkwave \
+        iverilog \
+        librsvg2-bin \
+        libpython3-dev \
+        make \
+        nextpnr-gowin \
+        nextpnr-ice40 \
+        nodejs \
+        npm \
+        openfpgaloader \
+        python3 \
+        python3-pip \
+        verilator \
+        yosys \
+    && sudo rm -rf /var/lib/apt/lists/*
+RUN pip install --break-system-packages cocotb==1.7.2 apycula click
 RUN sudo npm install -g netlistsvg
-RUN git clone https://github.com/sfmth/verilog-workbench/
+ARG SBY_REV=fea6e467d067b3ea84b6b5ac08cd48beb59f0d42
+RUN git clone https://github.com/YosysHQ/sby.git /tmp/sby \
+    && git -C /tmp/sby checkout --detach ${SBY_REV} \
+    && sudo make -C /tmp/sby install \
+    && rm -rf /tmp/sby
+
+COPY --chown=${USER_UID}:${USER_GID} . .
+
+CMD ["/bin/bash"]

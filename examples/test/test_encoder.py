@@ -1,7 +1,7 @@
 import cocotb
 from cocotb.clock import Clock
 from cocotb.triggers import RisingEdge, FallingEdge, ClockCycles
-from test.encoder import Encoder
+from .encoder import Encoder
 
 async def reset(dut):
     dut.a <= 0

@@ -1,0 +1,726 @@
+import contextlib
+import io
+import json
+import subprocess
+import tempfile
+import unittest
+from pathlib import Path
+from types import SimpleNamespace
+from unittest import mock
+
+import vwb
+
+
+class ProjectMixin:
+    def write(self, root: Path, relative: str, content: str) -> Path:
+        path = root / relative
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(content, encoding="utf-8")
+        return path
+
+    def make_project(self, root: Path, *, dry_run: bool = False) -> vwb.Workbench:
+        self.write(root, "src/dut.v", "module dut; endmodule\n")
+        self.write(
+            root,
+            "test/test_dut.v",
+            "module test_dut; dut u_dut(); initial $finish; endmodule\n",
+        )
+        return vwb.Workbench(
+            root=root,
+            src_dir=root / "src",
+            test_dir=root / "test",
+            build_dir=root / ".vwb",
+            dry_run=dry_run,
+        )
+
+    @staticmethod
+    def simulation_args(**overrides: object) -> SimpleNamespace:
+        values: dict[str, object] = {
+            "waves": True,
+            "wave_format": "vcd",
+            "max_array_words": 32,
+            "define": [],
+            "include": [],
+            "compile_arg": [],
+            "sim_arg": [],
+            "plusarg": [],
+            "test_top": None,
+            "testcase": None,
+            "seed": None,
+        }
+        values.update(overrides)
+        return SimpleNamespace(**values)
+
+
+class WaveParserTests(unittest.TestCase):
+    def test_simulation_option_names_and_array_default(self):
+        parser = vwb.make_parser()
+
+        args = parser.parse_args(["test"])
+
+        self.assertEqual(args.test_language, "auto")
+        self.assertEqual(args.max_array_words, 32)
+        with contextlib.redirect_stderr(io.StringIO()):
+            with self.assertRaises(SystemExit):
+                parser.parse_args(["test", "--kind", "hdl"])
+
+    def test_wave_saved_run_options_parse(self):
+        parser = vwb.make_parser()
+
+        tagged = parser.parse_args(["wave", "dut", "--tag", "known-good"])
+        loaded = parser.parse_args(["wave", "--load", "known-good"])
+        listed = parser.parse_args(["wave", "--list-saved"])
+
+        self.assertEqual(tagged.tag, "known-good")
+        self.assertEqual(loaded.load, "known-good")
+        self.assertTrue(listed.list_saved)
+
+    def test_wave_management_detects_explicit_default_valued_options(self):
+        parser = vwb.make_parser()
+        cases = [
+            (["wave", "--load", "baseline", "--wave-format", "fst"], "--wave-format"),
+            (["wave", "--list-saved", "--max-array-words=32"], "--max-array-words"),
+            (["wave", "--list-saved", "--test-language", "auto"], "--test-language"),
+            (["wave", "--list-saved", "-DDEFAULT=1"], "--define"),
+            (["wave", "--list-saved", "--waves"], "--waves"),
+        ]
+
+        for argv, expected in cases:
+            with self.subTest(argv=argv):
+                args = parser.parse_args(argv)
+                self.assertIn(expected, vwb.wave_management_overrides(args))
+
+    def test_long_option_abbreviations_are_rejected(self):
+        parser = vwb.make_parser()
+        with contextlib.redirect_stderr(io.StringIO()):
+            with self.assertRaises(SystemExit):
+                parser.parse_args(["wave", "--load", "baseline", "--wave-f", "fst"])
+
+
+class WaveLifecycleTests(ProjectMixin, unittest.TestCase):
+    def test_simulation_cleanup_preserves_gtkw_but_removes_stale_outputs(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            workbench = self.make_project(root)
+            workbench.prepare_build_dir()
+            spec = workbench.tests[0]
+            work_dir = root / ".vwb" / "sim" / "dut" / "hdl-test_dut"
+            work_dir.mkdir(parents=True)
+            save_file = self.write(work_dir, "dut.gtkw", "[*] preserved\n")
+            stale = self.write(work_dir, "stale-output.txt", "old simulation\n")
+
+            def compile_simulation(
+                _spec: vwb.TestSpec, actual_work_dir: Path, **_kwargs: object
+            ) -> tuple[bool, Path, Path]:
+                self.assertEqual(actual_work_dir, work_dir)
+                self.assertTrue(save_file.is_file())
+                self.assertFalse(stale.exists())
+                wave = self.write(actual_work_dir, "dut.vcd", "$enddefinitions $end\n")
+                simulation = self.write(actual_work_dir, "sim.vvp", "compiled\n")
+                return True, wave, simulation
+
+            completed = subprocess.CompletedProcess(["vvp"], 0, "", "")
+            with (
+                mock.patch.object(
+                    workbench,
+                    "_compile_simulation",
+                    side_effect=compile_simulation,
+                ),
+                mock.patch.object(workbench, "require_tool", return_value="vvp"),
+                mock.patch.object(workbench, "run", return_value=completed),
+            ):
+                passed, wave = workbench.run_test_spec(
+                    spec, self.simulation_args()
+                )
+
+            self.assertTrue(passed)
+            self.assertEqual(wave, work_dir / "dut.vcd")
+            self.assertEqual(save_file.read_text(encoding="utf-8"), "[*] preserved\n")
+
+    def test_tagged_wave_is_self_contained_and_can_be_loaded_after_cleanup(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            workbench = self.make_project(root)
+            workbench.prepare_build_dir()
+            work_dir = root / ".vwb" / "sim" / "dut" / "hdl-test_dut"
+            wave = self.write(work_dir, "dut.vcd", "$enddefinitions $end\n")
+            self.write(work_dir, "dut.gtkw", "[*] GTKWave Analyzer save file\n")
+            parser = vwb.make_parser()
+            tag_args = parser.parse_args(
+                [
+                    "wave",
+                    "dut",
+                    "--test-language",
+                    "verilog",
+                    "--wave-format",
+                    "vcd",
+                    "--tag",
+                    "known-good",
+                ]
+            )
+            completed = subprocess.CompletedProcess(["gtkwave"], 0, "", "")
+
+            with (
+                mock.patch.object(workbench, "run_tests", return_value=(True, [wave])),
+                mock.patch.object(workbench, "require_tool", return_value="gtkwave"),
+                mock.patch.object(workbench, "run", return_value=completed),
+            ):
+                self.assertEqual(vwb.command_wave(workbench, tag_args), 0)
+
+            saved = root / ".vwb" / "saved-waves" / "known-good"
+            self.assertTrue(saved.is_dir())
+            self.assertEqual([path.name for path in saved.glob("*.vcd")], ["dut.vcd"])
+            self.assertEqual([path.name for path in saved.glob("*.gtkw")], ["dut.gtkw"])
+            metadata_files = list(saved.glob("*.json"))
+            self.assertEqual(len(metadata_files), 1)
+            metadata = json.loads(metadata_files[0].read_text(encoding="utf-8"))
+            self.assertEqual(metadata["dut"], "dut")
+            for key in ("waveform", "layout"):
+                if metadata.get(key):
+                    self.assertFalse(Path(metadata[key]).is_absolute())
+                    self.assertTrue((saved / metadata[key]).is_file())
+
+            # A saved run must not depend on files in the transient simulation tree.
+            for path in work_dir.iterdir():
+                path.unlink()
+            work_dir.rmdir()
+            calls: list[tuple[list[str], Path | None]] = []
+
+            def record_run(
+                command: list[str | Path],
+                *,
+                cwd: Path | None = None,
+                **_kwargs: object,
+            ) -> subprocess.CompletedProcess[str]:
+                calls.append(([str(item) for item in command], cwd))
+                return subprocess.CompletedProcess(command, 0, "", "")
+
+            load_args = parser.parse_args(["wave", "--load", "known-good"])
+            with (
+                mock.patch.object(
+                    workbench,
+                    "run_tests",
+                    side_effect=AssertionError("loading a tag must not rerun simulation"),
+                ),
+                mock.patch.object(workbench, "require_tool", return_value="gtkwave"),
+                mock.patch.object(workbench, "run", side_effect=record_run),
+            ):
+                self.assertEqual(vwb.command_wave(workbench, load_args), 0)
+
+            self.assertEqual(len(calls), 1)
+            command, cwd = calls[0]
+            self.assertEqual(command[0:2], ["gtkwave", "--autosavename"])
+            self.assertEqual(cwd, saved)
+            self.assertFalse(Path(command[2]).is_absolute())
+            self.assertTrue((saved / command[2]).is_file())
+
+    def test_saved_wave_listing_and_invalid_tags(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            workbench = self.make_project(root)
+            workbench.prepare_build_dir()
+            wave = self.write(
+                root, "completed-run.vcd", "$enddefinitions $end\n"
+            )
+            workbench.archive_wave(
+                "baseline",
+                workbench.tests[0],
+                wave,
+                self.simulation_args(),
+                None,
+                replace=False,
+            )
+            parser = vwb.make_parser()
+            output = io.StringIO()
+
+            with contextlib.redirect_stdout(output):
+                result = vwb.command_wave(
+                    workbench, parser.parse_args(["wave", "--list-saved"])
+                )
+
+            self.assertEqual(result, 0)
+            self.assertIn("baseline", output.getvalue())
+            self.assertIn("dut", output.getvalue())
+
+            for invalid in (
+                "../escape",
+                "nested/tag",
+                ".",
+                "",
+                "_tag",
+                "-tag",
+                ".tag",
+            ):
+                with self.subTest(tag=invalid):
+                    with self.assertRaises(vwb.VWBError):
+                        workbench._validate_wave_tag(invalid)
+
+    def test_saved_wave_replacement_is_explicit_and_atomic(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            workbench = self.make_project(root)
+            args = self.simulation_args()
+            first = self.write(root, "first.vcd", "first waveform\n")
+            second = self.write(root, "second.vcd", "second waveform\n")
+            original = workbench.archive_wave(
+                "baseline", workbench.tests[0], first, args, None, replace=False
+            )
+
+            with self.assertRaisesRegex(vwb.VWBError, "use --replace-tag"):
+                workbench.archive_wave(
+                    "baseline", workbench.tests[0], second, args, None, replace=False
+                )
+            self.assertEqual(original.waveform.read_text(encoding="utf-8"), "first waveform\n")
+
+            real_replace = vwb.os.replace
+            target = root / ".vwb" / "saved-waves" / "baseline"
+
+            def fail_new_archive(source: str | Path, destination: str | Path) -> None:
+                source_path = Path(source)
+                destination_path = Path(destination)
+                if source_path.name.endswith(".tmp") and destination_path == target:
+                    raise OSError("injected commit failure")
+                real_replace(source, destination)
+
+            with (
+                mock.patch.object(vwb.os, "replace", side_effect=fail_new_archive),
+                self.assertRaisesRegex(vwb.VWBError, "could not replace"),
+            ):
+                workbench.archive_wave(
+                    "baseline", workbench.tests[0], second, args, None, replace=True
+                )
+
+            restored = workbench._read_saved_wave("baseline")
+            self.assertEqual(restored.waveform.read_text(encoding="utf-8"), "first waveform\n")
+            self.assertEqual(list((root / ".vwb" / "saved-waves").glob(".*.backup")), [])
+
+            replaced = workbench.archive_wave(
+                "baseline", workbench.tests[0], second, args, None, replace=True
+            )
+            self.assertEqual(replaced.waveform.read_text(encoding="utf-8"), "second waveform\n")
+
+    def test_gtkwave_uses_autosave_and_simulation_directory_as_cwd(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            workbench = self.make_project(root, dry_run=True)
+            self.write(
+                root,
+                f".vwb/{vwb.BUILD_MARKER}",
+                f"Verilog Work Bench {vwb.VERSION}\nproject={root.resolve()}\n",
+            )
+            work_dir = root / ".vwb" / "sim" / "dut" / "hdl-test_dut"
+            self.write(work_dir, "dut.gtkw", "[*] existing view\n")
+            args = vwb.make_parser().parse_args(
+                [
+                    "wave",
+                    "dut",
+                    "--test-language",
+                    "verilog",
+                    "--wave-format",
+                    "vcd",
+                ]
+            )
+            output = io.StringIO()
+
+            with contextlib.redirect_stdout(output):
+                result = vwb.command_wave(workbench, args)
+
+            self.assertEqual(result, 0)
+            gtkwave_line = next(
+                line
+                for line in output.getvalue().splitlines()
+                if line.startswith("$ gtkwave")
+            )
+            self.assertIn("--autosavename", gtkwave_line)
+            self.assertIn("dut.vcd", gtkwave_line)
+            self.assertIn(f"cwd={work_dir}", gtkwave_line)
+
+    def test_explicit_gtkwave_save_file_is_loaded_from_wave_directory(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            workbench = self.make_project(root)
+            wave = self.write(root, ".vwb/sim/dut/run/dut.vcd", "waveform\n")
+            layout = self.write(root, "views/dut.gtkw", "[*] saved layout\n")
+            completed = subprocess.CompletedProcess(["gtkwave"], 0, "", "")
+
+            with (
+                mock.patch.object(workbench, "require_tool", return_value="gtkwave"),
+                mock.patch.object(workbench, "run", return_value=completed) as run,
+            ):
+                status, active_layout = workbench.open_waveform(
+                    wave, explicit_save=str(layout)
+                )
+
+            self.assertEqual(status, 0)
+            self.assertEqual(active_layout, layout)
+            run.assert_called_once_with(
+                ["gtkwave", f"--save={layout}", wave.name], cwd=wave.parent
+            )
+
+    def test_cleaning_symlinked_scope_does_not_follow_it(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            workbench = self.make_project(root)
+            workbench.prepare_build_dir()
+            outside = root / "outside"
+            outside.mkdir()
+            sentinel = self.write(outside, "keep.txt", "keep\n")
+            sim_link = root / ".vwb" / "sim"
+            sim_link.symlink_to(outside, target_is_directory=True)
+
+            workbench.clean("sim")
+
+            self.assertFalse(sim_link.exists())
+            self.assertFalse(sim_link.is_symlink())
+            self.assertEqual(sentinel.read_text(encoding="utf-8"), "keep\n")
+
+    def test_saved_wave_payload_symlinks_are_rejected(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            workbench = self.make_project(root)
+            wave = self.write(root, "run.vcd", "waveform\n")
+            saved = workbench.archive_wave(
+                "baseline",
+                workbench.tests[0],
+                wave,
+                self.simulation_args(),
+                None,
+                replace=False,
+            )
+            outside_wave = self.write(root, "outside.vcd", "outside\n")
+            saved.waveform.unlink()
+            saved.waveform.symlink_to(outside_wave)
+
+            with self.assertRaisesRegex(vwb.VWBError, "waveform file is missing"):
+                workbench._read_saved_wave("baseline")
+
+    def test_saved_wave_layout_sync_does_not_follow_destination_symlink(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            workbench = self.make_project(root)
+            wave = self.write(root, "run.vcd", "waveform\n")
+            saved = workbench.archive_wave(
+                "baseline",
+                workbench.tests[0],
+                wave,
+                self.simulation_args(),
+                None,
+                replace=False,
+            )
+            source_layout = self.write(root, "source.gtkw", "new layout\n")
+            outside_layout = self.write(root, "outside.gtkw", "do not replace\n")
+            archived_layout = saved.directory / "dut.gtkw"
+            archived_layout.symlink_to(outside_layout)
+
+            with self.assertRaisesRegex(vwb.VWBError, "symlinked GTKWave layout"):
+                workbench.sync_saved_wave_layout("baseline", source_layout)
+            self.assertEqual(
+                outside_layout.read_text(encoding="utf-8"), "do not replace\n"
+            )
+
+    def test_saved_wave_root_symlink_is_rejected_before_archive_write(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            workbench = self.make_project(root)
+            workbench.prepare_build_dir()
+            outside = root / "outside-archives"
+            outside.mkdir()
+            workbench.saved_waves_dir.symlink_to(outside, target_is_directory=True)
+            wave = self.write(root, "run.vcd", "waveform\n")
+
+            with self.assertRaisesRegex(vwb.VWBError, "symlinked saved-wave directory"):
+                workbench.archive_wave(
+                    "baseline",
+                    workbench.tests[0],
+                    wave,
+                    self.simulation_args(),
+                    None,
+                    replace=False,
+                )
+            with self.assertRaisesRegex(vwb.VWBError, "symlinked saved-wave directory"):
+                workbench.saved_waves()
+            self.assertEqual(list(outside.iterdir()), [])
+
+
+class SynthesisTests(ProjectMixin, unittest.TestCase):
+    def test_synth_parser_defaults_and_schematic_aliases(self):
+        parser = vwb.make_parser()
+
+        defaults = parser.parse_args(["synth", "dut"])
+        canonical = parser.parse_args(["synth", "dut", "--schematic"])
+        typo_alias = parser.parse_args(["synth", "dut", "--schemetic"])
+        disabled = parser.parse_args(["synth", "dut", "--no-schematic"])
+
+        self.assertFalse(defaults.full)
+        self.assertTrue(defaults.schematic)
+        self.assertEqual(defaults.format, "png")
+        self.assertEqual(defaults.view, "geeqie")
+        self.assertTrue(canonical.schematic)
+        self.assertTrue(typo_alias.schematic)
+        self.assertFalse(disabled.schematic)
+
+    def test_format_parses_with_every_full_and_schematic_combination(self):
+        parser = vwb.make_parser()
+
+        for full in (False, True):
+            for schematic in (False, True):
+                for output_format in ("json", "dot", "svg", "png"):
+                    argv = ["synth", "dut", "--format", output_format, "--view", "none"]
+                    if full:
+                        argv.append("--full")
+                    argv.append("--schematic" if schematic else "--no-schematic")
+                    with self.subTest(
+                        full=full, schematic=schematic, output_format=output_format
+                    ):
+                        args = parser.parse_args(argv)
+                        self.assertEqual(args.format, output_format)
+                        self.assertEqual(args.schematic, schematic)
+                        self.assertEqual(args.full, full)
+
+    def _synthesize_with_fake_tools(
+        self, root: Path, argv: list[str]
+    ) -> tuple[Path, str, list[tuple[list[str], Path | None]]]:
+        workbench = self.make_project(root)
+        args = vwb.make_parser().parse_args(argv)
+        calls: list[tuple[list[str], Path | None]] = []
+
+        def fake_run(
+            command: list[str | Path],
+            *,
+            cwd: Path | None = None,
+            **_kwargs: object,
+        ) -> subprocess.CompletedProcess[str]:
+            items = [str(item) for item in command]
+            calls.append((items, cwd))
+            output_dir = root / ".vwb" / "synth" / "dut"
+            if items[0] == "yosys":
+                (output_dir / "dut.json").write_text("{}\n", encoding="utf-8")
+                script = ""
+                if "-p" in items:
+                    script = items[items.index("-p") + 1]
+                elif "-s" in items:
+                    script = Path(items[items.index("-s") + 1]).read_text(
+                        encoding="utf-8"
+                    )
+                prefix_match = vwb.re.search(r"-prefix\s+\"?([^\" ;]+)", script)
+                format_match = vwb.re.search(r"-format\s+(dot|svg|png)", script)
+                if prefix_match and format_match:
+                    prefix = Path(prefix_match.group(1))
+                    if not prefix.is_absolute() and cwd is not None:
+                        prefix = cwd / prefix
+                    prefix.with_suffix("." + format_match.group(1)).write_text(
+                        "rendered\n", encoding="utf-8"
+                    )
+            elif items[0] == "netlistsvg":
+                Path(items[items.index("-o") + 1]).write_text(
+                    "<svg/>\n", encoding="utf-8"
+                )
+            elif items[0] == "rsvg-convert":
+                if "--output" in items:
+                    output = items[items.index("--output") + 1]
+                elif "-o" in items:
+                    output = items[items.index("-o") + 1]
+                else:
+                    output = next(
+                        item.split("=", 1)[1]
+                        for item in items
+                        if item.startswith("--output=")
+                    )
+                Path(output).write_bytes(b"PNG")
+            return subprocess.CompletedProcess(command, 0, "", "")
+
+        with (
+            mock.patch.object(workbench, "require_tool", side_effect=lambda item: item),
+            mock.patch.object(workbench, "run", side_effect=fake_run),
+        ):
+            artifact = workbench.synthesize("dut", args)
+
+        script_path = root / ".vwb" / "synth" / "dut" / "synth.ys"
+        script = script_path.read_text(encoding="utf-8")
+        return artifact, script, calls
+
+    def test_default_synthesis_uses_makefile_style_flow_and_netlistsvg(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+
+            artifact, script, calls = self._synthesize_with_fake_tools(
+                root, ["synth", "dut"]
+            )
+
+            self.assertEqual(artifact, root / ".vwb" / "synth" / "dut" / "dut.png")
+            self.assertIn("prep", script)
+            self.assertNotIn("proc", script)
+            self.assertNotIn("opt -full", script)
+            self.assertNotIn("synth -top dut", script)
+            commands = [command for command, _cwd in calls]
+            self.assertTrue(any(command[0] == "netlistsvg" for command in commands))
+            self.assertTrue(any(command[0] == "rsvg-convert" for command in commands))
+            self.assertFalse(any(command[0] == "convert" for command in commands))
+            self.assertTrue(any(command[0] == "geeqie" for command in commands))
+
+    def test_preparation_flow_matches_makefile_backend_matrix(self):
+        cases = [
+            (True, False, ["prep"], ["prep -flatten", "proc", "opt -full", "synth -top dut"]),
+            (True, True, ["prep -flatten"], ["proc", "opt -full", "synth -top dut"]),
+            (False, False, ["proc", "opt -full"], ["prep", "prep -flatten", "synth -top dut"]),
+            (False, True, ["synth -top dut"], ["prep", "prep -flatten", "proc", "opt -full"]),
+        ]
+
+        for schematic, full, expected, absent in cases:
+            with self.subTest(schematic=schematic, full=full):
+                with tempfile.TemporaryDirectory() as directory:
+                    argv = [
+                        "synth",
+                        "dut",
+                        "--format",
+                        "json",
+                        "--view",
+                        "none",
+                        "--schematic" if schematic else "--no-schematic",
+                    ]
+                    if full:
+                        argv.append("--full")
+                    _artifact, script, _calls = self._synthesize_with_fake_tools(
+                        Path(directory), argv
+                    )
+                    commands = [item.strip() for item in script.split(";") if item.strip()]
+                    for command in expected:
+                        self.assertIn(command, commands)
+                    for command in absent:
+                        self.assertNotIn(command, commands)
+
+    def test_requested_format_is_produced_for_every_backend_combination(self):
+        for full in (False, True):
+            for schematic in (False, True):
+                for output_format in ("json", "dot", "svg", "png"):
+                    with self.subTest(
+                        full=full, schematic=schematic, output_format=output_format
+                    ):
+                        with tempfile.TemporaryDirectory() as directory:
+                            argv = [
+                                "synth",
+                                "dut",
+                                "--format",
+                                output_format,
+                                "--view",
+                                "none",
+                                "--schematic" if schematic else "--no-schematic",
+                            ]
+                            if full:
+                                argv.append("--full")
+
+                            artifact, _script, _calls = (
+                                self._synthesize_with_fake_tools(Path(directory), argv)
+                            )
+
+                            self.assertEqual(artifact.suffix, f".{output_format}")
+                            self.assertTrue(artifact.is_file())
+
+    def test_full_synthesis_and_yosys_rendering_backend(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+
+            artifact, script, calls = self._synthesize_with_fake_tools(
+                root,
+                [
+                    "synth",
+                    "dut",
+                    "--full",
+                    "--no-schematic",
+                    "--format",
+                    "dot",
+                    "--view",
+                    "none",
+                ],
+            )
+
+            self.assertEqual(artifact, root / ".vwb" / "synth" / "dut" / "dut.dot")
+            self.assertIn("synth -top dut", script)
+            self.assertNotIn("opt -full", script)
+            commands = [command for command, _cwd in calls]
+            self.assertFalse(any(command[0] == "netlistsvg" for command in commands))
+            self.assertFalse(any(command[0] in {"geeqie", "xdg-open"} for command in commands))
+
+    def test_yosys_read_script_separates_spaced_include_option_and_value(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory) / "project with spaces"
+            include_dir = root / "include files"
+            include_dir.mkdir(parents=True)
+
+            _artifact, script, _calls = self._synthesize_with_fake_tools(
+                root,
+                [
+                    "synth",
+                    "dut",
+                    "--format",
+                    "json",
+                    "--no-schematic",
+                    "--view",
+                    "none",
+                    "-I",
+                    str(include_dir),
+                ],
+            )
+
+            self.assertIn(f'-I "{include_dir}"', script)
+            self.assertNotIn(f'-I"{include_dir}"', script)
+            self.assertIn(f'"{root / "src" / "dut.v"}"', script)
+
+    def test_yosys_read_script_quotes_string_valued_definition(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+
+            _artifact, script, _calls = self._synthesize_with_fake_tools(
+                root,
+                [
+                    "synth",
+                    "dut",
+                    "--format",
+                    "json",
+                    "--no-schematic",
+                    "--view",
+                    "none",
+                    "-D",
+                    'LABEL="hello world"',
+                ],
+            )
+
+            self.assertIn(r'-D "LABEL=\"hello world\""', script)
+
+    def test_yosys_render_script_runs_from_spaced_output_directory(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory) / "project with spaces"
+
+            artifact, _script, calls = self._synthesize_with_fake_tools(
+                root,
+                [
+                    "synth",
+                    "dut",
+                    "--format",
+                    "dot",
+                    "--no-schematic",
+                    "--view",
+                    "none",
+                ],
+            )
+
+            output_dir = root / ".vwb" / "synth" / "dut"
+            render_script = output_dir / "render.ys"
+            render_text = render_script.read_text(encoding="utf-8")
+            yosys_calls = [
+                (command, cwd) for command, cwd in calls if command[0] == "yosys"
+            ]
+
+            self.assertEqual(artifact, output_dir / "dut.dot")
+            self.assertEqual(len(yosys_calls), 2)
+            self.assertEqual(yosys_calls[0][1], root)
+            self.assertEqual(
+                yosys_calls[1], (["yosys", "-s", str(render_script)], output_dir)
+            )
+            self.assertIn('read_json "dut.json"', render_text)
+            self.assertIn("-prefix dut", render_text)
+            self.assertNotIn(str(output_dir), render_text)
+
+
+if __name__ == "__main__":
+    unittest.main()
