@@ -132,7 +132,7 @@ and only the selected module hierarchy is compiled.
 
 Python tests must contain at least one `@cocotb.test()` and normally use the
 name `test_<module>.py`. HDL testbenches can use `test_<module>.v`,
-`test_<module>.sv`, `tb_<module>.*`, or `<module>_tb.*`.
+`test_<module>.sv`, `tb_<module>.*`, or `<module>_tb.*`. The name `<module>` should match a module name in HDL sources.
 
 ```sh
 ./vwb.py doctor                         # Check installed tools
@@ -153,7 +153,7 @@ layout. For example, `./vwb.py --src-dir rtl --test-dir verification test`.
 To save those paths once, initialize the project configuration:
 
 ```sh
-./vwb.py init --root . --src-dir rtl --test-dir verification --build-dir .vwb
+./vwb.py init --root . --src-dir <path_to_rtl> --test-dir <path_to_test_files> --build-dir .vwb
 ```
 
 This creates `.vwb.json` in the project root. Later commands discover it from

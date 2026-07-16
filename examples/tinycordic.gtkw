@@ -1,0 +1,49 @@
+[*]
+[*] GTKWave Analyzer v3.3.111 (w)1999-2020 BSI
+[*] Tue Aug 30 15:29:19 2022
+[*]
+[dumpfile] "/home/farhad/Projects/tinycordic/tinycordic.vcd"
+[dumpfile_mtime] "Tue Aug 30 15:14:32 2022"
+[dumpfile_size] 131759
+[savefile] "/home/farhad/Projects/tinycordic/tinycordic.gtkw"
+[timestart] 0
+[size] 1920 1029
+[pos] -1 -1
+*-29.000000 386000000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[sst_width] 211
+[signals_width] 379
+[sst_expanded] 1
+[sst_vpaned_height] 292
+@28
+tinycordic.clk
+tinycordic.reset
+tinycordic.en
+tinycordic.done
+@200
+-
+@24
+tinycordic.i[2:0]
+@420
+tinycordic.z0[5:0]
+tinycordic.reg_z[5:0]
+tinycordic.reg_x[5:0]
+tinycordic.reg_y[5:0]
+@200
+-
+@820
+tinycordic.inp_angle[1023:0]
+tinycordic.read_z[1023:0]
+@200
+-
+-Cos
+@820
+tinycordic.read_x[1023:0]
+tinycordic.real_ans_x[1023:0]
+@200
+-
+-Sin
+@820
+tinycordic.read_y[1023:0]
+tinycordic.real_ans_y[1023:0]
+[pattern_trace] 1
+[pattern_trace] 0
