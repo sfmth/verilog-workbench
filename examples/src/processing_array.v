@@ -2,7 +2,7 @@
 `timescale 1ns/1ns
 
 
-`include "/home/farhad/github/spyeyeriss/verilog-workbench/src/processing_element.v"
+//`include "/home/farhad/github/spyeyeriss/verilog-workbench/src/processing_element.v"
 
 `define K32_5    3'b000
 `define K32_3    3'b001
@@ -425,13 +425,7 @@ module processing_array #(
         padding[40]
         };
 
-    `ifdef COCOTB_SIM
-    initial begin
-    $dumpfile ("processing_array.vcd");
-    $dumpvars (0, processing_array);
-    #1;
-    end
-    `endif
+
 
 endmodule
 

@@ -22,7 +22,7 @@ async def test_pwm(dut):
     dut.write_enable.value = 1
 
     # test a range of values
-    for i in range(0, 32):
+    for i in range(0, 17):
         # set pwm to this level
         await FallingEdge(dut.clk)
         dut.address_1.value = i

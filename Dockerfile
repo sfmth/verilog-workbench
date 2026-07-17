@@ -62,13 +62,14 @@ RUN sudo apt-get update \
         verilator \
         yosys \
     && sudo rm -rf /var/lib/apt/lists/*
-RUN pip install --break-system-packages cocotb==1.7.2 apycula click bitstring
+RUN pip install --break-system-packages cocotb==1.7.2 apycula click bitstring pillow scipy colorama scikit-learn torch
 RUN sudo npm install -g netlistsvg
 ARG SBY_REV=fea6e467d067b3ea84b6b5ac08cd48beb59f0d42
 RUN git clone https://github.com/YosysHQ/sby.git /tmp/sby \
     && git -C /tmp/sby checkout --detach ${SBY_REV} \
     && sudo make -C /tmp/sby install \
     && rm -rf /tmp/sby
+RUN printf '\nalias vwb_examples="./vwb.py init --root . --src-dir examples/src --test-dir examples/test --build-dir .vwb"\n' >> "$HOME/.bashrc" 
 
 COPY --chown=${USER_UID}:${USER_GID} . .
 

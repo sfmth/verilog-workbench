@@ -140,7 +140,8 @@ async def test_all(dut):
     await reset(dut)
     
     # Load the image
-    image = Image.open('/home/farhad/github/spyeyeriss/python-workbench/img/32-0.png')
+    import os
+    image = Image.open(os.path.join(os.path.dirname(__file__), '32-0.png'))
     gray_image = image.convert('L')
     scaler = MinMaxScaler()
     gray_image = np.round(scaler.fit_transform(gray_image)).astype(int)

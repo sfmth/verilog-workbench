@@ -27,20 +27,18 @@ module processor (
 
 	// memory io
     input [31:0] inst_f, read_data_m,
-    output mem_write_m,
-    output [31:0] pc_f, alu_result_m, write_data_m    
+    output reg mem_write_m,
+    output reg [31:0] pc_f, alu_result_m, write_data_m
     );
 
     // Net instantiations:
 
     // 32bits coming out of flops
-    reg [31:0] pc_f, // program counter in the fetch stage
-		inst_d, // fetched instruction in decode stage
+    reg [31:0] inst_d, // fetched instruction in decode stage
 		pc_d, pc_plus4_d, // one word ahead of the current program counter in decode stage
 		rd1_e, rd2_e, // Read data 1 & 2 coming out of the register file in execute stage
 		pc_e, imm_ext_e, // output of the extend module in execute stage
-		pc_plus4_e, alu_result_m, // Result of the ALU operation in the memory stage
-		write_data_m, // data that is going to be written in the data memory in the memory stage
+		pc_plus4_e,
 		pc_plus4_m, read_data_w, // Read data from the data memory in the writeback stage
 		alu_result_w, pc_plus4_w;
     
@@ -50,7 +48,7 @@ module processor (
 
     // control signals out of flops 
 	// refer to the control_unit for description
-    reg reg_write_e, reg_write_m, reg_write_w, mem_write_e, mem_write_m, jump_e, branch_e, alu_src_e;
+    reg reg_write_e, reg_write_m, reg_write_w, mem_write_e, jump_e, branch_e, alu_src_e;
     reg [1:0] result_src_e, result_src_m, result_src_w;
     reg [4:0] alu_control_e;
 
@@ -62,8 +60,8 @@ module processor (
 		result_w, // output of the writeback stage
 		src_a_e, src_b_e, // ALU sources
 		write_data_e, pc_target_e, // calculated PC for jal and beq instructions
-		imm_ext_d, rd1_d, rd2_d, inst_f, 
-        alu_result_e, read_data_m;
+		imm_ext_d, rd1_d, rd2_d,
+        alu_result_e;
 
     // 1bit wires
     wire zero_e, // ALU output zero signal

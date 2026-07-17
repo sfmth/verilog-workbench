@@ -27,8 +27,8 @@ async def reset(dut):
 
 @cocotb.test()
 async def test_pwm(dut):
-    clock = Clock(dut.clk, 10, units="us")
-    cocotb.fork(clock.start())
+    #clock = Clock(dut.clk, 10, units="us")
+    #cocotb.fork(clock.start())
     # await reset(dut)
     # dut.write_enable.value = 1
     instruction = ["addi", "or", "and", "add", "beq", "slt", "sub", "sw", "lw", "jal" ]
@@ -44,7 +44,7 @@ async def test_pwm(dut):
         dut.op.value = op[i]
         dut.funct3.value = funct3[i]
         dut.funct7_5.value = funct7_5[i]
-        dut.inst.value = text_to_decimal(instruction[i])
+        #dut.inst.value = text_to_decimal(instruction[i])
 
 
         # print(op[i])
@@ -58,9 +58,8 @@ async def test_pwm(dut):
         # await Timer(1, units='us')
         # data = random.randint(0, 4294967295)
         # dut.write_data.value = data
-        # await Timer(1000, units='ps')
+        await Timer(1000, units='ps')
         # wait pwm level clock steps
-        await ClockCycles(dut.clk, 5)
 
         # # assert still high
         # if (i != 0):
