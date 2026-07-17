@@ -20,8 +20,8 @@ class CommandLineConfigurationTests(unittest.TestCase):
     def setUp(self) -> None:
         self.parser = vwb.make_parser()
 
-    def test_array_dump_limit_defaults_to_32_words(self):
-        self.assertEqual(vwb.DEFAULT_MAX_ARRAY_WORDS, 32)
+    def test_array_dump_limit_uses_the_configured_default(self):
+        self.assertEqual(vwb.DEFAULT_MAX_ARRAY_WORDS, 4096)
         self.assertEqual(
             self.parser.parse_args(["test"]).max_array_words,
             vwb.DEFAULT_MAX_ARRAY_WORDS,

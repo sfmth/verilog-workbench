@@ -152,7 +152,16 @@ synth_gowin:
 
 pnr_gowin: synth_gowin
 	@echo -e '\n' $(Yellow)$(bold) '==>' $(Green)$(bold)Running Place and Route [Gowin]$(Color_Off) '\n'
-	nextpnr-gowin --json fpga/$(PREFIX).json --write fpga/pnr$(PREFIX).json --device GW1NR-LV9QN88PC6/I5 --family GW1N-9C --cst $(SRC_DIR)/io.cst
+	@if command -v nextpnr-himbaechel-gowin >/dev/null 2>&1; then \
+		nextpnr-himbaechel-gowin --json fpga/$(PREFIX).json --write fpga/pnr$(PREFIX).json --device GW1NR-LV9QN88PC6/I5 --vopt family=GW1N-9C --vopt cst=$(SRC_DIR)/io.cst; \
+	elif command -v nextpnr-himbaechel >/dev/null 2>&1; then \
+		nextpnr-himbaechel --uarch gowin --json fpga/$(PREFIX).json --write fpga/pnr$(PREFIX).json --device GW1NR-LV9QN88PC6/I5 --vopt family=GW1N-9C --vopt cst=$(SRC_DIR)/io.cst; \
+	elif command -v nextpnr-gowin >/dev/null 2>&1; then \
+		nextpnr-gowin --json fpga/$(PREFIX).json --write fpga/pnr$(PREFIX).json --device GW1NR-LV9QN88PC6/I5 --family GW1N-9C --cst $(SRC_DIR)/io.cst; \
+	else \
+		echo 'nextpnr-himbaechel-gowin, nextpnr-himbaechel, or nextpnr-gowin is required' >&2; \
+		exit 127; \
+	fi
 
 pack_gowin: pnr_gowin
 	@echo -e '\n' $(Yellow)$(bold) '==>' $(Green)$(bold)Compiling the final binary file [Gowin]$(Color_Off) '\n'

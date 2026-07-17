@@ -7,15 +7,8 @@ import math
 from cocotb.handle import RealObject
 from bitstring import BitArray
 
-from PIL import Image, ImageFilter
+from PIL import Image
 import numpy as np
-from scipy import signal
-from colorama import Fore, Back, Style
-
-from sklearn.preprocessing import MinMaxScaler
-
-import torch
-import torch.nn.functional as F
 
 np.set_printoptions(threshold=np.inf, linewidth=np.inf)
 
@@ -101,7 +94,7 @@ async def test_all(dut):
     # load kernel
     kernel = np.array([[6,5,9,4,3], [0,3,0,7,1], [6,7,2,2,9], [0,3,0,7,1], [0,3,0,7,1]])
     print()
-    print(Style.BRIGHT + Fore.RED + "Kernel:" + Style.RESET_ALL)
+    print("Kernel:")
     print(np.array(kernel))
     dut.kernel_0.value =  int(kernel[0][0])
     dut.kernel_1.value =  int(kernel[0][1])
@@ -143,10 +136,13 @@ async def test_all(dut):
     import os
     image = Image.open(os.path.join(os.path.dirname(__file__), '32-0.png'))
     gray_image = image.convert('L')
-    scaler = MinMaxScaler()
-    gray_image = np.round(scaler.fit_transform(gray_image)).astype(int)
+    gray_image = np.asarray(gray_image, dtype=float)
+    image_range = np.ptp(gray_image)
+    if image_range:
+        gray_image = (gray_image - np.min(gray_image)) / image_range
+    gray_image = np.round(gray_image).astype(int)
     print()
-    print(Style.BRIGHT + Fore.RED + "Input Image:" + Style.RESET_ALL)
+    print("Input Image:")
     print(np.array(gray_image))
 
     # image = Image.open('/home/farhad/github/spyeyeriss/python-workbench/img/32-0.png')
@@ -162,9 +158,8 @@ async def test_all(dut):
 
 
     print()
-    print(Style.BRIGHT + Fore.RED + "Pytorch Output Image (with padding):" + Style.RESET_ALL)
-    out_pytorch = F.conv2d(torch.from_numpy(np.array(gray_image)).unsqueeze(0).unsqueeze(0), torch.from_numpy(kernel).unsqueeze(0).unsqueeze(0),  padding='same')
-    print(out_pytorch.numpy())
+    print("Reference output image (with padding):")
+    print(convolve_(gray_image, kernel))
     print()
 
 
@@ -193,8 +188,7 @@ async def test_all(dut):
     out_module = np.delete(out_module, 0, axis=0)
 
     print()
-    print(Style.BRIGHT + Fore.RED + "Verilog Output Image (with padding):" + Style.RESET_ALL)
+    print("Verilog output image (with padding):")
     print(out_module.astype(int))
     print(out_module.shape)
-
 

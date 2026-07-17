@@ -8,84 +8,35 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  test:
+  validate:
+    name: Actual all-design baseline and full option contracts
     runs-on: ubuntu-latest
-    timeout-minutes: 20
-    strategy:
-      fail-fast: false
-      matrix:
-        python-version: ["3.11", "3.14"]
+    timeout-minutes: 180
 
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build validation image
+        uses: docker/build-push-action@v6
         with:
-          python-version: ${{ matrix.python-version }}
+          context: .
+          load: true
+          tags: verilog-workbench-ci:${{ github.sha }}
+          cache-from: type=gha,scope=ci
+          cache-to: type=gha,mode=max,scope=ci
 
-      - name: Install HDL tools
+      - name: Validate all designs, tests, waves, and CI-safe artifacts
         run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends \
-            build-essential \
-            graphviz \
-            iverilog \
-            librsvg2-bin \
-            nodejs \
-            npm \
-            yosys
-          sudo npm install --global netlistsvg
-
-      - name: Install Python dependencies
-        run: |
-          python -m pip install --upgrade pip
-          python -m pip install cocotb==1.7.2
-
-      - name: Run vwb regressions
-        env:
-          PYTHONPATH: .
-        run: python -m unittest discover -v -s examples/test -t . -p 'test_vwb*.py'
-
-      - name: Verify default user workspace
-        run: |
-          cat > src/ci_smoke.v <<'EOF'
-          module ci_smoke(output wire value);
-            assign value = 1'b1;
-          endmodule
-          EOF
-          cat > test/test_ci_smoke.py <<'EOF'
-          import cocotb
-          from cocotb.triggers import Timer
-
-          @cocotb.test()
-          async def value_is_high(dut):
-              await Timer(1, units="ns")
-              assert int(dut.value.value) == 1
-          EOF
-          ./vwb.py test ci_smoke
-
-      - name: Run bundled Cocotb tests
-        run: ./vwb.py --src-dir examples/src --test-dir examples/test test --test-language cocotb --seed 1 --keep-going
-
-      - name: Verify HDL test and array waveform
-        run: ./vwb.py --src-dir examples/src --test-dir examples/test test array_example --test-language verilog --waves --wave-format vcd
-
-      - name: Synthesize bundled encoder
-        run: |
-          ./vwb.py --src-dir examples/src --test-dir examples/test synth encoder --view none
-          ./vwb.py --src-dir examples/src --test-dir examples/test synth encoder --no-schematic --format dot --view none
-
-      - name: Upload CI artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: verilog-workbench-ci-python-${{ matrix.python-version }}
-          path: |
-            .vwb/sim/array_example/hdl-test_array_example/array_example.vcd
-            .vwb/synth/encoder/encoder.png
-            .vwb/synth/encoder/encoder.dot
-          include-hidden-files: true
-          if-no-files-found: error
-          retention-days: 7
+          docker run --rm --network none \
+            verilog-workbench-ci:${{ github.sha }} \
+            python3 scripts/validate_vwb.py \
+              --all-wave-formats

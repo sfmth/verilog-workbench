@@ -32,6 +32,14 @@ TEST_KINDS = {"cocotb", "hdl"}
 SAVED_WAVE_SCHEMA = 1
 TAG_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
 SAFE_IDENTIFIER_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_$]*$")
+TCL_BARE_WORD_RE = re.compile(r"^[A-Za-z0-9_./:@%+=,-]+$")
+TOOL_ALTERNATIVES = {
+    "nextpnr-gowin": (
+        "nextpnr-himbaechel-gowin",
+        "nextpnr-himbaechel",
+        "nextpnr-gowin",
+    ),
+}
 
 
 class Ansi:
@@ -125,6 +133,19 @@ def unique_paths(paths: Iterable[Path]) -> list[Path]:
             seen.add(resolved)
             result.append(resolved)
     return result
+
+
+def find_tool_choice(command: str) -> tuple[str, str] | None:
+    for candidate in TOOL_ALTERNATIVES.get(command, (command,)):
+        found = shutil.which(candidate)
+        if found is not None:
+            return candidate, found
+    return None
+
+
+def find_tool(command: str) -> str | None:
+    choice = find_tool_choice(command)
+    return choice[1] if choice is not None else None
 
 
 def project_path(root: Path, value: str | Path) -> Path:
@@ -1279,13 +1300,19 @@ class Workbench:
         build.mkdir(parents=True, exist_ok=True)
         self._write_build_marker(marker, build)
 
+    def require_tool_choice(self, command: str) -> tuple[str, str]:
+        choice = find_tool_choice(command)
+        if choice is not None:
+            return choice
+        candidates = TOOL_ALTERNATIVES.get(command, (command,))
+        if self.dry_run:
+            return candidates[0], candidates[0]
+        raise VWBError(
+            "required command is not on PATH: " + " or ".join(candidates)
+        )
+
     def require_tool(self, command: str) -> str:
-        found = shutil.which(command)
-        if found is None and self.dry_run:
-            return command
-        if found is None:
-            raise VWBError(f"required command is not on PATH: {command}")
-        return found
+        return self.require_tool_choice(command)[1]
 
     def run(
         self,
@@ -2000,19 +2027,39 @@ class Workbench:
     def _yosys_quote(value: str | Path) -> str:
         return '"' + str(value).replace("\\", "\\\\").replace('"', '\\"') + '"'
 
+    @staticmethod
+    def _tcl_quote(value: str | Path) -> str:
+        text = str(value)
+        if text and TCL_BARE_WORD_RE.fullmatch(text):
+            return text
+        escaped = (
+            text.replace("\\", "\\\\")
+            .replace('"', '\\"')
+            .replace("$", "\\$")
+            .replace("[", "\\[")
+            .replace("]", "\\]")
+            .replace("\r", "\\r")
+            .replace("\n", "\\n")
+        )
+        return f'"{escaped}"'
+
+    @classmethod
+    def _yosys_tcl_command(cls, arguments: Sequence[str | Path]) -> str:
+        return "yosys " + " ".join(cls._tcl_quote(item) for item in arguments)
+
     def _yosys_read_command(
         self,
         module: str,
         defines: Sequence[str],
         includes: Sequence[str],
     ) -> str:
-        arguments = ["read_verilog", "-sv"]
+        arguments: list[str | Path] = ["read_verilog", "-sv"]
         for define in defines:
-            arguments.extend(["-D", self._yosys_quote(define)])
+            arguments.append(f"-D{define}")
         for path in self.include_dirs(includes):
-            arguments.extend(["-I", self._yosys_quote(path)])
-        arguments.extend(self._yosys_quote(path) for path in self.catalog.closure(module))
-        return " ".join(arguments)
+            arguments.append(f"-I{path}")
+        arguments.extend(self.catalog.closure(module))
+        return self._yosys_tcl_command(arguments)
 
     def synthesize(self, module: str, args: argparse.Namespace) -> Path:
         self.catalog.definition(module)
@@ -2024,22 +2071,32 @@ class Workbench:
         if not self.dry_run:
             output_dir.mkdir(parents=True, exist_ok=True)
         json_path = output_dir / f"{output_name}.json"
-        script_path = output_dir / "synth.ys"
+        script_path = output_dir / "synth.tcl"
         commands = [
             self._yosys_read_command(module, args.define, args.include),
-            f"hierarchy -check -top {module}",
+            self._yosys_tcl_command(["hierarchy", "-check", "-top", module]),
         ]
         if args.schematic and args.full:
-            commands.append("prep -flatten")
+            commands.append(self._yosys_tcl_command(["prep", "-flatten"]))
         elif args.schematic:
-            commands.append("prep")
+            commands.append(self._yosys_tcl_command(["prep"]))
         elif args.full:
-            commands.append(f"synth -top {module}")
+            commands.append(self._yosys_tcl_command(["synth", "-top", module]))
         else:
-            commands.extend(["proc", "opt -full"])
+            commands.extend(
+                [
+                    self._yosys_tcl_command(["proc"]),
+                    self._yosys_tcl_command(["opt", "-full"]),
+                ]
+            )
         if args.flatten and not (args.schematic and args.full):
-            commands.extend(["flatten", "opt_clean"])
-        commands.append(f"write_json {self._yosys_quote(json_path)}")
+            commands.extend(
+                [
+                    self._yosys_tcl_command(["flatten"]),
+                    self._yosys_tcl_command(["opt_clean"]),
+                ]
+            )
+        commands.append(self._yosys_tcl_command(["write_json", json_path]))
 
         artifact = json_path
         prefix = output_dir / output_name
@@ -2066,8 +2123,8 @@ class Workbench:
             if args.format in {"svg", "png"}:
                 self.require_tool("dot")
         if not self.dry_run:
-            script_path.write_text(";\n".join(commands) + ";\n", encoding="utf-8")
-        result = self.run(["yosys", "-s", script_path], cwd=self.root)
+            script_path.write_text("\n".join(commands) + "\n", encoding="utf-8")
+        result = self.run(["yosys", "-c", script_path], cwd=self.root)
         if result.returncode != 0:
             raise VWBError(f"Yosys synthesis failed for {module}")
 
@@ -2174,46 +2231,63 @@ class Workbench:
         defines = ["LEDS_NR=6", *args.define]
         self.require_tool("yosys")
         design_json = output / f"{output_name}.json"
-        script = output / "fpga.ys"
-        synth_command = (
-            f"synth_gowin -top {module} -json {self._yosys_quote(design_json)}"
-            if board == "gowin"
-            else f"synth_ice40 -top {module} -json {self._yosys_quote(design_json)}"
+        script = output / "fpga.tcl"
+        synth_command = self._yosys_tcl_command(
+            [
+                "synth_gowin" if board == "gowin" else "synth_ice40",
+                "-top",
+                module,
+                "-json",
+                design_json.name,
+            ]
         )
         if not self.dry_run:
             script.write_text(
-                ";\n".join(
+                "\n".join(
                     [
                         self._yosys_read_command(module, defines, args.include),
-                        f"hierarchy -check -top {module}",
+                        self._yosys_tcl_command(
+                            ["hierarchy", "-check", "-top", module]
+                        ),
                         synth_command,
                     ]
                 )
-                + ";\n",
+                + "\n",
                 encoding="utf-8",
             )
-        if self.run(["yosys", "-s", script], cwd=self.root).returncode != 0:
+        if self.run(["yosys", "-c", script], cwd=output).returncode != 0:
             raise VWBError(f"FPGA synthesis failed for {module}")
         artifact: Path = design_json
         if requested_index == 0:
             return artifact
 
         if board == "gowin":
-            self.require_tool("nextpnr-gowin")
+            pnr_variant, pnr_tool = self.require_tool_choice("nextpnr-gowin")
             pnr_json = output / f"{output_name}-pnr.json"
             command: list[str | Path] = [
-                "nextpnr-gowin",
+                pnr_tool,
                 "--json",
                 design_json,
                 "--write",
                 pnr_json,
                 "--device",
                 "GW1NR-LV9QN88PC6/I5",
-                "--family",
-                "GW1N-9C",
-                "--cst",
-                constraints,
             ]
+            if "himbaechel" in pnr_variant:
+                if pnr_variant == "nextpnr-himbaechel":
+                    command.extend(["--uarch", "gowin"])
+                command.extend(
+                    [
+                        "--vopt",
+                        "family=GW1N-9C",
+                        "--vopt",
+                        f"cst={constraints}",
+                    ]
+                )
+            else:
+                command.extend(
+                    ["--family", "GW1N-9C", "--cst", constraints]
+                )
             if self.run(command, cwd=self.root).returncode != 0:
                 raise VWBError(f"Gowin place and route failed for {module}")
             artifact = pnr_json
@@ -2844,7 +2918,7 @@ def command_doctor(workbench: Workbench, args: argparse.Namespace) -> int:
         "ice40": ["nextpnr-ice40", "icepack", "openFPGALoader"],
     }
     data = {
-        group: {command: shutil.which(command) for command in commands}
+        group: {command: find_tool(command) for command in commands}
         for group, commands in groups.items()
     }
     if args.as_json:

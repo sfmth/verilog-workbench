@@ -5,6 +5,7 @@ import tempfile
 import unittest
 from pathlib import Path
 from types import SimpleNamespace
+from unittest import mock
 
 import vwb
 
@@ -16,17 +17,27 @@ class SourceCatalogTests(unittest.TestCase):
         path.write_text(content, encoding="utf-8")
         return path
 
-    def test_current_rgb_mixer_closure_excludes_unrelated_stubs(self):
-        root = Path(__file__).resolve().parents[1]
-        catalog = vwb.SourceCatalog(vwb.find_hdl_files(root / "src"))
+    def test_module_closure_excludes_unrelated_designs(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.write(root, "src/debounce.v", "module debounce; endmodule\n")
+            self.write(root, "src/encoder.v", "module encoder; endmodule\n")
+            self.write(root, "src/pwm.v", "module pwm; endmodule\n")
+            self.write(
+                root,
+                "src/rgb_mixer.v",
+                "module rgb_mixer; debounce d(); encoder e(); pwm p(); endmodule\n",
+            )
+            self.write(root, "src/alu.v", "module alu; endmodule\n")
+            catalog = vwb.SourceCatalog(vwb.find_hdl_files(root / "src"))
 
-        closure = {path.name for path in catalog.closure("rgb_mixer")}
+            closure = {path.name for path in catalog.closure("rgb_mixer")}
 
-        self.assertEqual(
-            closure,
-            {"rgb_mixer.v", "debounce.v", "encoder.v", "pwm.v"},
-        )
-        self.assertNotIn("alu", catalog.names())
+            self.assertEqual(
+                closure,
+                {"rgb_mixer.v", "debounce.v", "encoder.v", "pwm.v"},
+            )
+            self.assertIn("alu", catalog.names())
 
     def test_declarations_do_not_depend_on_file_names(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -686,6 +697,135 @@ class TestDiscoveryTests(unittest.TestCase):
             self.assertEqual(
                 artifact,
                 root / ".vwb" / "fpga" / "ice40" / "dut" / "dut.json",
+            )
+
+    def test_fpga_supports_modern_generic_and_legacy_gowin_tools(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.write(root, "src/dut.v", "module dut; endmodule\n")
+            constraints = self.write(root, "src/io.cst", "IO_LOC \"clk\" 52;\n")
+            self.write(root, "test/.gitkeep", "")
+            workbench = vwb.Workbench(
+                root=root,
+                src_dir=root / "src",
+                test_dir=root / "test",
+                build_dir=root / ".vwb",
+                dry_run=True,
+            )
+            args = SimpleNamespace(
+                board="gowin",
+                stage="pnr",
+                constraints=str(constraints),
+                define=[],
+                include=[],
+            )
+
+            cases = [
+                (
+                    "nextpnr-himbaechel-gowin",
+                    ["--vopt family=GW1N-9C", f"--vopt cst={constraints}"],
+                    [" --uarch ", " --family ", " --cst "],
+                ),
+                (
+                    "nextpnr-himbaechel",
+                    [
+                        "--uarch gowin",
+                        "--vopt family=GW1N-9C",
+                        f"--vopt cst={constraints}",
+                    ],
+                    [" --family ", " --cst "],
+                ),
+                (
+                    "nextpnr-gowin",
+                    ["--family GW1N-9C", f"--cst {constraints}"],
+                    [" --uarch ", " --vopt "],
+                ),
+            ]
+            alternatives = set(vwb.TOOL_ALTERNATIVES["nextpnr-gowin"])
+            for available, expected, absent in cases:
+                with self.subTest(available=available):
+                    def which(command: str) -> str | None:
+                        if command in alternatives:
+                            return f"/usr/bin/{command}" if command == available else None
+                        return f"/usr/bin/{command}"
+
+                    output = io.StringIO()
+                    with (
+                        mock.patch("vwb.shutil.which", side_effect=which),
+                        contextlib.redirect_stdout(output),
+                    ):
+                        workbench.run_fpga("dut", args)
+
+                    command = next(
+                        line
+                        for line in output.getvalue().splitlines()
+                        if f"/usr/bin/{available}" in line
+                    )
+                    for value in expected:
+                        self.assertIn(value, command)
+                    for value in absent:
+                        self.assertNotIn(value, command)
+
+    def test_gowin_tool_resolution_prefers_modern_and_dry_run_defaults_to_it(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.write(root, "src/dut.v", "module dut; endmodule\n")
+            self.write(root, "test/.gitkeep", "")
+            workbench = vwb.Workbench(
+                root=root,
+                src_dir=root / "src",
+                test_dir=root / "test",
+                build_dir=root / ".vwb",
+                dry_run=True,
+            )
+            with mock.patch(
+                "vwb.shutil.which", side_effect=lambda command: f"/bin/{command}"
+            ):
+                variant, _path = workbench.require_tool_choice("nextpnr-gowin")
+            self.assertEqual(variant, "nextpnr-himbaechel-gowin")
+
+            with mock.patch("vwb.shutil.which", return_value=None):
+                variant, path = workbench.require_tool_choice("nextpnr-gowin")
+            self.assertEqual((variant, path), (variant, variant))
+            self.assertEqual(variant, "nextpnr-himbaechel-gowin")
+
+    def test_gowin_tool_error_and_doctor_report_all_supported_variants(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.write(root, "src/dut.v", "module dut; endmodule\n")
+            self.write(root, "test/.gitkeep", "")
+            workbench = vwb.Workbench(
+                root=root,
+                src_dir=root / "src",
+                test_dir=root / "test",
+                build_dir=root / ".vwb",
+            )
+            with mock.patch("vwb.shutil.which", return_value=None):
+                with self.assertRaises(vwb.VWBError) as raised:
+                    workbench.require_tool("nextpnr-gowin")
+            for candidate in vwb.TOOL_ALTERNATIVES["nextpnr-gowin"]:
+                self.assertIn(candidate, str(raised.exception))
+
+            def which(command: str) -> str | None:
+                if command == "nextpnr-himbaechel-gowin":
+                    return "/usr/bin/nextpnr-himbaechel-gowin"
+                if command in vwb.TOOL_ALTERNATIVES["nextpnr-gowin"]:
+                    return None
+                return f"/usr/bin/{command}"
+
+            output = io.StringIO()
+            with (
+                mock.patch("vwb.shutil.which", side_effect=which),
+                contextlib.redirect_stdout(output),
+            ):
+                status = vwb.command_doctor(
+                    workbench, SimpleNamespace(as_json=True)
+                )
+            report = vwb.json.loads(output.getvalue())
+            self.assertEqual(status, 0)
+            self.assertEqual(
+                report["gowin"]["nextpnr-gowin"],
+                "/usr/bin/nextpnr-himbaechel-gowin",
             )
 
     def test_formal_dry_run_with_view_does_not_require_a_trace(self):

@@ -62,7 +62,7 @@ RUN sudo apt-get update \
         verilator \
         yosys \
     && sudo rm -rf /var/lib/apt/lists/*
-RUN pip install --break-system-packages cocotb==1.7.2 apycula click bitstring pillow scipy colorama scikit-learn torch
+RUN pip install --break-system-packages cocotb==1.7.2 apycula click bitstring numpy pillow
 RUN sudo npm install -g netlistsvg
 ARG SBY_REV=fea6e467d067b3ea84b6b5ac08cd48beb59f0d42
 RUN git clone https://github.com/YosysHQ/sby.git /tmp/sby \

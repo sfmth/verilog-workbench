@@ -2,8 +2,6 @@
 `timescale 1ns/1ns
 
 
-`include "/home/farhad/github/spyeyeriss/verilog-workbench/src/shift_add_mult.v"
-
 module potential_arithmetic_unit (
     // save
     input wire [255:0] cnn_32n_potential_in,

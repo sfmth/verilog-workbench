@@ -16,8 +16,9 @@ env:
 
 jobs:
   publish:
+    name: Actual all-design baseline and full option contracts
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 180
 
     steps:
       - name: Check out repository
@@ -35,16 +36,12 @@ jobs:
           cache-from: type=gha,scope=release
           cache-to: type=gha,mode=max,scope=release
 
-      - name: Test release candidate
+      - name: Validate all designs, tests, waves, and CI-safe artifacts
         run: |
           docker run --rm --network none \
             verilog-workbench-release:${{ github.sha }} \
-            bash -c '
-              sby --version &&
-              python3 -m unittest discover -v -s examples/test -t . -p "test_vwb*.py" &&
-              ./vwb.py --src-dir examples/src --test-dir examples/test test --keep-going &&
-              ./vwb.py --src-dir examples/src --test-dir examples/test synth encoder --view none
-            '
+            python3 scripts/validate_vwb.py \
+              --all-wave-formats
 
       - name: Log in to GHCR
         uses: docker/login-action@v3

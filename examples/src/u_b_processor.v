@@ -2,8 +2,6 @@
 `timescale 1ns/1ns
 
 
-`include "/home/farhad/github/iscas-snn-accelerator/verilog-workbench/src/shift_add_mult.v"
-
 module u_b_processor (
     // save
     input wire [127:0] save_16n_potential_in,

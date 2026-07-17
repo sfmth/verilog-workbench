@@ -1,9 +1,6 @@
 `default_nettype none
 `timescale 1ns/1ns
 
-`include "/home/farhad/github/spyeyeriss/verilog-workbench/src/potential_arithmetic_unit.v"
-`include "/home/farhad/github/spyeyeriss/verilog-workbench/src/processing_array.v"
-
 module openeyes #(
     parameter KERNEL_NBITS = 4
     )(
@@ -134,4 +131,3 @@ module openeyes #(
     /* `endif */
 
 endmodule
-

@@ -74,7 +74,7 @@ This project aims to ease the setup of your verilog projects by providing you wi
 * `GTKWave` To view the input or outpot waveforms of your design 
 * `Yosys` To synthesize your design into actual hardware and view it
 * `SymbiYosys (sby)` To run formal verification configurations
-* `nextpnr-ice40` / `nextpnr-gowin` For place and route on iCE40 or Gowin FPGAs
+* `nextpnr-ice40` / `nextpnr-himbaechel-gowin` For place and route on iCE40 or Gowin FPGAs (`nextpnr-gowin` remains supported)
 * `IceStorm (icepack)` To pack iCE40 bitstreams
 * `Apicula (gowin_pack)` To pack Gowin bitstreams
 * `openFPGALoader` To flash FPGA boards
@@ -96,6 +96,11 @@ $ pip install --break-system-packages cocotb==1.7.2 apycula click && printf '\ne
 $ sudo npm install -g netlistsvg
 $ git clone https://github.com/YosysHQ/sby.git /tmp/sby && git -C /tmp/sby checkout --detach fea6e467d067b3ea84b6b5ac08cd48beb59f0d42 && sudo make -C /tmp/sby install && rm -rf /tmp/sby
 ```
+
+Ubuntu 26.04's transitional `nextpnr-gowin` package installs
+`nextpnr-himbaechel-gowin`. VWB prefers that executable, also supports generic
+`nextpnr-himbaechel` and legacy `nextpnr-gowin`, and selects the matching
+command-line dialect automatically.
 
 ### Installation
 
@@ -257,7 +262,7 @@ creating directories or writing configuration.
 | `--seed INTEGER` | Cocotb chooses | Set the Cocotb/Python random seed. The selection must be Cocotb-only; an `auto` selection containing any HDL test is rejected. |
 | `--waves` | Off | Generate a waveform without opening GTKWave. VWB injects dump logic into temporary preprocessed sources, so the design does not need `$dumpfile`, `$dumpvars`, or a simulator conditional. |
 | `--wave-format {fst,vcd}` | `fst` | Select the generated waveform format. This has an effect only with `--waves`; `wave` enables waves automatically. |
-| `--max-array-words COUNT` | `32` | Limit the number of words registered for each static unpacked array during waveform generation. `0` removes the limit. Negative values and values that do not fit in 128 bits are rejected. This option has an effect only when waves are enabled. |
+| `--max-array-words COUNT` | `4096` | Limit the number of words registered for each static unpacked array during waveform generation. `0` removes the limit. Negative values and values that do not fit in 128 bits are rejected. This option has an effect only when waves are enabled. |
 | `-D NAME[=VALUE]`, `--define NAME[=VALUE]` | None | Add a repeatable Icarus preprocessor definition to preprocessing and compilation. Supply the option once per definition. |
 | `-I DIR`, `--include DIR` | None | Add a repeatable include directory. VWB already includes the source/test roots and nested directories containing HDL or header files. |
 | `--compile-arg ARG` | None | Pass a repeatable raw argument to Icarus preprocessing and compilation. Use `--compile-arg=-option` when the value begins with `-`. |
@@ -423,6 +428,8 @@ iCE40 tools. Its exit status requires `iverilog` and `vvp`, plus
 reported but do not make `doctor` fail; the relevant mode will require them
 when used. Synthesis reporting includes Yosys, Graphviz `dot`, `netlistsvg`,
 `rsvg-convert`, and `geeqie` for the selectable rendering pipeline.
+The Gowin entry keeps the logical key `nextpnr-gowin`; its path identifies the
+modern Himbaechel or legacy executable that VWB resolved.
 
 #### Exit status
 
@@ -457,18 +464,41 @@ including parameterized, multidimensional, generated, and typedef-backed
 arrays. Project source files remain unchanged. Icarus may report harmless
 escaped-identifier warnings for these words.
 
-Array dumping is limited to 32 words per declaration by default. Change
+Array dumping is limited to 4096 words per declaration by default. Change
 the limit with `--max-array-words COUNT`, or use `0` for no limit. Dynamic,
 procedural, and aggregate-member arrays cannot be registered statically and
 produce a clear error.
 
 ### CI/CD
 
-The CI workflow runs the Python regression suite, every bundled Cocotb and HDL
-test, and an encoder synthesis check on pushes and pull requests. Version tags
-matching `v*` publish the checked-out repository as a Docker image at
-`ghcr.io/sfmth/verilog-workbench`; the publish workflow can also be started
-manually from GitHub Actions.
+Both GitHub workflows build the repository Dockerfile and invoke
+`scripts/validate_vwb.py`. The harness consumes `vwb.py list --json`; no module,
+test, or artifact name is embedded in either workflow. Adding a discoverable
+module or test under `examples/` therefore adds it to the next run automatically.
+
+| Validation layer | Coverage |
+| --- | --- |
+| Discovery integrity | Compile every `test_*.py`, reject syntax errors and orphan Cocotb tests, verify every path reported by `list --json`, and emit a reusable module/test matrix with `--emit-matrix`. |
+| Tests and waves | Run every discovered Cocotb and HDL test, generate every supported wave format for every test, verify nonempty artifacts, and exercise GTKWave save files plus tag, replace, list, JSON-list, and load operations with a headless viewer stub. |
+| Every design | Lint every discovered module with Verilator and run real Yosys JSON synthesis for both the normal and `--full` flows. Definitions and include paths are included in the real commands. |
+| Synthesis options | Dry-run every format, schematic backend, `--full`, and `--flatten` combination on every discovered module. A generated neutral design also runs the complete combination matrix through real Yosys, NetlistSVG, Graphviz, and `rsvg-convert`. |
+| Formal and FPGA | Dry-run formal viewing and every board/stage combination on every discovered module. CI also runs a real SymbiYosys proof, real Gowin/iCE40 synthesis, and generated constraint-valid place-and-route/pack fixtures for every board alias. GUI viewing and hardware flashing remain dry-run because they require a display or attached hardware. |
+| CLI contracts | Audit every parser option, all aliases, color modes, persistent `init` paths, help/version output, tool discovery, invalid arguments, and every cleanup scope. A newly added unclassified option fails CI. |
+
+The default validation command is:
+
+```sh
+python3 scripts/validate_vwb.py --all-wave-formats
+```
+
+Use `--module NAME`, `--test-index N`, or repeatable `--phase PHASE` arguments
+for a focused local run. `--emit-matrix` prints the current name-independent
+inventory and the exact runner arguments for each row.
+
+Pushes and pull requests run `.github/workflows/ci.yml`. Version tags matching
+`v*` run the same validation before `.github/workflows/release.yml` publishes
+the image to `ghcr.io/sfmth/verilog-workbench`; both workflows can also be
+started manually.
 
 
 <!-- LICENSE -->

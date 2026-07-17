@@ -112,6 +112,7 @@ async def w_spk_in(dut, spk_in, w_read):
 
 @cocotb.test()
 async def test_shift_add_mult(dut):
+    await Timer(1, units="ns")
     # dut.io_in.value = 0 # initialize
     # await Timer(10, units='us')
     # clock = Clock(dut.clk, 10, units="us")

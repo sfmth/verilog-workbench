@@ -2,8 +2,6 @@
 `timescale 1ns/1ns
 
 
-`include "/home/farhad/github/iscas-snn-accelerator/verilog-workbench/src/schmitt_trigger.v"
-
 `define HIDDEN_LAYER 1
 `define INPUT_LAYER 0
 `define OUTOUT_LAYER 2

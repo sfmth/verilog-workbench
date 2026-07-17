@@ -22,23 +22,28 @@ module potential_processor #(
 
 
 
+    localparam [3:0] STATE_INIT  = 4'd0;
+    localparam [3:0] STATE_START = 4'd1;
+    localparam [3:0] STATE_WRITE = 4'd2;
+    localparam [3:0] STATE_READ  = 4'd3;
+
     reg [3:0] state;
     always @(posedge clk) begin
         case (state)
-            `INIT: begin
+            STATE_INIT: begin
                 ;
             end
-            `START: begin
+            STATE_START: begin
                 ;
             end
-            `WRITE: begin
-                write_data <= u_out;
-                state <= `READ;
+            STATE_WRITE: begin
+                write_data <= cnn_in;
+                state <= STATE_READ;
             end
-            `READ: begin
+            STATE_READ: begin
                 ;
             end
-            default: state <= `INIT;
+            default: state <= STATE_INIT;
         endcase
     end
 
@@ -52,4 +57,3 @@ module potential_processor #(
     /* `endif */
 
 endmodule
-

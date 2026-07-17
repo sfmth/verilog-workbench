@@ -1,15 +1,6 @@
 `default_nettype none
 `timescale 1ns/1ns
 
-`include "/home/farhad/github/iscas-snn-accelerator/verilog-workbench/src/accumulator.v"
-`include "/home/farhad/github/iscas-snn-accelerator/verilog-workbench/src/neuron_selector.v"
-`include "/home/farhad/github/iscas-snn-accelerator/verilog-workbench/src/neuron.v"
-`include "/home/farhad/github/iscas-snn-accelerator/verilog-workbench/src/spk_processor.v"
-`include "/home/farhad/github/iscas-snn-accelerator/verilog-workbench/src/u_b_processor.v"
-`include "/home/farhad/github/iscas-snn-accelerator/verilog-workbench/src/u_b_memory_controler.v"
-`include "/home/farhad/github/iscas-snn-accelerator/verilog-workbench/src/spk_memory_controler.v"
-`include "/home/farhad/github/iscas-snn-accelerator/verilog-workbench/src/control_unit.v"
-
 module accelerator (
     input wire [2047:0] w_read_sram,
     output wire [10:0] w_read_sram_addr,
@@ -207,7 +198,7 @@ module accelerator (
         .cntrl_potential_write_we(cntrl_potential_write_we)
     );
 
-    control_unit cu(
+    control_unit_256 cu(
         .w_read_sram_addr(w_read_sram_addr),
         .cntrl_u_out_select(cntrl_u_out_select),
         .cntrl_spk_select(cntrl_spk_select),

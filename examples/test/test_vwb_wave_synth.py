@@ -59,7 +59,7 @@ class WaveParserTests(unittest.TestCase):
         args = parser.parse_args(["test"])
 
         self.assertEqual(args.test_language, "auto")
-        self.assertEqual(args.max_array_words, 32)
+        self.assertEqual(args.max_array_words, vwb.DEFAULT_MAX_ARRAY_WORDS)
         with contextlib.redirect_stderr(io.StringIO()):
             with self.assertRaises(SystemExit):
                 parser.parse_args(["test", "--kind", "hdl"])
@@ -79,7 +79,14 @@ class WaveParserTests(unittest.TestCase):
         parser = vwb.make_parser()
         cases = [
             (["wave", "--load", "baseline", "--wave-format", "fst"], "--wave-format"),
-            (["wave", "--list-saved", "--max-array-words=32"], "--max-array-words"),
+            (
+                [
+                    "wave",
+                    "--list-saved",
+                    f"--max-array-words={vwb.DEFAULT_MAX_ARRAY_WORDS}",
+                ],
+                "--max-array-words",
+            ),
             (["wave", "--list-saved", "--test-language", "auto"], "--test-language"),
             (["wave", "--list-saved", "-DDEFAULT=1"], "--define"),
             (["wave", "--list-saved", "--waves"], "--waves"),
@@ -502,6 +509,10 @@ class SynthesisTests(ProjectMixin, unittest.TestCase):
                     script = Path(items[items.index("-s") + 1]).read_text(
                         encoding="utf-8"
                     )
+                elif "-c" in items:
+                    script = Path(items[items.index("-c") + 1]).read_text(
+                        encoding="utf-8"
+                    )
                 prefix_match = vwb.re.search(r"-prefix\s+\"?([^\" ;]+)", script)
                 format_match = vwb.re.search(r"-format\s+(dot|svg|png)", script)
                 if prefix_match and format_match:
@@ -535,7 +546,7 @@ class SynthesisTests(ProjectMixin, unittest.TestCase):
         ):
             artifact = workbench.synthesize("dut", args)
 
-        script_path = root / ".vwb" / "synth" / "dut" / "synth.ys"
+        script_path = root / ".vwb" / "synth" / "dut" / "synth.tcl"
         script = script_path.read_text(encoding="utf-8")
         return artifact, script, calls
 
@@ -583,7 +594,11 @@ class SynthesisTests(ProjectMixin, unittest.TestCase):
                     _artifact, script, _calls = self._synthesize_with_fake_tools(
                         Path(directory), argv
                     )
-                    commands = [item.strip() for item in script.split(";") if item.strip()]
+                    commands = [
+                        item.removeprefix("yosys ")
+                        for item in script.splitlines()
+                        if item
+                    ]
                     for command in expected:
                         self.assertIn(command, commands)
                     for command in absent:
@@ -662,8 +677,7 @@ class SynthesisTests(ProjectMixin, unittest.TestCase):
                 ],
             )
 
-            self.assertIn(f'-I "{include_dir}"', script)
-            self.assertNotIn(f'-I"{include_dir}"', script)
+            self.assertIn(f'"-I{include_dir}"', script)
             self.assertIn(f'"{root / "src" / "dut.v"}"', script)
 
     def test_yosys_read_script_quotes_string_valued_definition(self):
@@ -685,7 +699,7 @@ class SynthesisTests(ProjectMixin, unittest.TestCase):
                 ],
             )
 
-            self.assertIn(r'-D "LABEL=\"hello world\""', script)
+            self.assertIn(r'"-DLABEL=\"hello world\""', script)
 
     def test_yosys_render_script_runs_from_spaced_output_directory(self):
         with tempfile.TemporaryDirectory() as directory:
