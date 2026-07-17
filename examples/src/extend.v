@@ -34,11 +34,4 @@ module extend (
     //     end
     // `endif
 
-    // `ifdef COCOTB_SIM
-    // initial begin
-    // $dumpfile ("data_memory.vcd");
-    // $dumpvars (0, data_memory);
-    // #1;
-    // end
-    // `endif
 endmodule

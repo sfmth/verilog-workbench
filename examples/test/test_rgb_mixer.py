@@ -1,6 +1,6 @@
 import cocotb
 from cocotb.clock import Clock
-from cocotb.triggers import RisingEdge, FallingEdge, ClockCycles
+from cocotb.triggers import RisingEdge, FallingEdge, ClockCycles, Timer
 import random
 from .encoder import Encoder
 
@@ -54,11 +54,24 @@ async def test_all(dut):
     await run_encoder_test(encoder1, dut.enc1, max_count)
     await run_encoder_test(encoder2, dut.enc2, max_count)
 
-    # sync to pwm
-    await RisingEdge(dut.pwm0_out)
-    # pwm should all be on for max_count 
-    for i in range(max_count): 
+    # Sync on the one stable low PWM clock. Mapped logic can briefly glitch, so
+    # sample after a clock instead of treating an output glitch as a real edge.
+    for _ in range(max_count * 2):
+        await RisingEdge(dut.clk)
+        await Timer(1, units="ns")
+        if not int(dut.pwm0_out) and not int(dut.pwm1_out) and not int(dut.pwm2_out):
+            break
+    else:
+        assert False, "PWM outputs never reached their synchronized low clock"
+
+    await RisingEdge(dut.clk)
+    await Timer(1, units="ns")
+
+    # A level of 255 stays high for the next 255 clocks.
+    for i in range(max_count):
         assert dut.pwm0_out == 1
         assert dut.pwm1_out == 1
         assert dut.pwm2_out == 1
-        await ClockCycles(dut.clk, 1)
+        if i + 1 < max_count:
+            await RisingEdge(dut.clk)
+            await Timer(1, units="ns")

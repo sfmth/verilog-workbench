@@ -287,12 +287,4 @@ module dummy (
         endcase
     end
 
-    `ifdef COCOTB_SIM
-    initial begin
-    $dumpfile ("control_unit_256.vcd");
-    $dumpvars (0, control_unit_256);
-    #1;
-    end
-    `endif
-
 endmodule

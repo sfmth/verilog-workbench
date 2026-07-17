@@ -317,11 +317,4 @@ module processor (
         end
     `endif
 
-    // `ifdef COCOTB_SIM
-    // initial begin
-    // $dumpfile ("processor.vcd");
-    // $dumpvars (0, processor);
-    // #1;
-    // end
-    // `endif
 endmodule

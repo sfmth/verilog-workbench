@@ -155,11 +155,4 @@ module control_unit (
     //     end
     // `endif
 
-    // `ifdef COCOTB_SIM
-    // initial begin
-    // $dumpfile ("control_unit.vcd");
-    // $dumpvars (0, control_unit);
-    // #1;
-    // end
-    // `endif
 endmodule

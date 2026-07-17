@@ -95,7 +95,7 @@ async def test_shift_add_mult(dut):
     for i in range(0, 9):
         for j in range(256):
             dut.beta.value = i
-            dut.potential.value = j
+            dut.potential_in.value = j
             await Timer(10, units='us')
             assert(shift_add_mult(i, j) == bin_to_int(dut.mult_ans.value))
             

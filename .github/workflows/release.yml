@@ -16,9 +16,9 @@ env:
 
 jobs:
   publish:
-    name: Actual all-design baseline and full option contracts
+    name: Real CI-safe runs plus dry-run GUI and flash checks
     runs-on: ubuntu-latest
-    timeout-minutes: 180
+    timeout-minutes: 360
 
     steps:
       - name: Check out repository
@@ -36,12 +36,13 @@ jobs:
           cache-from: type=gha,scope=release
           cache-to: type=gha,mode=max,scope=release
 
-      - name: Validate all designs, tests, waves, and CI-safe artifacts
+      - name: Run real CI-safe checks and parse or dry-run GUI and flash options
         run: |
           docker run --rm --network none \
             verilog-workbench-release:${{ github.sha }} \
             python3 scripts/validate_vwb.py \
-              --all-wave-formats
+              --all-wave-formats \
+              --synth-option-matrix
 
       - name: Log in to GHCR
         uses: docker/login-action@v3

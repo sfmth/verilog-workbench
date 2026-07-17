@@ -86,13 +86,4 @@ module spk_memory_controler (
     assign spkblty_write_sram_we = cntrl_spkblty_write_we;
 
 
-    `ifdef COCOTB_SIM
-    initial begin
-    $dumpfile ("spk_memory_controler.vcd");
-    $dumpvars (0, spk_memory_controler);
-    #1;
-    end
-    `endif
-
 endmodule
-

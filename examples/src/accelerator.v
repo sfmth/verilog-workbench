@@ -224,12 +224,4 @@ module accelerator (
         .reset(reset)
     );
 
-    `ifdef COCOTB_SIM
-    initial begin
-    $dumpfile ("accelerator.vcd");
-    $dumpvars (0, accelerator);
-    #1;
-    end
-    `endif
-
 endmodule

@@ -198,13 +198,5 @@ module wrapped_ibnalhaytham(
 
 
 
-	// The following code is used for verification and tests
-    `ifdef COCOTB_SIM
-    initial begin
-    $dumpfile ("wrapped_ibnalhaytham.vcd");
-    $dumpvars (0, wrapped_ibnalhaytham);
-    #1;
-    end
-    `endif
 endmodule 
 `default_nettype wire

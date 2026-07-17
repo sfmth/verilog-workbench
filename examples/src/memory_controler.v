@@ -115,7 +115,6 @@ module memory_controler (
 
 
 	// The following code is used for verification and tests
-    // initial $dumpvars(0, );
     // `ifdef FORMAL
     //     // initial assume(reset);
     //     // initial assume(reg_file[0] == 32'b0);
@@ -127,11 +126,4 @@ module memory_controler (
     //     end
     // `endif
 
-    // `ifdef COCOTB_SIM
-    // initial begin
-    // $dumpfile ("memory_controler.vcd");
-    // $dumpvars (0, memory_controler);
-    // #1;
-    // end
-    // `endif
 endmodule

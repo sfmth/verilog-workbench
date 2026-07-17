@@ -117,12 +117,11 @@ show_synth_full_human: | show_synth_dir
 	geeqie show_synth/$(PREFIX).png
 
 
-	# Show waveforms after simulation with gtkwave
-gtkwave: module
-	@echo -e '\n' $(Yellow)$(bold) '==>' $(Green)$(bold)Runing waveform viewer$(Color_Off) '\n'
-	gtkwave $(PREFIX).vcd $(PREFIX).gtkw
+	# Show waveforms through VWB so source files do not need dump blocks.
+gtkwave:
+	./vwb.py --src-dir $(SRC_DIR) --test-dir $(TEST_DIR) wave $(NAM)
 gtkwave_good:
-	gtkwave $(PREFIX)_good.vcd $(PREFIX).gtkw
+	./vwb.py --src-dir $(SRC_DIR) --test-dir $(TEST_DIR) wave --load $(PREFIX)_good
 
 # Delete simulation files
 delete_sim:

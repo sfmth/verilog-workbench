@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# PYTHON_ARGCOMPLETE_OK
 """Verilog Work Bench command-line driver."""
 
 from __future__ import annotations
@@ -7,11 +8,13 @@ import argparse
 import ast
 from datetime import datetime, timezone
 import hashlib
+import html
 import json
 import os
 import re
 import shlex
 import shutil
+import signal
 import subprocess
 import sys
 import xml.etree.ElementTree as ET
@@ -20,19 +23,30 @@ from pathlib import Path
 from typing import Iterable, Sequence, TextIO
 
 
-VERSION = "0.1.0"
+VERSION = "0.2.0"
 BUILD_MARKER = ".vwb-root"
 BUILD_MARKER_SCHEMA = 1
 CONFIG_FILE = ".vwb.json"
 CONFIG_VERSION = 1
-DEFAULT_MAX_ARRAY_WORDS = 4096
-HDL_SUFFIXES = {".v", ".sv"}
+DEFAULT_MAX_ARRAY_WORDS = 32
+FULL_GATE_NETLIST_LIMIT_BYTES = 1024 * 1024
+SCALABLE_LAYOUT_JSON_LIMIT_BYTES = 256 * 1024
+NETLISTSVG_JSON_LIMIT_BYTES = 512 * 1024
+VISUAL_OVERVIEW_JSON_LIMIT_BYTES = 4 * 1024 * 1024
+VISUAL_OVERVIEW_PORT_LIMIT_BITS = 512
+VISUAL_OVERVIEW_CELL_LIMIT = 5_000
+MAX_PNG_PIXELS = 16_000_000
+VERILOG_SUFFIXES = {".v", ".sv"}
+VHDL_SUFFIXES = {".vhd", ".vhdl"}
+HDL_SUFFIXES = VERILOG_SUFFIXES | VHDL_SUFFIXES
 HEADER_SUFFIXES = {".vh", ".svh"}
-TEST_KINDS = {"cocotb", "hdl"}
+TEST_KINDS = {"cocotb", "verilog", "vhdl"}
 SAVED_WAVE_SCHEMA = 1
 TAG_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
 SAFE_IDENTIFIER_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_$]*$")
 TCL_BARE_WORD_RE = re.compile(r"^[A-Za-z0-9_./:@%+=,-]+$")
+YOSYS_BARE_WORD_RE = re.compile(r"^[A-Za-z0-9_./:@%+=,$-]+$")
+YOSYS_IDENTIFIER_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_.$-]*$")
 TOOL_ALTERNATIVES = {
     "nextpnr-gowin": (
         "nextpnr-himbaechel-gowin",
@@ -162,12 +176,34 @@ def artifact_component(value: str) -> str:
     return f"{readable}-{digest}"
 
 
+def python_identifier_component(value: str) -> str:
+    candidate = re.sub(r"[^A-Za-z0-9_]", "_", value.lstrip("\\"))
+    if not candidate or not re.match(r"[A-Za-z_]", candidate):
+        candidate = "dut_" + candidate
+    if candidate == value:
+        return candidate
+    digest = hashlib.sha256(value.encode("utf-8")).hexdigest()[:8]
+    return f"{candidate}_{digest}"
+
+
+def tool_identifier(value: str) -> str:
+    """Return the spelling simulators and synthesis tools use for an HDL name."""
+    return value[1:] if value.startswith("\\") else value
+
+
 def require_yosys_identifier(value: str) -> str:
-    if not SAFE_IDENTIFIER_RE.fullmatch(value):
-        raise VWBError(
-            "Yosys top modules must use an unescaped Verilog identifier: " + value
-        )
-    return value
+    if SAFE_IDENTIFIER_RE.fullmatch(value):
+        return value
+    normalized = tool_identifier(value)
+    if value.startswith("\\") and YOSYS_IDENTIFIER_RE.fullmatch(normalized):
+        return normalized
+    raise VWBError(f"Yosys cannot select the top module safely: {value}")
+
+
+def cocotb_toplevel_names(value: str) -> tuple[str, str]:
+    normalized = tool_identifier(value)
+    legacy = f"work.{normalized}" if value.startswith("\\") else normalized
+    return legacy, normalized
 
 
 def find_project_config(start: Path) -> Path | None:
@@ -321,6 +357,28 @@ def strip_comments_and_strings(text: str) -> str:
     return pattern.sub(blank, text)
 
 
+def verilog_source_needs_preprocessing(text: str, defines: Sequence[str]) -> bool:
+    """Return whether Verible needs an Icarus-preprocessed copy of this source."""
+    cleaned = strip_comments_and_strings(text)
+    if re.search(r"`include\b", cleaned):
+        return True
+
+    identifier_tail = r"(?![A-Za-z0-9_$])"
+    for definition in defines:
+        name = definition.partition("=")[0].strip()
+        if not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_$]*", name):
+            continue
+        escaped_name = re.escape(name)
+        if re.search(rf"`{escaped_name}{identifier_tail}", cleaned):
+            return True
+        if re.search(
+            rf"`(?:ifdef|ifndef|elsif)\s+{escaped_name}{identifier_tail}",
+            cleaned,
+        ):
+            return True
+    return False
+
+
 MODULE_RE = re.compile(
     r"\bmodule\s+(?:automatic\s+)?(?P<name>\\\S+|[A-Za-z_][A-Za-z0-9_$]*)"
 )
@@ -332,6 +390,38 @@ INTERFACE_RE = re.compile(
 )
 PRIMITIVE_RE = re.compile(
     r"\bprimitive\s+(?P<name>\\\S+|[A-Za-z_][A-Za-z0-9_$]*)"
+)
+VHDL_ENTITY_RE = re.compile(
+    r"\bentity\s+(?P<name>[A-Za-z][A-Za-z0-9_]*)\s+is\b",
+    flags=re.IGNORECASE,
+)
+VHDL_ARCHITECTURE_RE = re.compile(
+    r"\barchitecture\s+[A-Za-z][A-Za-z0-9_]*\s+of\s+"
+    r"(?P<entity>[A-Za-z][A-Za-z0-9_]*)\s+is\b",
+    flags=re.IGNORECASE,
+)
+VHDL_DIRECT_ENTITY_RE = re.compile(
+    r"\bentity\s+(?:[A-Za-z][A-Za-z0-9_]*\.)?"
+    r"(?P<name>[A-Za-z][A-Za-z0-9_]*)\b",
+    flags=re.IGNORECASE,
+)
+VHDL_COMPONENT_INSTANCE_RE = re.compile(
+    r"\b[A-Za-z][A-Za-z0-9_]*\s*:\s*(?:component\s+)?"
+    r"(?P<name>[A-Za-z][A-Za-z0-9_]*)"
+    r"(?=\s*(?:(?:generic|port)\s+map\b|;))",
+    flags=re.IGNORECASE,
+)
+VHDL_PACKAGE_DECL_RE = re.compile(
+    r"\bpackage\s+(?!body\b)(?P<name>[A-Za-z][A-Za-z0-9_]*)\s+is\b",
+    flags=re.IGNORECASE,
+)
+VHDL_PACKAGE_BODY_RE = re.compile(
+    r"\bpackage\s+body\s+(?P<name>[A-Za-z][A-Za-z0-9_]*)\s+is\b",
+    flags=re.IGNORECASE,
+)
+VHDL_WORK_PACKAGE_USE_RE = re.compile(
+    r"\buse\s+work\.(?P<name>[A-Za-z][A-Za-z0-9_]*)\.",
+    flags=re.IGNORECASE,
 )
 ENDMODULE_RE = re.compile(r"\bendmodule\b")
 ENDINTERFACE_RE = re.compile(r"\bendinterface\b")
@@ -407,6 +497,7 @@ class ModuleDef:
     name: str
     path: Path
     dependencies: tuple[str, ...]
+    language: str = "verilog"
 
 
 @dataclass(frozen=True)
@@ -419,6 +510,15 @@ class TestSpec:
     @property
     def label(self) -> str:
         return f"{self.kind}:{self.path.name}"
+
+
+def hdl_language(path: Path) -> str:
+    suffix = path.suffix.lower()
+    if suffix in VHDL_SUFFIXES:
+        return "vhdl"
+    if suffix == ".sv":
+        return "systemverilog"
+    return "verilog"
 
 
 @dataclass(frozen=True)
@@ -488,6 +588,242 @@ def extract_raw_modules(path: Path) -> list[RawModule]:
     text = path.read_text(encoding="utf-8", errors="replace")
     cleaned = strip_comments_and_strings(text)
     return extract_raw_declarations(path, cleaned, MODULE_RE, ENDMODULE_RE)
+
+
+def strip_vhdl_comments(text: str) -> str:
+    return re.sub(
+        r"--[^\n]*",
+        lambda match: " " * len(match.group(0)),
+        text,
+    )
+
+
+def extract_vhdl_entity_names(path: Path) -> list[str]:
+    text = path.read_text(encoding="utf-8", errors="replace")
+    return [match.group("name") for match in VHDL_ENTITY_RE.finditer(strip_vhdl_comments(text))]
+
+
+def vhdl_file_dependencies(
+    text: str, own_names: set[str], known_names: dict[str, str]
+) -> tuple[str, ...]:
+    dependencies: set[str] = set()
+    cleaned = strip_vhdl_comments(text)
+    matches = [
+        *VHDL_DIRECT_ENTITY_RE.finditer(cleaned),
+        *VHDL_COMPONENT_INSTANCE_RE.finditer(cleaned),
+    ]
+    for match in matches:
+        lowered = match.group("name").lower()
+        dependency = known_names.get(lowered)
+        if dependency is not None and lowered not in own_names:
+            dependencies.add(dependency)
+    return tuple(sorted(dependencies))
+
+
+def _balanced_end(text: str, start: int, opening: str = "(", closing: str = ")") -> int:
+    depth = 0
+    for index in range(start, len(text)):
+        if text[index] == opening:
+            depth += 1
+        elif text[index] == closing:
+            depth -= 1
+            if depth == 0:
+                return index
+    return -1
+
+
+def _split_top_level(text: str, separator: str) -> list[str]:
+    parts: list[str] = []
+    start = 0
+    depths = {"(": 0, "[": 0, "{": 0}
+    closings = {")": "(", "]": "[", "}": "{"}
+    for index, char in enumerate(text):
+        if char in depths:
+            depths[char] += 1
+        elif char in closings:
+            opening = closings[char]
+            depths[opening] = max(0, depths[opening] - 1)
+        elif char == separator and not any(depths.values()):
+            parts.append(text[start:index])
+            start = index + 1
+    parts.append(text[start:])
+    return parts
+
+
+def verilog_module_sections(
+    path: Path, module: str
+) -> tuple[str | None, str, str] | None:
+    raw_text = path.read_text(encoding="utf-8", errors="replace")
+    text = strip_comments_and_strings(raw_text)
+    declaration = re.search(
+        rf"\bmodule\s+(?:automatic\s+)?{re.escape(module)}\b", text
+    )
+    if declaration is None:
+        return None
+    cursor = declaration.end()
+    while cursor < len(text) and text[cursor].isspace():
+        cursor += 1
+    parameters: str | None = None
+    if cursor < len(text) and text[cursor] == "#":
+        parameter_start = text.find("(", cursor + 1)
+        if parameter_start < 0:
+            return None
+        parameter_end = _balanced_end(text, parameter_start)
+        if parameter_end < 0:
+            return None
+        parameters = raw_text[parameter_start + 1 : parameter_end].strip()
+        cursor = parameter_end + 1
+    port_start = text.find("(", cursor)
+    if port_start < 0:
+        return None
+    port_end = _balanced_end(text, port_start)
+    if port_end < 0:
+        return None
+    body = text[port_end + 1 :]
+    end_match = ENDMODULE_RE.search(body)
+    if end_match:
+        body = body[: end_match.start()]
+    return parameters, text[port_start + 1 : port_end], body
+
+
+def verilog_port_directions(path: Path, module: str) -> dict[str, str]:
+    sections = verilog_module_sections(path, module)
+    if sections is None:
+        return {}
+    _parameters, header, body = sections
+    directions: dict[str, str] = {}
+    current_direction: str | None = None
+    ignored = DATA_TYPES | {
+        "const", "signed", "unsigned", "var", "supply0", "supply1"
+    }
+    for segment in _split_top_level(header, ","):
+        direction_match = re.search(r"\b(input|output|inout)\b", segment)
+        if direction_match:
+            current_direction = direction_match.group(1)
+        identifiers = [
+            token
+            for token in re.findall(r"\\[^\s]+|[A-Za-z_][A-Za-z0-9_$]*", segment)
+            if token.startswith("\\")
+            or (token not in ignored and token not in {"input", "output", "inout"})
+        ]
+        if current_direction and identifiers:
+            directions[identifiers[-1]] = current_direction
+
+    for match in re.finditer(r"\b(input|output|inout)\b([^;]*);", body):
+        direction = match.group(1)
+        for segment in _split_top_level(match.group(2), ","):
+            identifiers = re.findall(
+                r"\\[^\s]+|[A-Za-z_][A-Za-z0-9_$]*", segment
+            )
+            identifiers = [
+                item
+                for item in identifiers
+                if item.startswith("\\") or item not in ignored
+            ]
+            if identifiers:
+                directions[identifiers[-1]] = direction
+    return directions
+
+
+def verilog_input_declarations(path: Path, module: str) -> dict[str, str]:
+    sections = verilog_module_sections(path, module)
+    if sections is None:
+        return {}
+    _parameters, header, body = sections
+    ignored = DATA_TYPES | {
+        "const", "signed", "unsigned", "var", "supply0", "supply1",
+        "input", "output", "inout",
+    }
+    declarations: dict[str, str] = {}
+
+    def consume(segments: Sequence[str], initial_direction: str | None = None) -> None:
+        current_direction = initial_direction
+        current_packed = ""
+        current_signed = False
+        for segment in segments:
+            direction_match = re.search(r"\b(input|output|inout)\b", segment)
+            without_ranges = re.sub(
+                r"\[[^\]]*\]",
+                lambda match: " " * len(match.group(0)),
+                segment,
+            )
+            identifier_matches = [
+                match
+                for match in re.finditer(
+                    r"\\[^\s]+|[A-Za-z_][A-Za-z0-9_$]*", without_ranges
+                )
+                if match.group(0).startswith("\\") or match.group(0) not in ignored
+            ]
+            if direction_match:
+                current_direction = direction_match.group(1)
+            if not identifier_matches:
+                continue
+            name_match = identifier_matches[-1]
+            name = name_match.group(0)
+            before_name = segment[: name_match.start()]
+            after_name = segment[name_match.end() :]
+            packed_ranges = re.findall(r"\[[^\]]*\]", before_name)
+            if direction_match:
+                current_packed = " ".join(item.strip() for item in packed_ranges)
+                current_signed = bool(re.search(r"\bsigned\b", before_name))
+            elif packed_ranges:
+                current_packed = " ".join(item.strip() for item in packed_ranges)
+            if current_direction != "input":
+                continue
+            unpacked = " ".join(
+                item.strip() for item in re.findall(r"\[[^\]]*\]", after_name)
+            )
+            pieces = ["  logic"]
+            if current_signed:
+                pieces.append("signed")
+            if current_packed:
+                pieces.append(current_packed)
+            rendered_name = hdl_reference(name)
+            if unpacked:
+                separator = "" if rendered_name.endswith(" ") else " "
+                rendered_name += separator + unpacked
+            pieces.append(rendered_name + ";")
+            declarations[name] = " ".join(pieces)
+
+    consume(_split_top_level(header, ","))
+    for match in re.finditer(r"\b(input|output|inout)\b([^;]*);", body):
+        consume(
+            _split_top_level(match.group(2), ","),
+            initial_direction=match.group(1),
+        )
+    return declarations
+
+
+def vhdl_port_directions(path: Path, entity: str) -> dict[str, str]:
+    text = strip_vhdl_comments(path.read_text(encoding="utf-8", errors="replace"))
+    declaration = re.search(
+        rf"\bentity\s+{re.escape(entity)}\s+is\b", text, flags=re.IGNORECASE
+    )
+    if declaration is None:
+        return {}
+    port_match = re.search(r"\bport\s*\(", text[declaration.end() :], flags=re.IGNORECASE)
+    if port_match is None:
+        return {}
+    start = declaration.end() + port_match.end() - 1
+    end = _balanced_end(text, start)
+    if end < 0:
+        return {}
+    directions: dict[str, str] = {}
+    for declaration_text in _split_top_level(text[start + 1 : end], ";"):
+        match = re.match(
+            r"\s*(?P<names>[A-Za-z0-9_,\s]+)\s*:\s*"
+            r"(?P<direction>inout|in|out|buffer)\b",
+            declaration_text,
+            flags=re.IGNORECASE,
+        )
+        if match is None:
+            continue
+        direction = match.group("direction").lower()
+        for name in match.group("names").split(","):
+            cleaned = name.strip()
+            if cleaned:
+                directions[cleaned] = direction
+    return directions
 
 
 def skip_balanced(tokens: Sequence[str], index: int, opening: str, closing: str) -> int:
@@ -834,22 +1170,8 @@ def array_dump_instrumentation(
         bounds.append((lower, upper))
         sizes.append(f"(({upper}) - ({lower}) + 1)")
 
-    count_name = f"__vwb_array_{array_index}_word_count"
-    count_expression = "128'd1" + "".join(f" * ({size})" for size in sizes)
-    lines = [
-        "  // Generated by vwb.py to include unpacked array words.",
-        f"  localparam [127:0] {count_name} = {count_expression};",
-    ]
+    lines = ["  // Generated by vwb.py to include unpacked array words."]
     indent = "  "
-    if max_array_words > 0:
-        lines.extend(
-            [
-                f"  if ({count_name} > 128'd{max_array_words}) begin : __vwb_array_{array_index}_too_large",
-                "    initial $fatal(1, \"vwb.py array dump exceeds --max-array-words\");",
-                f"  end else begin : __vwb_array_{array_index}_enabled",
-            ]
-        )
-        indent = "    "
     for dimension, (index_name, (lower, upper)) in enumerate(
         zip(indices, bounds), start=1
     ):
@@ -862,14 +1184,46 @@ def array_dump_instrumentation(
             ]
         )
         indent += "  "
+    linear_index = "128'd0"
+    for index_name, (lower, _upper), size in zip(indices, bounds, sizes):
+        linear_index = (
+            f"(({linear_index}) * ({size}) + (({index_name}) - ({lower})))"
+        )
+    if max_array_words > 0:
+        lines.append(
+            f"{indent}if ({linear_index} < 128'd{max_array_words}) "
+            f"begin : __vwb_array_{array_index}_within_limit"
+        )
+        indent += "  "
     selected_word = array_name + "".join(f"[{name}]" for name in indices)
     lines.append(f"{indent}initial $dumpvars(0, {selected_word});")
+    if max_array_words > 0:
+        indent = indent[:-2]
+        lines.append(f"{indent}end")
     for _ in indices:
         indent = indent[:-2]
         lines.append(f"{indent}end")
-    if max_array_words > 0:
-        lines.append("  end")
     return "\n" + "\n".join(lines) + "\n"
+
+
+def unsupported_array_reason(raw: RawModule, array: ArrayDef) -> str | None:
+    if array.unsupported_reason:
+        return f"{array.unsupported_reason} array '{raw.name}.{array.name}'"
+    if array.procedural:
+        return f"procedural array '{raw.name}.{array.name}'"
+    for declared_range in array.ranges:
+        if ":" not in declared_range:
+            return (
+                f"non-static array '{raw.name}.{array.name}' "
+                f"dimension [{declared_range}]"
+            )
+        left, right = (item.strip() for item in declared_range.split(":", 1))
+        if not left or not right:
+            return (
+                f"non-static array '{raw.name}.{array.name}' "
+                f"dimension [{declared_range}]"
+            )
+    return None
 
 
 def instrument_source_arrays(path: Path, max_array_words: int) -> str | None:
@@ -883,6 +1237,13 @@ def instrument_source_arrays(path: Path, max_array_words: int) -> str | None:
     grouped: dict[int, list[str]] = {}
     for raw in declarations:
         for array_index, array in enumerate(unpacked_arrays(raw, known_types)):
+            reason = unsupported_array_reason(raw, array)
+            if reason:
+                print(
+                    f"warning: waveform instrumentation skipped {reason}",
+                    file=sys.stderr,
+                )
+                continue
             position = raw.body_start + array.insertion_position
             grouped.setdefault(position, []).append(
                 array_dump_instrumentation(
@@ -907,26 +1268,49 @@ class SourceCatalog:
         raw_primitives: list[RawModule] = []
         files_with_modules: set[Path] = set()
         cleaned_sources: dict[Path, str] = {}
+        vhdl_entities: dict[Path, list[str]] = {}
+        vhdl_architectures: dict[str, list[Path]] = {}
+        vhdl_cleaned_sources: dict[Path, str] = {}
         for path in self.files:
             text = path.read_text(encoding="utf-8", errors="replace")
+            if path.suffix.lower() in VHDL_SUFFIXES:
+                cleaned = strip_vhdl_comments(text)
+                vhdl_cleaned_sources[path] = cleaned
+                names = [
+                    match.group("name") for match in VHDL_ENTITY_RE.finditer(cleaned)
+                ]
+                vhdl_entities[path] = names
+                architecture_entities = [
+                    match.group("entity")
+                    for match in VHDL_ARCHITECTURE_RE.finditer(cleaned)
+                ]
+                for entity in architecture_entities:
+                    vhdl_architectures.setdefault(entity.lower(), []).append(path)
+                if names or architecture_entities:
+                    files_with_modules.add(path.resolve())
+                continue
             cleaned = strip_comments_and_strings(text)
             cleaned_sources[path] = cleaned
             found = extract_raw_declarations(path, cleaned, MODULE_RE, ENDMODULE_RE)
             raw_modules.extend(found)
-            raw_interfaces.extend(
-                extract_raw_declarations(
-                    path, cleaned, INTERFACE_RE, ENDINTERFACE_RE
-                )
+            found_interfaces = extract_raw_declarations(
+                path, cleaned, INTERFACE_RE, ENDINTERFACE_RE
             )
-            raw_primitives.extend(
-                extract_raw_declarations(
-                    path, cleaned, PRIMITIVE_RE, ENDPRIMITIVE_RE
-                )
+            raw_interfaces.extend(found_interfaces)
+            found_primitives = extract_raw_declarations(
+                path, cleaned, PRIMITIVE_RE, ENDPRIMITIVE_RE
             )
-            if found:
+            raw_primitives.extend(found_primitives)
+            if found or found_interfaces or found_primitives:
                 files_with_modules.add(path.resolve())
 
-        module_names = {module.name for module in raw_modules}
+        vhdl_name_map: dict[str, str] = {}
+        for names in vhdl_entities.values():
+            for name in names:
+                vhdl_name_map.setdefault(name.lower(), name)
+        module_names = {module.name for module in raw_modules} | set(
+            vhdl_name_map.values()
+        )
         interface_names = {interface.name for interface in raw_interfaces}
         known_units = module_names | interface_names | {
             primitive.name for primitive in raw_primitives
@@ -941,6 +1325,7 @@ class SourceCatalog:
                 name=raw.name,
                 path=raw.path,
                 dependencies=unit_dependencies(raw, known_units, interface_names),
+                language=hdl_language(raw.path),
             )
             self.units.setdefault(raw.name, []).append(definition)
             return definition
@@ -954,10 +1339,67 @@ class SourceCatalog:
             add_unit(raw)
             self.primitives.setdefault(raw.name, []).append(raw.path)
 
+        for path, names in vhdl_entities.items():
+            own_names = {name.lower() for name in names}
+            for name in names:
+                canonical_name = vhdl_name_map[name.lower()]
+                source_paths = unique_paths(
+                    [path, *vhdl_architectures.get(name.lower(), [])]
+                )
+                dependencies = tuple(
+                    sorted(
+                        {
+                            dependency
+                            for source_path in source_paths
+                            for dependency in vhdl_file_dependencies(
+                                vhdl_cleaned_sources[source_path],
+                                own_names,
+                                vhdl_name_map,
+                            )
+                        }
+                    )
+                )
+                definition = ModuleDef(
+                    name=canonical_name,
+                    path=path,
+                    dependencies=dependencies,
+                    language="vhdl",
+                )
+                self.units.setdefault(canonical_name, []).append(definition)
+                self.modules.setdefault(canonical_name, []).append(definition)
+
+        self.vhdl_architectures = {
+            name: unique_paths(paths) for name, paths in vhdl_architectures.items()
+        }
+
+        self.vhdl_packages: dict[str, list[Path]] = {}
+        self.vhdl_package_names: dict[str, str] = {}
+        self.vhdl_package_bodies: dict[str, list[Path]] = {}
+        for path, cleaned in vhdl_cleaned_sources.items():
+            for match in VHDL_PACKAGE_DECL_RE.finditer(cleaned):
+                name = match.group("name")
+                lowered = name.lower()
+                self.vhdl_package_names.setdefault(lowered, name)
+                self.vhdl_packages.setdefault(lowered, []).append(path)
+                files_with_modules.add(path.resolve())
+            for match in VHDL_PACKAGE_BODY_RE.finditer(cleaned):
+                lowered = match.group("name").lower()
+                self.vhdl_package_bodies.setdefault(lowered, []).append(path)
+                files_with_modules.add(path.resolve())
+        self.vhdl_package_uses: dict[Path, tuple[str, ...]] = {}
+        for path, cleaned in vhdl_cleaned_sources.items():
+            used = {
+                match.group("name").lower()
+                for match in VHDL_WORK_PACKAGE_USE_RE.finditer(cleaned)
+                if match.group("name").lower() in self.vhdl_packages
+            }
+            self.vhdl_package_uses[path] = tuple(sorted(used))
+
         self.packages: dict[str, list[Path]] = {}
         for path, cleaned in cleaned_sources.items():
             for match in PACKAGE_RE.finditer(cleaned):
                 self.packages.setdefault(match.group("name"), []).append(path)
+                files_with_modules.add(path.resolve())
         self.package_uses: dict[Path, tuple[str, ...]] = {}
         for path, cleaned in cleaned_sources.items():
             used = {
@@ -976,6 +1418,15 @@ class SourceCatalog:
     def definition(self, name: str) -> ModuleDef:
         definitions = self.modules.get(name, [])
         if not definitions:
+            vhdl_matches = [
+                matches
+                for candidate, matches in self.modules.items()
+                if candidate.casefold() == name.casefold()
+                and all(item.language == "vhdl" for item in matches)
+            ]
+            if len(vhdl_matches) == 1:
+                definitions = vhdl_matches[0]
+        if not definitions:
             choices = ", ".join(self.names()) or "none"
             raise VWBError(f"unknown module '{name}'; discovered modules: {choices}")
         if len(definitions) > 1:
@@ -983,7 +1434,15 @@ class SourceCatalog:
             raise VWBError(f"module '{name}' is declared more than once: {paths}")
         return definitions[0]
 
+    def implementation_files(self, name: str) -> list[Path]:
+        definition = self.definition(name)
+        paths = [item.path for item in self.modules[definition.name]]
+        if definition.language == "vhdl":
+            paths.extend(self.vhdl_architectures.get(definition.name.lower(), []))
+        return unique_paths(paths)
+
     def closure(self, top: str) -> list[Path]:
+        top_definition = self.definition(top)
         module_files: list[Path] = []
         seen_module_files: set[Path] = set()
         visiting: set[str] = set()
@@ -1004,13 +1463,49 @@ class SourceCatalog:
             definition = definitions[0]
             for dependency in definition.dependencies:
                 visit(dependency)
-            if definition.path not in seen_module_files:
-                module_files.append(definition.path)
-                seen_module_files.add(definition.path)
+            definition_paths = [definition.path]
+            if definition.language == "vhdl":
+                definition_paths.extend(
+                    self.vhdl_architectures.get(definition.name.lower(), [])
+                )
+            for path in definition_paths:
+                if path not in seen_module_files:
+                    module_files.append(path)
+                    seen_module_files.add(path)
             visiting.remove(name)
             visited.add(name)
 
-        visit(top)
+        visit(top_definition.name)
+        if top_definition.language == "vhdl":
+            package_files: list[Path] = []
+            visited_packages: set[str] = set()
+
+            def visit_vhdl_package(name: str) -> None:
+                if name in visited_packages:
+                    return
+                definitions = unique_paths(self.vhdl_packages.get(name, []))
+                display_name = self.vhdl_package_names.get(name, name)
+                if len(definitions) != 1:
+                    paths = ", ".join(str(path) for path in definitions) or "none"
+                    raise VWBError(
+                        f"VHDL package '{display_name}' must have one declaration; "
+                        f"found: {paths}"
+                    )
+                visited_packages.add(name)
+                paths = unique_paths(
+                    [*definitions, *self.vhdl_package_bodies.get(name, [])]
+                )
+                for path in paths:
+                    for dependency in self.vhdl_package_uses.get(path, ()):
+                        if dependency != name:
+                            visit_vhdl_package(dependency)
+                package_files.extend(paths)
+
+            for path in module_files:
+                for package in self.vhdl_package_uses.get(path, ()):
+                    visit_vhdl_package(package)
+            return unique_paths([*package_files, *module_files])
+
         package_files: list[Path] = []
         visited_packages: set[str] = set()
 
@@ -1081,14 +1576,32 @@ def is_cocotb_test(path: Path) -> bool:
     return False
 
 
-def module_from_test_stem(stem: str, module_names: Sequence[str]) -> str | None:
+def module_from_test_stem(
+    stem: str,
+    module_names: Sequence[str],
+    case_insensitive_names: Iterable[str] = (),
+) -> str | None:
     matches: list[tuple[int, int, str]] = []
+    insensitive = set(case_insensitive_names)
     for name in module_names:
-        exact = {f"test_{name}", f"tb_{name}", f"{name}_test", f"{name}_tb"}
-        if stem in exact:
-            matches.append((0, -len(name), name))
-        elif stem.startswith(f"test_{name}_"):
-            matches.append((1, -len(name), name))
+        candidate_stem = stem.casefold() if name in insensitive else stem
+        aliases = {name, python_identifier_component(name)}
+        matched: tuple[int, int, str] | None = None
+        for alias in aliases:
+            candidate_name = alias.casefold() if name in insensitive else alias
+            exact = {
+                f"test_{candidate_name}",
+                f"tb_{candidate_name}",
+                f"{candidate_name}_test",
+                f"{candidate_name}_tb",
+            }
+            if candidate_stem in exact:
+                matched = (0, -len(name), name)
+                break
+            if candidate_stem.startswith(f"test_{candidate_name}_"):
+                matched = (1, -len(name), name)
+        if matched is not None:
+            matches.append(matched)
     if not matches:
         return None
     matches.sort()
@@ -1098,6 +1611,14 @@ def module_from_test_stem(stem: str, module_names: Sequence[str]) -> str | None:
 
 
 def infer_hdl_test_top(path: Path, dut: str) -> str | None:
+    if path.suffix.lower() in VHDL_SUFFIXES:
+        names = extract_vhdl_entity_names(path)
+        preferred = [f"test_{dut}", f"tb_{dut}", f"{dut}_test", f"{dut}_tb"]
+        lowered = {name.lower(): name for name in names}
+        preferred_found = [lowered[name.lower()] for name in preferred if name.lower() in lowered]
+        if len(preferred_found) == 1:
+            return preferred_found[0]
+        return names[0] if len(names) == 1 else None
     modules = extract_raw_modules(path)
     names = [module.name for module in modules]
     preferred = [f"test_{dut}", f"tb_{dut}", f"{dut}_test", f"{dut}_tb"]
@@ -1180,6 +1701,7 @@ class Workbench:
         self.test_catalog = SourceCatalog(self.test_hdl_files)
         self.tests = self._discover_tests()
         self._cocotb_library: tuple[str, str] | None = None
+        self._ghdl_vpi_library: str | None = None
 
     def style(
         self, value: object, *codes: str, stream: TextIO | None = None
@@ -1188,25 +1710,42 @@ class Workbench:
 
     def _discover_tests(self) -> list[TestSpec]:
         module_names = self.catalog.names()
+        vhdl_names = {
+            name
+            for name in module_names
+            if self.catalog.definition(name).language == "vhdl"
+        }
         tests: list[TestSpec] = []
         for path in sorted(self.test_dir.rglob("*.py")):
             if not path.is_file() or not is_cocotb_test(path):
                 continue
-            dut = module_from_test_stem(path.stem, module_names)
+            dut = module_from_test_stem(path.stem, module_names, vhdl_names)
             if dut:
                 tests.append(TestSpec(dut=dut, kind="cocotb", path=path.resolve()))
 
+        hdl_tests: list[TestSpec] = []
         for path in self.test_hdl_files:
-            dut = module_from_test_stem(path.stem, module_names)
+            dut = module_from_test_stem(path.stem, module_names, vhdl_names)
             if dut:
-                tests.append(
+                kind = "vhdl" if path.suffix.lower() in VHDL_SUFFIXES else "verilog"
+                hdl_tests.append(
                     TestSpec(
                         dut=dut,
-                        kind="hdl",
+                        kind=kind,
                         path=path,
                         top=infer_hdl_test_top(path, dut),
                     )
                 )
+        declared_tops = {
+            (spec.dut, spec.kind)
+            for spec in hdl_tests
+            if spec.top is not None
+        }
+        tests.extend(
+            spec
+            for spec in hdl_tests
+            if spec.top is not None or (spec.dut, spec.kind) not in declared_tops
+        )
         return sorted(tests, key=lambda item: (item.dut, item.kind, str(item.path)))
 
     def include_dirs(self, extra: Sequence[str] = ()) -> list[Path]:
@@ -1228,7 +1767,191 @@ class Workbench:
         if len(tested) == 1:
             return next(iter(tested))
         choices = ", ".join(sorted(tested)) or ", ".join(self.catalog.names())
+        roots = self.catalog.roots()
+        if len(roots) == 1:
+            return roots[0]
         raise VWBError(f"cannot choose a unique top module; specify one of: {choices}")
+
+    def port_directions(self, module: str) -> dict[str, str]:
+        definition = self.catalog.definition(module)
+        if definition.language == "vhdl":
+            return vhdl_port_directions(definition.path, definition.name)
+        return verilog_port_directions(definition.path, definition.name)
+
+    @staticmethod
+    def _clock_name(names: Sequence[str]) -> str | None:
+        for name in names:
+            lowered = name.lower().lstrip("\\")
+            if (
+                lowered in {"clk", "clock"}
+                or lowered.endswith(("clk", "clock", "clk_i", "clock_i"))
+                or re.search(r"(?:^|_)(?:clk|clock)(?:_i|_in)$", lowered)
+            ):
+                return name
+        return None
+
+    @staticmethod
+    def _reset_name(names: Sequence[str]) -> str | None:
+        for name in names:
+            lowered = name.lower().lstrip("\\")
+            if (
+                lowered in {"reset", "rst", "reset_n", "rst_n", "resetn", "rstn"}
+                or "reset" in lowered
+                or lowered.startswith("rst")
+            ):
+                return name
+        return None
+
+    @staticmethod
+    def _reset_is_active_low(name: str) -> bool:
+        lowered = name.lower().lstrip("\\")
+        return bool(
+            re.search(r"(?:^|_)(?:[as]?(?:reset|rst))_?n(?:_|$)", lowered)
+            or re.search(r"(?:^|_)(?:nreset|nrst)(?:_|$)", lowered)
+        )
+
+    def _cocotb_starter(self, module: str) -> str:
+        directions = self.port_directions(module)
+        inputs = [
+            name
+            for name, direction in directions.items()
+            if direction in {"input", "in"}
+        ]
+        input_literal = repr(tuple(inputs))
+        clock = self._clock_name(inputs)
+        reset = self._reset_name(inputs)
+        reset_active_low = bool(reset and self._reset_is_active_low(reset))
+        return (
+            '"""Starter test generated by vwb.py. Add checks as you learn the design."""\n\n'
+            "import cocotb\n"
+            "from cocotb.clock import Clock\n"
+            "from cocotb.triggers import Timer\n\n\n"
+            f"INPUTS = {input_literal}\n\n\n"
+            "def _vwb_signal(dut, name):\n"
+            "    if not name.startswith(\"\\\\\"):\n"
+            "        return getattr(dut, name)\n"
+            "    simulator_name = name[1:]\n"
+            "    for child in dut:\n"
+            "        if child._name == simulator_name:\n"
+            "            return child\n"
+            "    raise AttributeError(f\"DUT has no signal {name}\")\n\n\n"
+            "@cocotb.test()\n"
+            f"async def test_{python_identifier_component(module)}_starter(dut):\n"
+            "    # Give every DUT input a known starting value.\n"
+            "    for name in INPUTS:\n"
+            "        _vwb_signal(dut, name).value = 0\n"
+            + (
+                "\n    cocotb.start_soon(Clock("
+                f"_vwb_signal(dut, {clock!r}), 10, units=\"ns\").start(start_high=False))\n"
+                if clock
+                else ""
+            )
+            + (
+                f"\n    reset = _vwb_signal(dut, {reset!r})\n"
+                f"    reset.value = {0 if reset_active_low else 1}\n"
+                "    await Timer(10, units=\"ns\")\n"
+                f"    reset.value = {1 if reset_active_low else 0}\n"
+                if reset
+                else ""
+            )
+            + "\n    await Timer(10, units=\"ns\")\n"
+        )
+
+    def _verilog_starter(self, module: str) -> tuple[str, str]:
+        definition = self.catalog.definition(module)
+        directions = self.port_directions(module)
+        inputs = [
+            name for name, direction in directions.items() if direction == "input"
+        ]
+        input_declarations = verilog_input_declarations(definition.path, module)
+        sections = verilog_module_sections(definition.path, module)
+        parameters = sections[0] if sections is not None else None
+        clock = self._clock_name(inputs)
+        reset = self._reset_name(inputs)
+        top = f"test_{python_identifier_component(module)}"
+        declarations = "\n".join(
+            input_declarations.get(name, f"  logic {hdl_reference(name)};")
+            for name in inputs
+        )
+        connections = ",\n".join(
+            f"    .{hdl_reference(name)}({hdl_reference(name)})"
+            for name in inputs
+        )
+        initialization = "\n".join(
+            f"    {hdl_reference(name)} = '0;" for name in inputs
+        )
+        clock_block = (
+            f"\n  always #5 {hdl_reference(clock)} = ~{hdl_reference(clock)};\n"
+            if clock
+            else ""
+        )
+        reset_block = ""
+        if reset:
+            active = "1'b0" if self._reset_is_active_low(reset) else "1'b1"
+            inactive = "1'b1" if active == "1'b0" else "1'b0"
+            reset_block = (
+                f"\n    {hdl_reference(reset)} = {active};\n"
+                f"    #10 {hdl_reference(reset)} = {inactive};"
+            )
+        module_reference = hdl_reference(module)
+        instance = (
+            f"  {module_reference} dut (\n{connections}\n  );"
+            if connections
+            else f"  {module_reference} dut ();"
+        )
+        return (
+            top,
+            "`timescale 1ns/1ps\n"
+            + (
+                f"module {top} #(\n{parameters}\n);\n"
+                if parameters
+                else f"module {top};\n"
+            )
+            + (declarations + "\n" if declarations else "")
+            + instance
+            + "\n"
+            + clock_block
+            + "  initial begin\n"
+            + (initialization + "\n" if initialization else "")
+            + reset_block
+            + "\n    #10 $finish;\n"
+            + "  end\nendmodule\n",
+        )
+
+    def generate_starter_test(self, module: str, test_language: str) -> TestSpec:
+        definition = self.catalog.definition(module)
+        module = definition.name
+        if test_language == "vhdl":
+            raise VWBError(
+                "automatic VHDL testbench generation is not supported; "
+                "use --test-language cocotb or add a VHDL test file"
+            )
+        language = "cocotb" if test_language in {"auto", "cocotb"} else test_language
+        if language == "verilog" and definition.language == "vhdl":
+            raise VWBError(
+                "a Verilog testbench cannot directly test VHDL; use --test-language cocotb"
+            )
+        suffix = ".py" if language == "cocotb" else ".sv"
+        component = python_identifier_component(module)
+        path = self.test_dir / f"test_{component}_starter{suffix}"
+        if path.exists() or path.is_symlink():
+            raise VWBError(f"refusing to overwrite existing starter test: {path}")
+        top: str | None = None
+        if language == "cocotb":
+            content = self._cocotb_starter(module)
+        else:
+            top, content = self._verilog_starter(module)
+        print(
+            self.style("generated starter test:", Ansi.BOLD, Ansi.GREEN),
+            display_path(path, self.root),
+        )
+        if not self.dry_run:
+            path.parent.mkdir(parents=True, exist_ok=True)
+            package_marker = path.parent / "__init__.py"
+            if not package_marker.exists():
+                package_marker.write_text("", encoding="ascii")
+            path.write_text(content, encoding="utf-8")
+        return TestSpec(dut=module, kind=language, path=path.resolve(), top=top)
 
     def _validate_build_location(self) -> None:
         build = self.build_dir.resolve()
@@ -1321,6 +2044,7 @@ class Workbench:
         cwd: Path | None = None,
         env: dict[str, str] | None = None,
         capture: bool = False,
+        timeout: float | None = None,
     ) -> subprocess.CompletedProcess[str]:
         argv = [str(item) for item in command]
         if self.verbose or self.dry_run:
@@ -1329,13 +2053,66 @@ class Workbench:
         if self.dry_run:
             return subprocess.CompletedProcess(argv, 0, "", "")
         try:
-            return subprocess.run(
+            process = subprocess.Popen(
                 argv,
                 cwd=str(cwd) if cwd else None,
                 env=env,
                 text=True,
-                capture_output=capture,
-                check=False,
+                stdout=subprocess.PIPE if capture else None,
+                stderr=subprocess.PIPE if capture else None,
+                start_new_session=True,
+            )
+            try:
+                stdout, stderr = process.communicate(timeout=timeout)
+            except subprocess.TimeoutExpired:
+                try:
+                    os.killpg(process.pid, signal.SIGTERM)
+                except ProcessLookupError:
+                    pass
+                try:
+                    stdout, stderr = process.communicate(timeout=2)
+                except subprocess.TimeoutExpired:
+                    try:
+                        os.killpg(process.pid, signal.SIGKILL)
+                    except ProcessLookupError:
+                        pass
+                    stdout, stderr = process.communicate()
+                else:
+                    # The group leader may exit while a descendant ignores
+                    # SIGTERM. The isolated process group can still be killed
+                    # safely after communicate() has reaped the leader.
+                    try:
+                        os.killpg(process.pid, signal.SIGKILL)
+                    except ProcessLookupError:
+                        pass
+                print(
+                    f"error: command timed out after {timeout:g}s: {argv[0]}",
+                    file=sys.stderr,
+                )
+                return subprocess.CompletedProcess(
+                    argv, 124, stdout or "", stderr or ""
+                )
+            except KeyboardInterrupt:
+                try:
+                    os.killpg(process.pid, signal.SIGTERM)
+                except ProcessLookupError:
+                    pass
+                try:
+                    process.wait(timeout=2)
+                except subprocess.TimeoutExpired:
+                    try:
+                        os.killpg(process.pid, signal.SIGKILL)
+                    except ProcessLookupError:
+                        pass
+                    process.wait()
+                else:
+                    try:
+                        os.killpg(process.pid, signal.SIGKILL)
+                    except ProcessLookupError:
+                        pass
+                raise
+            return subprocess.CompletedProcess(
+                argv, process.returncode, stdout, stderr
             )
         except OSError as exc:
             raise VWBError(f"could not execute {argv[0]}: {exc}") from exc
@@ -1365,6 +2142,18 @@ class Workbench:
             self._cocotb_library = (lib_dir, lib_name)
         return self._cocotb_library
 
+    def ghdl_vpi_library(self) -> str:
+        if self._ghdl_vpi_library is None:
+            if self.dry_run:
+                self._ghdl_vpi_library = "<cocotb-ghdl-vpi-library>"
+            else:
+                self._ghdl_vpi_library = self.capture_tool(
+                    ["cocotb-config", "--lib-name-path", "vpi", "ghdl"]
+                )
+            if not self._ghdl_vpi_library:
+                raise VWBError("cocotb-config returned an empty GHDL VPI library path")
+        return self._ghdl_vpi_library
+
     def specs_for(
         self,
         modules: Sequence[str],
@@ -1372,10 +2161,10 @@ class Workbench:
         explicit_test: str | None,
         explicit_test_top: str | None,
     ) -> list[TestSpec]:
-        kind = "hdl" if test_language == "verilog" else test_language
-        selected_modules = list(modules)
-        for module in selected_modules:
-            self.catalog.definition(module)
+        kind = "verilog" if test_language == "hdl" else test_language
+        selected_modules = [
+            self.catalog.definition(module).name for module in modules
+        ]
 
         if explicit_test:
             if len(selected_modules) > 1:
@@ -1386,8 +2175,10 @@ class Workbench:
             suffix = path.suffix.lower()
             if suffix == ".py":
                 detected_kind = "cocotb"
-            elif suffix in HDL_SUFFIXES:
-                detected_kind = "hdl"
+            elif suffix in VHDL_SUFFIXES:
+                detected_kind = "vhdl"
+            elif suffix in VERILOG_SUFFIXES:
+                detected_kind = "verilog"
             else:
                 raise VWBError(f"unsupported test file type: {path.suffix}")
             if kind != "auto" and kind != detected_kind:
@@ -1395,7 +2186,13 @@ class Workbench:
                     f"--test-language {test_language} does not match test file {path}"
                 )
             dut = selected_modules[0] if selected_modules else module_from_test_stem(
-                path.stem, self.catalog.names()
+                path.stem,
+                self.catalog.names(),
+                {
+                    name
+                    for name in self.catalog.names()
+                    if self.catalog.definition(name).language == "vhdl"
+                },
             )
             if dut is None:
                 raise VWBError("could not infer DUT from --test; also specify a module")
@@ -1403,9 +2200,9 @@ class Workbench:
             if detected_kind == "cocotb" and not is_cocotb_test(path):
                 raise VWBError(f"Python file has no @cocotb.test: {path}")
             if detected_kind == "cocotb" and explicit_test_top:
-                raise VWBError("--test-top only applies to Verilog testbenches")
+                raise VWBError("--test-top only applies to HDL testbenches")
             top = explicit_test_top
-            if detected_kind == "hdl" and top is None:
+            if detected_kind in {"verilog", "vhdl"} and top is None:
                 top = infer_hdl_test_top(path, dut)
             return [TestSpec(dut=dut, kind=detected_kind, path=path, top=top)]
 
@@ -1417,25 +2214,23 @@ class Workbench:
             if spec.kind in allowed and (not requested or spec.dut in requested)
         ]
         if explicit_test_top:
-            if len(specs) != 1 or specs[0].kind != "hdl":
-                raise VWBError("--test-top requires exactly one Verilog test")
+            if len(specs) != 1 or specs[0].kind not in {"verilog", "vhdl"}:
+                raise VWBError("--test-top requires exactly one HDL test")
             specs = [
                 TestSpec(
                     dut=specs[0].dut,
-                    kind="hdl",
+                    kind=specs[0].kind,
                     path=specs[0].path,
                     top=explicit_test_top,
                 )
             ]
         if requested:
             missing = sorted(requested - {spec.dut for spec in specs})
-            if missing:
-                raise VWBError(
-                    f"no {test_language} test discovered for module(s): {', '.join(missing)}"
-                )
+            for module in missing:
+                specs.append(self.generate_starter_test(module, test_language))
         if not specs:
             raise VWBError("no runnable tests were discovered")
-        return specs
+        return sorted(specs, key=lambda item: (item.dut, item.kind, str(item.path)))
 
     def _write_dump_module(self, path: Path, top: str, wave_path: Path) -> None:
         escaped_path = str(wave_path).replace("\\", "\\\\").replace('"', '\\"')
@@ -1485,6 +2280,38 @@ class Workbench:
         output.write_text(instrumented, encoding="utf-8")
         return [output]
 
+    def _convert_systemverilog(
+        self,
+        sources: Sequence[Path],
+        work_dir: Path,
+        defines: Sequence[str],
+        include_dirs: Sequence[Path],
+        compile_args: Sequence[str],
+    ) -> list[Path]:
+        if not any(path.suffix.lower() == ".sv" for path in sources):
+            return list(sources)
+        if find_tool("sv2v") is None and not self.dry_run:
+            return list(sources)
+        self.require_tool("sv2v")
+        preprocessed = work_dir / "sv2v-input.sv"
+        preprocess: list[str | Path] = ["iverilog", "-E", "-g2012", "-o", preprocessed]
+        for directory in include_dirs:
+            preprocess.extend(["-I", directory])
+        for define in defines:
+            preprocess.append(f"-D{define}")
+        preprocess.extend(compile_args)
+        preprocess.extend(sources)
+        if self.run(preprocess, cwd=self.root).returncode != 0:
+            raise VWBError("SystemVerilog preprocessing failed")
+        converted = work_dir / "sv2v-output.v"
+        result = self.run(["sv2v", preprocessed], cwd=self.root, capture=True)
+        if result.returncode != 0:
+            detail = result.stderr.strip()
+            raise VWBError("SystemVerilog conversion failed" + (f": {detail}" if detail else ""))
+        if not self.dry_run:
+            converted.write_text(result.stdout, encoding="utf-8")
+        return [converted]
+
     def _compile_simulation(
         self,
         spec: TestSpec,
@@ -1497,6 +2324,7 @@ class Workbench:
         compile_args: Sequence[str],
         test_top: str | None,
         max_array_words: int,
+        gate_netlist: Path | None = None,
     ) -> tuple[bool, Path | None, Path]:
         self.require_tool("iverilog")
         self.prepare_build_dir()
@@ -1506,10 +2334,18 @@ class Workbench:
         command_file = work_dir / "cmds.f"
         if not self.dry_run:
             command_file.write_text("+timescale+1ns/1ps\n", encoding="ascii")
-        sources = self.catalog.closure(spec.dut)
+        if gate_netlist is not None:
+            simlib = gate_netlist.parent / "yosys_simlib.v"
+            if not self.dry_run and (not simlib.is_file() or simlib.stat().st_size == 0):
+                raise VWBError(f"Yosys simulation library is missing: {simlib}")
+            sources = [simlib, gate_netlist]
+        else:
+            sources = self.catalog.closure(spec.dut)
+        if any(path.suffix.lower() in VHDL_SUFFIXES for path in sources):
+            raise VWBError("mixed-language Icarus simulation is not supported")
         selected_top = spec.dut
 
-        if spec.kind == "hdl":
+        if spec.kind == "verilog":
             selected_top = test_top or spec.top or ""
             if not selected_top:
                 raise VWBError(
@@ -1523,8 +2359,8 @@ class Workbench:
             ):
                 sources.extend(self.test_catalog.closure(selected_top))
 
-        sources = unique_paths(sources)
-        command: list[str | Path] = [
+        original_sources = unique_paths(sources)
+        base_command: list[str | Path] = [
             "iverilog",
             "-g2012",
             "-Wall",
@@ -1535,15 +2371,16 @@ class Workbench:
         ]
         include_dirs = self.include_dirs(includes)
         for directory in include_dirs:
-            command.extend(["-I", directory])
+            base_command.extend(["-I", directory])
         for directory in sorted({path.parent for path in self.catalog.files}):
-            command.extend(["-y", directory])
-        command.extend(["-Y", ".v", "-Y", ".sv"])
+            base_command.extend(["-y", directory])
+        base_command.extend(["-Y", ".v", "-Y", ".sv"])
         for define in defines:
-            command.append(f"-D{define}")
-        command.extend(compile_args)
+            base_command.append(f"-D{define}")
+        base_command.extend(compile_args)
 
         wave_path: Path | None = None
+        dump_module: Path | None = None
         if waves:
             if max_array_words < 0:
                 raise VWBError("--max-array-words must be zero or greater")
@@ -1553,20 +2390,45 @@ class Workbench:
             dump_module = work_dir / "vwb_dump.v"
             if not self.dry_run:
                 self._write_dump_module(dump_module, selected_top, wave_path)
-            sources = self._instrument_array_sources(
-                sources,
-                work_dir,
-                defines,
-                include_dirs,
-                compile_args,
-                max_array_words,
-            )
-            command.extend(["-s", "vwb_dump"])
-            sources.append(dump_module)
 
-        command.extend(["-s", selected_top])
-        command.extend(sources)
-        result = self.run(command, cwd=self.root)
+        def compile_sources(candidate_sources: Sequence[Path]) -> subprocess.CompletedProcess[str]:
+            prepared_sources = list(candidate_sources)
+            if waves:
+                prepared_sources = self._instrument_array_sources(
+                    prepared_sources,
+                    work_dir,
+                    defines,
+                    include_dirs,
+                    compile_args,
+                    max_array_words,
+                )
+            command = list(base_command)
+            if dump_module is not None:
+                command.extend(["-s", "vwb_dump"])
+                prepared_sources.append(dump_module)
+            command.extend(["-s", tool_identifier(selected_top)])
+            command.extend(prepared_sources)
+            return self.run(command, cwd=self.root)
+
+        result = compile_sources(original_sources)
+        if (
+            result.returncode != 0
+            and any(path.suffix.lower() == ".sv" for path in original_sources)
+            and find_tool("sv2v") is not None
+        ):
+            print(
+                self.style(
+                    "warning: native SystemVerilog compilation failed; trying sv2v",
+                    Ansi.BOLD,
+                    Ansi.YELLOW,
+                    stream=sys.stderr,
+                ),
+                file=sys.stderr,
+            )
+            converted_sources = self._convert_systemverilog(
+                original_sources, work_dir, defines, include_dirs, compile_args
+            )
+            result = compile_sources(converted_sources)
         return result.returncode == 0, wave_path, simulation
 
     @staticmethod
@@ -1741,7 +2603,7 @@ class Workbench:
             return SavedWave(
                 tag=tag,
                 dut=spec.dut,
-                test_language="verilog" if spec.kind == "hdl" else spec.kind,
+                test_language=spec.kind,
                 test_path=display_path(spec.path, self.root),
                 wave_format=args.wave_format,
                 created_at=created_at,
@@ -1767,11 +2629,11 @@ class Workbench:
                 "schema": SAVED_WAVE_SCHEMA,
                 "tag": tag,
                 "dut": spec.dut,
-                "test_language": "verilog" if spec.kind == "hdl" else spec.kind,
+                "test_language": spec.kind,
                 "test_path": display_path(spec.path, self.root),
                 "test_top": spec.top,
                 "testcase": args.testcase,
-                "seed": args.seed,
+                "seed": getattr(args, "_effective_seed", args.seed),
                 "wave_format": args.wave_format,
                 "waveform": wave_name,
                 "layout": archived_layout,
@@ -1833,6 +2695,25 @@ class Workbench:
             if temporary.exists():
                 temporary.unlink()
 
+    def _legacy_wave_layout(self, dut: str | None) -> Path | None:
+        if not dut:
+            return None
+        filename = f"{artifact_component(dut)}.gtkw"
+        directories = unique_paths(
+            [
+                self.root,
+                self.src_dir.parent,
+                self.test_dir.parent,
+                self.src_dir,
+                self.test_dir,
+            ]
+        )
+        for directory in directories:
+            candidate = directory / filename
+            if candidate.is_file() and not candidate.is_symlink():
+                return candidate
+        return None
+
     def open_waveform(
         self,
         wave_path: Path,
@@ -1855,11 +2736,7 @@ class Workbench:
             ]
         else:
             layout = wave_path.with_suffix(".gtkw")
-            legacy = (
-                self.root / f"{artifact_component(legacy_dut)}.gtkw"
-                if legacy_dut
-                else None
-            )
+            legacy = self._legacy_wave_layout(legacy_dut)
             if (
                 not self.dry_run
                 and not layout.exists()
@@ -1871,8 +2748,121 @@ class Workbench:
         result = self.run(command, cwd=directory)
         return result.returncode, layout
 
-    def run_test_spec(self, spec: TestSpec, args: argparse.Namespace) -> tuple[bool, Path | None]:
-        if spec.kind == "hdl" and (args.testcase or args.seed is not None):
+    def _cocotb_environment(
+        self,
+        spec: TestSpec,
+        work_dir: Path,
+        args: argparse.Namespace,
+        top_language: str,
+    ) -> tuple[dict[str, str], Path]:
+        environment = os.environ.copy()
+        results_file = work_dir / "results.xml"
+        if results_file.exists() and not self.dry_run:
+            results_file.unlink()
+        module_name, import_root = python_module_import(
+            spec.path, self.root, self.test_dir
+        )
+        legacy_top, modern_top = cocotb_toplevel_names(spec.dut)
+        environment.update(
+            {
+                "MODULE": module_name,
+                "COCOTB_TEST_MODULES": module_name,
+                "TOPLEVEL": legacy_top,
+                "COCOTB_TOPLEVEL": modern_top,
+                "TOPLEVEL_LANG": top_language,
+                "COCOTB_RESULTS_FILE": str(results_file),
+                "PYTHONDONTWRITEBYTECODE": "1",
+            }
+        )
+        python_path = environment.get("PYTHONPATH", "")
+        python_entries = [str(import_root)]
+        if import_root != self.root:
+            python_entries.append(str(self.root))
+        if python_path:
+            python_entries.append(python_path)
+        environment["PYTHONPATH"] = os.pathsep.join(python_entries)
+        if args.testcase:
+            environment["TESTCASE"] = args.testcase
+            environment["COCOTB_TESTCASE"] = args.testcase
+        if args.seed is not None:
+            environment["RANDOM_SEED"] = str(args.seed)
+            environment["COCOTB_RANDOM_SEED"] = str(args.seed)
+        return environment, results_file
+
+    def _run_vhdl_test(
+        self,
+        spec: TestSpec,
+        args: argparse.Namespace,
+        work_dir: Path,
+    ) -> tuple[bool, Path | None]:
+        self.require_tool("ghdl")
+        self.prepare_build_dir()
+        if not self.dry_run:
+            work_dir.mkdir(parents=True, exist_ok=True)
+        sources = self.catalog.closure(spec.dut)
+        top = spec.dut
+        if spec.kind == "vhdl":
+            top = args.test_top or spec.top or ""
+            if not top:
+                raise VWBError(
+                    f"cannot infer VHDL testbench entity in {spec.path}; use --test-top"
+                )
+            sources = unique_paths([*sources, spec.path])
+            test_definitions = self.test_catalog.modules.get(top, [])
+            if (
+                len(test_definitions) == 1
+                and test_definitions[0].path.resolve() == spec.path.resolve()
+            ):
+                sources = unique_paths(
+                    [*sources, *self.test_catalog.closure(top)]
+                )
+        if any(path.suffix.lower() not in VHDL_SUFFIXES for path in sources):
+            raise VWBError("mixed VHDL/Verilog simulation needs an external mixed-language simulator")
+        work_library = work_dir / "ghdl-work"
+        if not self.dry_run:
+            work_library.mkdir(parents=True, exist_ok=True)
+        analyze: list[str | Path] = [
+            "ghdl", "-i", "--std=08", f"--workdir={work_library}", *sources
+        ]
+        if self.run(analyze, cwd=self.root).returncode != 0:
+            return False, None
+        if self.run(
+            ["ghdl", "-m", "--std=08", f"--workdir={work_library}", top],
+            cwd=self.root,
+        ).returncode != 0:
+            return False, None
+
+        wave_path: Path | None = None
+        command: list[str | Path] = [
+            "ghdl", "-r", "--std=08", f"--workdir={work_library}", top
+        ]
+        environment = os.environ.copy()
+        results_file: Path | None = None
+        if spec.kind == "cocotb":
+            environment, results_file = self._cocotb_environment(
+                spec, work_dir, args, "vhdl"
+            )
+            command.append(f"--vpi={self.ghdl_vpi_library()}")
+        if args.waves:
+            wave_path = work_dir / f"{artifact_component(spec.dut)}.{args.wave_format}"
+            command.append(f"--{args.wave_format}={wave_path}")
+        command.extend(args.sim_arg)
+        command.extend(
+            item if item.startswith("+") else f"+{item}" for item in args.plusarg
+        )
+        result = self.run(command, cwd=work_dir, env=environment)
+        if self.dry_run:
+            return True, wave_path
+        passed = result.returncode == 0
+        if results_file is not None:
+            passed = passed and self._results_passed(results_file)
+        if wave_path is not None and not wave_path.is_file():
+            print(f"error: waveform was not produced: {wave_path}", file=sys.stderr)
+            passed = False
+        return passed, wave_path
+
+    def _run_rtl_test_spec(self, spec: TestSpec, args: argparse.Namespace) -> tuple[bool, Path | None]:
+        if spec.kind in {"verilog", "vhdl"} and (args.testcase or args.seed is not None):
             raise VWBError("--testcase and --seed only apply to Cocotb tests")
         work_dir = (
             self.build_dir
@@ -1882,6 +2872,13 @@ class Workbench:
         )
         self.prepare_build_dir()
         self._reset_sim_work_dir(work_dir)
+        definition = self.catalog.definition(spec.dut)
+        if definition.language == "vhdl":
+            if spec.kind == "verilog":
+                raise VWBError("a Verilog testbench cannot directly test a VHDL design")
+            return self._run_vhdl_test(spec, args, work_dir)
+        if spec.kind == "vhdl":
+            raise VWBError("a VHDL testbench cannot directly test a Verilog design")
         compiled, wave_path, simulation = self._compile_simulation(
             spec,
             work_dir,
@@ -1901,38 +2898,13 @@ class Workbench:
         self.require_tool("vvp")
         vvp_args: list[str | Path] = ["vvp"]
         environment = os.environ.copy()
+        results_file: Path | None = None
         if spec.kind == "cocotb":
             lib_dir, lib_name = self.cocotb_library()
-            results_file = work_dir / "results.xml"
-            if results_file.exists() and not self.dry_run:
-                results_file.unlink()
-            module_name, import_root = python_module_import(
-                spec.path, self.root, self.test_dir
+            environment, results_file = self._cocotb_environment(
+                spec, work_dir, args, "verilog"
             )
             vvp_args.extend(["-M", lib_dir, "-m", lib_name])
-            environment.update(
-                {
-                    "MODULE": module_name,
-                    "COCOTB_TEST_MODULES": module_name,
-                    "TOPLEVEL": spec.dut,
-                    "COCOTB_TOPLEVEL": spec.dut,
-                    "TOPLEVEL_LANG": "verilog",
-                    "COCOTB_RESULTS_FILE": str(results_file),
-                }
-            )
-            python_path = environment.get("PYTHONPATH", "")
-            python_entries = [str(import_root)]
-            if import_root != self.root:
-                python_entries.append(str(self.root))
-            if python_path:
-                python_entries.append(python_path)
-            environment["PYTHONPATH"] = os.pathsep.join(python_entries)
-            if args.testcase:
-                environment["TESTCASE"] = args.testcase
-                environment["COCOTB_TESTCASE"] = args.testcase
-            if args.seed is not None:
-                environment["RANDOM_SEED"] = str(args.seed)
-                environment["COCOTB_RANDOM_SEED"] = str(args.seed)
 
         vvp_args.extend(args.sim_arg)
         vvp_args.append(simulation)
@@ -1944,23 +2916,121 @@ class Workbench:
         if self.dry_run:
             return True, wave_path
         passed = result.returncode == 0
-        if spec.kind == "cocotb":
-            passed = passed and self._results_passed(work_dir / "results.xml")
+        if results_file is not None:
+            passed = passed and self._results_passed(results_file)
         if args.waves and wave_path is not None and not wave_path.is_file():
             passed = False
             print(f"error: waveform was not produced: {wave_path}", file=sys.stderr)
         return passed, wave_path
 
+    def _run_gate_test_spec(
+        self,
+        spec: TestSpec,
+        args: argparse.Namespace,
+        netlist: Path,
+    ) -> bool:
+        if spec.kind == "vhdl":
+            raise VWBError(
+                "a native VHDL testbench cannot drive a Verilog gate netlist; "
+                "use Cocotb or --no-gate-level"
+            )
+        work_dir = (
+            self.build_dir
+            / "sim"
+            / artifact_component(spec.dut)
+            / f"{spec.kind}-{artifact_component(spec.path.stem)}-gate"
+        )
+        self._reset_sim_work_dir(work_dir)
+        gate_args = argparse.Namespace(**vars(args))
+        gate_args.waves = False
+        compiled, _, simulation = self._compile_simulation(
+            spec,
+            work_dir,
+            waves=False,
+            wave_format=args.wave_format,
+            defines=args.define,
+            includes=args.include,
+            compile_args=args.compile_arg,
+            test_top=args.test_top,
+            max_array_words=getattr(args, "max_array_words", DEFAULT_MAX_ARRAY_WORDS),
+            gate_netlist=netlist,
+        )
+        if not compiled:
+            return False
+        self.require_tool("vvp")
+        command: list[str | Path] = ["vvp"]
+        environment = os.environ.copy()
+        results_file: Path | None = None
+        if spec.kind == "cocotb":
+            lib_dir, lib_name = self.cocotb_library()
+            environment, results_file = self._cocotb_environment(
+                spec, work_dir, gate_args, "verilog"
+            )
+            command.extend(["-M", lib_dir, "-m", lib_name])
+        command.extend(args.sim_arg)
+        command.append(simulation)
+        command.extend(
+            item if item.startswith("+") else f"+{item}" for item in args.plusarg
+        )
+        result = self.run(command, cwd=work_dir, env=environment)
+        if self.dry_run:
+            return True
+        passed = result.returncode == 0
+        if results_file is not None:
+            passed = passed and self._results_passed(results_file)
+        return passed
+
+    def run_test_spec(self, spec: TestSpec, args: argparse.Namespace) -> tuple[bool, Path | None]:
+        run_args = args
+        if spec.kind == "cocotb" and args.seed is None:
+            run_args = argparse.Namespace(**vars(args))
+            run_args.seed = int.from_bytes(os.urandom(4), "big") & 0x7FFFFFFF
+            args._effective_seed = run_args.seed
+            print(f"  Cocotb seed: {run_args.seed}")
+
+        rtl_passed, wave_path = self._run_rtl_test_spec(spec, run_args)
+        print(
+            "  "
+            + self.style(
+                "RTL PASS" if rtl_passed else "RTL FAIL",
+                Ansi.GREEN if rtl_passed else Ansi.RED,
+            )
+        )
+        if not getattr(args, "gate_level", False):
+            return rtl_passed, wave_path
+        if spec.kind == "vhdl":
+            print(
+                "  "
+                + self.style("GATE SKIP", Ansi.YELLOW)
+                + " (native VHDL testbench cannot drive a Verilog netlist)"
+            )
+            return rtl_passed, wave_path
+        try:
+            netlist = self.gate_netlist(spec.dut, run_args.define, run_args.include)
+            gate_passed = self._run_gate_test_spec(spec, run_args, netlist)
+        except VWBError as exc:
+            gate_passed = False
+            print(f"error: gate-level simulation: {exc}", file=sys.stderr)
+        print(
+            "  "
+            + self.style(
+                "GATE PASS" if gate_passed else "GATE FAIL",
+                Ansi.GREEN if gate_passed else Ansi.RED,
+            )
+        )
+        return rtl_passed and gate_passed, wave_path
+
     def run_tests(self, specs: Sequence[TestSpec], args: argparse.Namespace) -> tuple[bool, list[Path]]:
-        if any(spec.kind == "hdl" for spec in specs) and (
+        if any(spec.kind in {"verilog", "vhdl"} for spec in specs) and (
             args.testcase or args.seed is not None
         ):
             raise VWBError(
                 "--testcase and --seed require --test-language cocotb when "
-                "Verilog tests are selected"
+                "HDL testbenches are selected"
             )
         passed_count = 0
         wave_paths: list[Path] = []
+        failures: list[tuple[TestSpec, str]] = []
         for index, spec in enumerate(specs, start=1):
             print(
                 self.style("==>", Ansi.BOLD, Ansi.CYAN)
@@ -1973,7 +3043,10 @@ class Workbench:
             except VWBError as exc:
                 passed = False
                 wave_path = None
+                reason = str(exc)
                 print(f"error: {exc}", file=sys.stderr)
+            else:
+                reason = "one or more requested simulation stages failed"
             print(
                 self.style(
                     "PASS" if passed else "FAIL",
@@ -1983,10 +3056,10 @@ class Workbench:
             )
             if passed:
                 passed_count += 1
+            else:
+                failures.append((spec, reason))
             if wave_path is not None:
                 wave_paths.append(wave_path)
-            if not passed and not args.keep_going:
-                break
         all_passed = passed_count == len(specs)
         print(
             self.style("==>", Ansi.BOLD, Ansi.CYAN)
@@ -1996,6 +3069,10 @@ class Workbench:
                 Ansi.GREEN if all_passed else Ansi.RED,
             )
         )
+        if failures:
+            print(self.style("Failed test runs:", Ansi.BOLD, Ansi.RED))
+            for spec, reason in failures:
+                print(f"  {spec.dut} ({spec.label}): {reason}")
         return all_passed, wave_paths
 
     def lint_module(
@@ -2005,27 +3082,201 @@ class Workbench:
         includes: Sequence[str],
         extra_args: Sequence[str],
     ) -> bool:
-        self.require_tool("verilator")
-        command: list[str | Path] = [
-            "verilator",
-            "--lint-only",
-            "--top-module",
+        return self.lint_with_tool(
             module,
-            "-Wall",
-            "-Wno-COMBDLY",
-            "-Wno-INCABSPATH",
-        ]
-        for directory in self.include_dirs(includes):
-            command.append(f"-I{directory}")
-        for define in defines:
-            command.append(f"-D{define}")
-        command.extend(extra_args)
-        command.extend(self.catalog.closure(module))
-        return self.run(command, cwd=self.root).returncode == 0
+            "verilator",
+            defines,
+            includes,
+            verilator_args=extra_args,
+        )
+
+    def lint_with_tool(
+        self,
+        module: str,
+        tool: str,
+        defines: Sequence[str],
+        includes: Sequence[str],
+        *,
+        iverilog_args: Sequence[str] = (),
+        verilator_args: Sequence[str] = (),
+        yosys_args: Sequence[str] = (),
+        verible_args: Sequence[str] = (),
+        ghdl_args: Sequence[str] = (),
+    ) -> bool:
+        definition = self.catalog.definition(module)
+        module = definition.name
+        external_top = tool_identifier(module)
+        output_dir = self.build_dir / "lint" / artifact_component(module) / tool
+        self.prepare_build_dir()
+        if not self.dry_run:
+            output_dir.mkdir(parents=True, exist_ok=True)
+        original_sources = self.catalog.closure(module)
+        include_dirs = self.include_dirs(includes)
+
+        if tool == "ghdl":
+            if definition.language != "vhdl":
+                raise VWBError("GHDL only checks VHDL designs")
+            self.require_tool("ghdl")
+            work_library = output_dir / "ghdl-work"
+            if not self.dry_run:
+                work_library.mkdir(parents=True, exist_ok=True)
+            analyze = [
+                "ghdl", "-i", "--std=08", f"--workdir={work_library}",
+                *ghdl_args, *original_sources,
+            ]
+            if self.run(analyze, cwd=self.root).returncode != 0:
+                return False
+            return self.run(
+                [
+                    "ghdl", "-m", "--std=08", f"--workdir={work_library}",
+                    *ghdl_args, module,
+                ],
+                cwd=self.root,
+            ).returncode == 0
+
+        if tool == "verible" and definition.language == "vhdl":
+            raise VWBError("Verible checks Verilog and SystemVerilog, not VHDL")
+        sources = original_sources
+        if tool == "yosys" or definition.language == "vhdl":
+            sources = self.yosys_sources(module, output_dir, defines, includes)
+
+        if tool == "iverilog":
+            self.require_tool("iverilog")
+
+            def run_iverilog(input_sources: Sequence[Path]) -> subprocess.CompletedProcess[str]:
+                command: list[str | Path] = [
+                    "iverilog", "-g2012", "-Wall", "-t", "null", "-s", external_top
+                ]
+                for directory in include_dirs:
+                    command.extend(["-I", directory])
+                for define in defines:
+                    command.append(f"-D{define}")
+                command.extend(iverilog_args)
+                command.extend(input_sources)
+                return self.run(command, cwd=self.root)
+
+            result = run_iverilog(sources)
+            if (
+                result.returncode != 0
+                and definition.language != "vhdl"
+                and any(path.suffix.lower() == ".sv" for path in original_sources)
+                and find_tool("sv2v") is not None
+            ):
+                print(
+                    self.style(
+                        "warning: native SystemVerilog lint failed; trying sv2v",
+                        Ansi.BOLD,
+                        Ansi.YELLOW,
+                        stream=sys.stderr,
+                    ),
+                    file=sys.stderr,
+                )
+                converted_sources = self.yosys_sources(
+                    module, output_dir, defines, includes
+                )
+                result = run_iverilog(converted_sources)
+            return result.returncode == 0
+
+        if tool == "verilator":
+            self.require_tool("verilator")
+            command = [
+                "verilator", "--lint-only", "--top-module", external_top,
+                "--timing", "-Wall", "-Wno-fatal", "-Wno-COMBDLY",
+                "-Wno-DECLFILENAME", "-Wno-INCABSPATH",
+            ]
+            for directory in include_dirs:
+                command.append(f"-I{directory}")
+            for define in defines:
+                command.append(f"-D{define}")
+            command.extend(verilator_args)
+            command.extend(sources)
+            return self.run(command, cwd=self.root).returncode == 0
+
+        if tool == "yosys":
+            self.require_tool("yosys")
+            script = output_dir / "lint.ys"
+            commands = [
+                self._yosys_read_sources_command(sources, defines, includes),
+                self._yosys_tcl_command(
+                    ["hierarchy", "-check", "-top", require_yosys_identifier(module)]
+                ),
+                self._yosys_tcl_command(["proc"]),
+                self._yosys_tcl_command(["check"]),
+            ]
+            commands.extend(yosys_args)
+            if not self.dry_run:
+                script.write_text("\n".join(commands) + "\n", encoding="utf-8")
+            return self.run(["yosys", "-c", script], cwd=self.root).returncode == 0
+
+        if tool == "verible":
+            self.require_tool("verible-verilog-lint")
+            preprocess_sources = {
+                source
+                for source in original_sources
+                if verilog_source_needs_preprocessing(
+                    source.read_text(encoding="utf-8", errors="replace"),
+                    defines,
+                )
+            }
+            preprocessed_dir = output_dir / "preprocessed"
+            if preprocess_sources:
+                self.require_tool("iverilog")
+                if not self.dry_run:
+                    preprocessed_dir.mkdir(parents=True, exist_ok=True)
+            lint_sources: list[Path] = []
+            for index, source in enumerate(original_sources):
+                if source in preprocess_sources:
+                    generated = (
+                        preprocessed_dir
+                        / f"{index:03d}-{artifact_component(source.stem)}{source.suffix}"
+                    )
+                    command: list[str | Path] = [
+                        "iverilog",
+                        "-E",
+                        "-g2012",
+                        "-o",
+                        generated,
+                    ]
+                    for define in defines:
+                        command.append(f"-D{define}")
+                    for directory in include_dirs:
+                        command.extend(["-I", directory])
+                    command.append(source)
+                    result = self.run(command, cwd=self.root, capture=True)
+                    if result.returncode != 0:
+                        detail = (result.stderr or result.stdout).rstrip()
+                        if detail:
+                            print(detail, file=sys.stderr)
+                        return False
+                    lint_sources.append(generated)
+                else:
+                    lint_sources.append(source)
+            command = ["verible-verilog-lint"]
+            command.extend(verible_args)
+            command.extend(lint_sources)
+            return self.run(command, cwd=self.root).returncode == 0
+        raise VWBError(f"unknown linter: {tool}")
 
     @staticmethod
     def _yosys_quote(value: str | Path) -> str:
         return '"' + str(value).replace("\\", "\\\\").replace('"', '\\"') + '"'
+
+    @classmethod
+    def _yosys_command(cls, arguments: Sequence[str | Path]) -> str:
+        if not arguments:
+            raise VWBError("cannot build an empty Yosys command")
+        command = str(arguments[0])
+        if not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", command):
+            raise VWBError(f"unsafe Yosys command name: {command}")
+
+        rendered = [command]
+        for item in arguments[1:]:
+            text = str(item)
+            if text and YOSYS_BARE_WORD_RE.fullmatch(text):
+                rendered.append(text)
+            else:
+                rendered.append(cls._yosys_quote(text))
+        return " ".join(rendered)
 
     @staticmethod
     def _tcl_quote(value: str | Path) -> str:
@@ -2047,9 +3298,72 @@ class Workbench:
     def _yosys_tcl_command(cls, arguments: Sequence[str | Path]) -> str:
         return "yosys " + " ".join(cls._tcl_quote(item) for item in arguments)
 
-    def _yosys_read_command(
+    def _vhdl_to_verilog(
+        self, module: str, output_dir: Path
+    ) -> Path:
+        module = self.catalog.definition(module).name
+        self.require_tool("ghdl")
+        work_library = output_dir / "ghdl-work"
+        if not self.dry_run:
+            output_dir.mkdir(parents=True, exist_ok=True)
+            work_library.mkdir(parents=True, exist_ok=True)
+        sources = self.catalog.closure(module)
+        if self.run(
+            ["ghdl", "-i", "--std=08", f"--workdir={work_library}", *sources],
+            cwd=self.root,
+        ).returncode != 0:
+            raise VWBError(f"GHDL analysis failed for {module}")
+        if self.run(
+            ["ghdl", "-m", "--std=08", f"--workdir={work_library}", module],
+            cwd=self.root,
+        ).returncode != 0:
+            raise VWBError(f"GHDL elaboration failed for {module}")
+        result = self.run(
+            [
+                "ghdl",
+                "--synth",
+                "--std=08",
+                f"--workdir={work_library}",
+                "--out=verilog",
+                module,
+            ],
+            cwd=self.root,
+            capture=True,
+        )
+        if result.returncode != 0:
+            detail = result.stderr.strip()
+            raise VWBError(
+                f"GHDL synthesis conversion failed for {module}"
+                + (f": {detail}" if detail else "")
+            )
+        output = output_dir / f"{artifact_component(module)}.v"
+        if not self.dry_run:
+            output.write_text(result.stdout, encoding="utf-8")
+        return output
+
+    def yosys_sources(
         self,
         module: str,
+        output_dir: Path,
+        defines: Sequence[str],
+        includes: Sequence[str],
+    ) -> list[Path]:
+        definition = self.catalog.definition(module)
+        module = definition.name
+        if definition.language == "vhdl":
+            return [self._vhdl_to_verilog(module, output_dir)]
+        sources = self.catalog.closure(module)
+        return self._convert_systemverilog(
+            sources,
+            output_dir,
+            defines,
+            self.include_dirs(includes),
+            (),
+        )
+
+    def _yosys_read_sources_command(
+        self,
+        sources: Sequence[Path],
         defines: Sequence[str],
         includes: Sequence[str],
     ) -> str:
@@ -2058,12 +3372,234 @@ class Workbench:
             arguments.append(f"-D{define}")
         for path in self.include_dirs(includes):
             arguments.append(f"-I{path}")
-        arguments.extend(self.catalog.closure(module))
+        arguments.extend(sources)
         return self._yosys_tcl_command(arguments)
 
+    def gate_netlist(
+        self,
+        module: str,
+        defines: Sequence[str],
+        includes: Sequence[str],
+    ) -> Path:
+        module = self.catalog.definition(module).name
+        yosys_top = require_yosys_identifier(module)
+        self.require_tool("yosys")
+        self.prepare_build_dir()
+        output_dir = self.build_dir / "synth" / artifact_component(module) / "gate"
+        if not self.dry_run:
+            output_dir.mkdir(parents=True, exist_ok=True)
+        sources = self.yosys_sources(module, output_dir, defines, includes)
+        netlist = output_dir / f"{artifact_component(module)}_gate.v"
+        simlib = output_dir / "yosys_simlib.v"
+        script = output_dir / "gate.ys"
+
+        def gate_commands(
+            target: Path, library_target: Path, *, coarse: bool
+        ) -> list[str]:
+            synth_arguments = ["synth", "-top", yosys_top]
+            if coarse:
+                synth_arguments[1:1] = ["-run", "begin:fine"]
+            return [
+                self._yosys_read_sources_command(sources, defines, includes),
+                self._yosys_tcl_command(
+                    ["hierarchy", "-check", "-top", yosys_top]
+                ),
+                self._yosys_tcl_command(synth_arguments),
+                self._yosys_tcl_command(["write_verilog", "-noattr", target]),
+                self._yosys_tcl_command(
+                    ["write_file", library_target, "+/simlib.v"]
+                ),
+            ]
+
+        commands = gate_commands(netlist, simlib, coarse=False)
+        if not self.dry_run:
+            script.write_text("\n".join(commands) + "\n", encoding="utf-8")
+        mapped_result = self.run(["yosys", "-c", script], cwd=self.root)
+        if self.dry_run:
+            return netlist
+        mapped_valid = (
+            mapped_result.returncode == 0
+            and netlist.is_file()
+            and netlist.stat().st_size > 0
+            and simlib.is_file()
+            and simlib.stat().st_size > 0
+        )
+        use_coarse = (
+            not mapped_valid
+            or netlist.stat().st_size > FULL_GATE_NETLIST_LIMIT_BYTES
+        )
+
+        if use_coarse:
+            message = (
+                "mapped gate synthesis failed; trying word-level generic cells"
+                if not mapped_valid
+                else "mapped gate netlist is large; keeping word-level generic "
+                "cells for simulation"
+            )
+            print(
+                self.style(
+                    "warning: " + message,
+                    Ansi.BOLD,
+                    Ansi.YELLOW,
+                    stream=sys.stderr,
+                ),
+                file=sys.stderr,
+            )
+            coarse_netlist = output_dir / f".{artifact_component(module)}_coarse.tmp.v"
+            coarse_simlib = output_dir / ".yosys_simlib.coarse.tmp.v"
+            coarse_script = output_dir / "gate-coarse.ys"
+            coarse_script.write_text(
+                "\n".join(
+                    gate_commands(coarse_netlist, coarse_simlib, coarse=True)
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+            result = self.run(["yosys", "-c", coarse_script], cwd=self.root)
+            coarse_valid = (
+                result.returncode == 0
+                and coarse_netlist.is_file()
+                and coarse_netlist.stat().st_size > 0
+                and coarse_simlib.is_file()
+                and coarse_simlib.stat().st_size > 0
+            )
+            if coarse_valid:
+                os.replace(coarse_netlist, netlist)
+                os.replace(coarse_simlib, simlib)
+            else:
+                for temporary in (coarse_netlist, coarse_simlib):
+                    if temporary.exists() or temporary.is_symlink():
+                        temporary.unlink()
+                if not mapped_valid:
+                    raise VWBError(f"gate netlist synthesis failed for {module}")
+                print(
+                    self.style(
+                        "warning: word-level fallback failed; using the fully "
+                        "mapped gate netlist",
+                        Ansi.BOLD,
+                        Ansi.YELLOW,
+                        stream=sys.stderr,
+                    ),
+                    file=sys.stderr,
+                )
+        if not netlist.is_file() or netlist.stat().st_size == 0:
+            raise VWBError(f"gate netlist was not produced: {netlist}")
+        if not simlib.is_file() or simlib.stat().st_size == 0:
+            raise VWBError(f"Yosys simulation library was not produced: {simlib}")
+        return netlist
+
+    def _yosys_read_command(
+        self,
+        module: str,
+        defines: Sequence[str],
+        includes: Sequence[str],
+    ) -> str:
+        return self._yosys_read_sources_command(
+            self.catalog.closure(module), defines, includes
+        )
+
+    @staticmethod
+    def _is_valid_svg(path: Path) -> bool:
+        try:
+            if path.stat().st_size == 0:
+                return False
+            root: ET.Element | None = None
+            root_tag = ""
+            for event, element in ET.iterparse(path, events=("start", "end")):
+                if root is None and event == "start":
+                    root = element
+                    root_tag = element.tag.rsplit("}", 1)[-1].lower()
+                if event == "end":
+                    element.clear()
+                    # ElementTree otherwise retains every completed SVG node
+                    # under the root. Large schematics must stay stream-sized.
+                    if root is not None and element is not root:
+                        root.clear()
+        except (OSError, ET.ParseError):
+            return False
+        return root_tag == "svg"
+
+    @staticmethod
+    def _svg_root_attributes(path: Path) -> dict[str, str] | None:
+        parser = ET.XMLPullParser(events=("start",))
+        try:
+            with path.open("rb") as source:
+                while chunk := source.read(64 * 1024):
+                    parser.feed(chunk)
+                    for _event, element in parser.read_events():
+                        if element.tag.rsplit("}", 1)[-1].lower() != "svg":
+                            return None
+                        return dict(element.attrib)
+        except (OSError, ET.ParseError):
+            return None
+        return None
+
+    @staticmethod
+    def _svg_dimensions(path: Path) -> tuple[float, float] | None:
+        attributes = Workbench._svg_root_attributes(path)
+        if attributes is None:
+            return None
+
+        unit_scale = {
+            "": 1.0,
+            "px": 1.0,
+            "pt": 96.0 / 72.0,
+            "pc": 16.0,
+            "in": 96.0,
+            "cm": 96.0 / 2.54,
+            "mm": 96.0 / 25.4,
+            "q": 96.0 / 101.6,
+        }
+
+        def length(value: str | None) -> float | None:
+            if value is None:
+                return None
+            match = re.fullmatch(
+                r"\s*([0-9]+(?:\.[0-9]*)?|\.[0-9]+)"
+                r"(?:[eE]([+-]?[0-9]+))?\s*([A-Za-z]*)\s*",
+                value,
+            )
+            if match is None:
+                return None
+            unit = match.group(3).lower()
+            if unit not in unit_scale:
+                return None
+            number = float(match.group(1))
+            if match.group(2):
+                number *= 10 ** int(match.group(2))
+            return number * unit_scale[unit]
+
+        width = length(attributes.get("width"))
+        height = length(attributes.get("height"))
+        if width is None or height is None:
+            view_box = attributes.get("viewBox") or attributes.get("viewbox")
+            if view_box:
+                values = re.split(r"[\s,]+", view_box.strip())
+                if len(values) == 4:
+                    try:
+                        width = float(values[2])
+                        height = float(values[3])
+                    except ValueError:
+                        return None
+        if width is None or height is None or width <= 0 or height <= 0:
+            return None
+        return width, height
+
+    @classmethod
+    def _png_zoom(cls, svg_path: Path) -> float:
+        dimensions = cls._svg_dimensions(svg_path)
+        if dimensions is None:
+            return 2.0
+        width, height = dimensions
+        requested_pixels = width * height * 4.0
+        if requested_pixels <= MAX_PNG_PIXELS:
+            return 2.0
+        # Leave a small margin for renderer rounding at fractional pixel sizes.
+        return (MAX_PNG_PIXELS * 0.99 / (width * height)) ** 0.5
+
     def synthesize(self, module: str, args: argparse.Namespace) -> Path:
-        self.catalog.definition(module)
-        require_yosys_identifier(module)
+        module = self.catalog.definition(module).name
+        yosys_top = require_yosys_identifier(module)
         self.require_tool("yosys")
         self.prepare_build_dir()
         output_name = artifact_component(module)
@@ -2072,16 +3608,19 @@ class Workbench:
             output_dir.mkdir(parents=True, exist_ok=True)
         json_path = output_dir / f"{output_name}.json"
         script_path = output_dir / "synth.tcl"
+        sources = self.yosys_sources(
+            module, output_dir, args.define, args.include
+        )
         commands = [
-            self._yosys_read_command(module, args.define, args.include),
-            self._yosys_tcl_command(["hierarchy", "-check", "-top", module]),
+            self._yosys_read_sources_command(sources, args.define, args.include),
+            self._yosys_tcl_command(["hierarchy", "-check", "-top", yosys_top]),
         ]
         if args.schematic and args.full:
             commands.append(self._yosys_tcl_command(["prep", "-flatten"]))
         elif args.schematic:
             commands.append(self._yosys_tcl_command(["prep"]))
         elif args.full:
-            commands.append(self._yosys_tcl_command(["synth", "-top", module]))
+            commands.append(self._yosys_tcl_command(["synth", "-top", yosys_top]))
         else:
             commands.extend(
                 [
@@ -2098,67 +3637,411 @@ class Workbench:
             )
         commands.append(self._yosys_tcl_command(["write_json", json_path]))
 
-        artifact = json_path
-        prefix = output_dir / output_name
-        render_commands: list[str] = []
-        needs_yosys_show = args.format != "json" and (
-            not args.schematic or args.format == "dot"
-        )
-        if needs_yosys_show:
-            render_commands.append(f"read_json {self._yosys_quote(json_path.name)}")
-            show_options = [
-                "show",
-                f"-format {args.format}",
-                "-viewer none",
-                f"-prefix {prefix.name}",
-                "-colors 2",
-                "-width",
-                "-signed",
-            ]
-            if args.format == "dot":
-                show_options.append("-long")
-            show_options.append(module)
-            render_commands.append(" ".join(show_options))
-            artifact = prefix.with_suffix(f".{args.format}")
-            if args.format in {"svg", "png"}:
-                self.require_tool("dot")
         if not self.dry_run:
             script_path.write_text("\n".join(commands) + "\n", encoding="utf-8")
         result = self.run(["yosys", "-c", script_path], cwd=self.root)
         if result.returncode != 0:
             raise VWBError(f"Yosys synthesis failed for {module}")
 
-        if render_commands:
+        artifact = json_path
+        prefix = output_dir / output_name
+        render_json_path = json_path
+        interface_dot_path: Path | None = None
+
+        def make_visual_overview() -> Path:
+            overview_path = output_dir / f"{output_name}.visual.json"
+            overview_script = output_dir / "visual-overview.tcl"
+            overview_commands = [
+                self._yosys_read_sources_command(
+                    sources, args.define, args.include
+                ),
+                self._yosys_tcl_command(
+                    ["hierarchy", "-check", "-top", yosys_top]
+                ),
+                self._yosys_tcl_command(["proc"]),
+                self._yosys_tcl_command(["opt", "-full"]),
+                self._yosys_tcl_command(["write_json", overview_path]),
+            ]
+            if not self.dry_run:
+                overview_script.write_text(
+                    "\n".join(overview_commands) + "\n", encoding="utf-8"
+                )
+            overview_result = self.run(
+                ["yosys", "-c", overview_script], cwd=self.root
+            )
+            if overview_result.returncode != 0 or (
+                not self.dry_run
+                and (
+                    not overview_path.is_file()
+                    or overview_path.stat().st_size == 0
+                )
+            ):
+                raise VWBError(
+                    f"could not create a visual overview for {module}; "
+                    f"full synthesis JSON remains at {json_path}"
+                )
+            return overview_path
+
+        def visual_overview_needs_interface(
+            overview_path: Path, *, enforce_size_limit: bool
+        ) -> bool:
+            try:
+                data = json.loads(overview_path.read_text(encoding="utf-8"))
+                module_data = data["modules"][yosys_top]
+                ports = module_data.get("ports", {})
+                cells = module_data.get("cells", {})
+            except (OSError, UnicodeError, json.JSONDecodeError, KeyError, TypeError):
+                return True
+            return (
+                (
+                    enforce_size_limit
+                    and overview_path.stat().st_size
+                    > NETLISTSVG_JSON_LIMIT_BYTES
+                )
+                or len(cells) > VISUAL_OVERVIEW_CELL_LIMIT
+                or any(
+                    len(port.get("bits", ())) > VISUAL_OVERVIEW_PORT_LIMIT_BITS
+                    for port in ports.values()
+                    if isinstance(port, dict)
+                )
+            )
+
+        def make_interface_dot(overview_path: Path) -> Path:
+            try:
+                data = json.loads(overview_path.read_text(encoding="utf-8"))
+                module_data = data["modules"][yosys_top]
+                ports = module_data.get("ports", {})
+                cells = module_data.get("cells", {})
+            except (
+                OSError,
+                UnicodeError,
+                json.JSONDecodeError,
+                KeyError,
+                TypeError,
+            ) as exc:
+                raise VWBError(
+                    f"could not read the visual overview for {module}; "
+                    f"full synthesis JSON remains at {json_path}"
+                ) from exc
+            if not isinstance(ports, dict) or not isinstance(cells, dict):
+                raise VWBError(
+                    f"visual overview has an invalid module record for {module}; "
+                    f"full synthesis JSON remains at {json_path}"
+                )
+
+            rows: list[str] = []
+            for name, port in sorted(ports.items()):
+                if not isinstance(port, dict):
+                    continue
+                direction = str(port.get("direction", "port"))
+                bits = port.get("bits", ())
+                width = len(bits) if isinstance(bits, list) else 0
+                rows.append(
+                    "    <TR>"
+                    f'<TD ALIGN="LEFT">{html.escape(direction)}</TD>'
+                    f'<TD ALIGN="LEFT"><B>{html.escape(str(name))}</B></TD>'
+                    f'<TD ALIGN="RIGHT">{width or "?"} bit'
+                    f'{"s" if width != 1 else ""}</TD>'
+                    "</TR>"
+                )
+            if not rows:
+                rows.append('    <TR><TD COLSPAN="3">No ports</TD></TR>')
+
+            interface_path = output_dir / f"{output_name}.interface.dot"
+            interface_lines = [
+                f"digraph {json.dumps(module)} {{",
+                '  graph [bgcolor="white", pad="0.2", rankdir="LR"];',
+                '  node [fontname="Helvetica", shape="plain"];',
+                "  interface [label=<",
+                '  <TABLE BORDER="1" CELLBORDER="1" CELLSPACING="0" '
+                'CELLPADDING="6" COLOR="#555555">',
+                '    <TR><TD COLSPAN="3" BGCOLOR="#E8EEF5"><B>'
+                f"{html.escape(module)}</B><BR/><FONT POINT-SIZE=\"10\">"
+                "large-netlist interface overview</FONT></TD></TR>",
+                '    <TR><TD><B>Direction</B></TD><TD><B>Port</B></TD>'
+                '<TD><B>Width</B></TD></TR>',
+                *rows,
+                '    <TR><TD COLSPAN="3" ALIGN="LEFT"><FONT POINT-SIZE="10">'
+                f"{len(cells)} internal cells are kept in {html.escape(json_path.name)}"
+                "</FONT></TD></TR>",
+                "  </TABLE>",
+                "  >];",
+                "}",
+            ]
+            if not self.dry_run:
+                interface_path.write_text(
+                    "\n".join(interface_lines) + "\n", encoding="utf-8"
+                )
+            return interface_path
+
+        used_visual_overview = False
+        if (
+            args.format in {"svg", "png"}
+            and not self.dry_run
+            and json_path.stat().st_size > VISUAL_OVERVIEW_JSON_LIMIT_BYTES
+        ):
+            print(
+                self.style(
+                    "warning: the full netlist is too large for a reliable "
+                    "drawing; rendering a smaller hierarchical overview "
+                    f"instead. Full JSON remains at {json_path}",
+                    Ansi.BOLD,
+                    Ansi.YELLOW,
+                    stream=sys.stderr,
+                ),
+                file=sys.stderr,
+            )
+            render_json_path = make_visual_overview()
+            used_visual_overview = True
+        if (
+            args.format in {"svg", "png"}
+            and not self.dry_run
+            and visual_overview_needs_interface(
+                render_json_path,
+                enforce_size_limit=used_visual_overview,
+            )
+        ):
+            print(
+                self.style(
+                    "warning: the drawing input is still too detailed for a "
+                    "reliable layout; drawing a compact module interface "
+                    "instead",
+                    Ansi.BOLD,
+                    Ansi.YELLOW,
+                    stream=sys.stderr,
+                ),
+                file=sys.stderr,
+            )
+            interface_dot_path = make_interface_dot(render_json_path)
+
+        def render_with_sfdp(dot_path: Path, target: Path) -> bool:
+            try:
+                self.require_tool("sfdp")
+            except VWBError:
+                return False
+            scalable = self.run(
+                ["sfdp", "-Tsvg", "-o", target, dot_path],
+                cwd=output_dir,
+                timeout=120,
+            )
+            valid = scalable.returncode == 0 and self._is_valid_svg(target)
+            if not valid and not self.dry_run and target.exists():
+                target.unlink()
+            return valid
+
+        def render_with_dot(dot_path: Path, target: Path) -> bool:
+            try:
+                self.require_tool("dot")
+            except VWBError:
+                return False
+            conventional = self.run(
+                ["dot", "-Tsvg", "-o", target, dot_path],
+                cwd=output_dir,
+                timeout=120,
+            )
+            valid = conventional.returncode == 0 and self._is_valid_svg(target)
+            if not valid and not self.dry_run and target.exists():
+                target.unlink()
+            return valid
+
+        def render_with_yosys(output_format: str) -> Path:
+            target = prefix.with_suffix(f".{output_format}")
+            if not self.dry_run and (target.exists() or target.is_symlink()):
+                target.unlink()
+            if (
+                output_format == "svg"
+                and not self.dry_run
+                and render_json_path.stat().st_size
+                > SCALABLE_LAYOUT_JSON_LIMIT_BYTES
+            ):
+                print(
+                    self.style(
+                        "warning: Yosys graph is large; using the scalable sfdp "
+                        "layout",
+                        Ansi.BOLD,
+                        Ansi.YELLOW,
+                        stream=sys.stderr,
+                    ),
+                    file=sys.stderr,
+                )
+                dot_path = render_with_yosys("dot")
+                if not render_with_sfdp(dot_path, target) and not render_with_dot(
+                    dot_path, target
+                ):
+                    raise VWBError(
+                        f"visual rendering failed for {module}; synthesis JSON "
+                        f"remains at {json_path}"
+                    )
+                return target
+            if output_format in {"svg", "png"}:
+                self.require_tool("dot")
             render_script = output_dir / "render.ys"
+            show_options = [
+                "show",
+                "-format",
+                output_format,
+                "-viewer",
+                "none",
+                "-prefix",
+                prefix.name,
+                "-colors",
+                "2",
+                "-width",
+                "-signed",
+            ]
+            if output_format == "dot":
+                show_options.append("-long")
+            show_options.append(yosys_top)
+            render_commands = [
+                self._yosys_command(["read_json", render_json_path.name]),
+                self._yosys_command(show_options),
+            ]
             if not self.dry_run:
                 render_script.write_text(
                     ";\n".join(render_commands) + ";\n", encoding="utf-8"
                 )
-            result = self.run(["yosys", "-s", render_script], cwd=output_dir)
-            if result.returncode != 0:
-                raise VWBError(f"Yosys rendering failed for {module}")
+            render_result = self.run(
+                ["yosys", "-s", render_script], cwd=output_dir, timeout=120
+            )
+            valid_render = render_result.returncode == 0 and (
+                self.dry_run or target.is_file()
+            ) and (
+                output_format != "svg"
+                or self.dry_run
+                or self._is_valid_svg(target)
+            )
+            if not valid_render and output_format == "svg" and not self.dry_run:
+                print(
+                    self.style(
+                        "warning: Graphviz dot layout failed; trying the scalable "
+                        "sfdp layout",
+                        Ansi.BOLD,
+                        Ansi.YELLOW,
+                        stream=sys.stderr,
+                    ),
+                    file=sys.stderr,
+                )
+                dot_path = render_with_yosys("dot")
+                valid_render = render_with_sfdp(dot_path, target)
+            if not valid_render:
+                raise VWBError(
+                    f"visual rendering failed for {module}; synthesis JSON remains at {json_path}"
+                )
+            return target
 
-        if args.schematic:
-            self.require_tool("netlistsvg")
+        if args.format == "dot":
+            artifact = render_with_yosys("dot")
+        elif args.format in {"svg", "png"}:
             svg_path = output_dir / f"{output_name}.svg"
-            result = self.run(["netlistsvg", json_path, "-o", svg_path], cwd=self.root)
-            if result.returncode != 0:
-                raise VWBError(f"netlistsvg failed for {module}")
-            if args.format == "svg":
-                artifact = svg_path
+            rendered = False
+            if interface_dot_path is not None:
+                if not self.dry_run and svg_path.exists():
+                    svg_path.unlink()
+                rendered = render_with_dot(interface_dot_path, svg_path)
+                if not rendered:
+                    rendered = render_with_sfdp(interface_dot_path, svg_path)
+                if not rendered:
+                    raise VWBError(
+                        f"module-interface rendering failed for {module}; "
+                        f"synthesis JSON remains at {json_path}"
+                    )
+            large_netlist = (
+                not self.dry_run
+                and render_json_path.stat().st_size
+                > NETLISTSVG_JSON_LIMIT_BYTES
+            )
+            if rendered:
+                pass
+            elif args.schematic and large_netlist:
+                print(
+                    self.style(
+                        "warning: netlist is too large for NetlistSVG; using "
+                        "the scalable Yosys layout",
+                        Ansi.BOLD,
+                        Ansi.YELLOW,
+                        stream=sys.stderr,
+                    ),
+                    file=sys.stderr,
+                )
+            elif args.schematic:
+                try:
+                    self.require_tool("netlistsvg")
+                except VWBError:
+                    rendered = False
+                else:
+                    temporary_svg = output_dir / f".{output_name}.netlistsvg.tmp"
+                    if not self.dry_run and temporary_svg.exists():
+                        temporary_svg.unlink()
+                    netlist_result = self.run(
+                        ["netlistsvg", render_json_path, "-o", temporary_svg],
+                        cwd=self.root,
+                        timeout=120,
+                    )
+                    rendered = netlist_result.returncode == 0 and (
+                        self.dry_run or self._is_valid_svg(temporary_svg)
+                    )
+                    if rendered and not self.dry_run:
+                        os.replace(temporary_svg, svg_path)
+                    elif not self.dry_run and temporary_svg.exists():
+                        temporary_svg.unlink()
+            if not rendered:
+                if args.schematic and not large_netlist:
+                    print(
+                        self.style(
+                            "warning: NetlistSVG could not render this design; using Yosys instead",
+                            Ansi.BOLD,
+                            Ansi.YELLOW,
+                            stream=sys.stderr,
+                        ),
+                        file=sys.stderr,
+                    )
+                svg_path = render_with_yosys("svg")
+            artifact = svg_path
             if args.format == "png":
                 self.require_tool("rsvg-convert")
                 png_path = output_dir / f"{output_name}.png"
-                result = self.run(
-                    ["rsvg-convert", "-o", png_path, svg_path], cwd=self.root
+                temporary_png = output_dir / f".{output_name}.png.tmp"
+                if not self.dry_run and temporary_png.exists():
+                    temporary_png.unlink()
+                zoom = self._png_zoom(svg_path) if not self.dry_run else 2.0
+                if zoom < 2.0:
+                    print(
+                        self.style(
+                            "warning: schematic is very large; limiting PNG to "
+                            "16 megapixels",
+                            Ansi.BOLD,
+                            Ansi.YELLOW,
+                            stream=sys.stderr,
+                        ),
+                        file=sys.stderr,
+                    )
+                raster_result = self.run(
+                    [
+                        "rsvg-convert",
+                        "--format", "png",
+                        "--zoom", f"{zoom:.6g}",
+                        "--background-color", "white",
+                        "--unlimited",
+                        "--output", temporary_png,
+                        svg_path,
+                    ],
+                    cwd=self.root,
+                    timeout=120,
                 )
-                if result.returncode != 0:
+                if raster_result.returncode != 0 or (
+                    not self.dry_run and not temporary_png.is_file()
+                ):
                     raise VWBError(f"SVG rasterization failed for {module}")
+                if not self.dry_run:
+                    os.replace(temporary_png, png_path)
                 artifact = png_path
 
         if not self.dry_run and not artifact.is_file():
             raise VWBError(f"synthesis artifact was not produced: {artifact}")
         viewer = args.view.strip() if args.view else "none"
+        explicit_options = set(getattr(args, "_explicit_options", ()))
+        if args.format in {"json", "dot"} and "view" not in explicit_options:
+            viewer = "none"
         if viewer.lower() not in {"none", "off", "false", "0"}:
             self.require_tool(viewer)
             if self.run([viewer, artifact], cwd=self.root).returncode != 0:
@@ -2208,8 +4091,8 @@ class Workbench:
         return output
 
     def run_fpga(self, module: str, args: argparse.Namespace) -> Path:
-        self.catalog.definition(module)
-        require_yosys_identifier(module)
+        module = self.catalog.definition(module).name
+        yosys_top = require_yosys_identifier(module)
         board = {"tangnano9k": "gowin", "icebreaker": "ice40"}.get(
             args.board, args.board
         )
@@ -2230,13 +4113,14 @@ class Workbench:
         requested_index = stages.index(args.stage)
         defines = ["LEDS_NR=6", *args.define]
         self.require_tool("yosys")
+        sources = self.yosys_sources(module, output, defines, args.include)
         design_json = output / f"{output_name}.json"
         script = output / "fpga.tcl"
         synth_command = self._yosys_tcl_command(
             [
                 "synth_gowin" if board == "gowin" else "synth_ice40",
                 "-top",
-                module,
+                yosys_top,
                 "-json",
                 design_json.name,
             ]
@@ -2245,9 +4129,11 @@ class Workbench:
             script.write_text(
                 "\n".join(
                     [
-                        self._yosys_read_command(module, defines, args.include),
+                        self._yosys_read_sources_command(
+                            sources, defines, args.include
+                        ),
                         self._yosys_tcl_command(
-                            ["hierarchy", "-check", "-top", module]
+                            ["hierarchy", "-check", "-top", yosys_top]
                         ),
                         synth_command,
                     ]
@@ -2343,16 +4229,62 @@ class Workbench:
             raise VWBError(f"iCE40 flashing failed for {module}")
         return artifact
 
+    def _clean_simulation_temporaries(self, target: Path) -> None:
+        paths = sorted(
+            target.rglob("*"),
+            key=lambda path: (len(path.parts), str(path)),
+            reverse=True,
+        )
+        for path in paths:
+            if path.is_symlink():
+                if self.verbose or self.dry_run:
+                    print(
+                        self.style("unlink", Ansi.BOLD, Ansi.YELLOW),
+                        self.style(path, Ansi.DIM),
+                    )
+                if not self.dry_run:
+                    path.unlink()
+                continue
+            if path.is_file():
+                if path.suffix.lower() == ".gtkw":
+                    continue
+                if self.verbose or self.dry_run:
+                    print(
+                        self.style("remove", Ansi.BOLD, Ansi.YELLOW),
+                        self.style(path, Ansi.DIM),
+                    )
+                if not self.dry_run:
+                    path.unlink()
+                continue
+            if path.is_dir() and not self.dry_run:
+                try:
+                    path.rmdir()
+                except OSError:
+                    pass
+        if not self.dry_run:
+            try:
+                target.rmdir()
+            except OSError:
+                pass
+
     def clean(self, scope: str) -> None:
-        targets = {
+        individual_targets = {
             "sim": self.build_dir / "sim",
             "waves": self.saved_waves_dir,
             "synth": self.build_dir / "synth",
+            "lint": self.build_dir / "lint",
             "fpga": self.build_dir / "fpga",
             "formal": self.build_dir / "formal",
             "all": self.build_dir,
         }
-        target_path = targets[scope]
+        target_paths = (
+            [
+                individual_targets["sim"],
+                individual_targets["lint"],
+            ]
+            if scope == "temp"
+            else [individual_targets[scope]]
+        )
         build = self.build_dir.resolve()
         self._validate_build_location()
         marker = build / BUILD_MARKER
@@ -2361,39 +4293,75 @@ class Workbench:
         if not marker.is_file() or marker.is_symlink():
             raise VWBError(f"refusing to clean a directory not owned by vwb.py: {build}")
         self._validate_build_marker(marker, build)
-        if target_path.is_symlink():
+        for target_path in target_paths:
+            if target_path.is_symlink():
+                if self.verbose or self.dry_run:
+                    print(
+                        self.style("unlink", Ansi.BOLD, Ansi.YELLOW),
+                        self.style(target_path, Ansi.DIM),
+                    )
+                if not self.dry_run:
+                    target_path.unlink()
+                continue
+            target = target_path.resolve()
+            if target != build and build not in target.parents:
+                raise VWBError(f"refusing to remove unsafe build path: {target}")
             if self.verbose or self.dry_run:
                 print(
-                    self.style("unlink", Ansi.BOLD, Ansi.YELLOW),
-                    self.style(target_path, Ansi.DIM),
+                    self.style("remove", Ansi.BOLD, Ansi.YELLOW),
+                    self.style(target, Ansi.DIM),
                 )
-            if not self.dry_run:
-                target_path.unlink()
-            return
-        target = target_path.resolve()
-        if target != build and build not in target.parents:
-            raise VWBError(f"refusing to remove unsafe build path: {target}")
-        if self.verbose or self.dry_run:
-            print(
-                self.style("remove", Ansi.BOLD, Ansi.YELLOW),
-                self.style(target, Ansi.DIM),
-            )
-        if target.exists() and not target.is_dir():
-            raise VWBError(f"refusing to clean non-directory build target: {target}")
-        if target.exists() and not self.dry_run:
-            shutil.rmtree(target)
+            if target.exists() and not target.is_dir():
+                raise VWBError(f"refusing to clean non-directory build target: {target}")
+            if scope == "temp" and target_path == individual_targets["sim"]:
+                if target.exists():
+                    self._clean_simulation_temporaries(target)
+                continue
+            if target.exists() and not self.dry_run:
+                shutil.rmtree(target)
+
+
+def module_name_completer(
+    prefix: str, parsed_args: argparse.Namespace, **_: object
+) -> list[str]:
+    try:
+        settings = resolve_project_settings(parsed_args)
+        source = project_path(settings.root, settings.src_dir)
+        names = SourceCatalog(find_hdl_files(source)).names()
+    except (OSError, VWBError):
+        return []
+    folded_prefix = prefix.casefold()
+    return [name for name in names if name.casefold().startswith(folded_prefix)]
+
+
+def saved_wave_completer(
+    prefix: str, parsed_args: argparse.Namespace, **_: object
+) -> list[str]:
+    try:
+        settings = resolve_project_settings(parsed_args)
+        directory = project_path(settings.root, settings.build_dir) / "saved-waves"
+        if directory.is_symlink() or not directory.is_dir():
+            return []
+        return [
+            path.name
+            for path in sorted(directory.iterdir())
+            if path.is_dir() and not path.is_symlink() and path.name.startswith(prefix)
+        ]
+    except (OSError, VWBError):
+        return []
 
 
 def add_simulation_options(parser: argparse.ArgumentParser) -> None:
-    parser.add_argument("modules", nargs="*", metavar="MODULE")
-    parser.add_argument("--test", help="explicit Cocotb or Verilog test file")
+    modules = parser.add_argument("modules", nargs="*", metavar="MODULE")
+    modules.completer = module_name_completer  # type: ignore[attr-defined]
+    parser.add_argument("--test", help="explicit Cocotb, Verilog, or VHDL test file")
     parser.add_argument(
         "--test-language",
-        choices=["auto", "cocotb", "verilog"],
+        choices=["auto", "cocotb", "verilog", "vhdl"],
         default="auto",
-        help="select Cocotb and/or Verilog testbenches",
+        help="select Cocotb, Verilog, or VHDL testbenches",
     )
-    parser.add_argument("--test-top", help="top module declared by a Verilog testbench")
+    parser.add_argument("--test-top", help="top unit declared by an HDL testbench")
     parser.add_argument("--testcase", help="run one Cocotb testcase")
     parser.add_argument("--seed", type=int, help="Cocotb/Python random seed")
     parser.add_argument("--waves", action="store_true", help="generate a waveform")
@@ -2415,13 +4383,20 @@ def add_simulation_options(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--compile-arg", action="append", default=[], metavar="ARG")
     parser.add_argument("--sim-arg", action="append", default=[], metavar="ARG")
     parser.add_argument("--plusarg", action="append", default=[], metavar="ARG")
-    parser.add_argument("--keep-going", action="store_true")
+    parser.add_argument(
+        "--no-gate-level",
+        dest="gate_level",
+        action="store_false",
+        default=True,
+        help="skip the default post-synthesis functional simulation",
+    )
+    parser.add_argument("--keep-going", action="store_true", help=argparse.SUPPRESS)
 
 
 def make_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="vwb.py",
-        description="Discover, test, lint, synthesize, and build Verilog projects.",
+        description="Discover, test, lint, synthesize, and build HDL projects.",
         epilog=(
             "examples:\n"
             "  ./vwb.py list\n"
@@ -2474,9 +4449,15 @@ def make_parser() -> argparse.ArgumentParser:
     add_simulation_options(wave_parser)
     wave_parser.set_defaults(waves=True)
     wave_parser.add_argument("--save", help="explicit GTKWave save file")
-    wave_parser.add_argument("--tag", help="archive a passing waveform with this tag")
+    wave_tag = wave_parser.add_argument(
+        "--tag", help="archive a passing waveform with this tag"
+    )
+    wave_tag.completer = saved_wave_completer  # type: ignore[attr-defined]
     wave_parser.add_argument("--replace-tag", action="store_true")
-    wave_parser.add_argument("--load", metavar="TAG", help="open an archived waveform")
+    wave_load = wave_parser.add_argument(
+        "--load", metavar="TAG", help="open an archived waveform"
+    )
+    wave_load.completer = saved_wave_completer  # type: ignore[attr-defined]
     wave_parser.add_argument(
         "--list-saved", action="store_true", help="list archived waveforms"
     )
@@ -2485,17 +4466,37 @@ def make_parser() -> argparse.ArgumentParser:
     lint_parser = subparsers.add_parser(
         "lint", help="lint selected module hierarchies"
     )
-    lint_parser.add_argument("modules", nargs="*", metavar="MODULE")
+    lint_modules = lint_parser.add_argument("modules", nargs="*", metavar="MODULE")
+    lint_modules.completer = module_name_completer  # type: ignore[attr-defined]
     lint_parser.add_argument("--all", action="store_true", dest="all_modules")
-    lint_parser.add_argument("--keep-going", action="store_true")
+    lint_parser.add_argument(
+        "--linter",
+        action="append",
+        choices=["all", "iverilog", "verilator", "yosys", "verible", "ghdl"],
+        default=[],
+        help="linter to run; repeat for several (default: all applicable tools)",
+    )
+    lint_parser.add_argument("--keep-going", action="store_true", help=argparse.SUPPRESS)
     lint_parser.add_argument("-D", "--define", action="append", default=[])
     lint_parser.add_argument("-I", "--include", action="append", default=[])
-    lint_parser.add_argument("--lint-arg", action="append", default=[])
+    lint_parser.add_argument("--iverilog-arg", action="append", default=[])
+    lint_parser.add_argument("--verilator-arg", action="append", default=[])
+    lint_parser.add_argument(
+        "--lint-arg",
+        dest="verilator_arg",
+        action="append",
+        default=argparse.SUPPRESS,
+        help=argparse.SUPPRESS,
+    )
+    lint_parser.add_argument("--yosys-arg", action="append", default=[])
+    lint_parser.add_argument("--verible-arg", action="append", default=[])
+    lint_parser.add_argument("--ghdl-arg", action="append", default=[])
 
     synth_parser = subparsers.add_parser(
         "synth", help="synthesize and render a module"
     )
-    synth_parser.add_argument("module", nargs="?")
+    synth_module = synth_parser.add_argument("module", nargs="?")
+    synth_module.completer = module_name_completer  # type: ignore[attr-defined]
     synth_parser.add_argument(
         "--format",
         choices=["json", "svg", "png", "dot"],
@@ -2541,7 +4542,8 @@ def make_parser() -> argparse.ArgumentParser:
     formal_parser.add_argument("--view", action="store_true")
 
     fpga_parser = subparsers.add_parser("fpga", help="build or flash an FPGA bitstream")
-    fpga_parser.add_argument("module", nargs="?")
+    fpga_module = fpga_parser.add_argument("module", nargs="?")
+    fpga_module.completer = module_name_completer  # type: ignore[attr-defined]
     fpga_parser.add_argument(
         "--board",
         required=True,
@@ -2558,8 +4560,9 @@ def make_parser() -> argparse.ArgumentParser:
     clean_parser.add_argument(
         "scope",
         nargs="?",
-        choices=["sim", "waves", "synth", "fpga", "formal", "all"],
-        default="all",
+        choices=["temp", "sim", "waves", "synth", "lint", "fpga", "formal", "all"],
+        default="temp",
+        help="what to remove; plain clean preserves synthesis and saved waves",
     )
 
     doctor_parser = subparsers.add_parser("doctor", help="check project tools")
@@ -2625,6 +4628,7 @@ def wave_management_overrides(args: argparse.Namespace) -> list[str]:
         ("compile_arg", "--compile-arg"),
         ("sim_arg", "--sim-arg"),
         ("plusarg", "--plusarg"),
+        ("gate_level", "--no-gate-level"),
         ("keep_going", "--keep-going"),
     ]
     return [name for dest, name in options if dest in explicit]
@@ -2638,19 +4642,37 @@ def command_list(workbench: Workbench, args: argparse.Namespace) -> int:
         "packages": [
             {
                 "name": name,
+                "language": "systemverilog",
                 "files": [
                     display_path(path, workbench.root)
                     for path in workbench.catalog.packages[name]
                 ],
             }
             for name in sorted(workbench.catalog.packages)
+        ]
+        + [
+            {
+                "name": workbench.catalog.vhdl_package_names[name],
+                "language": "vhdl",
+                "files": [
+                    display_path(path, workbench.root)
+                    for path in unique_paths(
+                        [
+                            *workbench.catalog.vhdl_packages[name],
+                            *workbench.catalog.vhdl_package_bodies.get(name, []),
+                        ]
+                    )
+                ],
+            }
+            for name in sorted(workbench.catalog.vhdl_packages)
         ],
         "modules": [
             {
                 "name": name,
+                "language": workbench.catalog.definition(name).language,
                 "files": [
-                    display_path(item.path, workbench.root)
-                    for item in workbench.catalog.modules[name]
+                    display_path(path, workbench.root)
+                    for path in workbench.catalog.implementation_files(name)
                 ],
                 "dependencies": sorted(
                     {
@@ -2685,7 +4707,8 @@ def command_list(workbench: Workbench, args: argparse.Namespace) -> int:
             files = workbench.style(
                 ", ".join(package["files"]), Ansi.DIM
             )
-            print(f"  {name} {files}")
+            language = workbench.style(f"[{package['language']}]", Ansi.MAGENTA)
+            print(f"  {name} {language} {files}")
     print(workbench.style("Modules:", Ansi.BOLD, Ansi.CYAN))
     for module in data["modules"]:
         dependencies = ", ".join(module["dependencies"]) or "-"
@@ -2858,14 +4881,46 @@ def command_lint(workbench: Workbench, args: argparse.Namespace) -> int:
         modules = sorted({spec.dut for spec in workbench.tests})
     if not modules:
         raise VWBError("no modules selected for lint")
+    requested_tools = list(dict.fromkeys(args.linter or ["all"]))
+    checks: list[tuple[str, str]] = []
+    for module in modules:
+        language = workbench.catalog.definition(module).language
+        if "all" in requested_tools:
+            tools = (
+                ["ghdl", "iverilog", "verilator", "yosys"]
+                if language == "vhdl"
+                else ["iverilog", "verilator", "yosys", "verible"]
+            )
+            tools.extend(tool for tool in requested_tools if tool != "all")
+        else:
+            tools = requested_tools
+        checks.extend((module, tool) for tool in dict.fromkeys(tools))
     passed = 0
-    for index, module in enumerate(modules, start=1):
+    failures: list[tuple[str, str, str]] = []
+    for index, (module, tool) in enumerate(checks, start=1):
         print(
             workbench.style("==>", Ansi.BOLD, Ansi.CYAN)
-            + f" [{index}/{len(modules)}] lint "
+            + f" [{index}/{len(checks)}] lint "
             + workbench.style(module, Ansi.BOLD)
+            + f" with {tool}"
         )
-        ok = workbench.lint_module(module, args.define, args.include, args.lint_arg)
+        reason = "tool reported errors"
+        try:
+            ok = workbench.lint_with_tool(
+                module,
+                tool,
+                args.define,
+                args.include,
+                iverilog_args=args.iverilog_arg,
+                verilator_args=args.verilator_arg,
+                yosys_args=args.yosys_arg,
+                verible_args=args.verible_arg,
+                ghdl_args=args.ghdl_arg,
+            )
+        except VWBError as exc:
+            ok = False
+            reason = str(exc)
+            print(f"error: {exc}", file=sys.stderr)
         print(
             workbench.style(
                 "PASS" if ok else "FAIL",
@@ -2874,17 +4929,21 @@ def command_lint(workbench: Workbench, args: argparse.Namespace) -> int:
             )
         )
         passed += int(ok)
-        if not ok and not args.keep_going:
-            break
+        if not ok:
+            failures.append((module, tool, reason))
     print(
         workbench.style("==>", Ansi.BOLD, Ansi.CYAN)
         + " "
         + workbench.style(
-            f"{passed}/{len(modules)} lint runs passed",
-            Ansi.GREEN if passed == len(modules) else Ansi.RED,
+            f"{passed}/{len(checks)} lint checks passed",
+            Ansi.GREEN if passed == len(checks) else Ansi.RED,
         )
     )
-    return 0 if passed == len(modules) else 1
+    if failures:
+        print(workbench.style("Failed lint checks:", Ansi.BOLD, Ansi.RED))
+        for module, tool, reason in failures:
+            print(f"  {module}: {tool}: {reason}")
+    return 0 if passed == len(checks) else 1
 
 
 def command_synth(workbench: Workbench, args: argparse.Namespace) -> int:
@@ -2909,10 +4968,24 @@ def command_fpga(workbench: Workbench, args: argparse.Namespace) -> int:
 
 def command_doctor(workbench: Workbench, args: argparse.Namespace) -> int:
     groups = {
-        "simulation": ["iverilog", "vvp", "cocotb-config"],
+        "simulation": ["iverilog", "vvp", "ghdl", "sv2v", "cocotb-config"],
         "waveform": ["gtkwave"],
-        "lint": ["verilator"],
-        "synthesis": ["yosys", "dot", "netlistsvg", "rsvg-convert", "geeqie"],
+        "lint": [
+            "iverilog",
+            "verilator",
+            "yosys",
+            "verible-verilog-lint",
+            "ghdl",
+        ],
+        "synthesis": [
+            "yosys",
+            "dot",
+            "sfdp",
+            "netlistsvg",
+            "rsvg-convert",
+            "geeqie",
+        ],
+        "completion": ["register-python-argcomplete"],
         "formal": ["sby"],
         "gowin": ["nextpnr-gowin", "gowin_pack", "openFPGALoader"],
         "ice40": ["nextpnr-ice40", "icepack", "openFPGALoader"],
@@ -2939,13 +5012,27 @@ def command_doctor(workbench: Workbench, args: argparse.Namespace) -> int:
             + f"{len(workbench.tests)} runnable tests"
         )
     required = [data["simulation"]["iverilog"], data["simulation"]["vvp"]]
-    if any(spec.kind == "cocotb" for spec in workbench.tests):
+    required.append(data["synthesis"]["yosys"])
+    if workbench.catalog.names():
         required.append(data["simulation"]["cocotb-config"])
+    if any(
+        workbench.catalog.definition(name).language == "vhdl"
+        for name in workbench.catalog.names()
+    ):
+        required.append(data["simulation"]["ghdl"])
+    if any(path.suffix.lower() == ".sv" for path in workbench.catalog.files):
+        required.append(data["simulation"]["sv2v"])
     return 0 if all(required) else 1
 
 
 def main(argv: Sequence[str] | None = None) -> int:
     parser = make_parser()
+    try:
+        import argcomplete
+    except ImportError:
+        pass
+    else:
+        argcomplete.autocomplete(parser)
     args = parser.parse_args(argv)
     try:
         if args.command == "init":

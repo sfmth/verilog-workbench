@@ -1,507 +1,862 @@
-<!--
-*** Thanks for checking out the Best-README-Template. If you have a suggestion
-*** that would make this better, please fork the repo and create a pull request
-*** or simply open an issue with the tag "enhancement".
-*** Thanks again! Now go create something AMAZING! :D
-***
-***
-***
-*** To avoid retyping too much info. Do a search and replace for the following:
-*** github_username, repo_name, twitter_handle, email, project_title, project_description
--->
+# Verilog Workbench
 
+Verilog Workbench (`vwb.py`) is a small command-line workbench for learning and
+checking digital logic. Put HDL source in `src/`, put tests in `test/`, and let
+VWB discover the design hierarchy, run simulations, inspect waves, lint code,
+synthesize schematics, and build supported FPGA targets.
 
+VWB is designed to make the first steps simple without hiding the real tools.
+Its output shows whether the RTL design passed, whether the default
+post-synthesis gate-level check passed, and which external command failed when
+something needs attention. Release changes are listed in
+[`CHANGELOG.md`](CHANGELOG.md).
 
-<!-- PROJECT SHIELDS -->
-<!--
-*** I'm using markdown "reference style" links for readability.
-*** Reference links are enclosed in brackets [ ] instead of parentheses ( ).
-*** See the bottom of this document for the declaration of the reference variables
-*** for contributors-url, forks-url, etc. This is an optional, concise syntax you may use.
-*** https://www.markdownguide.org/basic-syntax/#reference-style-links
--->
+## Start Here: Docker
 
-<!-- PROJECT LOGO -->
-  <h1 align="center">The Opensource Verilog Workbench</h1>
+Docker is the recommended setup. The project image contains Icarus Verilog,
+GHDL, Cocotb, Yosys, Verilator, Verible, sv2v, GTKWave, NetlistSVG, Graphviz,
+SymbiYosys, and the supported FPGA tools.
 
-  <p align="center">
-    A Verilog workbench with opensource toolchains that lets you write and simulate your verilog code with ease
-</p>
-
-
-
-<!-- TABLE OF CONTENTS -->
-<details open="open">
-  <summary><h2 style="display: inline-block">Table of Contents</h2></summary>
-  <ol>
-    <li>
-      <a href="#about-the-project">About The Project</a>
-      <ul>
-        <li><a href="#built-with">Built With</a></li>
-      </ul>
-    </li>
-    <li>
-      <a href="#getting-started">Getting Started</a>
-      <ul>
-        <li><a href="#prerequisites">Prerequisites</a></li>
-        <li><a href="#installation">Installation</a></li>
-      </ul>
-    </li>
-    <li>
-      <a href="#usage">Usage</a>
-      <ul>
-        <li><a href="#verilog-work-bench-cli">Verilog Work Bench CLI</a></li>
-        <li><a href="#cli-reference">CLI Reference</a></li>
-        <li><a href="#bundled-example">Bundled Example</a></li>
-        <li><a href="#cicd">CI/CD</a></li>
-      </ul>
-    </li>
-    <li><a href="#license">License</a></li>
-  </ol>
-</details>
-
-
-
-<!-- ABOUT THE PROJECT -->
-## About The Project
-This project aims to ease the setup of your verilog projects by providing you with a precoded workbench.
-![image](https://user-images.githubusercontent.com/23662796/178709130-ad64a100-0d17-45ab-8561-e9ab9b15baac.png)
-
-### Built With
-
-* `Icarus Verilog (iverilog)` To simulate your verilog code
-* `Cocotb` To verify your verilog code by writing python testbenches
-* `GTKWave` To view the input or outpot waveforms of your design 
-* `Yosys` To synthesize your design into actual hardware and view it
-* `SymbiYosys (sby)` To run formal verification configurations
-* `nextpnr-ice40` / `nextpnr-himbaechel-gowin` For place and route on iCE40 or Gowin FPGAs (`nextpnr-gowin` remains supported)
-* `IceStorm (icepack)` To pack iCE40 bitstreams
-* `Apicula (gowin_pack)` To pack Gowin bitstreams
-* `openFPGALoader` To flash FPGA boards
-
-
-
-<!-- GETTING STARTED -->
-## Getting Started
-
-To get a local copy up and running follow these simple steps.
-
-### Prerequisites
-
-
-Ubuntu 26.04 LTS:
-```
-$ sudo apt update && sudo apt upgrade && sudo apt install iverilog yosys gtkwave verilator graphviz librsvg2-bin nodejs npm geeqie git make python3 python3-pip libpython3-dev nextpnr-ice40 nextpnr-gowin fpga-icestorm openfpgaloader boolector z3
-$ pip install --break-system-packages cocotb==1.7.2 apycula click && printf '\nexport PATH="$HOME/.local/bin:$PATH"\n' >> "$HOME/.bashrc" && export PATH="$HOME/.local/bin:$PATH"
-$ sudo npm install -g netlistsvg
-$ git clone https://github.com/YosysHQ/sby.git /tmp/sby && git -C /tmp/sby checkout --detach fea6e467d067b3ea84b6b5ac08cd48beb59f0d42 && sudo make -C /tmp/sby install && rm -rf /tmp/sby
-```
-
-Ubuntu 26.04's transitional `nextpnr-gowin` package installs
-`nextpnr-himbaechel-gowin`. VWB prefers that executable, also supports generic
-`nextpnr-himbaechel` and legacy `nextpnr-gowin`, and selects the matching
-command-line dialect automatically.
-
-### Installation
-
-1. Clone the repo
-   ```sh
-   git clone https://github.com/sfmth/verilog-workbench/ && cd verilog-workbench
-   ```
-
-2. Check the toolchain and run the bundled example:
-   ```sh
-   ./vwb.py --src-dir examples/src --test-dir examples/test doctor
-   ./vwb.py --src-dir examples/src --test-dir examples/test test encoder --waves
-   ```
-
-
-<!-- USAGE EXAMPLES -->
-## Usage
-The root `src/` and `test/` directories contain no designs or test cases; their
-only tracked files keep the directories and Python package available for a new
-checkout. Put your Verilog and testbench files there. The bundled reference
-project and regression suite live under `examples/src/` and `examples/test/`.
-
-The legacy Makefile workflow expected one module per same-named source file and
-required conditional waveform dump snippets. The `vwb.py` workflow below
-discovers declarations and generates waveform dump logic automatically, so
-source modules do not need `$dumpfile`, `$dumpvars`, or a `COCOTB_SIM`
-conditional block.
-
-### Verilog Work Bench CLI
-
-`vwb.py` discovers Verilog/SystemVerilog module declarations under `src/` and
-their tests under `test/`. Source file names do not have to match module names,
-and only the selected module hierarchy is compiled.
-
-Python tests must contain at least one `@cocotb.test()` and normally use the
-name `test_<module>.py`. HDL testbenches can use `test_<module>.v`,
-`test_<module>.sv`, `tb_<module>.*`, or `<module>_tb.*`. The name `<module>` should match a module name in HDL sources.
+You need Docker and Git on the host:
 
 ```sh
-./vwb.py doctor                         # Check installed tools
-./vwb.py list                           # Show modules, dependencies, and tests
-./vwb.py test                           # Run every discovered test
-./vwb.py test my_module --waves          # Run one module and generate an FST
-./vwb.py wave my_module                  # Run and open GTKWave
-./vwb.py wave my_module --tag known-good # Archive a passing waveform
-./vwb.py wave --load known-good          # Reopen it without simulating
-./vwb.py lint my_module
-./vwb.py synth my_module                 # Generate and open a PNG schematic
-./vwb.py fpga my_module --board ice40 --stage pack
-./vwb.py clean all
+git clone https://github.com/sfmth/verilog-workbench.git
+cd verilog-workbench
+./run-docker.sh
 ```
 
-Use the global directory options before the command for a different project
-layout. For example, `./vwb.py --src-dir rtl --test-dir verification test`.
-To save those paths once, initialize the project configuration:
+`run-docker.sh` builds the image, mounts this checkout into the container, and
+opens a shell. It also forwards a Linux X11 display when one is available, so
+GTKWave and Geeqie can open windows.
+
+Inside the container, try the bundled project:
 
 ```sh
-./vwb.py init --root . --src-dir <path_to_rtl> --test-dir <path_to_test_files> --build-dir .vwb
+./vwb.py --src-dir examples/src --test-dir examples/test doctor
+./vwb.py --src-dir examples/src --test-dir examples/test list
+./vwb.py --src-dir examples/src --test-dir examples/test test encoder --waves
+./vwb.py --src-dir examples/src --test-dir examples/test synth encoder --no-view
 ```
 
-This creates `.vwb.json` in the project root. Later commands discover it from
-the current directory or any child directory, while explicit global directory
-options remain one-command overrides.
+The test command runs two functional checks by default:
 
-### CLI Reference
+1. **RTL simulation** checks the code as written.
+2. **Gate-level simulation** asks Yosys to synthesize the design, then runs the
+   same test against the generated Verilog netlist.
 
-The command line has this form:
+The generated FST waveform is under `.vwb/sim/`. The synthesized PNG is under
+`.vwb/synth/`.
+
+## Build Your First Design
+
+Create a project inside the checkout so it remains available through the
+Docker mount:
+
+```sh
+mkdir -p learning-counter
+./vwb.py init --root learning-counter
+```
+
+This creates:
 
 ```text
-./vwb.py [GLOBAL OPTIONS] MODE [MODE OPTIONS]
+learning-counter/
+|-- .vwb.json
+|-- src/
+`-- test/
+    `-- __init__.py
 ```
 
-Global options must appear before `MODE`. Run `./vwb.py --help` for the command
-list or `./vwb.py MODE --help` for concise mode-specific syntax. Relative paths
-are resolved from `--root` unless a table says otherwise.
+Create `learning-counter/src/counter.sv`:
 
-#### Modes
+```systemverilog
+module counter (
+    input  logic       clk,
+    input  logic       reset,
+    output logic [3:0] count
+);
+    always_ff @(posedge clk) begin
+        if (reset)
+            count <= 4'd0;
+        else
+            count <= count + 4'd1;
+    end
+endmodule
+```
 
-| Mode | Alias | Purpose |
+Now enter the project and ask VWB to test the module:
+
+```sh
+cd learning-counter
+../vwb.py list
+../vwb.py test counter
+```
+
+There is no test yet, so VWB creates
+`test/test_counter_starter.py`. The starter sets every input to a known value,
+recognizes common clock and reset names, starts a clock, and waits for the
+design to run. VWB never overwrites an existing starter.
+
+The generated test is a scaffold, not a complete verification plan. Open it,
+drive useful input values, and add assertions for the expected output. Run the
+same command after each change:
+
+```sh
+../vwb.py test counter --waves
+```
+
+Use `--no-gate-level` while concentrating only on RTL:
+
+```sh
+../vwb.py test counter --no-gate-level
+```
+
+### Useful Words
+
+| Word | Plain meaning |
+| --- | --- |
+| **DUT** | "Design under test": the module or entity you are checking. |
+| **Module / entity** | A named block of digital logic. Verilog calls it a module; VHDL calls it an entity. |
+| **RTL** | Your HDL source before it is turned into gates. |
+| **Testbench** | Code that drives DUT inputs and checks DUT outputs. A Cocotb test is a Python testbench. |
+| **Unit test** | A small, repeatable test of one logic block. In VWB, this is usually a testbench that drives one module/entity and checks its outputs. |
+| **Waveform** | A time chart of signals. Use it to see when values changed. |
+| **Synthesis** | Turning RTL into logic gates and registers. |
+| **Hierarchy** | One module using smaller modules inside it. |
+| **Lint** | Checking HDL for likely mistakes without running a simulation. |
+| **Gate-level / netlist** | The logic blocks and connections produced by synthesis. |
+| **Package** | Shared names, constants, types, or functions used by several design files. |
+| **Place and route** | Choosing physical FPGA cells and the wires between them. |
+
+A useful test contains a check, called an assertion. For the counter above,
+the middle of a Cocotb test could look like this:
+
+```python
+from cocotb.triggers import RisingEdge, Timer
+
+dut.reset.value = 1
+await RisingEdge(dut.clk)
+dut.reset.value = 0
+
+await RisingEdge(dut.clk)
+await Timer(1, units="ns")
+assert int(dut.count.value) == 1
+```
+
+The generated starter only checks that the design can start and run. Add
+assertions like this to check that its logic is correct.
+
+## Project Layout
+
+A normal project looks like this:
+
+```text
+my-project/
+|-- .vwb.json                 # Paths saved by vwb.py init
+|-- src/
+|   |-- top.v                 # Verilog
+|   |-- control.sv            # SystemVerilog
+|   |-- helper.vhd            # VHDL
+|   `-- definitions.svh       # Included header
+|-- test/
+|   |-- __init__.py           # Makes Cocotb tests importable
+|   |-- test_top.py           # Cocotb test
+|   |-- test_control.sv       # Native Verilog/SystemVerilog testbench
+|   `-- test_helper.vhd       # Native VHDL testbench
+`-- .vwb/                     # Generated files, owned by VWB
+    |-- sim/
+    |-- synth/
+    |-- lint/
+    |-- saved-waves/
+    |-- formal/
+    `-- fpga/
+```
+
+Source file names do not need to match module or entity names. VWB reads
+declarations and follows the selected hierarchy. A discovered test normally
+uses one of these names:
+
+```text
+test_<unit>.*
+test_<unit>_anything.*
+tb_<unit>.*
+<unit>_test.*
+<unit>_tb.*
+```
+
+Python files count as tests only when they contain a Cocotb test decorator such
+as `@cocotb.test()`.
+
+## Language Support
+
+VWB targets the practical, synthesizable parts of these languages. It is not a
+complete implementation of every IEEE Verilog, SystemVerilog, or VHDL feature.
+
+| Language | Source suffixes | RTL simulation | Tests | Synthesis, gate, and FPGA input |
+| --- | --- | --- | --- | --- |
+| Verilog | `.v` | Icarus Verilog | Cocotb or Verilog/SystemVerilog testbench | Yosys |
+| SystemVerilog | `.sv` | Icarus first; sv2v is a fallback for constructs Icarus cannot compile | Cocotb or Verilog/SystemVerilog testbench | sv2v conversion when available, then Yosys |
+| VHDL-2008 | `.vhd`, `.vhdl` | GHDL | Cocotb through GHDL VPI, or a native VHDL testbench | GHDL `--synth` converts to Verilog, then Yosys |
+
+Important boundaries:
+
+- A single selected hierarchy must not mix VHDL with Verilog/SystemVerilog.
+  VWB does not include a mixed-language simulator.
+- A native Verilog testbench cannot directly test a VHDL design, and a native
+  VHDL testbench cannot directly test a Verilog design.
+- A native VHDL testbench cannot drive the generated Verilog gate netlist. Use
+  Cocotb to check both stages. For a native VHDL testbench, VWB runs RTL and
+  prints `GATE SKIP` for the gate stage. You may still pass `--no-gate-level`.
+- A VHDL entity and its architecture may be in the same file or in separate
+  files. VWB finds matching architecture files without depending on file names.
+- `synth`, gate simulation, and `fpga` use the same Yosys input conversion:
+  sv2v is used when available for SystemVerilog, while GHDL converts VHDL to
+  Verilog. The fixed FPGA board/device profiles still determine which designs
+  can be placed and routed.
+
+### Advanced Language Details
+
+The points below matter after the basic RTL workflow is familiar:
+
+- The gate-level run is a **functional, zero-delay** post-synthesis check.
+  VWB first creates a fully mapped generic netlist. If that Verilog file is
+  larger than 1 MiB, it automatically keeps word-level arithmetic and memories
+  as generic Yosys cells so large learning designs remain practical to
+  simulate. It is not a technology library simulation, does not apply SDF, and
+  contains no placed-and-routed timing.
+- Icarus, GHDL, sv2v, and Yosys each implement a practical subset of their
+  language standards. A construct accepted by one tool may still need a
+  simpler form for another stage.
+
+VWB currently generates Cocotb starters for VHDL designs. It can generate a
+SystemVerilog starter for a Verilog/SystemVerilog design when
+`--test-language verilog` is selected.
+
+## Everyday Commands
+
+Run these from a project containing `.vwb.json`:
+
+```sh
+../vwb.py doctor                         # Check tools used by this project
+../vwb.py list                           # Show units, languages, dependencies, tests
+../vwb.py test                           # Run every discovered RTL and gate test
+../vwb.py test counter --waves           # Test one unit and save an RTL FST
+../vwb.py wave counter                    # Test one unit and open its RTL wave
+../vwb.py lint counter                    # Run every applicable linter
+../vwb.py synth counter --no-view         # Create a 2x white-background PNG
+../vwb.py clean                           # Remove temporary work, keep synth and tags
+```
+
+Global options such as `--dry-run`, `--verbose`, and directory overrides go
+before the command:
+
+```sh
+../vwb.py --dry-run test counter
+../vwb.py --color never lint --all
+```
+
+Long option abbreviations are intentionally rejected. Write the complete
+option name so commands remain unambiguous as VWB grows.
+
+## Simulation: RTL and Gates
+
+`test` and its alias `sim` discover matching tests and run all selected cases.
+The report prints `RTL PASS` or `RTL FAIL`, followed by `GATE PASS` or
+`GATE FAIL` unless `--no-gate-level` is used. A native VHDL testbench instead
+prints `GATE SKIP`, because it cannot drive a Verilog netlist. The overall test
+passes only when every stage that can run passes.
+
+The gate netlist is written to:
+
+```text
+.vwb/synth/<unit>/gate/<unit>_gate.v
+.vwb/synth/<unit>/gate/yosys_simlib.v
+```
+
+The first file is the synthesized design. The second gives Icarus the behavior
+of Yosys's generic cells. Gate simulation reuses the test, defines, include
+paths, simulator arguments, and plusargs. Wave generation is currently for the
+RTL stage only.
+
+For Verilog/SystemVerilog waves, VWB preprocesses a temporary copy of the
+selected hierarchy under `.vwb/` and registers static module-scope unpacked
+arrays and memories for dumping. It leaves project sources unchanged. The
+default is 32 words from each array; `--max-array-words 0` removes the limit. A
+larger array is still included, but only its first words are added to the wave.
+Dynamic, procedural, or aggregate-member arrays cannot be registered at module
+startup. VWB warns and skips those arrays while still dumping every supported
+array in the same design. VHDL waves use GHDL's native FST/VCD output and do
+not need this instrumentation.
+
+When an explicitly named unit has no matching test, VWB creates a starter and
+runs it. With `auto` or `cocotb`, the starter is Python. With `verilog`, a
+Verilog/SystemVerilog design gets an `.sv` testbench. The starter initializes
+inputs and handles common `clk`, `clock`, `reset`, and `rst` names, but it does
+not invent expected output values.
+
+## Waves, Saved Tags, and Completion
+
+Use `test --waves` to generate a wave without opening a GUI:
+
+```sh
+../vwb.py test counter --waves                 # FST, the default
+../vwb.py test counter --waves --wave-format vcd
+```
+
+Use `wave` or its alias `gtkwave` to run exactly one test and open GTKWave:
+
+```sh
+../vwb.py wave counter
+```
+
+VWB keeps the `.gtkw` layout beside the live waveform when it refreshes other
+simulation outputs. Archive a passing run when it is useful for comparison:
+
+```sh
+../vwb.py wave counter --tag known-good
+../vwb.py wave --list-saved
+../vwb.py wave --load known-good
+../vwb.py wave counter --tag known-good --replace-tag
+```
+
+A saved tag is self-contained under `.vwb/saved-waves/<tag>/`: waveform,
+metadata, and any GTKWave layout are copied together. Plain `clean` preserves
+these tags.
+
+VWB has terminal Tab completion for commands, options, discovered module/entity
+names, and saved waveform tags. The Docker image enables Bash completion
+automatically and provides the stable `vwb` command. After rebuilding with
+`./run-docker.sh --recreate` once, examples such as these complete when you
+press Tab:
+
+```sh
+vwb synth du<Tab>
+vwb test sv_beginner_<Tab>
+vwb wave --load known-<Tab>
+```
+
+For a native installation, first create the same stable command from the
+repository root:
+
+```sh
+mkdir -p "$HOME/.local/bin"
+ln -sf "$PWD/vwb.py" "$HOME/.local/bin/vwb"
+```
+
+Then run the matching setup once and restart the terminal.
+
+**Bash:**
+
+```sh
+printf '\neval "$(register-python-argcomplete --shell bash vwb)"\n' >> "$HOME/.bashrc"
+```
+
+**Zsh:**
+
+```sh
+printf '\nautoload -Uz compinit && compinit\neval "$(register-python-argcomplete --shell zsh vwb)"\n' >> "$HOME/.zshrc"
+```
+
+**Fish:**
+
+```fish
+mkdir -p "$HOME/.config/fish/completions"
+register-python-argcomplete --shell fish vwb > "$HOME/.config/fish/completions/vwb.fish"
+```
+
+Completion uses the saved project directories from `.vwb.json`, so module and
+waveform suggestions continue to work after `vwb init` without repeating path
+options.
+
+## Linting
+
+Without `--linter`, VWB runs every applicable checker:
+
+| Design language | Default checks |
+| --- | --- |
+| Verilog/SystemVerilog | Icarus, Verilator, Yosys, Verible |
+| VHDL | GHDL, then converted-Verilog checks with Icarus, Verilator, and Yosys |
+
+Examples:
+
+```sh
+../vwb.py lint counter
+../vwb.py lint --all
+../vwb.py lint counter --linter verilator --verilator-arg=--Wno-UNUSED
+../vwb.py lint counter --linter yosys --yosys-arg='yosys stat'
+../vwb.py lint counter --linter verible --verible-arg=--ruleset=all
+../vwb.py lint counter --linter iverilog --linter verilator
+```
+
+All requested checks run so one invocation reports every failure. A missing or
+inapplicable selected tool is a failed check, not a silent skip. Tool-specific
+work is stored under `.vwb/lint/<unit>/<tool>/`.
+
+The defaults are:
+
+- Icarus: `-g2012 -Wall -t null -s <unit>`.
+- Verilator: `--lint-only --top-module <unit> --timing -Wall -Wno-fatal
+  -Wno-COMBDLY -Wno-DECLFILENAME -Wno-INCABSPATH`. Warnings are printed but
+  do not hide later checker results or turn into tool errors.
+- Yosys: read the hierarchy, run `hierarchy -check`, `proc`, then
+  `check`. Yosys warnings remain visible; syntax and hierarchy errors still
+  fail the check.
+- Verible: use its standard rule set. Pass `--verible-arg=--ruleset=all` for
+  every available style rule, or `--verible-arg=--ruleset=none` for syntax only.
+  When a source uses `` `include`` or refers to a macro supplied with `-D`, VWB
+  first uses Icarus to create a temporary copy for Verible. An `-I` path tells
+  Icarus where to find an included file, but does not change files that do not
+  use it.
+- GHDL: import and elaborate with `--std=08`.
+
+## Synthesis and Schematics
+
+The default command creates and opens a PNG:
+
+```sh
+../vwb.py synth counter
+```
+
+Use `--no-view` in Docker without a display, over SSH, or in CI:
+
+```sh
+../vwb.py synth counter --no-view
+```
+
+Yosys always writes a JSON netlist first. For SVG and PNG, VWB normally asks
+NetlistSVG for a readable schematic. If NetlistSVG is unavailable, rejects the
+netlist, or reaches its 120-second limit, VWB prints a warning and falls back
+to Yosys `show` plus Graphviz. If Graphviz's normal `dot` layout also reaches
+the limit, VWB retries the generated DOT file with the scalable `sfdp` layout;
+for a large Yosys JSON netlist it chooses `sfdp` immediately. The valid
+synthesis JSON remains available even if every visual renderer fails.
+
+Some synthesized designs contain too many gates or one very wide bus for any
+Graphviz layout to handle reliably. For SVG and PNG only, VWB then creates a
+smaller unflattened drawing input. If that is still too detailed, the picture
+becomes a compact table of the module's ports and widths. The requested full
+netlist is not replaced: it remains in `<unit>.json` for tools and later use.
+
+PNG output passes through `rsvg-convert` with 2x scaling and an opaque white
+background. This makes text sharper and avoids the transparent or dark
+backgrounds that image viewers can otherwise show. Very large schematics keep
+their shape but are limited to 16 megapixels so they do not exhaust memory.
+
+```sh
+../vwb.py synth counter --format json --no-view
+../vwb.py synth counter --format svg --no-view
+../vwb.py synth counter --format png --no-view
+../vwb.py synth counter --format dot --no-view
+../vwb.py synth counter --no-schematic --no-view  # Choose Yosys directly
+```
+
+JSON does not invoke a visual renderer. DOT always uses Yosys. VHDL is
+converted by GHDL and SystemVerilog is converted through sv2v when available
+before Yosys reads the synthesis input.
+
+## Safe Cleanup
+
+VWB marks its build directory and refuses to clean an unowned directory, a
+source/test directory, the project root, an ancestor, or a build directory
+owned by a different project.
+
+Plain `clean` is intentionally conservative:
+
+```sh
+../vwb.py clean
+```
+
+It removes temporary simulation and lint work. It preserves:
+
+- `.vwb/synth/`, including gate netlists and schematics.
+- `.vwb/saved-waves/`, including tagged waves and layouts.
+- `.vwb/fpga/`, including placed designs and bitstreams.
+- `.vwb/formal/`, including proof results and traces.
+- Live `.gtkw` layouts below `.vwb/sim/`, so the next `wave` run can load them.
+
+Use an explicit scope when you really want to remove those files:
+
+```sh
+../vwb.py clean sim
+../vwb.py clean lint
+../vwb.py clean fpga
+../vwb.py clean formal
+../vwb.py clean synth       # Remove synthesis and gate artifacts
+../vwb.py clean waves       # Remove archived wave tags
+../vwb.py clean all         # Remove the entire owned build directory
+```
+
+Preview cleanup with the global dry-run option:
+
+```sh
+../vwb.py --dry-run clean all
+```
+
+## Local Installation
+
+Docker is the complete and recommended installation. Native Linux package
+versions differ, and the shorter setup below does not install sv2v or Verible.
+Without sv2v, some SystemVerilog designs cannot pass every stage and `doctor`
+reports the missing converter. Without Verible, the default SystemVerilog lint
+set reports that its Verible check could not run. Use Docker when learning or
+when you need every documented feature.
+
+For an advanced native Ubuntu 26.04 setup, install the packaged tools first:
+
+```sh
+sudo apt update
+sudo apt install iverilog yosys ghdl gtkwave verilator graphviz \
+  libgvplugin-neato-layout8 librsvg2-bin \
+  nodejs npm geeqie git make python3 python3-pip libpython3-dev \
+  nextpnr-ice40 nextpnr-gowin fpga-icestorm openfpgaloader boolector z3
+```
+
+Install the Python tools into your user account:
+
+```sh
+python3 -m pip install --user --break-system-packages \
+  argcomplete==3.6.3 cocotb==1.7.2 apycula click bitstring numpy pillow
+```
+
+Make the user binary directory available permanently. Run this once, then
+reload the shell:
+
+```sh
+printf '\nexport PATH="$HOME/.local/bin:$PATH"\n' >> "$HOME/.bashrc"
+. "$HOME/.bashrc"
+```
+
+Install NetlistSVG and the pinned SymbiYosys revision used by the container:
+
+```sh
+sudo npm install -g netlistsvg
+git clone https://github.com/YosysHQ/sby.git /tmp/sby
+git -C /tmp/sby checkout --detach fea6e467d067b3ea84b6b5ac08cd48beb59f0d42
+sudo make -C /tmp/sby install
+rm -rf /tmp/sby
+```
+
+The remaining SystemVerilog conversion uses `sv2v`, and the full lint set uses
+`verible-verilog-lint`. Their release packaging is architecture-specific; the
+repository `Dockerfile` is the exact, pinned installation reference. This
+manual native path is therefore partial until both commands are installed.
+
+After installing tools, check the result:
+
+```sh
+./vwb.py doctor
+```
+
+Ubuntu's `nextpnr-gowin` package may install a Himbaechel executable. VWB tries
+`nextpnr-himbaechel-gowin`, generic `nextpnr-himbaechel`, and legacy
+`nextpnr-gowin` in that order.
+
+## Complete CLI Reference
+
+Syntax:
+
+```text
+./vwb.py [GLOBAL OPTIONS] COMMAND [COMMAND OPTIONS]
+```
+
+Every command accepts `-h` or `--help`. Global options normally go before the
+command. `init` also defines its path options after the command for convenient
+project creation.
+
+### Global Options
+
+| Option | Default | Behavior |
 | --- | --- | --- |
-| `init` | None | Create source/test directories and persist their project configuration. |
-| `list` | None | Report discovered packages, modules, dependencies, and tests. |
-| `test` | `sim` | Compile and run one or more discovered or explicitly selected tests. |
-| `wave` | `gtkwave` | Run and open one waveform, or list and reopen archived waveforms without simulating. |
-| `lint` | None | Run Verilator lint on selected module hierarchies. |
-| `synth` | None | Synthesize a module with Yosys and optionally render or open the result. |
-| `formal` | None | Run a SymbiYosys configuration and optionally open a failure trace. |
-| `fpga` | None | Run a supported FPGA pipeline through synthesis, place and route, packing, or flashing. |
-| `clean` | None | Remove VWB-owned generated files. |
-| `doctor` | None | Report installed tools and the discovered project size. |
+| `-h`, `--help` | Off | Show top-level help and exit. |
+| `--version` | Off | Print the VWB version and exit. |
+| `--root PATH` | See below | Set the project root. With no explicit root, VWB searches the current directory and its parents for `.vwb.json`; if none exists, it uses the directory containing `vwb.py`. |
+| `--src-dir DIR` | Config, then `src` | Override the source directory. Relative paths are resolved from the project root. |
+| `--test-dir DIR` | Config, then `test` | Override the test directory. Relative paths are resolved from the project root. |
+| `--build-dir DIR` | Config, then `.vwb` | Override the generated artifact directory. It cannot be the project root or one of its ancestors, and it cannot overlap the source or test directory. |
+| `--color {auto,always,never}` | `auto` | Control ANSI color. `auto` also honors `NO_COLOR` and non-terminal output. JSON output is never colored. |
+| `-v`, `--verbose` | Off | Print external commands and cleanup actions. |
+| `--dry-run` | Off | Validate and print planned commands without running tools or writing/removing files. |
 
-#### Global options
+Command-line directory values override `.vwb.json`; configuration values
+override built-in defaults.
 
-| Option | Default | Detailed behavior |
-| --- | --- | --- |
-| `-h`, `--help` | None | Show top-level help and exit. Every mode also accepts `-h` or `--help` after its name. |
-| `--version` | None | Print the `vwb.py` version and exit. |
-| `--root PATH` | Config root or directory containing `vwb.py` | Override the project root for one command. Without it, VWB uses the nearest `.vwb.json` found from the current directory upward, then falls back to the directory containing `vwb.py`. |
-| `--src-dir DIR` | Config value or `src` | Override the recursively scanned Verilog/SystemVerilog source tree. It may be absolute or relative to the resolved project root and must exist. |
-| `--test-dir DIR` | Config value or `test` | Override the recursively scanned Cocotb and Verilog test tree. It may be absolute or relative to the resolved project root and must exist. |
-| `--build-dir DIR` | Config value or `.vwb` | Override the generated-artifact directory. VWB adds an ownership marker and refuses unsafe, foreign, or nonempty unowned build directories. |
-| `--color {auto,always,never}` | `auto` | Control ANSI colors in human reports. `auto` colors terminals unless `NO_COLOR` is set or `TERM=dumb`; JSON output never contains color codes. |
-| `-v`, `--verbose` | Off | Print each external command before running it and print paths selected for cleanup. |
-| `--dry-run` | Off | Validate discovery and input paths and print planned commands without executing tools or creating, replacing, or deleting build artifacts. |
-
-Source discovery reads `.v` and `.sv` files recursively. Test discovery accepts
-`test_<module>`, `tb_<module>`, `<module>_test`, `<module>_tb`, and
-`test_<module>_<suffix>` file stems. A Python file is runnable only when it
-contains a Cocotb test decorator. When a mode needs one module and none is
-given, VWB selects a unique tested root or the only tested DUT; ambiguous
-projects must name the module explicitly.
-
-#### `init`
+### `init`
 
 ```text
 ./vwb.py init [--root PATH] [--src-dir DIR] [--test-dir DIR]
               [--build-dir DIR] [--force]
 ```
 
-| Option | Default | Detailed behavior |
+| Argument or option | Default | Behavior |
 | --- | --- | --- |
-| `--root PATH` | Current directory | Select the project root and location of the new `.vwb.json`. For `init`, directory options may appear after the mode as shown or as global options before it. |
-| `--src-dir DIR` | `src` | Save the source directory and create it when missing. |
-| `--test-dir DIR` | `test` | Save the test directory, create it when missing, and add an empty `__init__.py` when absent so Cocotb tests are importable. |
-| `--build-dir DIR` | `.vwb` | Save the artifact directory without creating it. Normal commands create it later with the VWB ownership marker. |
-| `--force` | Off | Replace an existing `.vwb.json`. Without this flag, `init` refuses to overwrite saved configuration. |
+| `--root PATH` | Current directory | Set the new project root and `.vwb.json` location. |
+| `--src-dir DIR` | `src` | Save and create the source directory. |
+| `--test-dir DIR` | `test` | Save and create the test directory; create `__init__.py` when missing. |
+| `--build-dir DIR` | `.vwb` | Save the artifact path. The directory is created by the first command that needs it. |
+| `--force` | Off | Replace an existing `.vwb.json`; otherwise `init` refuses to overwrite it. |
+| `-h`, `--help` | Off | Show `init` help. |
 
-The file stores a version plus source, test, and build paths; its parent is the
-project root, so moving the complete project keeps relative paths valid.
-`./vwb.py --dry-run init ...` validates and reports the destination without
-creating directories or writing configuration.
+`--dry-run init` validates the paths and reports the configuration location
+without creating anything.
 
-#### `list`
+### `list`
 
 ```text
 ./vwb.py list [--json]
 ```
 
-| Option | Default | Detailed behavior |
+| Option | Default | Behavior |
 | --- | --- | --- |
-| `--json` | Off | Emit structured JSON instead of the human-readable report. Both forms include packages and their files, modules and their source files, dependencies, associated test kind/path/top, and source files without module declarations. |
+| `--json` | Off | Emit packages, modules/entities, source language, files, dependencies, tests, and source files without units as JSON. |
+| `-h`, `--help` | Off | Show `list` help. |
 
-`list` only performs discovery and does not create build artifacts.
+The text form is intended for people. `list` performs discovery only and does
+not create build artifacts.
 
-#### `test` / `sim`
+### `test` / `sim`
 
 ```text
 ./vwb.py test [OPTIONS] [MODULE ...]
 ./vwb.py sim  [OPTIONS] [MODULE ...]
 ```
 
-| Option | Default | Detailed behavior |
+| Argument or option | Default | Behavior |
 | --- | --- | --- |
-| `MODULE ...` | Every discovered runnable test | Restrict the run to tests associated with one or more DUT modules. Every named module must have a test matching `--test-language`. |
-| `--test FILE` | Use discovery | Run one explicit `.py`, `.v`, or `.sv` test. At most one positional module may be supplied. Without a module, VWB infers the DUT from the file name. A Python test must have an importable module name under the project or configured test tree and contain a Cocotb test decorator. |
-| `--test-language {auto,cocotb,verilog}` | `auto` | Select both test languages, Cocotb only, or Verilog/SystemVerilog testbenches only. With `--test`, a non-`auto` language must agree with the file type. This replaces the removed `--kind` option. |
-| `--test-top MODULE` | Infer from HDL testbench | Override the HDL testbench top. It applies only when exactly one HDL test is selected and is invalid for a Cocotb test. |
-| `--testcase NAME` | All Cocotb testcases | Run one named Cocotb testcase. The selection must be Cocotb-only; an `auto` selection containing any HDL test is rejected. |
-| `--seed INTEGER` | Cocotb chooses | Set the Cocotb/Python random seed. The selection must be Cocotb-only; an `auto` selection containing any HDL test is rejected. |
-| `--waves` | Off | Generate a waveform without opening GTKWave. VWB injects dump logic into temporary preprocessed sources, so the design does not need `$dumpfile`, `$dumpvars`, or a simulator conditional. |
-| `--wave-format {fst,vcd}` | `fst` | Select the generated waveform format. This has an effect only with `--waves`; `wave` enables waves automatically. |
-| `--max-array-words COUNT` | `4096` | Limit the number of words registered for each static unpacked array during waveform generation. `0` removes the limit. Negative values and values that do not fit in 128 bits are rejected. This option has an effect only when waves are enabled. |
-| `-D NAME[=VALUE]`, `--define NAME[=VALUE]` | None | Add a repeatable Icarus preprocessor definition to preprocessing and compilation. Supply the option once per definition. |
-| `-I DIR`, `--include DIR` | None | Add a repeatable include directory. VWB already includes the source/test roots and nested directories containing HDL or header files. |
-| `--compile-arg ARG` | None | Pass a repeatable raw argument to Icarus preprocessing and compilation. Use `--compile-arg=-option` when the value begins with `-`. |
-| `--sim-arg ARG` | None | Pass a repeatable raw `vvp` option before the compiled simulation image. Use `--sim-arg=-option` when needed. |
-| `--plusarg ARG` | None | Add a repeatable Verilog runtime plusarg after the simulation image. VWB adds the leading `+` when omitted. |
-| `--keep-going` | Off | Continue running the remaining selected test specifications after a compile or runtime failure. Without it, the run stops at the first failure. |
+| `MODULE ...` | All discovered tests | Restrict the run to tests for named modules/entities. A named unit without a matching selected test gets a generated starter. |
+| `--test FILE` | Discovery | Run one explicit `.py`, `.v`, `.sv`, `.vhd`, or `.vhdl` test. At most one module may accompany it; otherwise VWB infers the DUT from the file name. |
+| `--test-language {auto,cocotb,verilog,vhdl}` | `auto` | Select all test kinds or one kind. With an explicit file, the value must match its type. |
+| `--test-top UNIT` | Infer | Override the top module/entity for exactly one native HDL test. It is invalid for Cocotb. |
+| `--testcase NAME` | All Cocotb tests | Select one Cocotb testcase. The full selection must be Cocotb-only. |
+| `--seed INTEGER` | New seed per Cocotb test run | Set the Cocotb/Python random seed. Without it, VWB prints the chosen seed and reuses it for the RTL and gate stages of that test. The full selection must be Cocotb-only. |
+| `--waves` | Off | Generate an RTL waveform without opening GTKWave. Verilog/SV sources are instrumented in the build tree; project sources remain unchanged. |
+| `--wave-format {fst,vcd}` | `fst` | Select the RTL waveform format when waves are enabled. |
+| `--max-array-words COUNT` | `32` | Dump at most the first `COUNT` words from every supported module-scope static Verilog/SV unpacked array; `0` dumps every word. Larger arrays do not fail the run. Unsupported dynamic, task-local, or aggregate-member arrays are warned about and skipped. When waves are enabled, negative values and values that do not fit in 128 bits are rejected. |
+| `-D NAME[=VALUE]`, `--define NAME[=VALUE]` | None | Add a repeatable Verilog/SV preprocessing definition to simulation and gate synthesis. |
+| `-I DIR`, `--include DIR` | None | Add a repeatable Verilog/SV include directory. Source/test roots and nested HDL/header directories are already included. |
+| `--compile-arg ARG` | None | Add a repeatable raw Icarus preprocessing/compile argument for Verilog/SV. Use `--compile-arg=-flag` for values beginning with `-`. |
+| `--sim-arg ARG` | None | Add a repeatable raw simulator argument before the simulation image, or to the GHDL run. |
+| `--plusarg ARG` | None | Add a repeatable runtime plusarg; VWB supplies the leading `+` when absent. |
+| `--no-gate-level` | Gate enabled | Skip post-synthesis functional simulation and require only RTL to pass. |
+| `--keep-going` | Compatibility option | Accepted as a legacy option. Current test runs already execute every selected specification and report all failures. |
+| `-h`, `--help` | Off | Show `test` help. |
 
-Each run recreates
-`.vwb/sim/<dut>/<kind>-<test-stem>/`. The directory contains the compiled
-`sim.vvp`, command file, Cocotb `results.xml` when applicable, temporary
-waveform instrumentation, and the requested `<dut>.fst` or `<dut>.vcd`.
-Cocotb passes only when the simulator exits successfully and `results.xml`
-contains testcases without failures or errors.
+RTL work is under `.vwb/sim/<unit>/<kind>-<test-stem>/`; gate work adds
+`-gate` to that directory name. Cocotb success requires a successful simulator
+exit and a nonempty passing results file.
 
-#### `wave` / `gtkwave`
+### `wave` / `gtkwave`
+
+`wave` accepts every `test` option above. Waves are always enabled, exactly one
+test must be selected, and the command opens GTKWave only after the selected
+RTL and default gate-level checks pass.
 
 ```text
-./vwb.py wave    [TEST OPTIONS] [WAVE OPTIONS] [MODULE ...]
-./vwb.py gtkwave [TEST OPTIONS] [WAVE OPTIONS] [MODULE ...]
+./vwb.py wave [TEST OPTIONS] [WAVE OPTIONS] [MODULE ...]
 ```
 
-`wave` accepts every option in the `test` table, with these differences:
-
-| Option | Default | Detailed behavior |
+| Additional option | Default | Behavior |
 | --- | --- | --- |
-| `MODULE ...` | Automatically selected top | A normal run must resolve to exactly one runnable test. If a module has both Cocotb and Verilog tests, use `--test-language` or `--test` to disambiguate it. With `--list-saved`, modules filter the report; with `--load`, one module may verify the saved trace's DUT. |
-| `--waves` | Always on | Accepted for consistency with `test`, but waveform generation cannot be disabled in this mode. |
-| `--keep-going` | Forced off | Accepted by the shared parser but has no effect because `wave` runs exactly one test and always stops on failure. |
-| `--save FILE` | Automatic build layout | Load an explicit existing GTKWave save file. Without it, GTKWave uses `<dut>.gtkw` beside the waveform in the simulation build directory. A legacy `<root>/<dut>.gtkw` is copied there once when no build layout exists. |
-| `--tag NAME` | None | After a successful simulation, copy the waveform, metadata, and current GTKWave layout into `.vwb/saved-waves/NAME/`. Tags must start with a letter or digit and may then contain letters, digits, dots, underscores, or hyphens. Failed simulations are never archived. |
-| `--replace-tag` | Off | Allow `--tag` to replace an existing saved tag. It is invalid without `--tag`. |
-| `--load NAME` | None | Skip compilation and simulation and open the self-contained archived waveform. This is mutually exclusive with simulation selectors and `--tag`. |
-| `--list-saved` | Off | List saved tags, DUTs, test languages, formats, and creation times without running a simulation. Optional positional modules filter by DUT. |
-| `--json` | Off | Emit `--list-saved` as ANSI-free JSON. It is invalid without `--list-saved`. |
+| `--save FILE` | `<wave>.gtkw` | Use an existing GTKWave save file. With `--load`, apply it to the archived wave. |
+| `--tag NAME` | None | Archive a passing wave, metadata, and layout. Tags start with a letter/digit and then use letters, digits, `.`, `_`, or `-`. |
+| `--replace-tag` | Off | Permit `--tag` to atomically replace an existing tag; invalid without `--tag`. |
+| `--load TAG` | None | Skip simulation and open a self-contained archived wave. One optional module may verify the saved DUT. Simulation selectors are invalid. |
+| `--list-saved` | Off | List saved tags. Optional positional modules filter the list. It cannot be combined with load/tag/replace/save or simulation options. |
+| `--json` | Off | Emit `--list-saved` as JSON. It is invalid without `--list-saved`. |
+| `-h`, `--help` | Off | Show `wave` help. |
 
-GTKWave is opened only after the selected test passes and the waveform file is
-confirmed to exist. By default it is launched with `--autosavename` and its
-working directory set to `.vwb/sim/<dut>/<kind>-<test-stem>/`. GTKWave therefore
-loads the existing `<dut>.gtkw` automatically, and **File > Write Save File**
-writes back to that build directory. An explicit `--save FILE` uses GTKWave's
-`--save` option instead. VWB preserves `.gtkw` files while recreating the other
-simulation outputs, so the signal layout opens again on the next run.
+`--waves` is accepted but redundant in this mode. The legacy `--keep-going`
+option is accepted but a normal wave run always selects exactly one test.
 
-`clean sim` removes live simulations and their layouts but keeps tagged waves.
-`clean waves` removes only tagged archives; `clean all` removes both.
-
-#### `lint`
+### `lint`
 
 ```text
 ./vwb.py lint [OPTIONS] [MODULE ...]
 ```
 
-| Option | Default | Detailed behavior |
+| Argument or option | Default | Behavior |
 | --- | --- | --- |
-| `MODULE ...` | DUTs with discovered tests | Lint one or more explicitly named module hierarchies. Explicit modules do not need associated tests. |
-| `--all` | Off | Lint every discovered source module, including untested modules. It cannot be combined with positional modules. |
-| `--keep-going` | Off | Continue with remaining modules after a failed lint run. |
-| `-D VALUE`, `--define VALUE` | None | Add a repeatable Verilator preprocessor definition. |
-| `-I DIR`, `--include DIR` | None | Add a repeatable include directory in addition to recursively detected source/test include directories. |
-| `--lint-arg ARG` | None | Pass a repeatable raw Verilator argument. Use `--lint-arg=-option` when the value begins with `-`. |
+| `MODULE ...` | Units with discovered tests | Select module/entity hierarchies. Explicit units do not need tests. |
+| `--all` | Off | Select every discovered source unit; invalid with positional modules. |
+| `--linter {all,iverilog,verilator,yosys,verible,ghdl}` | All applicable | Select a checker. Repeat to combine tools. `all` expands by source language and is deduplicated with explicitly repeated tools. |
+| `-D VALUE`, `--define VALUE` | None | Add a repeatable definition to the Verilog-family checks. Use `--ghdl-arg` for GHDL-specific controls. |
+| `-I DIR`, `--include DIR` | None | Add a repeatable include directory to the Verilog-family checks. |
+| `--iverilog-arg ARG` | None | Add a repeatable raw Icarus argument. |
+| `--verilator-arg ARG` | None | Add a repeatable raw Verilator argument. |
+| `--lint-arg ARG` | None | Legacy hidden alias for `--verilator-arg`. |
+| `--yosys-arg TCL` | None | Append a repeatable Tcl line to the generated Yosys lint script. Prefix Yosys commands with `yosys`, for example `--yosys-arg='yosys stat'`. |
+| `--verible-arg ARG` | Verible standard rules | Add a repeatable raw Verible argument. Use `--verible-arg=--ruleset=all` for every available rule or `--verible-arg=--ruleset=none` for syntax parsing only. |
+| `--ghdl-arg ARG` | None | Add a repeatable raw GHDL argument to import and elaboration. |
+| `--keep-going` | Compatibility option | Accepted as a legacy option. Current lint runs already execute every selected module/tool check. |
+| `-h`, `--help` | Off | Show `lint` help. |
 
-Each module and its dependency closure is checked with Verilator
-`--lint-only -Wall`. The mode prints a pass/fail summary and creates no
-persistent artifact.
+Arguments beginning with `-` should use the equals form, for example
+`--verilator-arg=--timing`.
 
-#### `synth`
+### `synth`
 
 ```text
 ./vwb.py synth [OPTIONS] [MODULE]
 ```
 
-| Option | Default | Detailed behavior |
+| Argument or option | Default | Behavior |
 | --- | --- | --- |
-| `MODULE` | Automatically selected top | Select the source module to synthesize. Name it explicitly when VWB cannot infer one unique tested top. |
-| `--format {json,svg,png,dot}` | `png` | Select the final reported artifact independently of `--full` and schematic rendering. JSON is always generated. |
-| `--full` | Off | Select the corresponding full Makefile flow. With NetlistSVG this changes `prep` to `prep -flatten`; with Yosys `show` it changes `proc; opt -full` to `synth -top`. |
-| `--flatten` | Off | Run `flatten; opt_clean` after the selected flow. The full NetlistSVG flow is already flattened, so this flag is redundant for that one combination. |
-| `--schematic`, `--schemetic` | On | Engage `netlistsvg` using the generated Yosys JSON. Both spellings are accepted. SVG is used directly; PNG is rasterized with `rsvg-convert`, avoiding ImageMagick delegate and policy differences. JSON and DOT remain selectable and receive an SVG sidecar while schematic rendering is enabled. |
-| `--no-schematic`, `--no-schemetic` | Off | Disable `netlistsvg`. JSON is written directly, while SVG, PNG, and DOT use Yosys `show` with the Makefile's `-colors 2 -width -signed` options and Graphviz. |
-| `--view VIEWER` | `geeqie` | Open the requested artifact with this executable after successful generation. Use `--view none` or `--no-view` for CI, Docker smoke tests, SSH sessions, or other headless use. |
-| `--no-view` | Off | Equivalent to `--view none`. |
-| `-D VALUE`, `--define VALUE` | None | Add a repeatable definition to Yosys `read_verilog -sv`. |
-| `-I DIR`, `--include DIR` | None | Add a repeatable include path to Yosys in addition to detected include directories. |
+| `MODULE` | Unique tested top/root | Select the unit to synthesize. Ambiguous projects must name it. |
+| `--format {json,svg,png,dot}` | `png` | Select the returned artifact. JSON is always generated. JSON skips rendering; DOT always uses Yosys. Oversized SVG/PNG drawings automatically use a smaller overview while keeping the full JSON. |
+| `--full` | Off | Use `prep -flatten` with schematic preparation, or `synth -top` with direct Yosys preparation. |
+| `--flatten` | Off | Run `flatten; opt_clean` after preparation unless the full schematic path already flattened the design. |
+| `--schematic`, `--schemetic` | On | Prefer NetlistSVG for SVG/PNG, with automatic Yosys fallback. The misspelled alias is kept for compatibility. |
+| `--no-schematic`, `--no-schemetic` | Off | Skip NetlistSVG and render SVG/PNG directly with Yosys `show`. |
+| `--view VIEWER` | `geeqie` for SVG/PNG | Open the final artifact with an executable. JSON and DOT do not open a viewer unless this option is explicitly supplied. `none`, `off`, `false`, or `0` disables viewing. |
+| `--no-view` | Off | Alias for `--view none`. |
+| `-D VALUE`, `--define VALUE` | None | Add a repeatable synthesis preprocessing definition. |
+| `-I DIR`, `--include DIR` | None | Add a repeatable synthesis include directory. |
+| `-h`, `--help` | Off | Show `synth` help. |
 
-All combinations of full/non-full, schematic/non-schematic, and output format
-are supported. NetlistSVG follows the Makefile's `show_synth_human` preparation
-with `prep`, or `prep -flatten` under `--full`. Yosys `show` follows the
-`show_synth` preparation with `proc; opt -full`, or `synth -top` under
-`--full`. The default `./vwb.py synth MODULE` creates a NetlistSVG schematic as
-PNG and opens it in `geeqie`. The generated
-script, JSON netlist, sidecars, and requested rendering are stored under
-`.vwb/synth/<module>/`; the final artifact path is printed on success.
+Scripts, converted sources, JSON, SVG, PNG, and DOT files are stored under
+`.vwb/synth/<unit>/`. Large pictures may also create `.visual.json` and
+`.interface.dot` helper files there. Visual rendering and rasterization have
+120-second limits. PNG files use 2x density when the result fits within the
+16-megapixel limit.
 
-#### `formal`
+### `formal`
 
 ```text
 ./vwb.py formal [--view] [CONFIG]
 ```
 
-| Option | Default | Detailed behavior |
+| Argument or option | Default | Behavior |
 | --- | --- | --- |
-| `CONFIG` | Auto-detect one `.sby` | Select a SymbiYosys configuration by absolute path or a path relative to `--root`. When omitted, VWB searches recursively outside `.git` and the build directory and requires exactly one match. |
-| `--view` | Off | After a successful run, open the first sorted VCD trace under the result directory with GTKWave. The command fails if no VCD trace was generated. |
+| `CONFIG` | Auto-detect one `.sby` | Use an absolute path or one relative to the project. Without it, VWB requires exactly one `.sby` outside `.git` and the build tree. |
+| `--view` | Off | After success, open the first sorted VCD trace with GTKWave; fail if no VCD exists. |
+| `-h`, `--help` | Off | Show `formal` help. |
 
-The mode runs `sby -f`, replaces its output at
-`.vwb/formal/<config-stem>/`, and prints that directory on success.
+SymbiYosys output is replaced at `.vwb/formal/<config-stem>/`.
 
-#### `fpga`
+### `fpga`
 
 ```text
 ./vwb.py fpga [OPTIONS] [MODULE] --board BOARD
 ```
 
-| Option | Default | Detailed behavior |
+| Argument or option | Default | Behavior |
 | --- | --- | --- |
-| `MODULE` | Automatically selected top | Select the FPGA top module. Name it explicitly when VWB cannot infer one unique tested top. |
-| `--board {gowin,tangnano9k,ice40,icebreaker}` | Required | Select a fixed toolchain/device profile. `tangnano9k` maps to `gowin`; `icebreaker` maps to `ice40`. |
-| `--stage {synth,pnr,pack,flash}` | `pack` | Run the cumulative pipeline through synthesis, place and route, bitstream packing, or device flashing. |
-| `--constraints FILE` | Board-family default | Select a constraints file relative to `--root` or by absolute path. The default is `<src-dir>/io.cst` for Gowin or `<src-dir>/io.pcf` for iCE40. A valid file is currently required for every stage, including `synth`. |
-| `-D VALUE`, `--define VALUE` | None | Add a repeatable Yosys definition. VWB also always supplies `LEDS_NR=6`. |
-| `-I DIR`, `--include DIR` | None | Add a repeatable Yosys include directory in addition to detected include directories. |
+| `MODULE` | Unique tested top/root | Select the FPGA top unit. |
+| `--board {gowin,tangnano9k,ice40,icebreaker}` | Required | Select a fixed device/tool profile. `tangnano9k` maps to Gowin; `icebreaker` maps to iCE40. |
+| `--stage {synth,pnr,pack,flash}` | `pack` | Run the cumulative flow through synthesis, place-and-route, packing, or hardware flashing. |
+| `--constraints FILE` | Family default | Use an explicit constraints file. Default: `<src-dir>/io.cst` for Gowin or `<src-dir>/io.pcf` for iCE40. A file is required even for `synth`. |
+| `-D VALUE`, `--define VALUE` | None | Add a repeatable Yosys definition; VWB also supplies `LEDS_NR=6`. |
+| `-I DIR`, `--include DIR` | None | Add a repeatable synthesis include directory. |
+| `-h`, `--help` | Off | Show `fpga` help. |
 
-The supported board profiles are fixed:
-
-| Board selection | Yosys/nextpnr target | Place-and-route output | Packed output | Flash target |
+| Board selection | Device/profile | PNR result | Packed result | Flash target |
 | --- | --- | --- | --- | --- |
-| `gowin`, `tangnano9k` | Gowin `GW1NR-LV9QN88PC6/I5`, family `GW1N-9C` | `<module>-pnr.json` | `<module>.fs` | `openFPGALoader -b tangnano9k` |
-| `ice40`, `icebreaker` | iCE40 UP5K, package `sg48` | `<module>.asc` | `<module>.bin` | `openFPGALoader -b ice40_generic` |
+| `gowin`, `tangnano9k` | `GW1NR-LV9QN88PC6/I5`, family `GW1N-9C` | `<unit>-pnr.json` | `<unit>.fs` | `tangnano9k` |
+| `ice40`, `icebreaker` | UP5K, package `sg48` | `<unit>.asc` | `<unit>.bin` | `ice40_generic` |
 
-Artifacts are stored under
-`.vwb/fpga/<normalized-board>/<module>/`. `synth` returns the Yosys JSON,
-`pnr` returns the place-and-route file, `pack` returns the bitstream, and
-`flash` returns the packed bitstream after programming the device.
+Artifacts are under `.vwb/fpga/<family>/<unit>/`.
 
-#### `clean`
+### `clean`
 
 ```text
-./vwb.py clean [{sim,waves,synth,fpga,formal,all}]
+./vwb.py clean [{temp,sim,waves,synth,lint,fpga,formal,all}]
 ```
 
-| Argument | Default | Detailed behavior |
+| Scope | Default | Behavior |
 | --- | --- | --- |
-| `scope` | `all` | Remove only `.vwb/sim`, `.vwb/saved-waves`, `.vwb/synth`, `.vwb/fpga`, `.vwb/formal`, or the entire configured build directory. |
+| `temp` | Yes | Remove simulation build files and live waves plus all lint work. Preserve live `.gtkw` layouts, synthesis, saved waves, FPGA results, and formal results. |
+| `sim` | No | Remove live RTL/gate simulations and their local GTKWave layouts. |
+| `waves` | No | Remove archived saved-wave tags only. |
+| `synth` | No | Remove synthesis outputs, schematics, converted sources, and gate netlists. |
+| `lint` | No | Remove lint work. |
+| `fpga` | No | Remove FPGA build outputs. |
+| `formal` | No | Remove formal outputs. |
+| `all` | No | Remove the complete owned build directory, including synthesis and saved tags. |
+| `-h`, `--help` | Off | Show `clean` help. |
 
-Cleanup proceeds only when the build directory contains the matching VWB
-ownership marker. It refuses source/test directories, project roots, ancestor
-directories, unowned nonempty paths, and build directories owned by another
-project. `--dry-run` prints the selected removal without deleting it.
-
-#### `doctor`
+### `doctor`
 
 ```text
 ./vwb.py doctor [--json]
 ```
 
-| Option | Default | Detailed behavior |
+| Option | Default | Behavior |
 | --- | --- | --- |
-| `--json` | Off | Emit tool groups whose command values are executable paths or `null`. The text form also prints discovered module and runnable-test counts. |
+| `--json` | Off | Emit tool groups as JSON, with executable paths or `null`. |
+| `-h`, `--help` | Off | Show `doctor` help. |
 
-`doctor` reports the simulation, waveform, lint, synthesis, formal, Gowin, and
-iCE40 tools. Its exit status requires `iverilog` and `vvp`, plus
-`cocotb-config` when Cocotb tests are discovered. Missing optional tools are
-reported but do not make `doctor` fail; the relevant mode will require them
-when used. Synthesis reporting includes Yosys, Graphviz `dot`, `netlistsvg`,
-`rsvg-convert`, and `geeqie` for the selectable rendering pipeline.
-The Gowin entry keeps the logical key `nextpnr-gowin`; its path identifies the
-modern Himbaechel or legacy executable that VWB resolved.
+The text report covers simulation, waveform, lint, synthesis, completion,
+formal, Gowin, and iCE40 tools plus project unit/test counts. Its exit status
+always requires Icarus, `vvp`, and Yosys. It also requires Cocotb configuration
+when any design is discovered because VWB may create a Cocotb starter, GHDL
+when any VHDL design is discovered, and sv2v when any SystemVerilog design is
+discovered. Other missing tools are reported and may be required by the command
+or option that uses them.
 
-#### Exit status
+### Exit Status
 
 | Status | Meaning |
 | --- | --- |
-| `0` | The requested operation succeeded. |
-| `1` | A test, waveform run, lint run, or required `doctor` check failed. |
-| `2` | Arguments, project input, configuration, or a required external tool were invalid. |
+| `0` | The requested work succeeded. |
+| `1` | A test, wave run, lint check, or required doctor check failed. |
+| `2` | Arguments, project input, configuration, or a required tool were invalid. |
 | `130` | The command was interrupted with Ctrl-C. |
 
-### Bundled Example
+## Bundled Examples and Development
 
-The same CLI runs the moved example without copying it into the user workspace:
+The repository's own `src/` and `test/` directories are a blank starter
+workspace. The larger example and regression project lives under `examples/`:
 
 ```sh
 ./vwb.py --src-dir examples/src --test-dir examples/test list
-./vwb.py --src-dir examples/src --test-dir examples/test test --keep-going
-./vwb.py --src-dir examples/src --test-dir examples/test test array_example --waves --wave-format vcd
-./vwb.py --src-dir examples/src --test-dir examples/test synth encoder --format json --view none
+./vwb.py --src-dir examples/src --test-dir examples/test test --no-gate-level
+./vwb.py --src-dir examples/src --test-dir examples/test lint --all
 ```
 
-The legacy Makefile also defaults to this example. Point it at the user
-workspace with `make SRC_DIR=src TEST_DIR=test NAM=my_module`.
+These small examples introduce one idea at a time. Each command runs both RTL
+and gate-level simulation unless you add `--no-gate-level`.
 
-Generated simulation, synthesis, formal, and FPGA files are stored under
-`.vwb/`. Run `./vwb.py <command> --help` for command-specific options.
+| Example | What to notice | Run it |
+| --- | --- | --- |
+| [`sv_beginner_counter`](examples/src/sv_beginner_counter.sv) | `always_ff`, an enable input, and active-low reset | `./vwb.py --src-dir examples/src --test-dir examples/test test sv_beginner_counter` |
+| [`sv_beginner_alu`](examples/src/sv_beginner_alu.sv) | `always_comb` and constants/functions from a [package](examples/src/sv_beginner_math_pkg.sv) | `./vwb.py --src-dir examples/src --test-dir examples/test test sv_beginner_alu` |
+| [`sv_beginner_interface`](examples/src/sv_beginner_interface.sv) | Signals grouped in a SystemVerilog interface and an included header | `./vwb.py --src-dir examples/src --test-dir examples/test test sv_beginner_interface` |
+| [`sv_beginner_shift_register`](examples/src/sv_beginner_shift_register.sv) | Shifting bits and asynchronous reset | `./vwb.py --src-dir examples/src --test-dir examples/test test sv_beginner_shift_register` |
+| [`vhdl_beginner_adder`](examples/src/vhdl_beginner_adder.vhd) | A VHDL-2008 combinational process | `./vwb.py --src-dir examples/src --test-dir examples/test test vhdl_beginner_adder` |
+| [`vhdl_beginner_accumulator`](examples/src/vhdl_beginner_accumulator.vhd) | One VHDL entity instantiating another | `./vwb.py --src-dir examples/src --test-dir examples/test test vhdl_beginner_accumulator` |
+| [`vhdl_beginner_counter`](examples/src/vhdl_beginner_counter.vhd) | An entity and its [architecture](examples/src/vhdl_beginner_counter_rtl.vhd) in separate files | `./vwb.py --src-dir examples/src --test-dir examples/test test vhdl_beginner_counter` |
 
-When waves are requested, `vwb.py` preprocesses the selected hierarchy and
-instruments a temporary copy under `.vwb/`. It explicitly registers every word
-of standalone static unpacked arrays and memories declared in modules or interfaces,
-including parameterized, multidimensional, generated, and typedef-backed
-arrays. Project source files remain unchanged. Icarus may report harmless
-escaped-identifier warnings for these words.
+The matching Cocotb files are under [`examples/test/`](examples/test/). Read a
+test beside its design to see how inputs are driven and outputs are checked.
 
-Array dumping is limited to 4096 words per declaration by default. Change
-the limit with `--max-array-words COUNT`, or use `0` for no limit. Dynamic,
-procedural, and aggregate-member arrays cannot be registered statically and
-produce a clear error.
+The repository uses three kinds of checks:
 
-### CI/CD
-
-Both GitHub workflows build the repository Dockerfile and invoke
-`scripts/validate_vwb.py`. The harness consumes `vwb.py list --json`; no module,
-test, or artifact name is embedded in either workflow. Adding a discoverable
-module or test under `examples/` therefore adds it to the next run automatically.
-
-| Validation layer | Coverage |
+| Check | What it checks |
 | --- | --- |
-| Discovery integrity | Compile every `test_*.py`, reject syntax errors and orphan Cocotb tests, verify every path reported by `list --json`, and emit a reusable module/test matrix with `--emit-matrix`. |
-| Tests and waves | Run every discovered Cocotb and HDL test, generate every supported wave format for every test, verify nonempty artifacts, and exercise GTKWave save files plus tag, replace, list, JSON-list, and load operations with a headless viewer stub. |
-| Every design | Lint every discovered module with Verilator and run real Yosys JSON synthesis for both the normal and `--full` flows. Definitions and include paths are included in the real commands. |
-| Synthesis options | Dry-run every format, schematic backend, `--full`, and `--flatten` combination on every discovered module. A generated neutral design also runs the complete combination matrix through real Yosys, NetlistSVG, Graphviz, and `rsvg-convert`. |
-| Formal and FPGA | Dry-run formal viewing and every board/stage combination on every discovered module. CI also runs a real SymbiYosys proof, real Gowin/iCE40 synthesis, and generated constraint-valid place-and-route/pack fixtures for every board alias. GUI viewing and hardware flashing remain dry-run because they require a display or attached hardware. |
-| CLI contracts | Audit every parser option, all aliases, color modes, persistent `init` paths, help/version output, tool discovery, invalid arguments, and every cleanup scope. A newly added unclassified option fails CI. |
+| `examples/test/test_<unit>.py`, `.v`, `.sv`, or `.vhd` | A **design unit test** drives one HDL module/entity and checks its outputs. |
+| `examples/test/test_vwb*.py` | A **software unit test** checks the Python workbench itself, such as discovery, command options, cleanup, and waveform handling. |
+| `scripts/validate_vwb.py` | An **integration test** runs VWB through the real tools in Docker and checks the generated files. |
 
-The default validation command is:
+Generated starter tests are intentionally simpler than design unit tests. They
+only prove that a unit initializes and runs; add assertions before relying on a
+starter to prove the unit's logic is correct.
+
+GitHub CI builds the Dockerfile and runs `scripts/validate_vwb.py`. The harness
+reads `vwb.py list --json`, so it finds new modules, entities, and tests without
+a list of names in the CI script. The normal CI-safe paths run for real. This
+includes checked-in tests, generated starter tests for units that have no test,
+FST and VCD waves, lint, synthesis, and FPGA synthesis. The option matrix also
+checks spelling and command setup with `--help` and `--dry-run`. This is how CI
+checks options that open a window or flash a physical board without trying to
+perform those actions. For a focused local harness run:
 
 ```sh
-python3 scripts/validate_vwb.py --all-wave-formats
+python3 scripts/validate_vwb.py --emit-matrix
+python3 scripts/validate_vwb.py --phase regressions --phase contracts
 ```
 
-Use `--module NAME`, `--test-index N`, or repeatable `--phase PHASE` arguments
-for a focused local run. `--emit-matrix` prints the current name-independent
-inventory and the exact runner arguments for each row.
+Run `./vwb.py COMMAND --help` whenever the installed checkout is newer than
+this guide.
 
-Pushes and pull requests run `.github/workflows/ci.yml`. Version tags matching
-`v*` run the same validation before `.github/workflows/release.yml` publishes
-the image to `ghcr.io/sfmth/verilog-workbench`; both workflows can also be
-started manually.
-
-
-<!-- LICENSE -->
 ## License
 
-Distributed under the MIT License. See `LICENSE` for more information.
+Distributed under the MIT License. See [`LICENSE.txt`](LICENSE.txt).

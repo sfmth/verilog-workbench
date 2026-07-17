@@ -14,11 +14,14 @@ from contextlib import contextmanager
 import importlib.util
 import json
 import os
+import re
+import signal
 import shlex
 import shutil
 import subprocess
 import sys
 import tempfile
+import xml.etree.ElementTree as ET
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Iterable, Sequence
@@ -39,6 +42,8 @@ ALL_PHASES = (
     "fpga",
     "clean",
 )
+COMMAND_TIMEOUT_SECONDS = 600
+PNG_MAX_PIXELS = 16_000_000
 
 
 class HarnessError(RuntimeError):
@@ -48,6 +53,7 @@ class HarnessError(RuntimeError):
 @dataclass(frozen=True)
 class TestCase:
     module: str
+    design_language: str
     kind: str
     language: str
     path: str
@@ -58,6 +64,7 @@ class TestCase:
         return {
             "index": index,
             "module": self.module,
+            "design_language": self.design_language,
             "kind": self.kind,
             "language": self.language,
             "path": self.path,
@@ -76,6 +83,7 @@ class TestCase:
 @dataclass(frozen=True)
 class CliMetadata:
     commands: tuple[str, ...]
+    test_languages: tuple[str, ...]
     wave_formats: tuple[str, ...]
     default_wave_format: str
     default_max_array_words: int
@@ -85,6 +93,7 @@ class CliMetadata:
     fpga_stages: tuple[str, ...]
     color_modes: tuple[str, ...]
     clean_scopes: tuple[str, ...]
+    linters: tuple[str, ...]
     option_actions: dict[str, dict[str, tuple[str, ...]]]
 
 
@@ -104,6 +113,8 @@ class Runner:
         self.test_dir = test_dir
         self.build_dir = build_dir
         self.failures: list[str] = []
+        self.vwb_invocations: list[tuple[str, ...]] = []
+        self._target_module: Any | None = None
         self.environment = os.environ.copy()
         prior_pythonpath = self.environment.get("PYTHONPATH")
         self.environment["PYTHONPATH"] = os.pathsep.join(
@@ -127,6 +138,16 @@ class Runner:
             "never",
         ]
 
+    def artifact_component(self, value: str) -> str:
+        if self._target_module is None:
+            self._target_module = load_target_module(self.vwb)
+        component = self._target_module.artifact_component(value)
+        if not isinstance(component, str) or not component:
+            raise HarnessError(
+                f"vwb.py returned an invalid artifact component for {value!r}"
+            )
+        return component
+
     @staticmethod
     def _display(command: Sequence[str]) -> None:
         print("$ " + shlex.join(command), file=sys.stderr, flush=True)
@@ -141,15 +162,52 @@ class Runner:
         record_failure: bool = True,
     ) -> subprocess.CompletedProcess[str]:
         command = [str(item) for item in command]
+        if (
+            len(command) >= 2
+            and Path(command[1]).expanduser().resolve() == self.vwb.resolve()
+        ):
+            self.vwb_invocations.append(tuple(command[2:]))
         self._display(command)
-        result = subprocess.run(
+        process = subprocess.Popen(
             command,
             cwd=self.root,
             env=self.environment,
             text=True,
             stdout=subprocess.PIPE if capture else None,
             stderr=subprocess.PIPE if capture else None,
-            check=False,
+            start_new_session=True,
+        )
+        try:
+            stdout, stderr = process.communicate(timeout=COMMAND_TIMEOUT_SECONDS)
+        except subprocess.TimeoutExpired:
+            try:
+                os.killpg(process.pid, signal.SIGTERM)
+            except ProcessLookupError:
+                pass
+            try:
+                stdout, stderr = process.communicate(timeout=5)
+            except subprocess.TimeoutExpired:
+                try:
+                    os.killpg(process.pid, signal.SIGKILL)
+                except ProcessLookupError:
+                    pass
+                stdout, stderr = process.communicate()
+            result = subprocess.CompletedProcess(command, 124, stdout, stderr)
+            detail = f"{label}: timed out after {COMMAND_TIMEOUT_SECONDS} seconds"
+            if capture:
+                output = "\n".join(
+                    part.strip()
+                    for part in (result.stdout, result.stderr)
+                    if part.strip()
+                )
+                if output:
+                    detail += f"\n{output}"
+            if record_failure:
+                self.failures.append(detail)
+                return result
+            raise HarnessError(detail) from None
+        result = subprocess.CompletedProcess(
+            command, process.returncode, stdout, stderr
         )
         allowed = set(expected)
         if result.returncode not in allowed:
@@ -215,7 +273,7 @@ def option_actions(parser: argparse.ArgumentParser) -> dict[str, tuple[str, ...]
     }
 
 
-def load_cli_metadata(vwb_path: Path) -> CliMetadata:
+def load_target_module(vwb_path: Path) -> Any:
     spec = importlib.util.spec_from_file_location("_vwb_validation_target", vwb_path)
     if spec is None or spec.loader is None:
         raise HarnessError(f"cannot import {vwb_path}")
@@ -225,7 +283,11 @@ def load_cli_metadata(vwb_path: Path) -> CliMetadata:
         spec.loader.exec_module(module)
     finally:
         sys.modules.pop(spec.name, None)
+    return module
 
+
+def load_cli_metadata(vwb_path: Path) -> CliMetadata:
+    module = load_target_module(vwb_path)
     parser = module.make_parser()
     subparsers = next(
         (
@@ -238,10 +300,12 @@ def load_cli_metadata(vwb_path: Path) -> CliMetadata:
     if subparsers is None:
         raise HarnessError("vwb.py parser has no commands")
     test_parser = subparsers.choices["test"]
+    lint_parser = subparsers.choices["lint"]
     synth_parser = subparsers.choices["synth"]
     fpga_parser = subparsers.choices["fpga"]
     clean_parser = subparsers.choices["clean"]
     wave_format = parser_action(test_parser, "--wave-format")
+    test_language = parser_action(test_parser, "--test-language")
     max_array_words = parser_action(test_parser, "--max-array-words")
     synth_format = parser_action(synth_parser, "--format")
     fpga_board = parser_action(fpga_parser, "--board")
@@ -252,6 +316,7 @@ def load_cli_metadata(vwb_path: Path) -> CliMetadata:
     )
     if clean_scope is None:
         raise HarnessError("vwb.py clean parser has no scope argument")
+    linter = parser_action(lint_parser, "--linter")
     canonical_parsers: dict[str, argparse.ArgumentParser] = {}
     seen_parsers: set[int] = set()
     for name, command_parser in subparsers.choices.items():
@@ -261,6 +326,7 @@ def load_cli_metadata(vwb_path: Path) -> CliMetadata:
         canonical_parsers[name] = command_parser
     return CliMetadata(
         commands=tuple(sorted(subparsers.choices)),
+        test_languages=tuple(test_language.choices or ()),
         wave_formats=tuple(wave_format.choices or ()),
         default_wave_format=str(wave_format.default),
         default_max_array_words=int(max_array_words.default),
@@ -270,6 +336,7 @@ def load_cli_metadata(vwb_path: Path) -> CliMetadata:
         fpga_stages=tuple(fpga_stage.choices or ()),
         color_modes=tuple(color_mode.choices or ()),
         clean_scopes=tuple(clean_scope.choices or ()),
+        linters=tuple(linter.choices or ()),
         option_actions={
             "global": option_actions(parser),
             **{
@@ -310,6 +377,7 @@ MATRIX_OPTION_DESTINATIONS: dict[str, set[str]] = {
         "compile_arg",
         "sim_arg",
         "plusarg",
+        "gate_level",
         "keep_going",
     },
     "wave": {
@@ -326,6 +394,7 @@ MATRIX_OPTION_DESTINATIONS: dict[str, set[str]] = {
         "compile_arg",
         "sim_arg",
         "plusarg",
+        "gate_level",
         "keep_going",
         "save",
         "tag",
@@ -334,11 +403,58 @@ MATRIX_OPTION_DESTINATIONS: dict[str, set[str]] = {
         "list_saved",
         "as_json",
     },
-    "lint": {"all_modules", "keep_going", "define", "include", "lint_arg"},
+    "lint": {
+        "all_modules",
+        "linter",
+        "keep_going",
+        "define",
+        "include",
+        "iverilog_arg",
+        "verilator_arg",
+        "yosys_arg",
+        "verible_arg",
+        "ghdl_arg",
+    },
     "synth": {"format", "full", "flatten", "schematic", "view", "define", "include"},
     "formal": {"view"},
     "fpga": {"board", "stage", "constraints", "define", "include"},
     "doctor": {"as_json"},
+}
+
+# Destinations classify behavior, while this map pins every alternate spelling.
+# A new alias must be added deliberately and exercised by the contracts probe.
+OPTION_ALIAS_SPELLINGS: dict[str, dict[str, set[str]]] = {
+    "global": {
+        "verbose": {"-v", "--verbose"},
+    },
+    "test": {
+        "define": {"-D", "--define"},
+        "include": {"-I", "--include"},
+    },
+    "wave": {
+        "define": {"-D", "--define"},
+        "include": {"-I", "--include"},
+    },
+    "lint": {
+        "define": {"-D", "--define"},
+        "include": {"-I", "--include"},
+        "verilator_arg": {"--lint-arg", "--verilator-arg"},
+    },
+    "synth": {
+        "schematic": {
+            "--schematic",
+            "--schemetic",
+            "--no-schematic",
+            "--no-schemetic",
+        },
+        "view": {"--no-view", "--view"},
+        "define": {"-D", "--define"},
+        "include": {"-I", "--include"},
+    },
+    "fpga": {
+        "define": {"-D", "--define"},
+        "include": {"-I", "--include"},
+    },
 }
 
 MANUAL_OPTION_DESTINATIONS: dict[str, set[str]] = {}
@@ -366,6 +482,22 @@ def option_coverage(metadata: CliMetadata) -> dict[str, dict[str, Any]]:
                 f"stale CLI option classifications for {scope}: "
                 + ", ".join(sorted(stale))
             )
+        expected_aliases = OPTION_ALIAS_SPELLINGS.get(scope, {})
+        actual_aliases = {
+            destination: set(options)
+            for destination, options in actual.items()
+            if len(options) > 1
+        }
+        if actual_aliases != expected_aliases:
+            for destination in sorted(set(actual_aliases) | set(expected_aliases)):
+                found = actual_aliases.get(destination, set())
+                expected = expected_aliases.get(destination, set())
+                if found != expected:
+                    problems.append(
+                        f"CLI option spellings for {scope}.{destination} are "
+                        f"{', '.join(sorted(found)) or 'none'}, expected "
+                        f"{', '.join(sorted(expected)) or 'none'}"
+                    )
         coverage[scope] = {
             destination: {
                 "options": list(options),
@@ -396,6 +528,7 @@ def read_inventory(runner: Runner) -> dict[str, Any]:
         raise HarnessError("inventory contains no modules")
 
     names: set[str] = set()
+    discovered_languages: set[str] = set()
     for module in modules:
         name = module.get("name")
         if not isinstance(name, str) or not name:
@@ -403,14 +536,43 @@ def read_inventory(runner: Runner) -> dict[str, Any]:
         if name in names:
             raise HarnessError(f"inventory contains duplicate module {name!r}")
         names.add(name)
+        language = module.get("language")
+        if language not in {"verilog", "systemverilog", "vhdl"}:
+            raise HarnessError(
+                f"module {name!r} has unsupported language metadata {language!r}"
+            )
+        discovered_languages.add(language)
         for source in module.get("files", []):
             if not project_path(runner.root, source).is_file():
                 raise HarnessError(f"module {name!r} references missing source {source}")
+    missing_languages = {"systemverilog", "vhdl"} - discovered_languages
+    if missing_languages:
+        raise HarnessError(
+            "example inventory does not exercise: "
+            + ", ".join(sorted(missing_languages))
+        )
+    for package in inventory.get("packages", []):
+        package_name = package.get("name")
+        if not isinstance(package_name, str) or not package_name:
+            raise HarnessError("inventory contains a package without a name")
+        if package_name in names:
+            raise HarnessError(
+                f"package-only design unit {package_name!r} is also runnable"
+            )
+        for source in package.get("files", []):
+            if not project_path(runner.root, source).is_file():
+                raise HarnessError(
+                    f"package {package_name!r} references missing source {source}"
+                )
     return inventory
 
 
 def flatten_tests(inventory: dict[str, Any], root: Path) -> list[TestCase]:
-    language_for_kind = {"cocotb": "cocotb", "hdl": "verilog"}
+    language_for_kind = {
+        "cocotb": "cocotb",
+        "verilog": "verilog",
+        "vhdl": "vhdl",
+    }
     tests: list[TestCase] = []
     seen: set[tuple[str, str, str]] = set()
     for module in inventory["modules"]:
@@ -433,6 +595,7 @@ def flatten_tests(inventory: dict[str, Any], root: Path) -> list[TestCase]:
             tests.append(
                 TestCase(
                     module=module["name"],
+                    design_language=module["language"],
                     kind=kind,
                     language=language_for_kind[kind],
                     path=path,
@@ -481,7 +644,7 @@ def compile_test_sources(
     test_dir = project_path(runner.root, runner.test_dir)
     represented = {project_path(runner.root, test.path) for test in tests}
     discovered: dict[Path, list[str]] = {}
-    for path in sorted(test_dir.rglob("test_*.py")):
+    for path in sorted(test_dir.rglob("*.py")):
         shown = path.relative_to(runner.root) if path.is_relative_to(runner.root) else path
         try:
             source = path.read_text(encoding="utf-8")
@@ -527,6 +690,15 @@ def module_names(inventory: dict[str, Any]) -> list[str]:
     )
 
 
+def applicable_linters(metadata: CliMetadata, language: str) -> tuple[str, ...]:
+    supported = (
+        {"all", "ghdl", "iverilog", "verilator", "yosys"}
+        if language == "vhdl"
+        else {"all", "iverilog", "verilator", "yosys", "verible"}
+    )
+    return tuple(linter for linter in metadata.linters if linter in supported)
+
+
 def matrix_document(
     inventory: dict[str, Any],
     tests: Sequence[TestCase],
@@ -539,6 +711,7 @@ def matrix_document(
             {
                 "index": index,
                 "name": name,
+                "language": inventory_by_name[name].get("language"),
                 "files": inventory_by_name[name].get("files", []),
                 "dependencies": inventory_by_name[name].get("dependencies", []),
                 "has_tests": bool(inventory_by_name[name].get("tests")),
@@ -548,9 +721,13 @@ def matrix_document(
                     "--phase",
                     "dry-run",
                     "--phase",
+                    "tests",
+                    "--phase",
                     "lint",
                     "--phase",
                     "synth",
+                    "--phase",
+                    "fpga",
                 ],
             }
             for index, name in enumerate(modules)
@@ -581,10 +758,21 @@ def explicit_test_arguments(
 
 
 @contextmanager
-def fake_executable(runner: Runner, name: str):
+def fake_executable(
+    runner: Runner,
+    name: str,
+    *,
+    exit_code: int = 0,
+    marker: Path | None = None,
+):
     with tempfile.TemporaryDirectory(prefix=f"vwb-fake-{name}-") as directory:
         executable = Path(directory) / name
-        executable.write_text("#!/bin/sh\nexit 0\n", encoding="ascii")
+        marker_command = (
+            f"printf called > {shlex.quote(str(marker))}\n" if marker else ""
+        )
+        executable.write_text(
+            f"#!/bin/sh\n{marker_command}exit {exit_code}\n", encoding="ascii"
+        )
         executable.chmod(0o755)
         previous = runner.environment.get("PATH", "")
         runner.environment["PATH"] = os.pathsep.join((directory, previous))
@@ -594,20 +782,182 @@ def fake_executable(runner: Runner, name: str):
             runner.environment["PATH"] = previous
 
 
-def validate_help(runner: Runner, metadata: CliMetadata) -> None:
-    runner.run(
-        [sys.executable, str(runner.vwb), "--help"],
-        label="top-level help",
+COMMAND_SCOPE_ALIASES = {"sim": "test", "gtkwave": "wave"}
+
+
+def option_probe_value(action: argparse.Action) -> str:
+    if action.choices:
+        return str(next(iter(action.choices)))
+    if action.type is int:
+        return "1"
+    return {
+        "root": ".",
+        "src_dir": "src",
+        "test_dir": "test",
+        "build_dir": ".vwb-option-audit",
+        "init_root": ".",
+        "init_src_dir": "src",
+        "init_test_dir": "test",
+        "init_build_dir": ".vwb-option-audit",
+        "test": "audit.py",
+        "include": ".",
+        "define": "VWB_OPTION_AUDIT=1",
+        "view": "none",
+        "constraints": "audit.constraints",
+    }.get(action.dest, "VWB_OPTION_AUDIT")
+
+
+def option_probe_tokens(parser: argparse.ArgumentParser) -> list[str]:
+    tokens: list[str] = []
+    for action in parser._actions:
+        if action.dest in {"help", "version"}:
+            continue
+        for option in action.option_strings:
+            tokens.append(option)
+            if action.nargs != 0:
+                tokens.append(option_probe_value(action))
+    return tokens
+
+
+def invoked_option_spellings(
+    runner: Runner, metadata: CliMetadata
+) -> dict[str, set[str]]:
+    observed = {scope: set() for scope in metadata.option_actions}
+    known = {
+        scope: {
+            option
+            for options in actions.values()
+            for option in options
+        }
+        for scope, actions in metadata.option_actions.items()
+    }
+
+    def record(scope: str, tokens: Sequence[str]) -> None:
+        available = known.get(scope, set())
+        for token in tokens:
+            exact = token.split("=", 1)[0]
+            if exact in available:
+                observed[scope].add(exact)
+                continue
+            if token.startswith("-") and not token.startswith("--"):
+                for option in available:
+                    if len(option) == 2 and token.startswith(option):
+                        observed[scope].add(option)
+                        break
+
+    command_names = set(metadata.commands)
+    target_parser = load_target_module(runner.vwb).make_parser()
+    global_value_options = {
+        option
+        for action in target_parser._actions
+        if action.nargs != 0
+        for option in action.option_strings
+    }
+
+    def command_position(invocation: Sequence[str]) -> int | None:
+        index = 0
+        global_options = known.get("global", set())
+        while index < len(invocation):
+            token = invocation[index]
+            if token in command_names:
+                return index
+            spelling = token.split("=", 1)[0]
+            if spelling in global_options:
+                if spelling in global_value_options and "=" not in token:
+                    index += 2
+                else:
+                    index += 1
+                continue
+            index += 1
+        return None
+
+    for invocation in runner.vwb_invocations:
+        command_index = command_position(invocation)
+        global_tokens = (
+            invocation if command_index is None else invocation[:command_index]
+        )
+        record("global", global_tokens)
+        if command_index is None:
+            continue
+        command = COMMAND_SCOPE_ALIASES.get(
+            invocation[command_index], invocation[command_index]
+        )
+        record(command, invocation[command_index + 1 :])
+    return observed
+
+
+def validate_option_spelling_invocations(
+    runner: Runner, metadata: CliMetadata
+) -> None:
+    observed = invoked_option_spellings(runner, metadata)
+    for scope, actions in metadata.option_actions.items():
+        expected = {
+            option
+            for options in actions.values()
+            for option in options
+        }
+        missing = sorted(expected - observed.get(scope, set()))
+        if missing:
+            runner.failures.append(
+                f"CLI option spellings were not invoked for {scope}: "
+                + ", ".join(missing)
+            )
+
+
+def validate_option_spelling_probes(
+    runner: Runner, metadata: CliMetadata
+) -> None:
+    target = load_target_module(runner.vwb)
+    parser = target.make_parser()
+    subparsers = next(
+        action
+        for action in parser._actions
+        if isinstance(action, argparse._SubParsersAction)
     )
+    runner.run(
+        [sys.executable, str(runner.vwb), *option_probe_tokens(parser), "list", "--help"],
+        label="exact global option-spelling probe",
+        capture=True,
+    )
+    runner.run(
+        [sys.executable, str(runner.vwb), "--version"],
+        label="version spelling probe",
+        capture=True,
+    )
+    seen_parsers: set[int] = set()
+    for command, command_parser in subparsers.choices.items():
+        if id(command_parser) in seen_parsers:
+            continue
+        seen_parsers.add(id(command_parser))
+        runner.run(
+            [
+                *runner.vwb_prefix,
+                command,
+                *option_probe_tokens(command_parser),
+                "--help",
+            ],
+            label=f"exact option-spelling probe for {command}",
+            capture=True,
+        )
+    validate_option_spelling_invocations(runner, metadata)
+
+
+def validate_help(runner: Runner, metadata: CliMetadata) -> None:
+    for option in ("-h", "--help"):
+        runner.run(
+            [sys.executable, str(runner.vwb), option],
+            label=f"top-level help via {option}",
+        )
     runner.run(
         [sys.executable, str(runner.vwb), "--version"],
         label="version option",
     )
     for command in metadata.commands:
-        runner.run(
-            [sys.executable, str(runner.vwb), command, "--help"],
-            label=f"help for {command}",
-        )
+        for option in ("-h", "--help"):
+            runner.run(
+                [sys.executable, str(runner.vwb), command, option],
+                label=f"help for {command} via {option}",
+            )
 
 
 def validate_regressions(runner: Runner) -> None:
@@ -640,10 +990,53 @@ def validate_regressions(runner: Runner) -> None:
     )
 
 
+def validate_completions(runner: Runner, modules: Sequence[str]) -> None:
+    target = load_target_module(runner.vwb)
+    parsed_args = argparse.Namespace(
+        root=str(runner.root),
+        src_dir=runner.src_dir,
+        test_dir=runner.test_dir,
+        build_dir=str(runner.build_dir),
+    )
+    completed_modules = target.module_name_completer("", parsed_args)
+    if completed_modules != sorted(modules):
+        runner.failures.append(
+            "module completion does not match the dynamically discovered inventory"
+        )
+    if modules:
+        prefix = modules[0][: max(1, len(modules[0]) // 2)]
+        expected = sorted(module for module in modules if module.startswith(prefix))
+        if target.module_name_completer(prefix, parsed_args) != expected:
+            runner.failures.append(
+                f"module completion returned the wrong matches for prefix {prefix!r}"
+            )
+
+    with tempfile.TemporaryDirectory(prefix="vwb-completion-") as directory:
+        root = Path(directory)
+        (root / "src").mkdir()
+        (root / "test").mkdir()
+        saved = root / "build" / "saved-waves"
+        (saved / "known-good").mkdir(parents=True)
+        (saved / "known-second").mkdir()
+        (saved / "unrelated").mkdir()
+        saved_args = argparse.Namespace(
+            root=str(root),
+            src_dir="src",
+            test_dir="test",
+            build_dir="build",
+        )
+        completed_saved = target.saved_wave_completer("known-", saved_args)
+        if completed_saved != ["known-good", "known-second"]:
+            runner.failures.append(
+                "saved-wave completion did not filter and sort known tags"
+            )
+
+
 def validate_contracts(
     runner: Runner,
     metadata: CliMetadata,
     tests: Sequence[TestCase],
+    modules: Sequence[str],
 ) -> None:
     report = option_coverage(metadata)
     matrix_count = sum(
@@ -660,6 +1053,8 @@ def validate_contracts(
         f"CLI option audit: {matrix_count} matrix, {manual_count} manual-side-effect",
         file=sys.stderr,
     )
+    validate_option_spelling_probes(runner, metadata)
+    validate_completions(runner, modules)
     for color_mode in metadata.color_modes:
         result = runner.run_vwb(
             ["list"],
@@ -729,6 +1124,27 @@ def validate_contracts(
         capture=True,
         dry_run=True,
     )
+    expected_languages = {"auto", "cocotb", "verilog", "vhdl"}
+    if set(metadata.test_languages) != expected_languages:
+        runner.failures.append(
+            "--test-language choices are "
+            f"{', '.join(metadata.test_languages)}, expected "
+            f"{', '.join(sorted(expected_languages))}"
+        )
+    expected_linters = {
+        "all",
+        "iverilog",
+        "verilator",
+        "yosys",
+        "verible",
+        "ghdl",
+    }
+    if set(metadata.linters) != expected_linters:
+        runner.failures.append(
+            "--linter choices are "
+            f"{', '.join(metadata.linters)}, expected "
+            f"{', '.join(sorted(expected_linters))}"
+        )
     runner.run_vwb(
         ["wave", "--list-saved", "--wave-format", metadata.default_wave_format],
         label="wave list rejects simulation-only --wave-format",
@@ -783,9 +1199,11 @@ def validate_dry_runs(
     metadata: CliMetadata,
     tests: Sequence[TestCase],
     modules: Sequence[str],
+    module_languages: dict[str, str],
     compiled_tests: dict[Path, list[str]],
     seed: int,
 ) -> None:
+    tested_modules = {test.module for test in tests}
     for test in tests:
         arguments = explicit_test_arguments(test, seed=seed)
         testcases = compiled_tests.get(project_path(runner.root, test.path), [])
@@ -813,6 +1231,18 @@ def validate_dry_runs(
             dry_run=True,
             capture=True,
         )
+        no_gate_arguments = explicit_test_arguments(test, seed=seed)
+        no_gate_arguments.append("--no-gate-level")
+        no_gate_result = runner.run_vwb(
+            no_gate_arguments,
+            label=f"dry-run no-gate simulation {test.module}:{test.kind}",
+            dry_run=True,
+            capture=True,
+        )
+        if "GATE PASS" in no_gate_result.stdout:
+            runner.failures.append(
+                f"--no-gate-level still ran the gate phase for {test.module}"
+            )
 
     if tests:
         runner.run_vwb(
@@ -832,20 +1262,109 @@ def validate_dry_runs(
             )
 
     for module in modules:
-        runner.run_vwb(
-            [
-                "lint",
-                module,
-                "--define",
-                "VWB_VALIDATION=1",
-                "--include",
-                ".",
-                "--lint-arg=-Wall",
-            ],
-            label=f"dry-run lint options for {module}",
+        cocotb_bundle = [
+            "test",
+            module,
+            "--test-language",
+            "cocotb",
+            "--testcase",
+            f"test_{module}_starter",
+            "--seed",
+            str(seed),
+            "--waves",
+            "--wave-format",
+            metadata.default_wave_format,
+            "--max-array-words",
+            str(metadata.default_max_array_words),
+            "--define",
+            "VWB_VALIDATION=1",
+            "--include",
+            ".",
+            "--compile-arg=-Wall",
+            "--sim-arg=",
+            "--plusarg=VWB_VALIDATION",
+            "--keep-going",
+        ]
+        cocotb_result = runner.run_vwb(
+            cocotb_bundle,
+            label=f"dry-run full Cocotb option bundle for {module}",
             dry_run=True,
             capture=True,
         )
+        if module not in tested_modules and "generated starter test:" not in cocotb_result.stdout:
+            runner.failures.append(
+                f"dry-run did not select a generated Cocotb starter for {module}"
+            )
+        runner.run_vwb(
+            [
+                "test",
+                module,
+                "--test-language",
+                "cocotb",
+                "--no-gate-level",
+            ],
+            label=f"dry-run Cocotb no-gate option for {module}",
+            dry_run=True,
+            capture=True,
+        )
+        if module_languages[module] != "vhdl":
+            runner.run_vwb(
+                [
+                    "test",
+                    module,
+                    "--test-language",
+                    "verilog",
+                    "--waves",
+                    "--wave-format",
+                    metadata.default_wave_format,
+                    "--max-array-words",
+                    str(metadata.default_max_array_words),
+                    "--define",
+                    "VWB_VALIDATION=1",
+                    "--include",
+                    ".",
+                    "--compile-arg=-Wall",
+                    "--sim-arg=",
+                    "--plusarg=VWB_VALIDATION",
+                    "--keep-going",
+                ],
+                label=f"dry-run native Verilog starter options for {module}",
+                dry_run=True,
+                capture=True,
+            )
+        if module not in tested_modules:
+            wave_result = runner.run_vwb(
+                ["wave", *cocotb_bundle[1:]],
+                label=f"dry-run generated wave starter for {module}",
+                dry_run=True,
+                capture=True,
+            )
+            if "generated starter test:" not in wave_result.stdout:
+                runner.failures.append(
+                    f"dry-run wave did not generate a Cocotb starter for {module}"
+                )
+
+        for linter in applicable_linters(metadata, module_languages[module]):
+            runner.run_vwb(
+                [
+                    "lint",
+                    module,
+                    "--linter",
+                    linter,
+                    "--define",
+                    "VWB_VALIDATION=1",
+                    "--include",
+                    ".",
+                    "--iverilog-arg=-Wall",
+                    "--verilator-arg=-Wno-fatal",
+                    "--yosys-arg=yosys check",
+                    "--verible-arg=--ruleset=none",
+                    "--ghdl-arg=-frelaxed-rules",
+                ],
+                label=f"dry-run {linter} lint options for {module}",
+                dry_run=True,
+                capture=True,
+            )
         runner.run_vwb(
             [
                 "synth",
@@ -1002,19 +1521,478 @@ def validate_doctor(runner: Runner) -> None:
 
 def validate_tests(runner: Runner, tests: Sequence[TestCase], seed: int) -> None:
     for test in tests:
-        runner.run_vwb(
+        result = runner.run_vwb(
             explicit_test_arguments(test, seed=seed),
             label=f"simulation {test.module}:{test.kind}",
+            capture=True,
         )
+        if result.returncode != 0:
+            continue
+        expected_gate_report = "GATE SKIP" if test.kind == "vhdl" else "GATE PASS"
+        if "RTL PASS" not in result.stdout or expected_gate_report not in result.stdout:
+            runner.failures.append(
+                f"default simulation did not report RTL PASS and "
+                f"{expected_gate_report}: "
+                f"{test.module}:{test.kind}"
+            )
+        if test.kind == "vhdl":
+            gate_netlist = None
+        else:
+            module_artifact = runner.artifact_component(test.module)
+            gate_netlist = (
+                runner.build_dir
+                / "synth"
+                / module_artifact
+                / "gate"
+                / f"{module_artifact}_gate.v"
+            )
+        if gate_netlist is not None and (
+            not gate_netlist.is_file() or gate_netlist.stat().st_size == 0
+        ):
+            runner.failures.append(
+                f"default simulation did not produce a gate netlist: {gate_netlist}"
+            )
+        gate_simlib = gate_netlist.parent / "yosys_simlib.v" if gate_netlist else None
+        if gate_simlib is not None and (
+            not gate_simlib.is_file() or gate_simlib.stat().st_size == 0
+        ):
+            runner.failures.append(
+                "default simulation did not preserve the Yosys generic-cell "
+                f"library: {gate_simlib}"
+            )
+        rtl_only = explicit_test_arguments(test, seed=seed)
+        rtl_only.append("--no-gate-level")
+        rtl_result = runner.run_vwb(
+            rtl_only,
+            label=f"RTL-only simulation {test.module}:{test.kind}",
+            capture=True,
+        )
+        if rtl_result.returncode == 0:
+            if "RTL PASS" not in rtl_result.stdout:
+                runner.failures.append(
+                    f"RTL-only simulation did not report a pass: "
+                    f"{test.module}:{test.kind}"
+                )
+            if "GATE PASS" in rtl_result.stdout or "GATE FAIL" in rtl_result.stdout:
+                runner.failures.append(
+                    f"--no-gate-level still reported a gate phase: "
+                    f"{test.module}:{test.kind}"
+                )
+
+
+def validate_starter_tests(runner: Runner) -> None:
+    with tempfile.TemporaryDirectory(prefix="vwb-starter-tests-") as directory:
+        root = Path(directory)
+        source = root / "src"
+        tests = root / "test"
+        source.mkdir()
+        tests.mkdir()
+        (source / "clocked_sv.sv").write_text(
+            "module clocked_sv(input logic clk, input logic reset_n, "
+            "output logic value);\n"
+            "  always_ff @(posedge clk) begin\n"
+            "    if (!reset_n) value <= 1'b0; else value <= ~value;\n"
+            "  end\n"
+            "endmodule\n",
+            encoding="ascii",
+        )
+        (source / "clocked_vhdl.vhd").write_text(
+            "library ieee;\n"
+            "use ieee.std_logic_1164.all;\n"
+            "entity clocked_vhdl is\n"
+            "  port (clk : in std_logic; reset : in std_logic; "
+            "value : out std_logic);\n"
+            "end entity;\n"
+            "architecture rtl of clocked_vhdl is\n"
+            "  signal state : std_logic := '0';\n"
+            "begin\n"
+            "  process(clk) begin\n"
+            "    if rising_edge(clk) then\n"
+            "      if reset = '1' then state <= '0'; else state <= not state; end if;\n"
+            "    end if;\n"
+            "  end process;\n"
+            "  value <= state;\n"
+            "end architecture;\n",
+            encoding="ascii",
+        )
+        (source / "plain_verilog.v").write_text(
+            "module plain_verilog(input wire value, output wire copy);\n"
+            "  assign copy = value;\n"
+            "endmodule\n",
+            encoding="ascii",
+        )
+        (source / "native_vhdl.vhd").write_text(
+            "library ieee;\n"
+            "use ieee.std_logic_1164.all;\n"
+            "entity native_vhdl is\n"
+            "  port (value : in std_logic; copy : out std_logic);\n"
+            "end entity;\n"
+            "architecture rtl of native_vhdl is begin copy <= value; end architecture;\n",
+            encoding="ascii",
+        )
+        (tests / "test_native_vhdl.vhd").write_text(
+            "library ieee;\n"
+            "use ieee.std_logic_1164.all;\n"
+            "use std.env.all;\n"
+            "entity test_native_vhdl is end entity;\n"
+            "architecture test of test_native_vhdl is\n"
+            "  signal value : std_logic := '0';\n"
+            "  signal copy : std_logic;\n"
+            "begin\n"
+            "  dut: entity work.native_vhdl port map (value => value, copy => copy);\n"
+            "  process begin\n"
+            "    value <= '1'; wait for 1 ns;\n"
+            "    assert copy = '1' severity failure;\n"
+            "    finish;\n"
+            "  end process;\n"
+            "end architecture;\n",
+            encoding="ascii",
+        )
+        fixture = Runner(
+            root=root,
+            vwb=runner.vwb,
+            src_dir="src",
+            test_dir="test",
+            build_dir=root / "build",
+        )
+        for module in ("clocked_sv", "clocked_vhdl"):
+            result = fixture.run_vwb(
+                ["test", module],
+                label=f"generated Cocotb starter for {module}",
+                capture=True,
+            )
+            starter = tests / f"test_{module}_starter.py"
+            if result.returncode == 0 and not starter.is_file():
+                fixture.failures.append(f"starter test was not generated: {starter}")
+            if starter.is_file():
+                content = starter.read_text(encoding="utf-8")
+                if "Clock(" not in content or "reset" not in content:
+                    fixture.failures.append(
+                        f"starter test does not initialize clock and reset: {starter}"
+                    )
+        fixture.run_vwb(
+            [
+                "test",
+                "plain_verilog",
+                "--test-language",
+                "verilog",
+                "--no-gate-level",
+            ],
+            label="generated native Verilog starter",
+        )
+        native_starter = tests / "test_plain_verilog_starter.sv"
+        if not native_starter.is_file():
+            fixture.failures.append(
+                f"native Verilog starter was not generated: {native_starter}"
+            )
+        native_vhdl_result = fixture.run_vwb(
+            [
+                "test",
+                "native_vhdl",
+                "--test-language",
+                "vhdl",
+            ],
+            label="native VHDL testbench default gate handling",
+            capture=True,
+        )
+        if (
+            native_vhdl_result.returncode == 0
+            and "GATE SKIP" not in native_vhdl_result.stdout
+        ):
+            fixture.failures.append(
+                "native VHDL testbench did not report its default gate skip"
+            )
+        runner.failures.extend(fixture.failures)
+
+
+def validate_escaped_identifier_fixture(runner: Runner) -> None:
+    with tempfile.TemporaryDirectory(prefix="vwb-escaped-identifier-") as directory:
+        root = Path(directory)
+        source = root / "src"
+        tests = root / "test"
+        source.mkdir()
+        tests.mkdir()
+        module = r"\odd.name"
+        (source / "escaped_top.sv").write_text(
+            "module \\odd.name  (\n"
+            "  input wire \\clk.in ,\n"
+            "  input wire \\reset.n ,\n"
+            "  output reg \\value.out \n"
+            ");\n"
+            "  always @(posedge \\clk.in ) begin\n"
+            "    if (\\reset.n ) \\value.out  <= 1'b0;\n"
+            "    else \\value.out  <= ~\\value.out ;\n"
+            "  end\n"
+            "endmodule\n",
+            encoding="ascii",
+        )
+        fixture = Runner(
+            root=root,
+            vwb=runner.vwb,
+            src_dir="src",
+            test_dir="test",
+            build_dir=root / "build",
+        )
+        result = fixture.run_vwb(
+            ["test", module, "--waves", "--wave-format", "vcd"],
+            label="escaped identifier starter, waveform, and gate simulation",
+            capture=True,
+        )
+        target = load_target_module(runner.vwb)
+        module_artifact = fixture.artifact_component(module)
+        starter_name = f"test_{target.python_identifier_component(module)}_starter"
+        starter = tests / f"{starter_name}.py"
+        starter_artifact = fixture.artifact_component(starter_name)
+        waveform = (
+            fixture.build_dir
+            / "sim"
+            / module_artifact
+            / f"cocotb-{starter_artifact}"
+            / f"{module_artifact}.vcd"
+        )
+        gate_netlist = (
+            fixture.build_dir
+            / "synth"
+            / module_artifact
+            / "gate"
+            / f"{module_artifact}_gate.v"
+        )
+        if result.returncode == 0:
+            output = result.stdout or ""
+            if "RTL PASS" not in output or "GATE PASS" not in output:
+                fixture.failures.append(
+                    "escaped identifier simulation did not report RTL and gate passes"
+                )
+            for label, artifact in (
+                ("generated starter", starter),
+                ("waveform", waveform),
+                ("gate netlist", gate_netlist),
+            ):
+                if not artifact.is_file() or artifact.stat().st_size == 0:
+                    fixture.failures.append(
+                        f"escaped identifier {label} is missing or empty: {artifact}"
+                    )
+        runner.failures.extend(fixture.failures)
+
+
+def validation_wave_formats(
+    metadata: CliMetadata, all_formats: bool
+) -> tuple[str, ...]:
+    if not all_formats:
+        return (metadata.default_wave_format,)
+    return (
+        metadata.default_wave_format,
+        *(
+            wave_format
+            for wave_format in metadata.wave_formats
+            if wave_format != metadata.default_wave_format
+        ),
+    )
+
+
+def validate_discovered_starter_tests(
+    runner: Runner,
+    metadata: CliMetadata,
+    modules: Sequence[str],
+    tests: Sequence[TestCase],
+    *,
+    seed: int,
+    all_formats: bool,
+) -> None:
+    tested_modules = {test.module for test in tests}
+    missing = [module for module in modules if module not in tested_modules]
+    if not missing:
+        return
+    target = load_target_module(runner.vwb)
+    with tempfile.TemporaryDirectory(prefix="vwb-discovered-starters-") as directory:
+        root = Path(directory)
+        source = root / "src"
+        generated_tests = root / "test"
+        shutil.copytree(project_path(runner.root, runner.src_dir), source)
+        generated_tests.mkdir()
+        fixture = Runner(
+            root=root,
+            vwb=runner.vwb,
+            src_dir="src",
+            test_dir="test",
+            build_dir=root / "build",
+        )
+        for module in missing:
+            component = target.python_identifier_component(module)
+            starter = generated_tests / f"test_{component}_starter.py"
+            module_artifact = target.artifact_component(module)
+            starter_artifact = target.artifact_component(starter.stem)
+            starter_content: bytes | None = None
+            for format_index, wave_format in enumerate(
+                validation_wave_formats(metadata, all_formats)
+            ):
+                if format_index == 0:
+                    arguments = [
+                        "test",
+                        module,
+                        "--seed",
+                        str(seed),
+                        "--waves",
+                        "--wave-format",
+                        wave_format,
+                    ]
+                else:
+                    arguments = [
+                        "test",
+                        module,
+                        "--test",
+                        str(starter),
+                        "--test-language",
+                        "cocotb",
+                        "--seed",
+                        str(seed),
+                        "--waves",
+                        "--wave-format",
+                        wave_format,
+                        "--no-gate-level",
+                    ]
+                result = fixture.run_vwb(
+                    arguments,
+                    label=(
+                        f"generated starter {wave_format} waveform for discovered "
+                        f"module {module}"
+                    ),
+                    capture=True,
+                )
+                output = result.stdout or ""
+                if format_index == 0:
+                    if not starter.is_file():
+                        fixture.failures.append(
+                            f"discovered module did not get a starter test: {module}"
+                        )
+                        break
+                    try:
+                        starter_content = starter.read_bytes()
+                    except OSError as error:
+                        fixture.failures.append(
+                            f"cannot read generated starter for {module}: {error}"
+                        )
+                        break
+                    if result.returncode == 0 and (
+                        "RTL PASS" not in output or "GATE PASS" not in output
+                    ):
+                        fixture.failures.append(
+                            f"generated starter did not pass RTL and gate simulation: "
+                            f"{module}"
+                        )
+                else:
+                    if "generated starter test:" in output:
+                        fixture.failures.append(
+                            f"extra waveform run regenerated the starter test: {module}"
+                        )
+                    try:
+                        unchanged = starter.read_bytes() == starter_content
+                    except OSError:
+                        unchanged = False
+                    if not unchanged:
+                        fixture.failures.append(
+                            f"extra waveform run changed the starter test: {module}"
+                        )
+                    if result.returncode == 0 and "RTL PASS" not in output:
+                        fixture.failures.append(
+                            f"generated starter {wave_format} RTL simulation did not pass: "
+                            f"{module}"
+                        )
+
+                waveform = (
+                    fixture.build_dir
+                    / "sim"
+                    / module_artifact
+                    / f"cocotb-{starter_artifact}"
+                    / f"{module_artifact}.{wave_format}"
+                )
+                if result.returncode == 0 and (
+                    not waveform.is_file() or waveform.stat().st_size == 0
+                ):
+                    fixture.failures.append(
+                        "missing or empty generated-starter waveform: "
+                        f"{waveform}"
+                    )
+        runner.failures.extend(fixture.failures)
+
+
+def validate_failure_aggregation(runner: Runner) -> None:
+    with tempfile.TemporaryDirectory(prefix="vwb-aggregation-") as directory:
+        root = Path(directory)
+        source = root / "src"
+        tests = root / "test"
+        source.mkdir()
+        tests.mkdir()
+        (source / "bad_design.v").write_text(
+            "module bad_design(output wire value); assign value = 1'b0; endmodule\n",
+            encoding="ascii",
+        )
+        (source / "good_design.v").write_text(
+            "module good_design(output wire value); assign value = 1'b1; endmodule\n",
+            encoding="ascii",
+        )
+        (tests / "test_bad_design.sv").write_text(
+            "module test_bad_design; bad_design dut(); initial begin #1 $fatal; end endmodule\n",
+            encoding="ascii",
+        )
+        (tests / "test_good_design.sv").write_text(
+            "module test_good_design; good_design dut(); initial begin #1 $finish; end endmodule\n",
+            encoding="ascii",
+        )
+        fixture = Runner(
+            root=root,
+            vwb=runner.vwb,
+            src_dir="src",
+            test_dir="test",
+            build_dir=root / "build",
+        )
+        result = fixture.run_vwb(
+            ["test", "--test-language", "verilog", "--no-gate-level"],
+            label="simulation failure aggregation",
+            expected=(1,),
+            capture=True,
+        )
+        if "good_design" not in result.stdout or "1/2 test runs passed" not in result.stdout:
+            fixture.failures.append(
+                "simulation stopped before the passing test after an earlier failure"
+            )
+
+        (source / "bad_lint.v").write_text(
+            "module bad_lint; missing_cell child(); endmodule\n",
+            encoding="ascii",
+        )
+        (source / "good_lint.v").write_text(
+            "module good_lint; endmodule\n",
+            encoding="ascii",
+        )
+        lint_result = fixture.run_vwb(
+            [
+                "lint",
+                "bad_lint",
+                "good_lint",
+                "--linter",
+                "iverilog",
+            ],
+            label="lint failure aggregation",
+            expected=(1,),
+            capture=True,
+        )
+        if "good_lint" not in lint_result.stdout or "1/2 lint checks passed" not in lint_result.stdout:
+            fixture.failures.append(
+                "lint stopped before the passing design after an earlier failure"
+            )
+        runner.failures.extend(fixture.failures)
 
 
 def waveform_path(runner: Runner, test: TestCase, wave_format: str) -> Path:
+    module_artifact = runner.artifact_component(test.module)
+    test_artifact = runner.artifact_component(Path(test.path).stem)
     return (
         runner.build_dir
         / "sim"
-        / test.module
-        / f"{test.kind}-{Path(test.path).stem}"
-        / f"{test.module}.{wave_format}"
+        / module_artifact
+        / f"{test.kind}-{test_artifact}"
+        / f"{module_artifact}.{wave_format}"
     )
 
 
@@ -1025,9 +2003,7 @@ def validate_waves(
     seed: int,
     all_formats: bool,
 ) -> None:
-    formats = (
-        metadata.wave_formats if all_formats else (metadata.default_wave_format,)
-    )
+    formats = validation_wave_formats(metadata, all_formats)
     with fake_executable(runner, "gtkwave") as fake_directory:
         explicit_layout = fake_directory / "validation.gtkw"
         explicit_layout.write_text("[*] vwb validation layout\n", encoding="ascii")
@@ -1096,25 +2072,199 @@ def validate_waves(
         )
 
 
-def validate_lint(runner: Runner, modules: Sequence[str]) -> None:
+def validate_lint(
+    runner: Runner,
+    metadata: CliMetadata,
+    modules: Sequence[str],
+    module_languages: dict[str, str],
+) -> None:
     for module in modules:
-        runner.run_vwb(
+        result = runner.run_vwb(
             [
                 "lint",
                 module,
+                "--linter",
+                "all",
                 "--define",
                 "VWB_VALIDATION=1",
                 "--include",
                 runner.src_dir,
-                "--lint-arg=--timing",
-                "--lint-arg=-Wno-fatal",
+                "--iverilog-arg=-Wall",
+                "--verilator-arg=-Wno-fatal",
+                "--yosys-arg=yosys check",
+                "--verible-arg=--ruleset=none",
+                "--ghdl-arg=-frelaxed-rules",
             ],
-            label=f"lint {module}",
+            label=f"exhaustive lint {module}",
+            capture=True,
         )
+        if result.returncode != 0:
+            continue
+        tools = [
+            tool
+            for tool in applicable_linters(metadata, module_languages[module])
+            if tool != "all"
+        ]
+        module_artifact = runner.artifact_component(module)
+        for tool in tools:
+            if f"with {tool}" not in result.stdout:
+                runner.failures.append(
+                    f"lint --all skipped applicable {tool} check for {module}"
+                )
+            output_dir = runner.build_dir / "lint" / module_artifact / tool
+            if not output_dir.is_dir():
+                runner.failures.append(
+                    f"lint {tool} did not create its result directory: {output_dir}"
+                )
+        if module_languages[module] != "vhdl":
+            style = runner.run_vwb(
+                [
+                    "lint",
+                    module,
+                    "--linter",
+                    "verible",
+                    "--define",
+                    "VWB_VALIDATION=1",
+                    "--include",
+                    runner.src_dir,
+                ],
+                label=f"default Verible rules {module}",
+                expected=(0, 1),
+                capture=True,
+            )
+            combined_output = "\n".join(
+                part for part in (style.stdout, style.stderr) if part
+            )
+            if "with verible" not in combined_output:
+                runner.failures.append(
+                    f"default Verible lint did not run for {module}"
+                )
 
 
 def synthesis_artifact(runner: Runner, module: str, output_format: str) -> Path:
-    return runner.build_dir / "synth" / module / f"{module}.{output_format}"
+    module_artifact = runner.artifact_component(module)
+    return (
+        runner.build_dir
+        / "synth"
+        / module_artifact
+        / f"{module_artifact}.{output_format}"
+    )
+
+
+def svg_pixel_dimensions(path: Path) -> tuple[float, float] | None:
+    parser = ET.XMLPullParser(events=("start",))
+    try:
+        attributes: dict[str, str] | None = None
+        with path.open("rb") as source:
+            while chunk := source.read(64 * 1024):
+                parser.feed(chunk)
+                for _event, element in parser.read_events():
+                    if element.tag.rsplit("}", 1)[-1].lower() != "svg":
+                        return None
+                    attributes = dict(element.attrib)
+                    break
+                if attributes is not None:
+                    break
+    except (OSError, ET.ParseError):
+        return None
+    if attributes is None:
+        return None
+
+    unit_scale = {
+        "": 1.0,
+        "px": 1.0,
+        "pt": 96.0 / 72.0,
+        "pc": 16.0,
+        "in": 96.0,
+        "cm": 96.0 / 2.54,
+        "mm": 96.0 / 25.4,
+        "q": 96.0 / 101.6,
+    }
+
+    def length(value: str | None) -> float | None:
+        if value is None:
+            return None
+        match = re.fullmatch(
+            r"\s*([0-9]+(?:\.[0-9]*)?|\.[0-9]+)"
+            r"(?:[eE]([+-]?[0-9]+))?\s*([A-Za-z]*)\s*",
+            value,
+        )
+        if match is None or match.group(3).lower() not in unit_scale:
+            return None
+        number = float(match.group(1))
+        if match.group(2):
+            number *= 10 ** int(match.group(2))
+        return number * unit_scale[match.group(3).lower()]
+
+    width = length(attributes.get("width"))
+    height = length(attributes.get("height"))
+    if width is None or height is None:
+        view_box = attributes.get("viewBox") or attributes.get("viewbox")
+        if view_box:
+            values = re.split(r"[\s,]+", view_box.strip())
+            if len(values) == 4:
+                try:
+                    width = float(values[2])
+                    height = float(values[3])
+                except ValueError:
+                    return None
+    if width is None or height is None or width <= 0 or height <= 0:
+        return None
+    return width, height
+
+
+def validate_png_artifact(
+    runner: Runner,
+    png_path: Path,
+    *,
+    svg_path: Path | None = None,
+    label: str,
+) -> None:
+    try:
+        from PIL import Image
+    except ImportError:
+        runner.failures.append("Pillow is required to validate synthesis PNG files")
+        return
+    try:
+        with Image.open(png_path) as image:
+            image.load()
+            width, height = image.size
+            rgba = image.convert("RGBA")
+            alpha = rgba.getchannel("A").getextrema()
+            corners = {
+                rgba.getpixel((0, 0)),
+                rgba.getpixel((width - 1, 0)),
+                rgba.getpixel((0, height - 1)),
+                rgba.getpixel((width - 1, height - 1)),
+            }
+    except (OSError, ValueError, Image.DecompressionBombError) as error:
+        runner.failures.append(f"invalid PNG for {label}: {png_path}: {error}")
+        return
+    if width < 2 or height < 2:
+        runner.failures.append(f"PNG is too small for {label}: {width}x{height}")
+    if alpha != (255, 255):
+        runner.failures.append(f"PNG has transparent pixels for {label}: {png_path}")
+    if any(pixel[:3] != (255, 255, 255) for pixel in corners):
+        runner.failures.append(f"PNG does not have a white background for {label}")
+    if width * height > PNG_MAX_PIXELS * 1.01:
+        runner.failures.append(
+            f"PNG exceeds the 16-megapixel limit for {label}: {width}x{height}"
+        )
+    if svg_path is None or not svg_path.is_file():
+        return
+    try:
+        dimensions = svg_pixel_dimensions(svg_path)
+        if dimensions is not None:
+            svg_width, svg_height = dimensions
+            if svg_width * svg_height * 4.0 > PNG_MAX_PIXELS:
+                return
+            if width < svg_width * 1.9 or height < svg_height * 1.9:
+                runner.failures.append(
+                    f"PNG density was not increased for {label}: "
+                    f"SVG {svg_width:g}x{svg_height:g}, PNG {width}x{height}"
+                )
+    except (OSError, UnicodeError, ValueError) as error:
+        runner.failures.append(f"could not compare PNG density for {label}: {error}")
 
 
 def validate_synthesis(
@@ -1122,24 +2272,21 @@ def validate_synthesis(
     metadata: CliMetadata,
     modules: Sequence[str],
     output_format: str | None,
-    schematic: bool,
+    schematic: bool | None,
     option_matrix: bool,
 ) -> None:
-    selected_format = output_format or metadata.synth_formats[0]
-    combinations = (
-        [
+    selected_format = output_format or metadata.default_synth_format
+    selected_schematic = True if schematic is None else schematic
+    if option_matrix:
+        combinations = [
             (candidate_format, candidate_schematic, full, flatten)
             for candidate_format in metadata.synth_formats
             for candidate_schematic in (True, False)
             for full in (False, True)
             for flatten in (False, True)
         ]
-        if option_matrix
-        else [
-            (selected_format, schematic, full, False)
-            for full in (False, True)
-        ]
-    )
+    else:
+        combinations = [(selected_format, selected_schematic, False, False)]
     for module in modules:
         for candidate_format, candidate_schematic, full, flatten in combinations:
             arguments = [
@@ -1166,6 +2313,7 @@ def validate_synthesis(
                     f"{'netlistsvg' if candidate_schematic else 'Yosys show'} "
                     f"(full={full}, flatten={flatten})"
                 ),
+                capture=True,
             )
             if result.returncode != 0:
                 continue
@@ -1173,6 +2321,13 @@ def validate_synthesis(
             if not artifact.is_file() or artifact.stat().st_size == 0:
                 runner.failures.append(
                     f"missing or empty synthesis artifact: {artifact}"
+                )
+            elif candidate_format == "png":
+                validate_png_artifact(
+                    runner,
+                    artifact,
+                    svg_path=artifact.with_suffix(".svg"),
+                    label=f"{module} synthesis",
                 )
 
 
@@ -1236,6 +2391,7 @@ def validate_synthesis_fixture(runner: Runner, metadata: CliMetadata) -> None:
                                 f"{output_format}/schematic={schematic}/"
                                 f"full={full}/flatten={flatten}"
                             ),
+                            capture=True,
                         )
                         if result.returncode:
                             continue
@@ -1246,6 +2402,75 @@ def validate_synthesis_fixture(runner: Runner, metadata: CliMetadata) -> None:
                             fixture.failures.append(
                                 f"missing fixture synthesis artifact: {artifact}"
                             )
+                        elif output_format == "png":
+                            validate_png_artifact(
+                                fixture,
+                                artifact,
+                                svg_path=artifact.with_suffix(".svg"),
+                                label=(
+                                    "fixture synthesis "
+                                    f"schematic={schematic}/full={full}/"
+                                    f"flatten={flatten}"
+                                ),
+                            )
+
+        viewer_marker = root / "default-viewer-called"
+        with fake_executable(
+            fixture,
+            "geeqie",
+            marker=viewer_marker,
+        ):
+            fixture.run_vwb(
+                [
+                    "synth",
+                    "validation_design",
+                    "-D",
+                    'VWB_VALIDATION="docker smoke"',
+                    "-I",
+                    "include files",
+                ],
+                label="default synthesis format, renderer, and viewer",
+                capture=True,
+            )
+        if not viewer_marker.is_file():
+            fixture.failures.append(
+                "default synthesis did not invoke the configured geeqie viewer"
+            )
+
+        with fake_executable(fixture, "netlistsvg", exit_code=1):
+            fallback = fixture.run_vwb(
+                [
+                    "synth",
+                    "validation_design",
+                    "--format",
+                    "png",
+                    "--schematic",
+                    "--no-view",
+                    "-D",
+                    'VWB_VALIDATION="docker smoke"',
+                    "-I",
+                    "include files",
+                ],
+                label="forced NetlistSVG renderer fallback",
+                capture=True,
+            )
+        fallback_png = synthesis_artifact(fixture, "validation_design", "png")
+        if fallback.returncode == 0:
+            if "using Yosys instead" not in fallback.stderr:
+                fixture.failures.append(
+                    "NetlistSVG failure did not report the Yosys renderer fallback"
+                )
+            if not fallback_png.is_file() or fallback_png.stat().st_size == 0:
+                fixture.failures.append(
+                    f"renderer fallback did not produce a PNG: {fallback_png}"
+                )
+            else:
+                validate_png_artifact(
+                    fixture,
+                    fallback_png,
+                    svg_path=fallback_png.with_suffix(".svg"),
+                    label="forced Yosys renderer fallback",
+                )
         runner.failures.extend(fixture.failures)
 
 
@@ -1276,7 +2501,11 @@ def validate_formal(runner: Runner) -> None:
         result = runner.run_vwb(
             ["formal", str(config)], label="actual SymbiYosys proof"
         )
-        output = runner.build_dir / "formal" / config.stem
+        output = (
+            runner.build_dir
+            / "formal"
+            / runner.artifact_component(config.stem)
+        )
         if result.returncode == 0 and not output.is_dir():
             runner.failures.append(f"formal output directory is missing: {output}")
 
@@ -1287,7 +2516,6 @@ def validate_fpga(
     if not modules:
         runner.failures.append("FPGA validation has no discovered module")
         return
-    module = modules[0]
     source_dir = project_path(runner.root, runner.src_dir)
     for board in metadata.fpga_boards:
         family = {"tangnano9k": "gowin", "icebreaker": "ice40"}.get(
@@ -1300,28 +2528,39 @@ def validate_fpga(
                 f"no {suffix} constraints found for actual FPGA {board} synthesis"
             )
             continue
-        result = runner.run_vwb(
-            [
-                "fpga",
-                module,
-                "--board",
-                board,
-                "--stage",
-                "synth",
-                "--constraints",
-                str(constraints[0]),
-                "-D",
-                "VWB_VALIDATION=1",
-                "-I",
-                runner.src_dir,
-            ],
-            label=f"actual FPGA synthesis for {board}",
-        )
-        artifact = runner.build_dir / "fpga" / family / module / f"{module}.json"
-        if result.returncode == 0 and (
-            not artifact.is_file() or artifact.stat().st_size == 0
-        ):
-            runner.failures.append(f"missing FPGA synthesis artifact: {artifact}")
+        for module in modules:
+            result = runner.run_vwb(
+                [
+                    "fpga",
+                    module,
+                    "--board",
+                    board,
+                    "--stage",
+                    "synth",
+                    "--constraints",
+                    str(constraints[0]),
+                    "-D",
+                    "VWB_VALIDATION=1",
+                    "-I",
+                    runner.src_dir,
+                ],
+                label=f"actual FPGA synthesis for {module}/{board}",
+                capture=True,
+            )
+            module_artifact = runner.artifact_component(module)
+            artifact = (
+                runner.build_dir
+                / "fpga"
+                / family
+                / module_artifact
+                / f"{module_artifact}.json"
+            )
+            if result.returncode == 0 and (
+                not artifact.is_file() or artifact.stat().st_size == 0
+            ):
+                runner.failures.append(
+                    f"missing FPGA synthesis artifact: {artifact}"
+                )
 
     validate_fpga_pack_fixture(runner, metadata)
 
@@ -1396,12 +2635,13 @@ def validate_fpga_pack_fixture(runner: Runner, metadata: CliMetadata) -> None:
                 label=f"actual FPGA place-route-pack fixture for {board}",
             )
             suffix = ".fs" if family == "gowin" else ".bin"
+            module_artifact = fixture.artifact_component("validation_fpga")
             artifact = (
                 fixture.build_dir
                 / "fpga"
                 / family
-                / "validation_fpga"
-                / f"validation_fpga{suffix}"
+                / module_artifact
+                / f"{module_artifact}{suffix}"
             )
             if result.returncode == 0 and (
                 not artifact.is_file() or artifact.stat().st_size == 0
@@ -1413,15 +2653,142 @@ def validate_fpga_pack_fixture(runner: Runner, metadata: CliMetadata) -> None:
 
 
 def validate_clean(runner: Runner, metadata: CliMetadata) -> None:
-    scopes = [scope for scope in metadata.clean_scopes if scope != "all"]
-    for scope in scopes:
-        runner.run_vwb(["clean", scope], label=f"clean scope {scope}")
-    runner.run_vwb(["clean", "all"], label="clean scope all")
-    if runner.build_dir.exists():
+    expected_scopes = {
+        "temp",
+        "sim",
+        "waves",
+        "synth",
+        "lint",
+        "fpga",
+        "formal",
+        "all",
+    }
+    if set(metadata.clean_scopes) != expected_scopes:
         runner.failures.append(
-            f"clean all left the build directory behind: {runner.build_dir}"
+            "clean scopes are "
+            f"{', '.join(metadata.clean_scopes)}, expected "
+            f"{', '.join(sorted(expected_scopes))}"
         )
-    runner.run_vwb(["clean"], label="default clean scope")
+        return
+
+    with tempfile.TemporaryDirectory(prefix="vwb-clean-") as directory:
+        root = Path(directory)
+        source = root / "src"
+        tests = root / "test"
+        source.mkdir()
+        tests.mkdir()
+        (source / "clean_fixture.v").write_text(
+            "module clean_fixture(input wire value, output wire copy);\n"
+            "  assign copy = value;\n"
+            "endmodule\n",
+            encoding="ascii",
+        )
+        fixture = Runner(
+            root=root,
+            vwb=runner.vwb,
+            src_dir="src",
+            test_dir="test",
+            build_dir=root / "build",
+        )
+        fixture.run_vwb(
+            [
+                "synth",
+                "clean_fixture",
+                "--format",
+                "json",
+                "--no-view",
+            ],
+            label="create retained synthesis result for clean validation",
+            capture=True,
+        )
+        synth_sentinel = fixture.build_dir / "synth" / "clean_fixture" / "clean_fixture.json"
+        wave_sentinel = fixture.build_dir / "saved-waves" / "saved" / "wave.vcd"
+        wave_sentinel.parent.mkdir(parents=True)
+        wave_sentinel.write_text("$date validation $end\n", encoding="ascii")
+        layout_sentinel = (
+            fixture.build_dir / "sim" / "clean_fixture" / "run" / "clean_fixture.gtkw"
+        )
+        layout_sentinel.parent.mkdir(parents=True)
+        layout_sentinel.write_text("[*] saved layout\n", encoding="ascii")
+
+        temporary_scopes = ("sim", "lint")
+        retained_result_scopes = ("fpga", "formal")
+        explicit_scopes = (*temporary_scopes, *retained_result_scopes)
+
+        def populate_scopes() -> None:
+            for scope in explicit_scopes:
+                sentinel = fixture.build_dir / scope / "sentinel.txt"
+                sentinel.parent.mkdir(parents=True, exist_ok=True)
+                sentinel.write_text(scope + "\n", encoding="ascii")
+
+        def assert_retained(label: str) -> None:
+            for retained in (synth_sentinel, wave_sentinel):
+                if not retained.is_file():
+                    fixture.failures.append(
+                        f"{label} removed retained artifact: {retained}"
+                    )
+
+        def assert_temp_retained(label: str) -> None:
+            assert_retained(label)
+            if not layout_sentinel.is_file():
+                fixture.failures.append(
+                    f"{label} removed retained artifact: {layout_sentinel}"
+                )
+            for scope in retained_result_scopes:
+                retained = fixture.build_dir / scope / "sentinel.txt"
+                if not retained.is_file():
+                    fixture.failures.append(
+                        f"{label} removed retained {scope} result: {retained}"
+                    )
+
+        def assert_temporary_removed(label: str) -> None:
+            for scope in temporary_scopes:
+                target = fixture.build_dir / scope
+                if scope == "sim":
+                    target = target / "sentinel.txt"
+                if target.exists():
+                    fixture.failures.append(
+                        f"{label} left temporary {scope} results behind"
+                    )
+
+        populate_scopes()
+        fixture.run_vwb(["clean"], label="default temporary clean")
+        assert_temp_retained("plain clean")
+        assert_temporary_removed("plain clean")
+
+        populate_scopes()
+        fixture.run_vwb(["clean", "temp"], label="explicit temporary clean")
+        assert_temp_retained("clean temp")
+        assert_temporary_removed("clean temp")
+
+        for scope in explicit_scopes:
+            sentinel = fixture.build_dir / scope / "sentinel.txt"
+            sentinel.parent.mkdir(parents=True, exist_ok=True)
+            sentinel.write_text(scope + "\n", encoding="ascii")
+            fixture.run_vwb(["clean", scope], label=f"clean scope {scope}")
+            if (fixture.build_dir / scope).exists():
+                fixture.failures.append(f"clean {scope} left its target behind")
+            assert_retained(f"clean {scope}")
+
+        fixture.run_vwb(["clean", "waves"], label="manual saved-wave clean")
+        if wave_sentinel.exists():
+            fixture.failures.append("clean waves did not remove saved waveforms")
+        if not synth_sentinel.is_file():
+            fixture.failures.append("clean waves removed synthesis results")
+
+        fixture.run_vwb(["clean", "synth"], label="manual synthesis clean")
+        if synth_sentinel.exists():
+            fixture.failures.append("clean synth did not remove synthesis results")
+
+        other = fixture.build_dir / "other" / "sentinel.txt"
+        other.parent.mkdir(parents=True)
+        other.write_text("all\n", encoding="ascii")
+        fixture.run_vwb(["clean", "all"], label="manual clean scope all")
+        if fixture.build_dir.exists():
+            fixture.failures.append(
+                f"clean all left the build directory behind: {fixture.build_dir}"
+            )
+        runner.failures.extend(fixture.failures)
 
 
 def select_modules(all_modules: Sequence[str], requested: Sequence[str]) -> list[str]:
@@ -1498,21 +2865,33 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument(
         "--all-wave-formats",
         action="store_true",
-        help="generate every CLI-supported waveform format for selected tests",
+        help=(
+            "generate every CLI-supported waveform format for selected tests "
+            "and generated starters"
+        ),
     )
     parser.add_argument(
         "--synth-format",
-        help="actual synthesis format (default: first format reported by vwb.py)",
+        help="actual synthesis format (default: the default reported by vwb.py)",
     )
-    parser.add_argument(
+    synth_renderer = parser.add_mutually_exclusive_group()
+    synth_renderer.add_argument(
         "--synth-schematic",
+        dest="synth_schematic",
         action="store_true",
-        help="use netlistsvg for the actual synthesis phase",
+        help="use NetlistSVG for the actual synthesis phase",
     )
+    synth_renderer.add_argument(
+        "--synth-no-schematic",
+        dest="synth_schematic",
+        action="store_false",
+        help="use the Yosys renderer for the actual synthesis phase",
+    )
+    parser.set_defaults(synth_schematic=None)
     parser.add_argument(
         "--synth-option-matrix",
         action="store_true",
-        help="actually run every synthesis format and renderer combination",
+        help="run every synthesis format and both renderers for each module",
     )
     parser.add_argument(
         "--keep-build",
@@ -1558,6 +2937,10 @@ def main() -> int:
         inventory = read_inventory(runner)
         tests = flatten_tests(inventory, root)
         modules = module_names(inventory)
+        module_languages = {
+            module["name"]: module["language"]
+            for module in inventory["modules"]
+        }
         if not modules:
             raise HarnessError("inventory has no module matrix")
         coverage = option_coverage(metadata)
@@ -1587,6 +2970,7 @@ def main() -> int:
             f"build directory: {build_dir}",
             file=sys.stderr,
         )
+        generated_starter_coverage_done = False
         for phase in phases:
             print(f"\n== {phase} ==", file=sys.stderr, flush=True)
             if phase == "help":
@@ -1594,27 +2978,57 @@ def main() -> int:
             elif phase == "regressions":
                 validate_regressions(runner)
             elif phase == "contracts":
-                validate_contracts(runner, metadata, selected_tests)
+                validate_contracts(
+                    runner,
+                    metadata,
+                    selected_tests,
+                    modules,
+                )
             elif phase == "dry-run":
                 validate_dry_runs(
                     runner,
                     metadata,
                     selected_tests,
                     selected_modules,
+                    module_languages,
                     compiled_tests,
                     seed=args.seed,
                 )
             elif phase == "doctor":
                 validate_doctor(runner)
             elif phase == "tests":
-                if not selected_tests:
-                    runner.failures.append("inventory contains no runnable tests")
-                else:
+                if selected_tests:
                     validate_tests(runner, selected_tests, seed=args.seed)
+                if not generated_starter_coverage_done:
+                    validate_discovered_starter_tests(
+                        runner,
+                        metadata,
+                        selected_modules,
+                        selected_tests,
+                        seed=args.seed,
+                        all_formats=args.all_wave_formats,
+                    )
+                    generated_starter_coverage_done = True
+                if not selected_tests and not selected_modules:
+                    runner.failures.append("inventory contains no simulation candidates")
+                if not args.module and not args.test_index:
+                    validate_starter_tests(runner)
+                    validate_escaped_identifier_fixture(runner)
+                    validate_failure_aggregation(runner)
             elif phase == "waves":
-                if not selected_tests:
+                if not generated_starter_coverage_done:
+                    validate_discovered_starter_tests(
+                        runner,
+                        metadata,
+                        selected_modules,
+                        selected_tests,
+                        seed=args.seed,
+                        all_formats=args.all_wave_formats,
+                    )
+                    generated_starter_coverage_done = True
+                if not selected_tests and not selected_modules:
                     runner.failures.append("inventory contains no waveform candidates")
-                else:
+                elif selected_tests:
                     validate_waves(
                         runner,
                         metadata,
@@ -1623,7 +3037,12 @@ def main() -> int:
                         all_formats=args.all_wave_formats,
                     )
             elif phase == "lint":
-                validate_lint(runner, selected_modules)
+                validate_lint(
+                    runner,
+                    metadata,
+                    selected_modules,
+                    module_languages,
+                )
             elif phase == "synth":
                 validate_synthesis(
                     runner,
@@ -1633,8 +3052,7 @@ def main() -> int:
                     schematic=args.synth_schematic,
                     option_matrix=args.synth_option_matrix,
                 )
-                if not args.module and not args.test_index:
-                    validate_synthesis_fixture(runner, metadata)
+                validate_synthesis_fixture(runner, metadata)
             elif phase == "formal":
                 validate_formal(runner)
             elif phase == "fpga":

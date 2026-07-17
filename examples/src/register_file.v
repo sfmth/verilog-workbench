@@ -55,11 +55,4 @@ module register_file (
     //     end
     // `endif
     
-    // `ifdef COCOTB_SIM
-    // initial begin
-    // $dumpfile ("register_file.vcd");
-    // $dumpvars (0, register_file);
-    // #1;
-    // end
-    // `endif
 endmodule

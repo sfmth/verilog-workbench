@@ -43,7 +43,7 @@ module spk_processor (
     generate
         for (j = 0; j < 16; j = j + 1 ) begin:g_hidden_mode
             schmitt_trigger sch0(
-                .potential(hidden_16n_potential_in[(j*8)+7:j*8]),
+                .potential_in(hidden_16n_potential_in[(j*8)+7:j*8]),
                 .spk(hidden_16n_spk_out[j]),
                 .spkblty_out(hidden_16n_spkblty_out[j]),
                 .spkblty_in(hidden_16n_spkblty_in[j])
@@ -81,7 +81,7 @@ module spk_processor (
 	// generate
     //     for (k = 0; k < 10; k = k + 1 ) begin:g_input_mode
     //         schmitt_trigger sch1(
-    //             .potential(input_10n_potential_in[(k*8)+7:k*8]),
+    //             .potential_in(input_10n_potential_in[(k*8)+7:k*8]),
     //             .spk(input_10n_spk_out[k]),
     //             .spkblty_out(input_10n_spkblty_out[k]),
     //             .spkblty_in(input_10n_spkblty_in[k])
@@ -90,13 +90,5 @@ module spk_processor (
     // endgenerate
 
     //output layer mode
-
-    `ifdef COCOTB_SIM
-    initial begin
-    $dumpfile ("spk_processor.vcd");
-    $dumpvars (0, spk_processor);
-    #1;
-    end
-    `endif
 
 endmodule

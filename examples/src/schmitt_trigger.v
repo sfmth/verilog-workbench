@@ -10,21 +10,13 @@
 `define THRESH_HIGH     8'd230
 
 module schmitt_trigger (
-    input wire [7:0] potential,
+    input wire [7:0] potential_in,
     output wire spk,
     output wire spkblty_out,
     input wire spkblty_in
     );
 
-    assign spk = spkblty_in & (potential > `THRESH_HIGH);
-    assign spkblty_out = !spk & (potential < `THRESH_LOW);
-
-    `ifdef COCOTB_SIM 
-    initial begin
-    $dumpfile ("schmitt_trigger.vcd");
-    $dumpvars (0, schmitt_trigger);
-    #1;
-    end
-    `endif
+    assign spk = spkblty_in & (potential_in > `THRESH_HIGH);
+    assign spkblty_out = !spk & (potential_in < `THRESH_LOW);
 
 endmodule

@@ -47,13 +47,4 @@ module accumulator (
         end
     end
 
-    `ifdef COCOTB_SIM
-    initial begin
-    $dumpfile ("accumulator.vcd");
-    $dumpvars (0, accumulator);
-    #1;
-    end
-    `endif
-
 endmodule
-

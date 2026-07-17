@@ -67,11 +67,4 @@ module hazard_unit (
     //     end
     // `endif
 
-    // `ifdef COCOTB_SIM
-    // initial begin
-    // $dumpfile ("alu.vcd");
-    // $dumpvars (0, alu);
-    // #1;
-    // end
-    // `endif
 endmodule

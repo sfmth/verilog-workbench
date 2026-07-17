@@ -92,16 +92,16 @@ async def test_shift_add_mult(dut):
     # print(funct7_5)
     # print(len(op))
     # test a range of values
-    await RisingEdge(dut.clk2)
+    await ClockCycles(dut.clk, 2)
     for i in range(0, 2**32, 2**28):
         for j in range(2**7):
             dut.we.value = 1
             dut.write_data.value = i
             dut.write_addr.value = j
-            await RisingEdge(dut.clk2)
+            await ClockCycles(dut.clk, 2)
             dut.we.value = 0
             dut.read_addr.value = j
-            await RisingEdge(dut.clk2)
+            await ClockCycles(dut.clk, 2)
             assert(bin_to_int(dut.read_data.value) == i)
     i = 2**32-1
     for j in range(2**7):

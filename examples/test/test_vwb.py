@@ -1,7 +1,10 @@
 import contextlib
 import io
+import json
+import shlex
 import shutil
 import tempfile
+import time
 import unittest
 from pathlib import Path
 from types import SimpleNamespace
@@ -113,6 +116,172 @@ class SourceCatalogTests(unittest.TestCase):
                 catalog.closure("consumer"),
                 [package.resolve(), consumer.resolve()],
             )
+            self.assertNotIn(package.resolve(), catalog.files_without_modules)
+
+    def test_vhdl_entities_dependencies_and_test_language_are_discovered(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            child = self.write(
+                root,
+                "src/vhdl_child.vhd",
+                """
+                library ieee;
+                use ieee.std_logic_1164.all;
+                entity vhdl_child is
+                  port (value_in : in std_logic; value_out : out std_logic);
+                end entity;
+                architecture rtl of vhdl_child is
+                begin
+                  value_out <= value_in;
+                end architecture;
+                """,
+            )
+            top = self.write(
+                root,
+                "src/vhdl_top.vhd",
+                """
+                library ieee;
+                use ieee.std_logic_1164.all;
+                entity vhdl_top is
+                  port (value_in : in std_logic; value_out : out std_logic);
+                end entity;
+                architecture rtl of vhdl_top is
+                begin
+                  child_instance : entity work.vhdl_child
+                    port map (value_in => value_in, value_out => value_out);
+                end architecture;
+                """,
+            )
+            test_path = self.write(
+                root,
+                "test/test_vhdl_top.vhd",
+                """
+                entity test_vhdl_top is end entity;
+                architecture test of test_vhdl_top is begin end architecture;
+                """,
+            )
+
+            workbench = vwb.Workbench(
+                root=root,
+                src_dir=root / "src",
+                test_dir=root / "test",
+                build_dir=root / ".vwb",
+            )
+
+            self.assertEqual(workbench.catalog.names(), ["vhdl_child", "vhdl_top"])
+            definition = workbench.catalog.definition("vhdl_top")
+            self.assertEqual(definition.language, "vhdl")
+            self.assertEqual(definition.dependencies, ("vhdl_child",))
+            self.assertEqual(workbench.catalog.closure("vhdl_top"), [child, top])
+            self.assertEqual(
+                workbench.tests,
+                [
+                    vwb.TestSpec(
+                        dut="vhdl_top",
+                        kind="vhdl",
+                        path=test_path.resolve(),
+                        top="test_vhdl_top",
+                    )
+                ],
+            )
+
+            output = io.StringIO()
+            with contextlib.redirect_stdout(output):
+                self.assertEqual(
+                    vwb.command_list(workbench, SimpleNamespace(as_json=True)), 0
+                )
+            report = json.loads(output.getvalue())
+            metadata = {item["name"]: item for item in report["modules"]}
+            self.assertEqual(metadata["vhdl_top"]["language"], "vhdl")
+            self.assertEqual(metadata["vhdl_top"]["dependencies"], ["vhdl_child"])
+
+    def test_vhdl_closure_excludes_unrelated_designs_and_keeps_local_packages(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            package = self.write(
+                root,
+                "src/values_pkg.vhd",
+                "package values_pkg is constant START_VALUE : integer := 0; end package;\n",
+            )
+            child = self.write(
+                root,
+                "src/vhdl_child.vhd",
+                "entity vhdl_child is end; architecture rtl of vhdl_child is begin end;\n",
+            )
+            top = self.write(
+                root,
+                "src/vhdl_top.vhd",
+                """
+                use work.values_pkg.all;
+                entity vhdl_top is end;
+                architecture rtl of vhdl_top is
+                  component vhdl_child is end component;
+                begin
+                  child_instance : vhdl_child;
+                end;
+                """,
+            )
+            self.write(
+                root,
+                "src/unrelated.vhd",
+                "entity unrelated is end; architecture rtl of unrelated is begin end;\n",
+            )
+
+            catalog = vwb.SourceCatalog(vwb.find_hdl_files(root / "src"))
+
+            self.assertEqual(catalog.closure("vhdl_top"), [package, child, top])
+            self.assertNotIn(package, catalog.files_without_modules)
+            (root / "test").mkdir()
+            workbench = vwb.Workbench(
+                root=root,
+                src_dir=root / "src",
+                test_dir=root / "test",
+                build_dir=root / ".vwb",
+            )
+            output = io.StringIO()
+            with contextlib.redirect_stdout(output):
+                vwb.command_list(workbench, SimpleNamespace(as_json=True))
+            packages = json.loads(output.getvalue())["packages"]
+            self.assertIn(
+                {
+                    "name": "values_pkg",
+                    "language": "vhdl",
+                    "files": ["src/values_pkg.vhd"],
+                },
+                packages,
+            )
+
+    def test_vhdl_closure_includes_a_separate_architecture_file(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            entity = self.write(
+                root,
+                "src/counter_entity.vhd",
+                "entity Counter is port (value : out bit); end entity;\n",
+            )
+            architecture = self.write(
+                root,
+                "src/counter_rtl.vhd",
+                "architecture RTL of counter is begin value <= '0'; end architecture;\n",
+            )
+
+            catalog = vwb.SourceCatalog(vwb.find_hdl_files(root / "src"))
+
+            self.assertEqual(catalog.closure("COUNTER"), [entity, architecture])
+            self.assertEqual(
+                catalog.implementation_files("counter"), [entity, architecture]
+            )
+            self.assertNotIn(architecture, catalog.files_without_modules)
+
+    def test_vhdl_duplicate_entity_names_are_case_insensitive(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.write(root, "src/first.vhd", "entity Counter is end entity;\n")
+            self.write(root, "src/second.vhd", "entity counter is end entity;\n")
+            catalog = vwb.SourceCatalog(vwb.find_hdl_files(root / "src"))
+
+            with self.assertRaisesRegex(vwb.VWBError, "declared more than once"):
+                catalog.definition("COUNTER")
 
     def test_interfaces_and_primitives_are_included_in_the_design_closure(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -138,6 +307,8 @@ class SourceCatalogTests(unittest.TestCase):
                 catalog.closure("consumer"),
                 [primitive.resolve(), interface.resolve(), consumer.resolve()],
             )
+            self.assertNotIn(interface.resolve(), catalog.files_without_modules)
+            self.assertNotIn(primitive.resolve(), catalog.files_without_modules)
 
     def test_unpacked_array_declarations_are_discovered(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -170,7 +341,7 @@ class SourceCatalogTests(unittest.TestCase):
                 ),
             )
 
-    def test_procedural_array_dump_is_rejected_clearly(self):
+    def test_procedural_array_dump_is_skipped_with_a_warning(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             path = self.write(
@@ -185,10 +356,15 @@ class SourceCatalogTests(unittest.TestCase):
                 """,
             )
 
-            with self.assertRaisesRegex(vwb.VWBError, "procedural array"):
-                vwb.instrument_source_arrays(path, vwb.DEFAULT_MAX_ARRAY_WORDS)
+            warnings = io.StringIO()
+            with contextlib.redirect_stderr(warnings):
+                instrumented = vwb.instrument_source_arrays(
+                    path, vwb.DEFAULT_MAX_ARRAY_WORDS
+                )
+            self.assertIsNone(instrumented)
+            self.assertIn("skipped procedural array", warnings.getvalue())
 
-    def test_final_block_array_dump_is_rejected_clearly(self):
+    def test_final_block_array_dump_is_skipped_with_a_warning(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             path = self.write(
@@ -197,20 +373,33 @@ class SourceCatalogTests(unittest.TestCase):
                 "module final_array; final begin integer values [0:1]; end endmodule\n",
             )
 
-            with self.assertRaisesRegex(vwb.VWBError, "procedural array"):
-                vwb.instrument_source_arrays(path, vwb.DEFAULT_MAX_ARRAY_WORDS)
+            warnings = io.StringIO()
+            with contextlib.redirect_stderr(warnings):
+                instrumented = vwb.instrument_source_arrays(
+                    path, vwb.DEFAULT_MAX_ARRAY_WORDS
+                )
+            self.assertIsNone(instrumented)
+            self.assertIn("skipped procedural array", warnings.getvalue())
 
-    def test_aggregate_member_array_dump_is_rejected_clearly(self):
+    def test_aggregate_member_array_does_not_block_supported_arrays(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             path = self.write(
                 root,
                 "aggregate_array.sv",
-                "module aggregate_array; struct { logic [7:0] values [0:1]; } item; endmodule\n",
+                "module aggregate_array; logic [7:0] memory [0:1]; "
+                "struct { logic [7:0] values [0:1]; } item; endmodule\n",
             )
 
-            with self.assertRaisesRegex(vwb.VWBError, "aggregate member array"):
-                vwb.instrument_source_arrays(path, vwb.DEFAULT_MAX_ARRAY_WORDS)
+            warnings = io.StringIO()
+            with contextlib.redirect_stderr(warnings):
+                instrumented = vwb.instrument_source_arrays(
+                    path, vwb.DEFAULT_MAX_ARRAY_WORDS
+                )
+            self.assertIsNotNone(instrumented)
+            self.assertIn("$dumpvars(0, memory[", instrumented)
+            self.assertNotIn("$dumpvars(0, values[", instrumented)
+            self.assertIn("skipped aggregate member array", warnings.getvalue())
 
 
 class TestDiscoveryTests(unittest.TestCase):
@@ -227,6 +416,31 @@ class TestDiscoveryTests(unittest.TestCase):
             test_dir=root / "test",
             build_dir=root / ".vwb",
         )
+
+    @unittest.skipUnless(shutil.which("sh"), "needs a POSIX shell")
+    def test_tool_timeout_terminates_spawned_process_group(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.write(root, "src/dut.v", "module dut; endmodule\n")
+            self.write(root, "test/.gitkeep", "")
+            marker = root / "orphan-finished"
+            ready = root / "orphan-ready"
+            command = (
+                "(trap '' TERM; printf ready > "
+                + shlex.quote(str(ready))
+                + "; sleep 0.4; printf done > "
+                + shlex.quote(str(marker))
+                + ") & wait"
+            )
+            workbench = self.make_workbench(root)
+
+            with contextlib.redirect_stderr(io.StringIO()):
+                result = workbench.run(["sh", "-c", command], timeout=0.1)
+            time.sleep(0.45)
+
+            self.assertEqual(result.returncode, 124)
+            self.assertTrue(ready.exists(), "the TERM-ignoring child never started")
+            self.assertFalse(marker.exists())
 
     def test_cocotb_helpers_are_not_runnable_tests(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -249,6 +463,1037 @@ class TestDiscoveryTests(unittest.TestCase):
                 workbench.tests,
                 [vwb.TestSpec(dut="dut", kind="cocotb", path=test_path.resolve())],
             )
+
+    def test_missing_module_generates_an_idempotent_cocotb_starter(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.write(
+                root,
+                "src/dut.sv",
+                """
+                module dut(
+                  input logic clk,
+                  input logic reset_n,
+                  input logic [3:0] data_in,
+                  output logic [3:0] data_out
+                );
+                  always_ff @(posedge clk) begin
+                    if (!reset_n) data_out <= '0;
+                    else data_out <= data_in;
+                  end
+                endmodule
+                """,
+            )
+            self.write(root, "test/.gitkeep", "")
+            first = self.make_workbench(root)
+
+            specs = first.specs_for(["dut"], "auto", None, None)
+
+            self.assertEqual(len(specs), 1)
+            self.assertEqual(specs[0].kind, "cocotb")
+            self.assertEqual(specs[0].path.name, "test_dut_starter.py")
+            content = specs[0].path.read_text(encoding="utf-8")
+            self.assertIn("INPUTS = ('clk', 'reset_n', 'data_in')", content)
+            self.assertIn("Clock(_vwb_signal(dut, 'clk'), 10", content)
+            self.assertIn("reset = _vwb_signal(dut, 'reset_n')", content)
+            self.assertIn("reset.value = 0", content)
+            self.assertIn("reset.value = 1", content)
+            self.assertTrue(vwb.is_cocotb_test(specs[0].path))
+            _top, hdl_content = first._verilog_starter("dut")
+            self.assertIn("logic [3:0] data_in;", hdl_content)
+            self.assertIn("data_in = '0;", hdl_content)
+
+            reloaded = self.make_workbench(root)
+            repeated = reloaded.specs_for(["dut"], "auto", None, None)
+            self.assertEqual(repeated, specs)
+            self.assertEqual(specs[0].path.read_text(encoding="utf-8"), content)
+
+    def test_generated_starter_only_treats_explicit_reset_n_names_as_active_low(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.write(
+                root,
+                "src/dut.sv",
+                "module dut(input logic clk, input logic reset_condition); endmodule\n",
+            )
+            self.write(root, "test/.gitkeep", "")
+            workbench = self.make_workbench(root)
+
+            content = workbench._cocotb_starter("dut")
+            _top, verilog_content = workbench._verilog_starter("dut")
+
+            self.assertIn("reset = _vwb_signal(dut, 'reset_condition')", content)
+            self.assertIn("reset.value = 1", content)
+            self.assertIn("reset.value = 0", content)
+            self.assertEqual(content.count('Timer(10, units="ns")'), 2)
+            self.assertIn("start(start_high=False)", content)
+            self.assertIn("#10 $finish", verilog_content)
+            self.assertNotIn("#100 $finish", verilog_content)
+            for name in ("reset_n", "resetn", "rst_n", "rstn", "nreset", "nrst"):
+                with self.subTest(name=name):
+                    self.assertTrue(workbench._reset_is_active_low(name))
+            for name in ("reset", "reset_condition", "reset_button", "rst_sync"):
+                with self.subTest(name=name):
+                    self.assertFalse(workbench._reset_is_active_low(name))
+            for name in ("clk", "sys_clk", "clk_i", "clock_i", "aclk", "iClock"):
+                with self.subTest(name=name):
+                    self.assertEqual(workbench._clock_name([name]), name)
+            self.assertIsNone(workbench._clock_name(["clock_enable"]))
+
+    def test_cocotb_starter_sanitizes_dollar_in_module_name(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.write(
+                root,
+                "src/dut.v",
+                "module foo$bar(input sys$clk, input rst$n); endmodule\n",
+            )
+            self.write(root, "test/.gitkeep", "")
+            workbench = self.make_workbench(root)
+
+            spec = workbench.specs_for(["foo$bar"], "cocotb", None, None)[0]
+            content = spec.path.read_text(encoding="utf-8")
+
+            self.assertNotIn("$", spec.path.name)
+            function_declaration = next(
+                line for line in content.splitlines() if line.startswith("async def ")
+            )
+            self.assertNotIn("$", function_declaration)
+            self.assertIn("Clock(_vwb_signal(dut, 'sys$clk'), 10", content)
+            self.assertIn("reset = _vwb_signal(dut, 'rst$n')", content)
+            self.assertTrue(vwb.is_cocotb_test(spec.path))
+            reloaded = self.make_workbench(root)
+            self.assertEqual(reloaded.tests[0].dut, "foo$bar")
+
+    def test_generated_starters_preserve_escaped_port_names(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = self.write(
+                root,
+                "src/dut.v",
+                "module dut(input wire \\sys.clk , input wire \\rst_n , "
+                "output wire \\data.out ); "
+                "assign \\data.out = \\rst_n ; endmodule\n",
+            )
+            self.write(root, "test/.gitkeep", "")
+            workbench = self.make_workbench(root)
+
+            self.assertEqual(
+                workbench.port_directions("dut"),
+                {"\\sys.clk": "input", "\\rst_n": "input", "\\data.out": "output"},
+            )
+            cocotb_content = workbench._cocotb_starter("dut")
+            self.assertIn("simulator_name = name[1:]", cocotb_content)
+            self.assertIn("if child._name == simulator_name", cocotb_content)
+            self.assertIn("_vwb_signal(dut, '\\\\sys.clk')", cocotb_content)
+            self.assertIn("_vwb_signal(dut, '\\\\rst_n')", cocotb_content)
+            top, verilog_content = workbench._verilog_starter("dut")
+            self.assertIn(".\\sys.clk (\\sys.clk )", verilog_content)
+            self.assertIn(".\\rst_n (\\rst_n )", verilog_content)
+
+            if shutil.which("iverilog"):
+                starter = self.write(root, "test/test_dut_starter.sv", verilog_content)
+                completed = vwb.subprocess.run(
+                    [
+                        "iverilog",
+                        "-g2012",
+                        "-s",
+                        top,
+                        "-o",
+                        root / "starter.vvp",
+                        source,
+                        starter,
+                    ],
+                    capture_output=True,
+                    text=True,
+                )
+                self.assertEqual(completed.returncode, 0, completed.stderr)
+
+    def test_escaped_top_uses_source_and_tool_specific_spellings(self):
+        self.assertEqual(vwb.tool_identifier("dut"), "dut")
+        self.assertEqual(vwb.tool_identifier("\\odd.name"), "odd.name")
+        self.assertEqual(vwb.require_yosys_identifier("\\odd.name"), "odd.name")
+        with self.assertRaises(vwb.VWBError):
+            vwb.require_yosys_identifier("\\odd;name")
+        self.assertEqual(
+            vwb.cocotb_toplevel_names("\\odd.name"),
+            ("work.odd.name", "odd.name"),
+        )
+
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = self.write(
+                root,
+                "src/odd.v",
+                "module \\odd.name (input wire \\clk.in ); endmodule\n",
+            )
+            test_path = self.write(
+                root,
+                "test/test_odd_name.py",
+                "import cocotb\n@cocotb.test()\nasync def check(dut):\n    pass\n",
+            )
+            workbench = self.make_workbench(root)
+            spec = vwb.TestSpec("\\odd.name", "cocotb", test_path)
+            args = SimpleNamespace(testcase=None, seed=None)
+
+            environment, _results = workbench._cocotb_environment(
+                spec, root / ".vwb" / "sim", args, "verilog"
+            )
+            self.assertEqual(environment["TOPLEVEL"], "work.odd.name")
+            self.assertEqual(environment["COCOTB_TOPLEVEL"], "odd.name")
+
+            success = vwb.subprocess.CompletedProcess([], 0, "", "")
+            with (
+                mock.patch.object(workbench, "require_tool"),
+                mock.patch.object(workbench, "run", return_value=success) as run,
+            ):
+                compiled, _wave, _simulation = workbench._compile_simulation(
+                    spec,
+                    root / ".vwb" / "sim",
+                    waves=False,
+                    wave_format="vcd",
+                    defines=[],
+                    includes=[],
+                    compile_args=[],
+                    test_top=None,
+                    max_array_words=32,
+                )
+            self.assertTrue(compiled)
+            command = [str(item) for item in run.call_args.args[0]]
+            self.assertEqual(command[command.index("-s") + 1], "odd.name")
+            self.assertIn(str(source), command)
+
+            dump = root / "dump.v"
+            workbench._write_dump_module(dump, "\\odd.name", root / "wave.vcd")
+            self.assertIn("$dumpvars(0, \\odd.name );", dump.read_text())
+
+    def test_generated_native_starter_sanitizes_an_escaped_top(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = self.write(
+                root,
+                "src/odd.v",
+                "module \\odd.name (input wire \\clk.in ); endmodule\n",
+            )
+            self.write(root, "test/.gitkeep", "")
+            workbench = self.make_workbench(root)
+
+            spec = workbench.specs_for(["\\odd.name"], "verilog", None, None)[0]
+            content = spec.path.read_text(encoding="utf-8")
+            self.assertEqual(spec.top, f"test_{vwb.python_identifier_component('\\odd.name')}")
+            self.assertIn("  \\odd.name  dut (", content)
+            self.assertIn("logic \\clk.in ;", content)
+
+            reloaded = self.make_workbench(root)
+            self.assertEqual(reloaded.tests[0].dut, "\\odd.name")
+            if shutil.which("iverilog"):
+                completed = vwb.subprocess.run(
+                    ["iverilog", "-g2012", "-s", spec.top, "-o", root / "starter.vvp", source, spec.path],
+                    capture_output=True,
+                    text=True,
+                )
+                self.assertEqual(completed.returncode, 0, completed.stderr)
+
+    @unittest.skipUnless(shutil.which("iverilog") and shutil.which("vvp"), "needs Icarus")
+    def test_parameterized_verilog_starter_preserves_input_bus_widths(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.write(
+                root,
+                "src/dut.v",
+                "module dut #(parameter WIDTH = 8) "
+                "(input wire clk_i, input wire [WIDTH-1:0] data); endmodule\n",
+            )
+            self.write(root, "test/.gitkeep", "")
+            workbench = self.make_workbench(root)
+
+            spec = workbench.specs_for(["dut"], "verilog", None, None)[0]
+            content = spec.path.read_text(encoding="utf-8")
+            self.assertIn("module test_dut #(\nparameter WIDTH = 8\n);", content)
+            self.assertIn("logic [WIDTH-1:0] data;", content)
+
+            args = vwb.make_parser().parse_args(
+                ["test", "dut", "--test-language", "verilog", "--no-gate-level"]
+            )
+            passed, _wave = workbench.run_test_spec(spec, args)
+            self.assertTrue(passed)
+
+    def test_explicit_vhdl_starter_request_is_not_silently_changed_to_cocotb(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.write(
+                root,
+                "src/dut.vhd",
+                "entity dut is end entity; architecture rtl of dut is begin end;\n",
+            )
+            self.write(root, "test/.gitkeep", "")
+            workbench = self.make_workbench(root)
+
+            with self.assertRaisesRegex(vwb.VWBError, "automatic VHDL testbench"):
+                workbench.specs_for(["dut"], "vhdl", None, None)
+
+    def test_vhdl_entity_and_test_matching_are_case_insensitive(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.write(
+                root,
+                "src/counter.vhd",
+                "entity Counter is end entity; "
+                "architecture rtl of Counter is begin end;\n",
+            )
+            test = self.write(
+                root,
+                "test/test_counter.py",
+                "import cocotb\n@cocotb.test()\nasync def check(dut):\n    pass\n",
+            )
+            workbench = self.make_workbench(root)
+
+            self.assertEqual(workbench.catalog.definition("counter").name, "Counter")
+            self.assertEqual(workbench.catalog.closure("counter")[0].name, "counter.vhd")
+            specs = workbench.specs_for(["counter"], "cocotb", None, None)
+            self.assertEqual(specs, [vwb.TestSpec("Counter", "cocotb", test.resolve())])
+
+            completion_args = SimpleNamespace(
+                root=str(root), src_dir="src", test_dir="test", build_dir=".vwb"
+            )
+            self.assertEqual(
+                vwb.module_name_completer("cou", completion_args), ["Counter"]
+            )
+
+    @unittest.skipUnless(
+        shutil.which("bash") and shutil.which("register-python-argcomplete"),
+        "needs Bash and argcomplete",
+    )
+    def test_bash_tab_completion_returns_modules_and_saved_waves(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.write(root, "src/counter.v", "module counter; endmodule\n")
+            self.write(root, "test/.gitkeep", "")
+            (root / ".vwb/saved-waves/known-good").mkdir(parents=True)
+            completion = root / "vwb-completion.bash"
+            generated = vwb.subprocess.run(
+                [
+                    "register-python-argcomplete",
+                    "--shell",
+                    "bash",
+                    "--external-argcomplete-script",
+                    str(Path(vwb.__file__).resolve()),
+                    "vwb",
+                ],
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(generated.returncode, 0, generated.stderr)
+            completion.write_text(generated.stdout, encoding="utf-8")
+
+            shell = r'''
+source "$1"
+completion_function="$(complete -p vwb | sed -n 's/.* -F \([^ ]*\) .*/\1/p')"
+COMP_LINE="vwb --root $2 synth co"
+COMP_POINT=${#COMP_LINE}
+COMP_TYPE=9
+COMP_WORDS=(vwb --root "$2" synth co)
+COMP_CWORD=4
+"$completion_function" vwb co co
+printf 'module:%s\n' "${COMPREPLY[@]}"
+COMP_LINE="vwb --root $2 wave --load known-"
+COMP_POINT=${#COMP_LINE}
+COMP_WORDS=(vwb --root "$2" wave --load known-)
+COMP_CWORD=5
+COMPREPLY=()
+"$completion_function" vwb known- known-
+printf 'wave:%s\n' "${COMPREPLY[@]}"
+'''
+            completed = vwb.subprocess.run(
+                [
+                    "bash",
+                    "--noprofile",
+                    "--norc",
+                    "-c",
+                    shell,
+                    "bash",
+                    str(completion),
+                    str(root),
+                ],
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(completed.returncode, 0, completed.stderr)
+            self.assertEqual(
+                completed.stdout.splitlines(),
+                ["module:counter ", "wave:known-good "],
+            )
+
+    def test_split_file_vhdl_testbench_is_discovered_once(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.write(
+                root,
+                "src/dut.vhd",
+                "entity dut is end entity; architecture rtl of dut is begin end;\n",
+            )
+            entity = self.write(
+                root,
+                "test/test_dut.vhd",
+                "entity test_dut is end entity;\n",
+            )
+            architecture = self.write(
+                root,
+                "test/test_dut_arch.vhd",
+                "architecture test of test_dut is begin end architecture;\n",
+            )
+
+            workbench = self.make_workbench(root)
+
+            self.assertEqual(
+                workbench.tests,
+                [vwb.TestSpec("dut", "vhdl", entity.resolve(), top="test_dut")],
+            )
+            self.assertEqual(
+                workbench.test_catalog.closure("test_dut"),
+                [entity.resolve(), architecture.resolve()],
+            )
+
+    def test_missing_module_starter_dry_run_does_not_write(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.write(root, "src/dut.v", "module dut(input clk); endmodule\n")
+            self.write(root, "test/.gitkeep", "")
+            workbench = vwb.Workbench(
+                root=root,
+                src_dir=root / "src",
+                test_dir=root / "test",
+                build_dir=root / ".vwb",
+                dry_run=True,
+            )
+
+            specs = workbench.specs_for(["dut"], "auto", None, None)
+
+            self.assertEqual(specs[0].kind, "cocotb")
+            self.assertFalse(specs[0].path.exists())
+            self.assertEqual(
+                [path.name for path in (root / "test").iterdir()], [".gitkeep"]
+            )
+
+    def test_run_tests_continues_and_aggregates_every_failure(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.write(root, "src/dut.v", "module dut; endmodule\n")
+            self.write(root, "test/.gitkeep", "")
+            workbench = self.make_workbench(root)
+            specs = [
+                vwb.TestSpec("first", "cocotb", root / "test_first.py"),
+                vwb.TestSpec("second", "cocotb", root / "test_second.py"),
+                vwb.TestSpec("third", "cocotb", root / "test_third.py"),
+            ]
+            wave = root / "third.vcd"
+            args = SimpleNamespace(testcase=None, seed=None)
+            output = io.StringIO()
+            errors = io.StringIO()
+
+            with (
+                mock.patch.object(
+                    workbench,
+                    "run_test_spec",
+                    side_effect=[
+                        (False, None),
+                        vwb.VWBError("second compile failed"),
+                        (True, wave),
+                    ],
+                ) as run,
+                contextlib.redirect_stdout(output),
+                contextlib.redirect_stderr(errors),
+            ):
+                passed, waves = workbench.run_tests(specs, args)
+
+            self.assertFalse(passed)
+            self.assertEqual(run.call_count, 3)
+            self.assertEqual(waves, [wave])
+            self.assertIn("1/3 test runs passed", output.getvalue())
+            self.assertIn("Failed test runs:", output.getvalue())
+            for name in ("first", "second", "third"):
+                self.assertIn(name, output.getvalue())
+            self.assertIn("second compile failed", errors.getvalue())
+
+    def test_run_test_spec_executes_gate_stage_unless_disabled(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.write(root, "src/dut.v", "module dut; endmodule\n")
+            self.write(
+                root,
+                "test/test_dut.v",
+                "module test_dut; dut instance(); initial $finish; endmodule\n",
+            )
+            workbench = self.make_workbench(root)
+            spec = workbench.tests[0]
+            netlist = root / ".vwb" / "synth" / "dut" / "gate" / "dut_gate.v"
+
+            with (
+                mock.patch.object(
+                    workbench, "_run_rtl_test_spec", return_value=(True, None)
+                ),
+                mock.patch.object(
+                    workbench, "gate_netlist", return_value=netlist
+                ) as gate_netlist,
+                mock.patch.object(
+                    workbench, "_run_gate_test_spec", return_value=True
+                ) as run_gate,
+                contextlib.redirect_stdout(io.StringIO()),
+            ):
+                default_args = vwb.make_parser().parse_args(["test", "dut"])
+                passed, _wave = workbench.run_test_spec(spec, default_args)
+                self.assertTrue(passed)
+                gate_netlist.assert_called_once_with("dut", [], [])
+                run_gate.assert_called_once_with(spec, default_args, netlist)
+
+                gate_netlist.reset_mock()
+                run_gate.reset_mock()
+                rtl_only_args = vwb.make_parser().parse_args(
+                    ["test", "dut", "--no-gate-level"]
+                )
+                passed, _wave = workbench.run_test_spec(spec, rtl_only_args)
+                self.assertTrue(passed)
+                gate_netlist.assert_not_called()
+                run_gate.assert_not_called()
+
+    def test_native_vhdl_test_reports_gate_skip_instead_of_guaranteed_failure(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.write(
+                root,
+                "src/dut.vhd",
+                "entity dut is end entity; architecture rtl of dut is begin end;\n",
+            )
+            test = self.write(
+                root,
+                "test/test_dut.vhd",
+                "entity test_dut is end entity; "
+                "architecture test of test_dut is begin end;\n",
+            )
+            workbench = self.make_workbench(root)
+            spec = vwb.TestSpec("dut", "vhdl", test, top="test_dut")
+            args = vwb.make_parser().parse_args(["test", "dut"])
+            output = io.StringIO()
+
+            with (
+                mock.patch.object(
+                    workbench, "_run_rtl_test_spec", return_value=(True, None)
+                ),
+                mock.patch.object(workbench, "gate_netlist") as gate_netlist,
+                contextlib.redirect_stdout(output),
+            ):
+                passed, _wave = workbench.run_test_spec(spec, args)
+
+            self.assertTrue(passed)
+            gate_netlist.assert_not_called()
+            self.assertIn("GATE SKIP", output.getvalue())
+
+    def test_cocotb_rtl_and_gate_stages_reuse_one_automatic_seed(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.write(root, "src/dut.v", "module dut; endmodule\n")
+            test = self.write(
+                root,
+                "test/test_dut.py",
+                "import cocotb\n@cocotb.test()\nasync def test_dut(dut):\n    pass\n",
+            )
+            workbench = self.make_workbench(root)
+            spec = vwb.TestSpec("dut", "cocotb", test)
+            args = vwb.make_parser().parse_args(["test", "dut"])
+            netlist = root / ".vwb" / "synth" / "dut" / "gate" / "dut_gate.v"
+
+            with (
+                mock.patch("vwb.os.urandom", return_value=b"\x01\x02\x03\x04"),
+                mock.patch.object(
+                    workbench, "_run_rtl_test_spec", return_value=(True, None)
+                ) as run_rtl,
+                mock.patch.object(workbench, "gate_netlist", return_value=netlist),
+                mock.patch.object(
+                    workbench, "_run_gate_test_spec", return_value=True
+                ) as run_gate,
+                contextlib.redirect_stdout(io.StringIO()),
+            ):
+                passed, _wave = workbench.run_test_spec(spec, args)
+
+            self.assertTrue(passed)
+            rtl_args = run_rtl.call_args.args[1]
+            gate_args = run_gate.call_args.args[1]
+            self.assertEqual(rtl_args.seed, 0x01020304)
+            self.assertEqual(gate_args.seed, rtl_args.seed)
+            self.assertIsNot(rtl_args, args)
+            self.assertIsNone(args.seed)
+
+    def test_gate_netlist_supplies_yosys_simlib(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.write(root, "src/dut.v", "module dut(input wire a, output wire y); assign y = a; endmodule\n")
+            self.write(root, "test/.gitkeep", "")
+            workbench = self.make_workbench(root)
+            gate_dir = root / ".vwb" / "synth" / "dut" / "gate"
+            netlist = gate_dir / "dut_gate.v"
+            simlib = gate_dir / "yosys_simlib.v"
+
+            def synth_run(*_args: object, **_kwargs: object) -> object:
+                netlist.write_text("module dut; endmodule\n", encoding="ascii")
+                simlib.write_text("module \\$alu; endmodule\n", encoding="ascii")
+                return vwb.subprocess.CompletedProcess([], 0, "", "")
+
+            with (
+                mock.patch.object(workbench, "require_tool"),
+                mock.patch.object(workbench, "run", side_effect=synth_run),
+            ):
+                self.assertEqual(workbench.gate_netlist("dut", [], []), netlist)
+
+            script = (gate_dir / "gate.ys").read_text(encoding="utf-8")
+            self.assertIn("synth -top dut", script)
+            self.assertIn("write_file", script)
+            self.assertIn("+/simlib.v", script)
+
+            spec = vwb.TestSpec(
+                dut="dut", kind="cocotb", path=root / "test" / "test_dut.py"
+            )
+            work_dir = root / ".vwb" / "sim" / "dut" / "gate"
+            success = vwb.subprocess.CompletedProcess([], 0, "", "")
+            with (
+                mock.patch.object(workbench, "require_tool"),
+                mock.patch.object(workbench, "run", return_value=success) as run,
+            ):
+                compiled, _wave, _simulation = workbench._compile_simulation(
+                    spec,
+                    work_dir,
+                    waves=False,
+                    wave_format="fst",
+                    defines=[],
+                    includes=[],
+                    compile_args=[],
+                    test_top=None,
+                    max_array_words=32,
+                    gate_netlist=netlist,
+                )
+
+            self.assertTrue(compiled)
+            command = [str(item) for item in run.call_args.args[0]]
+            self.assertLess(command.index(str(simlib)), command.index(str(netlist)))
+
+    def test_large_gate_netlist_uses_word_level_fallback(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.write(root, "src/dut.v", "module dut; endmodule\n")
+            self.write(root, "test/.gitkeep", "")
+            workbench = self.make_workbench(root)
+            gate_dir = root / ".vwb" / "synth" / "dut" / "gate"
+            netlist = gate_dir / "dut_gate.v"
+            simlib = gate_dir / "yosys_simlib.v"
+            coarse_netlist = gate_dir / ".dut_coarse.tmp.v"
+            coarse_simlib = gate_dir / ".yosys_simlib.coarse.tmp.v"
+            calls = 0
+
+            def synth_run(*_args: object, **_kwargs: object) -> object:
+                nonlocal calls
+                calls += 1
+                if calls == 1:
+                    simlib.write_text("module \\$alu; endmodule\n", encoding="ascii")
+                    netlist.write_bytes(
+                        b"x" * (vwb.FULL_GATE_NETLIST_LIMIT_BYTES + 1)
+                    )
+                else:
+                    coarse_netlist.write_text(
+                        "module dut; endmodule\n", encoding="ascii"
+                    )
+                    coarse_simlib.write_text(
+                        "module \\$alu; endmodule\n", encoding="ascii"
+                    )
+                return vwb.subprocess.CompletedProcess([], 0, "", "")
+
+            with (
+                mock.patch.object(workbench, "require_tool"),
+                mock.patch.object(workbench, "run", side_effect=synth_run),
+                contextlib.redirect_stderr(io.StringIO()),
+            ):
+                self.assertEqual(workbench.gate_netlist("dut", [], []), netlist)
+
+            self.assertEqual(calls, 2)
+            self.assertEqual(netlist.read_text(encoding="ascii"), "module dut; endmodule\n")
+            self.assertEqual(
+                simlib.read_text(encoding="ascii"), "module \\$alu; endmodule\n"
+            )
+            coarse_script = (gate_dir / "gate-coarse.ys").read_text(encoding="utf-8")
+            self.assertIn("synth -run begin:fine -top dut", coarse_script)
+
+    def test_failed_full_gate_synthesis_uses_word_level_fallback(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.write(root, "src/dut.v", "module dut; endmodule\n")
+            self.write(root, "test/.gitkeep", "")
+            workbench = self.make_workbench(root)
+            gate_dir = root / ".vwb" / "synth" / "dut" / "gate"
+            netlist = gate_dir / "dut_gate.v"
+            simlib = gate_dir / "yosys_simlib.v"
+            coarse_netlist = gate_dir / ".dut_coarse.tmp.v"
+            coarse_simlib = gate_dir / ".yosys_simlib.coarse.tmp.v"
+            calls = 0
+
+            def synth_run(*_args: object, **_kwargs: object) -> object:
+                nonlocal calls
+                calls += 1
+                if calls == 1:
+                    return vwb.subprocess.CompletedProcess([], 1, "", "mapped failed")
+                coarse_netlist.write_text("module dut; endmodule\n", encoding="ascii")
+                coarse_simlib.write_text(
+                    "module \\$alu; endmodule\n", encoding="ascii"
+                )
+                return vwb.subprocess.CompletedProcess([], 0, "", "")
+
+            with (
+                mock.patch.object(workbench, "require_tool"),
+                mock.patch.object(workbench, "run", side_effect=synth_run),
+                contextlib.redirect_stderr(io.StringIO()),
+            ):
+                self.assertEqual(workbench.gate_netlist("dut", [], []), netlist)
+
+            self.assertEqual(calls, 2)
+            self.assertEqual(netlist.read_text(encoding="ascii"), "module dut; endmodule\n")
+            self.assertEqual(
+                simlib.read_text(encoding="ascii"), "module \\$alu; endmodule\n"
+            )
+
+    def test_systemverilog_simulation_is_native_first_with_sv2v_fallback(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.write(root, "src/dut.sv", "module dut; endmodule\n")
+            self.write(
+                root,
+                "test/test_dut.sv",
+                "module test_dut; dut instance(); initial $finish; endmodule\n",
+            )
+            workbench = self.make_workbench(root)
+            spec = workbench.tests[0]
+            converted = root / ".vwb" / "sim" / "converted.v"
+
+            for returncodes, expected_conversions in (([0], 0), ([1, 0], 1)):
+                with self.subTest(returncodes=returncodes):
+                    runs = [
+                        vwb.subprocess.CompletedProcess([], returncode, "", "")
+                        for returncode in returncodes
+                    ]
+                    with (
+                        mock.patch.object(workbench, "require_tool"),
+                        mock.patch("vwb.find_tool", return_value="/usr/bin/sv2v"),
+                        mock.patch.object(
+                            workbench,
+                            "_convert_systemverilog",
+                            return_value=[converted],
+                        ) as convert,
+                        mock.patch.object(workbench, "run", side_effect=runs) as run,
+                        contextlib.redirect_stderr(io.StringIO()),
+                    ):
+                        compiled, _wave, _simulation = workbench._compile_simulation(
+                            spec,
+                            root / ".vwb" / "sim" / f"case-{len(returncodes)}",
+                            waves=False,
+                            wave_format="vcd",
+                            defines=[],
+                            includes=[],
+                            compile_args=[],
+                            test_top=None,
+                            max_array_words=32,
+                        )
+
+                    self.assertTrue(compiled)
+                    self.assertEqual(convert.call_count, expected_conversions)
+                    self.assertEqual(run.call_count, len(returncodes))
+                    first_command = [str(item) for item in run.call_args_list[0].args[0]]
+                    self.assertTrue(any(item.endswith("dut.sv") for item in first_command))
+                    if expected_conversions:
+                        second_command = [
+                            str(item) for item in run.call_args_list[1].args[0]
+                        ]
+                        self.assertIn(str(converted), second_command)
+
+    def test_iverilog_lint_is_native_first_with_sv2v_fallback(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.write(root, "src/dut.sv", "module dut; endmodule\n")
+            self.write(root, "test/.gitkeep", "")
+            workbench = self.make_workbench(root)
+            converted = root / ".vwb" / "lint" / "converted.v"
+            results = [
+                vwb.subprocess.CompletedProcess([], 1, "", ""),
+                vwb.subprocess.CompletedProcess([], 0, "", ""),
+            ]
+
+            with (
+                mock.patch.object(workbench, "require_tool"),
+                mock.patch("vwb.find_tool", return_value="/usr/bin/sv2v"),
+                mock.patch.object(
+                    workbench, "yosys_sources", return_value=[converted]
+                ) as convert,
+                mock.patch.object(workbench, "run", side_effect=results) as run,
+                contextlib.redirect_stderr(io.StringIO()),
+            ):
+                passed = workbench.lint_with_tool("dut", "iverilog", [], [])
+
+            self.assertTrue(passed)
+            convert.assert_called_once()
+            self.assertEqual(run.call_count, 2)
+            first_command = [str(item) for item in run.call_args_list[0].args[0]]
+            second_command = [str(item) for item in run.call_args_list[1].args[0]]
+            self.assertTrue(any(item.endswith("dut.sv") for item in first_command))
+            self.assertIn(str(converted), second_command)
+
+    def test_verible_uses_standard_rules_unless_overridden(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.write(root, "src/dut.sv", "module dut; endmodule\n")
+            self.write(root, "test/.gitkeep", "")
+            workbench = self.make_workbench(root)
+            success = vwb.subprocess.CompletedProcess([], 0, "", "")
+
+            with (
+                mock.patch.object(workbench, "require_tool"),
+                mock.patch.object(workbench, "run", return_value=success) as run,
+            ):
+                self.assertTrue(workbench.lint_with_tool("dut", "verible", [], []))
+                default_command = [str(item) for item in run.call_args.args[0]]
+                self.assertEqual(default_command[0], "verible-verilog-lint")
+                self.assertFalse(
+                    any(item.startswith("--ruleset=") for item in default_command)
+                )
+
+                self.assertTrue(
+                    workbench.lint_with_tool(
+                        "dut", "verible", [], [], verible_args=["--ruleset=all"]
+                    )
+                )
+                overridden_command = [str(item) for item in run.call_args.args[0]]
+                self.assertIn("--ruleset=all", overridden_command)
+
+    def test_verible_preprocesses_shared_defines_and_include_directories(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            child = self.write(
+                root,
+                "src/child.sv",
+                "module child; endmodule\n",
+            )
+            self.write(
+                root,
+                "src/dut.sv",
+                "`include \"feature.svh\"\nmodule dut; child child_i(); endmodule\n",
+            )
+            self.write(root, "headers/feature.svh", "`define FEATURE 1\n")
+            self.write(root, "test/.gitkeep", "")
+            workbench = self.make_workbench(root)
+            results = [
+                vwb.subprocess.CompletedProcess(
+                    [], 0, "module dut; endmodule\n", ""
+                ),
+                vwb.subprocess.CompletedProcess([], 0, "", ""),
+            ]
+
+            with (
+                mock.patch.object(workbench, "require_tool"),
+                mock.patch.object(
+                    workbench, "run", side_effect=results
+                ) as run,
+            ):
+                passed = workbench.lint_with_tool(
+                    "dut",
+                    "verible",
+                    ["VWB_VALIDATION=1"],
+                    ["headers"],
+                )
+
+            self.assertTrue(passed)
+            preprocess = [str(item) for item in run.call_args_list[0].args[0]]
+            lint = [str(item) for item in run.call_args_list[1].args[0]]
+            self.assertEqual(preprocess[:3], ["iverilog", "-E", "-g2012"])
+            self.assertIn("-DVWB_VALIDATION=1", preprocess)
+            self.assertIn("-I", preprocess)
+            self.assertIn(str(root / "headers"), preprocess)
+            self.assertEqual(lint[0], "verible-verilog-lint")
+            self.assertIn(str(child), lint)
+            self.assertTrue(any("preprocessed" in item for item in lint[1:]))
+
+    def test_verible_does_not_preprocess_unused_defines_or_include_paths(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = self.write(
+                root,
+                "src/dut.sv",
+                """
+                // `include "commented_out.svh"
+                module dut;
+                  initial $display("`include in a string");
+                endmodule
+                """,
+            )
+            self.write(root, "headers/unused.svh", "`define UNUSED 1\n")
+            self.write(root, "test/.gitkeep", "")
+            workbench = self.make_workbench(root)
+            success = vwb.subprocess.CompletedProcess([], 0, "", "")
+
+            with (
+                mock.patch.object(workbench, "require_tool") as require_tool,
+                mock.patch.object(
+                    workbench, "run", return_value=success
+                ) as run,
+            ):
+                passed = workbench.lint_with_tool(
+                    "dut",
+                    "verible",
+                    ["UNUSED=1"],
+                    ["headers"],
+                )
+
+            self.assertTrue(passed)
+            require_tool.assert_called_once_with("verible-verilog-lint")
+            run.assert_called_once()
+            lint = [str(item) for item in run.call_args.args[0]]
+            self.assertEqual(lint[0], "verible-verilog-lint")
+            self.assertIn(str(source), lint)
+            self.assertFalse(any("preprocessed" in item for item in lint))
+
+    def test_verible_preprocesses_a_referenced_command_line_define(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.write(
+                root,
+                "src/dut.sv",
+                """
+                module dut;
+                `ifdef FEATURE
+                  logic enabled;
+                `endif
+                endmodule
+                """,
+            )
+            self.write(root, "test/.gitkeep", "")
+            workbench = self.make_workbench(root)
+            success = vwb.subprocess.CompletedProcess([], 0, "", "")
+
+            with (
+                mock.patch.object(workbench, "require_tool"),
+                mock.patch.object(
+                    workbench, "run", return_value=success
+                ) as run,
+            ):
+                passed = workbench.lint_with_tool(
+                    "dut", "verible", ["FEATURE=1"], []
+                )
+
+            self.assertTrue(passed)
+            self.assertEqual(run.call_count, 2)
+            preprocess = [str(item) for item in run.call_args_list[0].args[0]]
+            lint = [str(item) for item in run.call_args_list[1].args[0]]
+            self.assertEqual(preprocess[:3], ["iverilog", "-E", "-g2012"])
+            self.assertIn("-DFEATURE=1", preprocess)
+            self.assertTrue(any("preprocessed" in item for item in lint[1:]))
+
+    def test_verilator_and_yosys_report_warnings_without_making_them_fatal(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.write(root, "src/dut.sv", "module dut; endmodule\n")
+            self.write(root, "test/.gitkeep", "")
+            workbench = self.make_workbench(root)
+            success = vwb.subprocess.CompletedProcess([], 0, "", "")
+
+            with (
+                mock.patch.object(workbench, "require_tool"),
+                mock.patch.object(workbench, "run", return_value=success) as run,
+            ):
+                self.assertTrue(workbench.lint_with_tool("dut", "verilator", [], []))
+                verilator = [str(item) for item in run.call_args.args[0]]
+                self.assertIn("--timing", verilator)
+                self.assertIn("-Wno-fatal", verilator)
+
+                self.assertTrue(workbench.lint_with_tool("dut", "yosys", [], []))
+                script = (
+                    root / ".vwb" / "lint" / "dut" / "yosys" / "lint.ys"
+                ).read_text(encoding="utf-8")
+                self.assertIn("yosys check\n", script)
+                self.assertNotIn("check -assert", script)
+
+    def test_verible_preprocessor_failure_prints_the_diagnostic(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.write(
+                root,
+                "src/dut.sv",
+                "`include \"missing.svh\"\nmodule dut; endmodule\n",
+            )
+            self.write(root, "test/.gitkeep", "")
+            workbench = self.make_workbench(root)
+            failure = vwb.subprocess.CompletedProcess(
+                [], 1, "", "missing.svh: file not found\n"
+            )
+            errors = io.StringIO()
+
+            with (
+                mock.patch.object(workbench, "require_tool"),
+                mock.patch.object(workbench, "run", return_value=failure),
+                contextlib.redirect_stderr(errors),
+            ):
+                passed = workbench.lint_with_tool("dut", "verible", [], [])
+
+            self.assertFalse(passed)
+            self.assertIn("missing.svh: file not found", errors.getvalue())
+
+    def test_lint_runs_every_selected_tool_and_reports_all_failures(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.write(
+                root,
+                "src/designs.v",
+                "module first; endmodule\nmodule second; endmodule\n",
+            )
+            self.write(root, "test/.gitkeep", "")
+            workbench = self.make_workbench(root)
+            args = vwb.make_parser().parse_args(
+                [
+                    "lint",
+                    "--all",
+                    "--linter",
+                    "iverilog",
+                    "--linter",
+                    "yosys",
+                    "--iverilog-arg=-Wimplicit",
+                    "--yosys-arg=check -assert",
+                ]
+            )
+            calls: list[tuple[str, str]] = []
+
+            def lint(module: str, tool: str, *_args: object, **_kwargs: object) -> bool:
+                calls.append((module, tool))
+                if (module, tool) == ("first", "iverilog"):
+                    return False
+                if (module, tool) == ("first", "yosys"):
+                    raise vwb.VWBError("Yosys unavailable")
+                return True
+
+            output = io.StringIO()
+            errors = io.StringIO()
+            with (
+                mock.patch.object(workbench, "lint_with_tool", side_effect=lint),
+                contextlib.redirect_stdout(output),
+                contextlib.redirect_stderr(errors),
+            ):
+                status = vwb.command_lint(workbench, args)
+
+            self.assertEqual(status, 1)
+            self.assertEqual(
+                calls,
+                [
+                    ("first", "iverilog"),
+                    ("first", "yosys"),
+                    ("second", "iverilog"),
+                    ("second", "yosys"),
+                ],
+            )
+            self.assertIn("2/4 lint checks passed", output.getvalue())
+            self.assertIn("first: iverilog: tool reported errors", output.getvalue())
+            self.assertIn("first: yosys: Yosys unavailable", output.getvalue())
+            self.assertIn("Yosys unavailable", errors.getvalue())
 
     def test_hdl_testbench_top_is_inferred(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -278,7 +1523,7 @@ class TestDiscoveryTests(unittest.TestCase):
                 [
                     vwb.TestSpec(
                         dut="passthrough",
-                        kind="hdl",
+                        kind="verilog",
                         path=test_path.resolve(),
                         top="test_passthrough",
                     )
@@ -316,6 +1561,7 @@ class TestDiscoveryTests(unittest.TestCase):
             )
             workbench = self.make_workbench(root)
             args = SimpleNamespace(
+                gate_level=False,
                 waves=True,
                 wave_format="vcd",
                 define=[],
@@ -350,6 +1596,7 @@ class TestDiscoveryTests(unittest.TestCase):
             )
             workbench = self.make_workbench(root)
             args = SimpleNamespace(
+                gate_level=False,
                 waves=True,
                 wave_format="vcd",
                 define=[],
@@ -451,6 +1698,7 @@ class TestDiscoveryTests(unittest.TestCase):
             )
             workbench = self.make_workbench(root)
             args = SimpleNamespace(
+                gate_level=False,
                 waves=True,
                 wave_format="vcd",
                 define=[],
@@ -486,21 +1734,25 @@ class TestDiscoveryTests(unittest.TestCase):
             self.assertNotIn("$dumpvars", source.read_text(encoding="utf-8"))
 
     @unittest.skipUnless(shutil.which("iverilog") and shutil.which("vvp"), "needs Icarus")
-    def test_array_word_limit_prevents_large_dump_elaboration(self):
+    def test_array_word_limit_caps_each_array_without_failing_simulation(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             self.write(
                 root,
                 "src/limited.sv",
-                "`timescale 1ns/1ps\nmodule limited; logic [7:0] memory [0:4]; assign memory[0] = 0; endmodule\n",
+                "`timescale 1ns/1ps\nmodule limited; logic [7:0] memory [0:4]; endmodule\n",
             )
             self.write(
                 root,
                 "test/test_limited.sv",
-                "`timescale 1ns/1ps\nmodule test_limited; limited dut(); initial #1 $finish; endmodule\n",
+                "`timescale 1ns/1ps\nmodule test_limited; limited dut(); "
+                "initial begin dut.memory[0] = 0; dut.memory[1] = 1; "
+                "dut.memory[2] = 2; dut.memory[3] = 3; dut.memory[4] = 4; "
+                "#1 $finish; end endmodule\n",
             )
             workbench = self.make_workbench(root)
             args = SimpleNamespace(
+                gate_level=False,
                 waves=True,
                 wave_format="vcd",
                 max_array_words=4,
@@ -514,9 +1766,13 @@ class TestDiscoveryTests(unittest.TestCase):
                 seed=None,
             )
 
-            passed, _ = workbench.run_test_spec(workbench.tests[0], args)
+            passed, wave_path = workbench.run_test_spec(workbench.tests[0], args)
 
-            self.assertFalse(passed)
+            self.assertTrue(passed)
+            waveform = wave_path.read_text(encoding="utf-8")
+            for index in range(4):
+                self.assertIn(f"\\memory[{index}]", waveform)
+            self.assertNotIn("\\memory[4]", waveform)
 
     @unittest.skipUnless(shutil.which("iverilog") and shutil.which("vvp"), "needs Icarus")
     def test_explicit_hdl_test_is_authoritative(self):
@@ -535,9 +1791,10 @@ class TestDiscoveryTests(unittest.TestCase):
             )
             workbench = self.make_workbench(root)
             specs = workbench.specs_for(
-                ["dut"], "hdl", str(selected), "shared_tb"
+                ["dut"], "verilog", str(selected), "shared_tb"
             )
             args = SimpleNamespace(
+                gate_level=False,
                 waves=False,
                 wave_format="vcd",
                 define=[],
@@ -582,6 +1839,7 @@ class TestDiscoveryTests(unittest.TestCase):
                 dry_run=True,
             )
             args = SimpleNamespace(
+                gate_level=False,
                 waves=True,
                 wave_format="vcd",
                 define=[],
@@ -622,6 +1880,7 @@ class TestDiscoveryTests(unittest.TestCase):
                 dry_run=True,
             )
             args = SimpleNamespace(
+                gate_level=False,
                 waves=True,
                 wave_format="vcd",
                 define=[],
@@ -827,6 +2086,7 @@ class TestDiscoveryTests(unittest.TestCase):
                 report["gowin"]["nextpnr-gowin"],
                 "/usr/bin/nextpnr-himbaechel-gowin",
             )
+            self.assertEqual(report["lint"]["iverilog"], "/usr/bin/iverilog")
 
     def test_formal_dry_run_with_view_does_not_require_a_trace(self):
         with tempfile.TemporaryDirectory() as directory:

@@ -86,13 +86,4 @@ module neuron_selector(
 
 
 
-    `ifdef COCOTB_SIM
-    initial begin
-    $dumpfile ("neuron_selector.vcd");
-    $dumpvars (0, neuron_selector);
-    #1;
-    end
-    `endif
-
 endmodule
-

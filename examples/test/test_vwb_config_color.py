@@ -21,7 +21,7 @@ class CommandLineConfigurationTests(unittest.TestCase):
         self.parser = vwb.make_parser()
 
     def test_array_dump_limit_uses_the_configured_default(self):
-        self.assertEqual(vwb.DEFAULT_MAX_ARRAY_WORDS, 4096)
+        self.assertEqual(vwb.DEFAULT_MAX_ARRAY_WORDS, 32)
         self.assertEqual(
             self.parser.parse_args(["test"]).max_array_words,
             vwb.DEFAULT_MAX_ARRAY_WORDS,
@@ -41,7 +41,7 @@ class CommandLineConfigurationTests(unittest.TestCase):
 
     def test_test_language_replaces_kind_for_simulation_commands(self):
         for command in ("test", "sim", "wave", "gtkwave"):
-            for language in ("auto", "cocotb", "verilog"):
+            for language in ("auto", "cocotb", "verilog", "vhdl"):
                 with self.subTest(command=command, language=language):
                     args = self.parser.parse_args(
                         [command, "--test-language", language]
@@ -60,6 +60,41 @@ class CommandLineConfigurationTests(unittest.TestCase):
                 with contextlib.redirect_stderr(io.StringIO()):
                     with self.assertRaises(SystemExit):
                         self.parser.parse_args([command, "--kind", "verilog"])
+
+    def test_gate_level_simulation_defaults_on_and_has_one_disable_flag(self):
+        for command in ("test", "sim", "wave", "gtkwave"):
+            with self.subTest(command=command):
+                self.assertTrue(self.parser.parse_args([command]).gate_level)
+                self.assertFalse(
+                    self.parser.parse_args([command, "--no-gate-level"]).gate_level
+                )
+                with contextlib.redirect_stderr(io.StringIO()):
+                    with self.assertRaises(SystemExit):
+                        self.parser.parse_args([command, "--gate-level"])
+
+    def test_multi_linter_options_and_backend_arguments_parse(self):
+        args = self.parser.parse_args(
+            [
+                "lint",
+                "dut",
+                "--linter",
+                "iverilog",
+                "--linter",
+                "verible",
+                "--iverilog-arg=-Wimplicit",
+                "--verilator-arg=--timing",
+                "--yosys-arg=check -assert",
+                "--verible-arg=--ruleset=default",
+                "--ghdl-arg=-Werror",
+            ]
+        )
+
+        self.assertEqual(args.linter, ["iverilog", "verible"])
+        self.assertEqual(args.iverilog_arg, ["-Wimplicit"])
+        self.assertEqual(args.verilator_arg, ["--timing"])
+        self.assertEqual(args.yosys_arg, ["check -assert"])
+        self.assertEqual(args.verible_arg, ["--ruleset=default"])
+        self.assertEqual(args.ghdl_arg, ["-Werror"])
 
     def test_init_persists_project_directories_and_cli_override_wins(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -234,7 +269,13 @@ class CommandLineConfigurationTests(unittest.TestCase):
                 return SimpleNamespace(returncode=0)
 
             args = vwb.make_parser().parse_args(
-                ["test", "dut", "--test-language", "cocotb"]
+                [
+                    "test",
+                    "dut",
+                    "--test-language",
+                    "cocotb",
+                    "--no-gate-level",
+                ]
             )
             with (
                 mock.patch.object(
@@ -255,6 +296,7 @@ class CommandLineConfigurationTests(unittest.TestCase):
             self.assertEqual(
                 captured["PYTHONPATH"].split(os.pathsep)[0], str(tests.parent)
             )
+            self.assertEqual(captured["PYTHONDONTWRITEBYTECODE"], "1")
 
     def test_build_marker_is_portable_across_mount_paths(self):
         with tempfile.TemporaryDirectory() as directory:

@@ -135,39 +135,36 @@ module tinycordic (
     reg [2:0]i;
     reg done;
     always @(posedge clk) begin
-        case (state)
-            `RESET: begin
-                done <= 0;
-                i <= 0;
-                
-                if (!reset) begin
+        if (reset) begin
+            state <= `RESET;
+            done <= 0;
+            i <= 0;
+            en <= 0;
+        end else begin
+            case (state)
+                `RESET: begin
+                    done <= 0;
+                    i <= 0;
                     state <= `CALC;
                     en <= 1;
                 end
-                    
-            end
-            `CALC: begin
-                if ( i < 5) begin
-                    i <= i+1;
-                    if (i == 4)
-                        en <= 0;
+                `CALC: begin
+                    if (i < 5) begin
+                        i <= i + 1;
+                        if (i == 4)
+                            en <= 0;
+                    end else begin
+                        state <= `DONE;
+                    end
                 end
-                    
-                else begin
-                    state <= `DONE;
-                    
+                `DONE: begin
+                    done <= 1;
                 end
-            end
-            `DONE: begin
-                done <= 1;
-                if (reset) 
+                default: begin
                     state <= `RESET;
-            end
-            default: begin
-                state <= 0;
-            end
-
-        endcase
+                end
+            endcase
+        end
     end
 
     // Ooutput controler
@@ -175,7 +172,7 @@ module tinycordic (
     wire x_yb;
     assign x_yb = clk;
     assign io_out[6] = x_yb;
-    wire data_out;
+    wire [5:0] data_out;
     assign io_out[5:0] = data_out;
 
     assign data_out = (done) ? (clk) ? reg_x : reg_y : 0;
@@ -183,16 +180,5 @@ module tinycordic (
 
 
     
-
-    `ifdef COCOTB_SIM
-
-    initial begin
-    $dumpfile ("tinycordic.vcd");
-    $dumpvars (0, tinycordic);
-    #1;
-    end
-    `endif
-
-
 
 endmodule

@@ -122,12 +122,4 @@ module openeyes #(
     /* end */
 
 
-    /* `ifdef COCOTB_SIM */
-    /* initial begin */
-    /* $dumpfile ("processing_element.vcd"); */
-    /* $dumpvars (0, processing_element); */
-    /* #1; */
-    /* end */
-    /* `endif */
-
 endmodule

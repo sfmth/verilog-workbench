@@ -47,6 +47,7 @@ class ProjectMixin:
             "test_top": None,
             "testcase": None,
             "seed": None,
+            "gate_level": False,
         }
         values.update(overrides)
         return SimpleNamespace(**values)
@@ -111,7 +112,7 @@ class WaveLifecycleTests(ProjectMixin, unittest.TestCase):
             workbench = self.make_project(root)
             workbench.prepare_build_dir()
             spec = workbench.tests[0]
-            work_dir = root / ".vwb" / "sim" / "dut" / "hdl-test_dut"
+            work_dir = root / ".vwb" / "sim" / "dut" / "verilog-test_dut"
             work_dir.mkdir(parents=True)
             save_file = self.write(work_dir, "dut.gtkw", "[*] preserved\n")
             stale = self.write(work_dir, "stale-output.txt", "old simulation\n")
@@ -149,7 +150,7 @@ class WaveLifecycleTests(ProjectMixin, unittest.TestCase):
             root = Path(directory)
             workbench = self.make_project(root)
             workbench.prepare_build_dir()
-            work_dir = root / ".vwb" / "sim" / "dut" / "hdl-test_dut"
+            work_dir = root / ".vwb" / "sim" / "dut" / "verilog-test_dut"
             wave = self.write(work_dir, "dut.vcd", "$enddefinitions $end\n")
             self.write(work_dir, "dut.gtkw", "[*] GTKWave Analyzer save file\n")
             parser = vwb.make_parser()
@@ -315,7 +316,7 @@ class WaveLifecycleTests(ProjectMixin, unittest.TestCase):
                 f".vwb/{vwb.BUILD_MARKER}",
                 f"Verilog Work Bench {vwb.VERSION}\nproject={root.resolve()}\n",
             )
-            work_dir = root / ".vwb" / "sim" / "dut" / "hdl-test_dut"
+            work_dir = root / ".vwb" / "sim" / "dut" / "verilog-test_dut"
             self.write(work_dir, "dut.gtkw", "[*] existing view\n")
             args = vwb.make_parser().parse_args(
                 [
@@ -325,6 +326,7 @@ class WaveLifecycleTests(ProjectMixin, unittest.TestCase):
                     "verilog",
                     "--wave-format",
                     "vcd",
+                    "--no-gate-level",
                 ]
             )
             output = io.StringIO()
@@ -364,6 +366,42 @@ class WaveLifecycleTests(ProjectMixin, unittest.TestCase):
                 ["gtkwave", f"--save={layout}", wave.name], cwd=wave.parent
             )
 
+    def test_layout_next_to_configured_source_tree_is_loaded_automatically(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.write(root, "examples/src/dut.v", "module dut; endmodule\n")
+            self.write(
+                root,
+                "examples/test/test_dut.v",
+                "module test_dut; dut instance(); initial $finish; endmodule\n",
+            )
+            workbench = vwb.Workbench(
+                root=root,
+                src_dir=root / "examples" / "src",
+                test_dir=root / "examples" / "test",
+                build_dir=root / ".vwb",
+            )
+            legacy = self.write(
+                root, "examples/dut.gtkw", "[*] bundled layout\n"
+            )
+            wave = self.write(root, ".vwb/sim/dut/run/dut.vcd", "waveform\n")
+            completed = subprocess.CompletedProcess(["gtkwave"], 0, "", "")
+
+            with (
+                mock.patch.object(workbench, "require_tool", return_value="gtkwave"),
+                mock.patch.object(workbench, "run", return_value=completed),
+            ):
+                status, active_layout = workbench.open_waveform(
+                    wave, legacy_dut="dut"
+                )
+
+            self.assertEqual(status, 0)
+            self.assertEqual(active_layout, wave.with_suffix(".gtkw"))
+            self.assertEqual(
+                active_layout.read_text(encoding="utf-8"),
+                legacy.read_text(encoding="utf-8"),
+            )
+
     def test_cleaning_symlinked_scope_does_not_follow_it(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -380,6 +418,39 @@ class WaveLifecycleTests(ProjectMixin, unittest.TestCase):
             self.assertFalse(sim_link.exists())
             self.assertFalse(sim_link.is_symlink())
             self.assertEqual(sentinel.read_text(encoding="utf-8"), "keep\n")
+
+    def test_default_clean_removes_temporary_outputs_but_preserves_results(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            workbench = self.make_project(root)
+            workbench.prepare_build_dir()
+            for scope in ("sim", "lint", "fpga", "formal", "synth", "saved-waves"):
+                self.write(root, f".vwb/{scope}/result.txt", f"{scope}\n")
+            layout = self.write(
+                root, ".vwb/sim/dut/test-dut/dut.gtkw", "[*] saved layout\n"
+            )
+
+            args = vwb.make_parser().parse_args(["clean"])
+            workbench.clean(args.scope)
+
+            self.assertEqual(args.scope, "temp")
+            self.assertFalse((root / ".vwb" / "lint").exists())
+            self.assertFalse((root / ".vwb" / "sim" / "result.txt").exists())
+            self.assertEqual(layout.read_text(encoding="utf-8"), "[*] saved layout\n")
+            for scope in ("fpga", "formal", "synth", "saved-waves"):
+                result = root / ".vwb" / scope / "result.txt"
+                self.assertEqual(result.read_text(encoding="utf-8"), f"{scope}\n")
+
+            workbench.clean("sim")
+            self.assertFalse(layout.exists())
+            for scope, directory_name in (
+                ("fpga", "fpga"),
+                ("formal", "formal"),
+                ("synth", "synth"),
+                ("waves", "saved-waves"),
+            ):
+                workbench.clean(scope)
+                self.assertFalse((root / ".vwb" / directory_name).exists())
 
     def test_saved_wave_payload_symlinks_are_rejected(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -450,6 +521,27 @@ class WaveLifecycleTests(ProjectMixin, unittest.TestCase):
 
 
 class SynthesisTests(ProjectMixin, unittest.TestCase):
+    def test_large_svg_png_zoom_preserves_density_without_exceeding_cap(self):
+        with tempfile.TemporaryDirectory() as directory:
+            svg = Path(directory) / "large.svg"
+            svg.write_text(
+                '<svg xmlns="http://www.w3.org/2000/svg" '
+                'width="10000pt" height="10000pt"/>\n',
+                encoding="utf-8",
+            )
+
+            dimensions = vwb.Workbench._svg_dimensions(svg)
+            self.assertIsNotNone(dimensions)
+            width, height = dimensions or (0.0, 0.0)
+            zoom = vwb.Workbench._png_zoom(svg)
+
+            self.assertLess(zoom, 2.0)
+            self.assertGreater(zoom, 0.0)
+            self.assertLessEqual(
+                width * height * zoom * zoom,
+                vwb.MAX_PNG_PIXELS,
+            )
+
     def test_synth_parser_defaults_and_schematic_aliases(self):
         parser = vwb.make_parser()
 
@@ -485,7 +577,20 @@ class SynthesisTests(ProjectMixin, unittest.TestCase):
                         self.assertEqual(args.full, full)
 
     def _synthesize_with_fake_tools(
-        self, root: Path, argv: list[str]
+        self,
+        root: Path,
+        argv: list[str],
+        *,
+        fail_netlistsvg: bool = False,
+        invalid_netlistsvg: bool = False,
+        fail_yosys_svg: bool = False,
+        large_json: bool = False,
+        huge_json: bool = False,
+        huge_overview: bool = False,
+        fail_sfdp: bool = False,
+        fail_dot: bool = False,
+        missing_dot: bool = False,
+        missing_sfdp: bool = False,
     ) -> tuple[Path, str, list[tuple[list[str], Path | None]]]:
         workbench = self.make_project(root)
         args = vwb.make_parser().parse_args(argv)
@@ -501,7 +606,6 @@ class SynthesisTests(ProjectMixin, unittest.TestCase):
             calls.append((items, cwd))
             output_dir = root / ".vwb" / "synth" / "dut"
             if items[0] == "yosys":
-                (output_dir / "dut.json").write_text("{}\n", encoding="utf-8")
                 script = ""
                 if "-p" in items:
                     script = items[items.index("-p") + 1]
@@ -513,18 +617,86 @@ class SynthesisTests(ProjectMixin, unittest.TestCase):
                     script = Path(items[items.index("-c") + 1]).read_text(
                         encoding="utf-8"
                     )
+                for write_match in vwb.re.finditer(
+                    r"write_json\s+(?:\"([^\"]+)\"|([^\s;]+))", script
+                ):
+                    written = Path(
+                        write_match.group(1) or write_match.group(2)
+                    )
+                    if not written.is_absolute() and cwd is not None:
+                        written = cwd / written
+                    written.parent.mkdir(parents=True, exist_ok=True)
+                    if written.name == "dut.json" and huge_json:
+                        size = vwb.VISUAL_OVERVIEW_JSON_LIMIT_BYTES + 1
+                    elif written.name == "dut.json" and large_json:
+                        size = (
+                            max(
+                                vwb.SCALABLE_LAYOUT_JSON_LIMIT_BYTES,
+                                vwb.NETLISTSVG_JSON_LIMIT_BYTES,
+                            )
+                            + 1
+                        )
+                    elif written.name == "dut.visual.json" and huge_overview:
+                        size = vwb.VISUAL_OVERVIEW_JSON_LIMIT_BYTES + 1
+                    else:
+                        size = 0
+                    payload = {
+                        "modules": {
+                            "dut": {
+                                "ports": {
+                                    "clk": {"direction": "input", "bits": [1]},
+                                    "result": {
+                                        "direction": "output",
+                                        "bits": [2, 3],
+                                    },
+                                },
+                                "cells": {},
+                            }
+                        }
+                    }
+                    if size:
+                        payload["padding"] = "x" * size
+                    written.write_text(
+                        vwb.json.dumps(payload) + "\n", encoding="utf-8"
+                    )
                 prefix_match = vwb.re.search(r"-prefix\s+\"?([^\" ;]+)", script)
                 format_match = vwb.re.search(r"-format\s+(dot|svg|png)", script)
                 if prefix_match and format_match:
+                    if fail_yosys_svg and format_match.group(1) == "svg":
+                        return subprocess.CompletedProcess(
+                            command, 124, "", "layout timed out"
+                        )
                     prefix = Path(prefix_match.group(1))
                     if not prefix.is_absolute() and cwd is not None:
                         prefix = cwd / prefix
                     prefix.with_suffix("." + format_match.group(1)).write_text(
-                        "rendered\n", encoding="utf-8"
+                        "<svg/>\n" if format_match.group(1) == "svg" else "rendered\n",
+                        encoding="utf-8",
+                    )
+            elif items[0] == "sfdp":
+                Path(items[items.index("-o") + 1]).write_text(
+                    "partial output\n" if fail_sfdp else "<svg/>\n",
+                    encoding="utf-8",
+                )
+                if fail_sfdp:
+                    return subprocess.CompletedProcess(
+                        command, 1, "", "layout failed"
+                    )
+            elif items[0] == "dot":
+                Path(items[items.index("-o") + 1]).write_text(
+                    "partial output\n" if fail_dot else "<svg/>\n",
+                    encoding="utf-8",
+                )
+                if fail_dot:
+                    return subprocess.CompletedProcess(
+                        command, 1, "", "layout failed"
                     )
             elif items[0] == "netlistsvg":
+                if fail_netlistsvg:
+                    return subprocess.CompletedProcess(command, 1, "", "recursion failed")
                 Path(items[items.index("-o") + 1]).write_text(
-                    "<svg/>\n", encoding="utf-8"
+                    "not an svg\n" if invalid_netlistsvg else "<svg/>\n",
+                    encoding="utf-8",
                 )
             elif items[0] == "rsvg-convert":
                 if "--output" in items:
@@ -540,8 +712,15 @@ class SynthesisTests(ProjectMixin, unittest.TestCase):
                 Path(output).write_bytes(b"PNG")
             return subprocess.CompletedProcess(command, 0, "", "")
 
+        def require_tool(item: str) -> str:
+            if missing_dot and item == "dot":
+                raise vwb.VWBError("required command is not on PATH: dot")
+            if missing_sfdp and item == "sfdp":
+                raise vwb.VWBError("required command is not on PATH: sfdp")
+            return item
+
         with (
-            mock.patch.object(workbench, "require_tool", side_effect=lambda item: item),
+            mock.patch.object(workbench, "require_tool", side_effect=require_tool),
             mock.patch.object(workbench, "run", side_effect=fake_run),
         ):
             artifact = workbench.synthesize("dut", args)
@@ -568,6 +747,283 @@ class SynthesisTests(ProjectMixin, unittest.TestCase):
             self.assertTrue(any(command[0] == "rsvg-convert" for command in commands))
             self.assertFalse(any(command[0] == "convert" for command in commands))
             self.assertTrue(any(command[0] == "geeqie" for command in commands))
+            raster = next(command for command in commands if command[0] == "rsvg-convert")
+            self.assertEqual(raster[raster.index("--zoom") + 1], "2")
+            self.assertEqual(
+                raster[raster.index("--background-color") + 1], "white"
+            )
+            self.assertIn("--unlimited", raster)
+            self.assertTrue(raster[raster.index("--output") + 1].endswith(".png.tmp"))
+            self.assertTrue(raster[-1].endswith("dut.svg"))
+
+    def test_nonvisual_formats_do_not_open_geeqie_unless_requested(self):
+        for output_format in ("json", "dot"):
+            with self.subTest(output_format=output_format):
+                with tempfile.TemporaryDirectory() as directory:
+                    _artifact, _script, calls = self._synthesize_with_fake_tools(
+                        Path(directory), ["synth", "dut", "--format", output_format]
+                    )
+
+                commands = [command for command, _cwd in calls]
+                self.assertFalse(any(command[0] == "geeqie" for command in commands))
+
+    def test_netlistsvg_failure_falls_back_to_yosys_svg_rendering(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            errors = io.StringIO()
+
+            with contextlib.redirect_stderr(errors):
+                artifact, _script, calls = self._synthesize_with_fake_tools(
+                    root,
+                    [
+                        "synth",
+                        "dut",
+                        "--format",
+                        "svg",
+                        "--schematic",
+                        "--view",
+                        "none",
+                    ],
+                    fail_netlistsvg=True,
+                )
+
+            commands = [command for command, _cwd in calls]
+            self.assertEqual(artifact, root / ".vwb" / "synth" / "dut" / "dut.svg")
+            self.assertTrue(artifact.is_file())
+            self.assertEqual(sum(command[0] == "netlistsvg" for command in commands), 1)
+            self.assertEqual(sum(command[0] == "yosys" for command in commands), 2)
+            self.assertIn("using Yosys instead", errors.getvalue())
+
+    def test_invalid_netlistsvg_output_falls_back_to_yosys_svg_rendering(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+
+            artifact, _script, calls = self._synthesize_with_fake_tools(
+                root,
+                ["synth", "dut", "--format", "svg", "--view", "none"],
+                invalid_netlistsvg=True,
+            )
+
+            commands = [command for command, _cwd in calls]
+            self.assertTrue(vwb.Workbench._is_valid_svg(artifact))
+            self.assertEqual(sum(command[0] == "netlistsvg" for command in commands), 1)
+            self.assertEqual(sum(command[0] == "yosys" for command in commands), 2)
+
+    def test_large_yosys_svg_uses_scalable_graphviz_fallback(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            errors = io.StringIO()
+
+            with contextlib.redirect_stderr(errors):
+                artifact, _script, calls = self._synthesize_with_fake_tools(
+                    root,
+                    [
+                        "synth",
+                        "dut",
+                        "--format",
+                        "svg",
+                        "--no-schematic",
+                        "--view",
+                        "none",
+                    ],
+                    fail_yosys_svg=True,
+                )
+
+            commands = [command for command, _cwd in calls]
+            self.assertTrue(vwb.Workbench._is_valid_svg(artifact))
+            self.assertEqual(sum(command[0] == "yosys" for command in commands), 3)
+            self.assertEqual(sum(command[0] == "sfdp" for command in commands), 1)
+            self.assertIn("scalable sfdp layout", errors.getvalue())
+
+    def test_large_json_uses_scalable_layout_without_waiting_for_dot(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            errors = io.StringIO()
+
+            with contextlib.redirect_stderr(errors):
+                artifact, _script, calls = self._synthesize_with_fake_tools(
+                    root,
+                    [
+                        "synth",
+                        "dut",
+                        "--format",
+                        "svg",
+                        "--no-schematic",
+                        "--view",
+                        "none",
+                    ],
+                    large_json=True,
+                    missing_dot=True,
+                )
+
+            commands = [command for command, _cwd in calls]
+            self.assertTrue(vwb.Workbench._is_valid_svg(artifact))
+            self.assertEqual(sum(command[0] == "yosys" for command in commands), 2)
+            self.assertEqual(sum(command[0] == "sfdp" for command in commands), 1)
+            self.assertIn("graph is large", errors.getvalue())
+
+    def test_large_json_uses_dot_when_sfdp_is_unavailable(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+
+            artifact, _script, calls = self._synthesize_with_fake_tools(
+                root,
+                [
+                    "synth",
+                    "dut",
+                    "--format",
+                    "svg",
+                    "--no-schematic",
+                    "--view",
+                    "none",
+                ],
+                large_json=True,
+                missing_sfdp=True,
+            )
+
+            commands = [command for command, _cwd in calls]
+            self.assertTrue(vwb.Workbench._is_valid_svg(artifact))
+            self.assertFalse(any(command[0] == "sfdp" for command in commands))
+            self.assertEqual(sum(command[0] == "dot" for command in commands), 1)
+
+    def test_large_json_skips_netlistsvg_before_scalable_layout(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            errors = io.StringIO()
+
+            with contextlib.redirect_stderr(errors):
+                artifact, _script, calls = self._synthesize_with_fake_tools(
+                    root,
+                    [
+                        "synth",
+                        "dut",
+                        "--format",
+                        "svg",
+                        "--schematic",
+                        "--view",
+                        "none",
+                    ],
+                    large_json=True,
+                )
+
+            commands = [command for command, _cwd in calls]
+            self.assertTrue(vwb.Workbench._is_valid_svg(artifact))
+            self.assertFalse(any(command[0] == "netlistsvg" for command in commands))
+            self.assertEqual(sum(command[0] == "sfdp" for command in commands), 1)
+            self.assertIn("too large for NetlistSVG", errors.getvalue())
+
+    def test_huge_netlist_renders_unflattened_overview_and_keeps_full_json(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            errors = io.StringIO()
+
+            with contextlib.redirect_stderr(errors):
+                artifact, _script, calls = self._synthesize_with_fake_tools(
+                    root,
+                    [
+                        "synth",
+                        "dut",
+                        "--full",
+                        "--flatten",
+                        "--format",
+                        "svg",
+                        "--no-schematic",
+                        "--view",
+                        "none",
+                    ],
+                    huge_json=True,
+                )
+
+            output_dir = root / ".vwb" / "synth" / "dut"
+            full_json = output_dir / "dut.json"
+            overview_json = output_dir / "dut.visual.json"
+            render_script = (output_dir / "render.ys").read_text(encoding="utf-8")
+            commands = [command for command, _cwd in calls]
+
+            self.assertTrue(vwb.Workbench._is_valid_svg(artifact))
+            self.assertGreater(
+                full_json.stat().st_size,
+                vwb.VISUAL_OVERVIEW_JSON_LIMIT_BYTES,
+            )
+            self.assertLess(
+                overview_json.stat().st_size,
+                vwb.VISUAL_OVERVIEW_JSON_LIMIT_BYTES,
+            )
+            self.assertIn('read_json "dut.visual.json"', render_script)
+            self.assertEqual(sum(command[0] == "yosys" for command in commands), 3)
+            self.assertIn("Full JSON remains", errors.getvalue())
+
+    def test_huge_overview_uses_interface_drawing_and_dense_white_png(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            errors = io.StringIO()
+
+            with contextlib.redirect_stderr(errors):
+                artifact, _script, calls = self._synthesize_with_fake_tools(
+                    root,
+                    [
+                        "synth",
+                        "dut",
+                        "--full",
+                        "--format",
+                        "png",
+                        "--schematic",
+                        "--view",
+                        "none",
+                    ],
+                    huge_json=True,
+                    huge_overview=True,
+                )
+
+            output_dir = root / ".vwb" / "synth" / "dut"
+            interface_dot = output_dir / "dut.interface.dot"
+            commands = [command for command, _cwd in calls]
+            dot = next(command for command in commands if command[0] == "dot")
+            raster = next(
+                command for command in commands if command[0] == "rsvg-convert"
+            )
+
+            self.assertEqual(artifact.read_bytes(), b"PNG")
+            interface_text = interface_dot.read_text(encoding="utf-8")
+            self.assertIn("large-netlist interface overview", interface_text)
+            self.assertIn("clk", interface_text)
+            self.assertIn("1 bit", interface_text)
+            self.assertIn("result", interface_text)
+            self.assertIn("2 bits", interface_text)
+            self.assertEqual(Path(dot[-1]), interface_dot)
+            self.assertFalse(
+                any(command[0] == "netlistsvg" for command in commands)
+            )
+            self.assertEqual(raster[raster.index("--zoom") + 1], "2")
+            self.assertEqual(
+                raster[raster.index("--background-color") + 1], "white"
+            )
+            self.assertIn("compact module interface", errors.getvalue())
+
+    def test_failed_scalable_layout_keeps_json_and_removes_partial_svg(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+
+            with self.assertRaisesRegex(vwb.VWBError, "visual rendering failed"):
+                self._synthesize_with_fake_tools(
+                    root,
+                    [
+                        "synth",
+                        "dut",
+                        "--format",
+                        "svg",
+                        "--no-schematic",
+                        "--view",
+                        "none",
+                    ],
+                    large_json=True,
+                    fail_sfdp=True,
+                    fail_dot=True,
+                )
+
+            output_dir = root / ".vwb" / "synth" / "dut"
+            self.assertTrue((output_dir / "dut.json").is_file())
+            self.assertFalse((output_dir / "dut.svg").exists())
 
     def test_preparation_flow_matches_makefile_backend_matrix(self):
         cases = [

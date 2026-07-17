@@ -45,13 +45,4 @@ module u_b_memory_controler(
     assign potential_write_sram_addr = cntrl_potential_write_addr;
     assign potential_write_sram_we = cntrl_potential_write_we;
 
-    `ifdef COCOTB_SIM
-    initial begin
-    $dumpfile ("u_b_memory_controler.vcd");
-    $dumpvars (0, u_b_memory_controler);
-    #1;
-    end
-    `endif
-
 endmodule
-
