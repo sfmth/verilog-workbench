@@ -86,9 +86,9 @@ class Colorizer:
         return "".join(codes) + text + Ansi.RESET
 
 
-class DefaultsArgumentParser(argparse.ArgumentParser):
+class VWBArgumentParser(argparse.ArgumentParser):
     def __init__(self, *args: object, **kwargs: object):
-        kwargs.setdefault("formatter_class", argparse.ArgumentDefaultsHelpFormatter)
+        kwargs.setdefault("formatter_class", argparse.HelpFormatter)
         kwargs.setdefault("allow_abbrev", False)
         super().__init__(*args, **kwargs)
 
@@ -4174,46 +4174,118 @@ def saved_wave_completer(
 
 
 def add_simulation_options(
-    parser: argparse.ArgumentParser, *, gate_level_default: bool
+    parser: argparse.ArgumentParser, *, gate_level_default: bool, wave_mode: bool
 ) -> None:
-    modules = parser.add_argument("modules", nargs="*", metavar="MODULE")
+    modules = parser.add_argument(
+        "modules",
+        nargs="*",
+        metavar="MODULE",
+        help=(
+            "module(s) to test; omit to run every discovered test"
+            if not wave_mode
+            else "module to simulate or use as a saved-wave filter"
+        ),
+    )
     modules.completer = module_name_completer  # type: ignore[attr-defined]
-    parser.add_argument("--test", help="explicit Cocotb, Verilog, or VHDL test file")
+    parser.add_argument(
+        "--test",
+        metavar="FILE",
+        help="use this test file instead of an automatically discovered test",
+    )
     parser.add_argument(
         "--test-language",
         choices=["auto", "cocotb", "verilog", "vhdl"],
         default="auto",
-        help="select Cocotb, Verilog, or VHDL testbenches",
+        help=(
+            "kind of test to run or create; auto uses discovered tests and "
+            "creates Cocotb when needed"
+        ),
     )
-    parser.add_argument("--test-top", help="top unit declared by an HDL testbench")
-    parser.add_argument("--testcase", help="run one Cocotb testcase")
-    parser.add_argument("--seed", type=int, help="Cocotb/Python random seed")
-    parser.add_argument("--waves", action="store_true", help="generate a waveform")
+    parser.add_argument(
+        "--test-top",
+        metavar="NAME",
+        help="testbench module or entity named inside a Verilog or VHDL test file",
+    )
+    parser.add_argument(
+        "--testcase",
+        metavar="NAME",
+        help="run only this function marked with @cocotb.test",
+    )
+    parser.add_argument(
+        "--seed",
+        type=int,
+        metavar="NUMBER",
+        help="number used to repeat the same Cocotb random values",
+    )
+    parser.add_argument(
+        "--waves",
+        action="store_true",
+        help=(
+            argparse.SUPPRESS
+            if wave_mode
+            else "save source-design signal changes to a waveform file"
+        ),
+    )
     parser.add_argument(
         "--wave-format",
         choices=["fst", "vcd"],
         default="fst",
-        help="waveform format when generation is enabled",
+        help="waveform file type; FST is smaller and VCD is widely supported",
     )
     parser.add_argument(
         "--max-array-words",
         type=int,
         default=DEFAULT_MAX_ARRAY_WORDS,
         metavar="COUNT",
-        help="maximum words dumped per static array; 0 disables the limit",
+        help=(
+            f"entries saved from each memory or array; 0 saves every entry "
+            f"(default: {DEFAULT_MAX_ARRAY_WORDS})"
+        ),
     )
-    parser.add_argument("-D", "--define", action="append", default=[], metavar="NAME[=VALUE]")
-    parser.add_argument("-I", "--include", action="append", default=[], metavar="DIR")
-    parser.add_argument("--compile-arg", action="append", default=[], metavar="ARG")
-    parser.add_argument("--sim-arg", action="append", default=[], metavar="ARG")
-    parser.add_argument("--plusarg", action="append", default=[], metavar="ARG")
+    parser.add_argument(
+        "-D",
+        "--define",
+        action="append",
+        default=[],
+        metavar="NAME[=VALUE]",
+        help="set a Verilog/SystemVerilog compile-time name; repeat as needed",
+    )
+    parser.add_argument(
+        "-I",
+        "--include",
+        action="append",
+        default=[],
+        metavar="DIR",
+        help="add a folder searched by Verilog/SystemVerilog include statements",
+    )
+    parser.add_argument(
+        "--compile-arg",
+        action="append",
+        default=[],
+        metavar="ARG",
+        help="pass an extra option to the test compiler; repeat as needed (advanced)",
+    )
+    parser.add_argument(
+        "--sim-arg",
+        action="append",
+        default=[],
+        metavar="ARG",
+        help="pass an extra option to the simulator; repeat as needed (advanced)",
+    )
+    parser.add_argument(
+        "--plusarg",
+        action="append",
+        default=[],
+        metavar="ARG",
+        help="pass a +NAME or +NAME=VALUE option to the simulator (advanced)",
+    )
     if gate_level_default:
         parser.add_argument(
             "--no-gate-level",
             dest="gate_level",
             action="store_false",
             default=True,
-            help="skip the default post-synthesis functional simulation",
+            help="run only the source design; skip the test of synthesized logic",
         )
     else:
         parser.add_argument(
@@ -4221,7 +4293,7 @@ def add_simulation_options(
             dest="gate_level",
             action="store_true",
             default=False,
-            help="also run post-synthesis functional simulation",
+            help="after the source test, run the same test on synthesized logic",
         )
     parser.add_argument("--keep-going", action="store_true", help=argparse.SUPPRESS)
 
@@ -4229,91 +4301,245 @@ def add_simulation_options(
 def make_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="vwb.py",
-        description="Discover, test, lint, synthesize, and build HDL projects.",
+        description=(
+            "Run and inspect Verilog, SystemVerilog, and VHDL designs.\n"
+            "Only basic digital logic knowledge is assumed. VWB finds source "
+            "files,\ndesign blocks, and tests for you."
+        ),
         epilog=(
-            "examples:\n"
+            "quick start:\n"
+            "  ./vwb.py init\n"
             "  ./vwb.py list\n"
-            "  ./vwb.py test\n"
-            "  ./vwb.py test my_module --waves\n"
-            "  ./vwb.py lint my_module\n"
-            "  ./vwb.py synth my_module --format svg\n"
-            "  ./vwb.py fpga my_module --board ice40 --stage pack\n"
-            "  ./vwb.py --src-dir examples/src --test-dir examples/test test"
+            "  ./vwb.py test counter\n"
+            "  ./vwb.py wave counter\n"
+            "  ./vwb.py synth counter\n\n"
+            "Run './vwb.py COMMAND --help' to learn about one command."
         ),
         formatter_class=argparse.RawDescriptionHelpFormatter,
         allow_abbrev=False,
     )
-    parser.add_argument("--version", action="version", version=f"%(prog)s {VERSION}")
-    parser.add_argument("--root")
-    parser.add_argument("--src-dir")
-    parser.add_argument("--test-dir")
-    parser.add_argument("--build-dir")
     parser.add_argument(
-        "--color", choices=["auto", "always", "never"], default="auto"
+        "--version",
+        action="version",
+        version=f"%(prog)s {VERSION}",
+        help="show the VWB version and exit",
     )
-    parser.add_argument("-v", "--verbose", action="store_true")
-    parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument(
+        "--root",
+        metavar="PROJECT_DIR",
+        help="use this project folder instead of finding one from .vwb.json",
+    )
+    parser.add_argument(
+        "--src-dir",
+        metavar="DIR",
+        help="use this design-source folder instead of the saved setting",
+    )
+    parser.add_argument(
+        "--test-dir",
+        metavar="DIR",
+        help="use this test folder instead of the saved setting",
+    )
+    parser.add_argument(
+        "--build-dir",
+        metavar="DIR",
+        help="use this folder for files created by VWB instead of the saved setting",
+    )
+    parser.add_argument(
+        "--color",
+        choices=["auto", "always", "never"],
+        default="auto",
+        help="when to color terminal messages (default: auto)",
+    )
+    parser.add_argument(
+        "-v",
+        "--verbose",
+        action="store_true",
+        help="show each external command before it runs",
+    )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="show commands without running tools or creating files",
+    )
     subparsers = parser.add_subparsers(
-        dest="command", required=True, parser_class=DefaultsArgumentParser
+        dest="command",
+        required=True,
+        parser_class=VWBArgumentParser,
+        title="commands",
+        metavar="COMMAND",
     )
 
     init_parser = subparsers.add_parser(
-        "init", help="create and save the project directory configuration"
+        "init",
+        help="set up the project folders",
+        description=(
+            "Create .vwb.json so later commands can find your source, test, and "
+            "output folders automatically."
+        ),
     )
-    init_parser.add_argument("--root", dest="init_root")
-    init_parser.add_argument("--src-dir", dest="init_src_dir")
-    init_parser.add_argument("--test-dir", dest="init_test_dir")
-    init_parser.add_argument("--build-dir", dest="init_build_dir")
-    init_parser.add_argument("--force", action="store_true")
+    init_parser.add_argument(
+        "--root",
+        dest="init_root",
+        metavar="PROJECT_DIR",
+        help="project folder to set up (default: current folder)",
+    )
+    init_parser.add_argument(
+        "--src-dir",
+        dest="init_src_dir",
+        metavar="DIR",
+        help="source folder to create and remember (default: src)",
+    )
+    init_parser.add_argument(
+        "--test-dir",
+        dest="init_test_dir",
+        metavar="DIR",
+        help="test folder to create and remember (default: test)",
+    )
+    init_parser.add_argument(
+        "--build-dir",
+        dest="init_build_dir",
+        metavar="DIR",
+        help="folder to remember for files VWB creates (default: .vwb)",
+    )
+    init_parser.add_argument(
+        "--force",
+        action="store_true",
+        help="replace an existing .vwb.json project file",
+    )
 
     list_parser = subparsers.add_parser(
-        "list", help="list discovered packages, modules, dependencies, and tests"
+        "list",
+        help="show the modules and tests VWB found",
+        description=(
+            "Scan the project folders and show each module or entity, its source "
+            "files, the blocks it uses, and its tests."
+        ),
     )
-    list_parser.add_argument("--json", action="store_true", dest="as_json")
+    list_parser.add_argument(
+        "--json",
+        action="store_true",
+        dest="as_json",
+        help="print the result as JSON for scripts",
+    )
 
     test_parser = subparsers.add_parser(
-        "test", aliases=["sim"], help="compile and run discovered tests"
+        "test",
+        aliases=["sim"],
+        help="run tests for one or more modules",
+        description=(
+            "Run Cocotb, Verilog, or VHDL tests. With no module name, run every "
+            "discovered test. If a named module has no test, create a starter "
+            "Cocotb test. By default, test both the source design and synthesized "
+            "logic."
+        ),
     )
-    add_simulation_options(test_parser, gate_level_default=True)
+    add_simulation_options(
+        test_parser, gate_level_default=True, wave_mode=False
+    )
 
     wave_parser = subparsers.add_parser(
-        "wave", aliases=["gtkwave"], help="run, open, and manage waveforms"
+        "wave",
+        aliases=["gtkwave"],
+        help="run one test and open its signals in GTKWave",
+        description=(
+            "Run one source-code test, save its signal changes, and open GTKWave. "
+            "Use --gate-level to also test synthesized logic. Saved waveforms can "
+            "be opened later without rerunning the test."
+        ),
     )
-    add_simulation_options(wave_parser, gate_level_default=False)
+    add_simulation_options(
+        wave_parser, gate_level_default=False, wave_mode=True
+    )
     wave_parser.set_defaults(waves=True)
-    wave_parser.add_argument("--save", help="explicit GTKWave save file")
+    wave_parser.add_argument(
+        "--save",
+        metavar="FILE",
+        help="use this GTKWave layout instead of the automatically saved layout",
+    )
     wave_tag = wave_parser.add_argument(
-        "--tag", help="archive a passing waveform with this tag"
+        "--tag", metavar="NAME", help="save a passing waveform under this name"
     )
     wave_tag.completer = saved_wave_completer  # type: ignore[attr-defined]
-    wave_parser.add_argument("--replace-tag", action="store_true")
+    wave_parser.add_argument(
+        "--replace-tag",
+        action="store_true",
+        help="replace an existing saved waveform named by --tag",
+    )
     wave_load = wave_parser.add_argument(
-        "--load", metavar="TAG", help="open an archived waveform"
+        "--load", metavar="NAME", help="open a saved waveform without simulating"
     )
     wave_load.completer = saved_wave_completer  # type: ignore[attr-defined]
     wave_parser.add_argument(
-        "--list-saved", action="store_true", help="list archived waveforms"
+        "--list-saved", action="store_true", help="show saved waveform names"
     )
-    wave_parser.add_argument("--json", action="store_true", dest="as_json")
+    wave_parser.add_argument(
+        "--json",
+        action="store_true",
+        dest="as_json",
+        help="print --list-saved results as JSON",
+    )
 
     lint_parser = subparsers.add_parser(
-        "lint", help="lint selected module hierarchies"
+        "lint",
+        help="check source code for common mistakes",
+        description=(
+            "Check each selected module and the source files it uses. Every "
+            "selected checker runs even if an earlier check fails."
+        ),
     )
-    lint_modules = lint_parser.add_argument("modules", nargs="*", metavar="MODULE")
+    lint_modules = lint_parser.add_argument(
+        "modules",
+        nargs="*",
+        metavar="MODULE",
+        help="module(s) to check; omit to check modules that have tests",
+    )
     lint_modules.completer = module_name_completer  # type: ignore[attr-defined]
-    lint_parser.add_argument("--all", action="store_true", dest="all_modules")
+    lint_parser.add_argument(
+        "--all",
+        action="store_true",
+        dest="all_modules",
+        help="check every module or entity found in the source folder",
+    )
     lint_parser.add_argument(
         "--linter",
         action="append",
         choices=["all", "iverilog", "verilator", "yosys", "verible", "ghdl"],
         default=[],
-        help="linter to run; repeat for several (default: all applicable tools)",
+        help="checker to run; repeat as needed (default: every suitable checker)",
     )
-    lint_parser.add_argument("--keep-going", action="store_true", help=argparse.SUPPRESS)
-    lint_parser.add_argument("-D", "--define", action="append", default=[])
-    lint_parser.add_argument("-I", "--include", action="append", default=[])
-    lint_parser.add_argument("--iverilog-arg", action="append", default=[])
-    lint_parser.add_argument("--verilator-arg", action="append", default=[])
+    lint_parser.add_argument(
+        "--keep-going", action="store_true", help=argparse.SUPPRESS
+    )
+    lint_parser.add_argument(
+        "-D",
+        "--define",
+        action="append",
+        default=[],
+        metavar="NAME[=VALUE]",
+        help="set a Verilog/SystemVerilog compile-time name; repeat as needed",
+    )
+    lint_parser.add_argument(
+        "-I",
+        "--include",
+        action="append",
+        default=[],
+        metavar="DIR",
+        help="add a folder searched by Verilog/SystemVerilog include statements",
+    )
+    lint_parser.add_argument(
+        "--iverilog-arg",
+        action="append",
+        default=[],
+        metavar="ARG",
+        help="pass an extra option to Icarus Verilog (advanced)",
+    )
+    lint_parser.add_argument(
+        "--verilator-arg",
+        action="append",
+        default=[],
+        metavar="ARG",
+        help="pass an extra option to Verilator (advanced)",
+    )
     lint_parser.add_argument(
         "--lint-arg",
         dest="verilator_arg",
@@ -4321,44 +4547,88 @@ def make_parser() -> argparse.ArgumentParser:
         default=argparse.SUPPRESS,
         help=argparse.SUPPRESS,
     )
-    lint_parser.add_argument("--yosys-arg", action="append", default=[])
-    lint_parser.add_argument("--verible-arg", action="append", default=[])
-    lint_parser.add_argument("--ghdl-arg", action="append", default=[])
+    lint_parser.add_argument(
+        "--yosys-arg",
+        action="append",
+        default=[],
+        metavar="COMMAND",
+        help="add a Tcl line to the Yosys source check (advanced)",
+    )
+    lint_parser.add_argument(
+        "--verible-arg",
+        action="append",
+        default=[],
+        metavar="ARG",
+        help="pass an extra option to Verible (advanced)",
+    )
+    lint_parser.add_argument(
+        "--ghdl-arg",
+        action="append",
+        default=[],
+        metavar="ARG",
+        help="pass an extra option to GHDL (advanced)",
+    )
 
     synth_parser = subparsers.add_parser(
-        "synth", help="synthesize and render a module"
+        "synth",
+        help="make a circuit drawing or synthesis data for a module",
+        description=(
+            "Synthesis turns design code into logic blocks. Turn one module or "
+            "entity into a circuit drawing or data file. PNG is used by default; "
+            "if the drawing is too large for PNG, VWB keeps SVG instead."
+        ),
     )
-    synth_module = synth_parser.add_argument("module", nargs="?")
+    synth_module = synth_parser.add_argument(
+        "module",
+        nargs="?",
+        metavar="MODULE",
+        help="module or VHDL entity to process; omit when there is one clear top",
+    )
     synth_module.completer = module_name_completer  # type: ignore[attr-defined]
     synth_parser.add_argument(
         "--format",
         choices=["json", "svg", "png", "dot"],
         default="png",
-        help="preferred synthesis artifact format",
+        help="output file type; a PNG that is too large is kept as SVG",
     )
     synth_parser.add_argument(
-        "--full", action="store_true", help="use the Makefile's full preparation flow"
+        "--full",
+        action="store_true",
+        help=(
+            "show more internal logic: combine submodules in the default circuit "
+            "drawing, or run full logic synthesis with --no-schematic"
+        ),
     )
-    synth_parser.add_argument("--flatten", action="store_true", help="flatten hierarchy")
+    synth_parser.add_argument(
+        "--flatten",
+        action="store_true",
+        help="combine submodules into the top module so their logic appears together",
+    )
     synth_parser.add_argument(
         "--schematic",
         dest="schematic",
         action="store_true",
         default=True,
-        help="try netlistsvg before the Yosys fallback",
+        help=(
+            "draw SVG/PNG with NetlistSVG; fall back to Yosys only if it fails "
+            "(default)"
+        ),
     )
     synth_parser.add_argument(
         "--no-schematic",
         dest="schematic",
         action="store_false",
         default=argparse.SUPPRESS,
-        help="render images through Yosys show instead of netlistsvg",
+        help="draw SVG/PNG with Yosys instead of NetlistSVG",
     )
     synth_parser.add_argument(
         "--view",
         default="auto",
         metavar="VIEWER",
-        help="artifact viewer, 'auto', or 'none'",
+        help=(
+            "program used to open the result; auto uses Geeqie for PNG and "
+            "Inkscape for SVG"
+        ),
     )
     synth_parser.add_argument(
         "--no-view",
@@ -4366,41 +4636,129 @@ def make_parser() -> argparse.ArgumentParser:
         action="store_const",
         const="none",
         default=argparse.SUPPRESS,
-        help="do not open the generated artifact",
+        help="create the result without opening it",
     )
-    synth_parser.add_argument("-D", "--define", action="append", default=[])
-    synth_parser.add_argument("-I", "--include", action="append", default=[])
+    synth_parser.add_argument(
+        "-D",
+        "--define",
+        action="append",
+        default=[],
+        metavar="NAME[=VALUE]",
+        help="set a Verilog/SystemVerilog compile-time name; repeat as needed",
+    )
+    synth_parser.add_argument(
+        "-I",
+        "--include",
+        action="append",
+        default=[],
+        metavar="DIR",
+        help="add a folder searched by Verilog/SystemVerilog include statements",
+    )
 
-    formal_parser = subparsers.add_parser("formal", help="run a SymbiYosys configuration")
-    formal_parser.add_argument("config", nargs="?")
-    formal_parser.add_argument("--view", action="store_true")
+    formal_parser = subparsers.add_parser(
+        "formal",
+        help="run checks from a SymbiYosys file",
+        description=(
+            "Run automatic design checks described in a SymbiYosys .sby file."
+        ),
+    )
+    formal_parser.add_argument(
+        "config",
+        nargs="?",
+        metavar="FILE",
+        help=".sby check file; omit when the project contains exactly one",
+    )
+    formal_parser.add_argument(
+        "--view",
+        action="store_true",
+        help="open the first generated signal trace in GTKWave",
+    )
 
-    fpga_parser = subparsers.add_parser("fpga", help="build or flash an FPGA bitstream")
-    fpga_module = fpga_parser.add_argument("module", nargs="?")
+    fpga_parser = subparsers.add_parser(
+        "fpga",
+        help="make an FPGA programming file or program a board",
+        description=(
+            "Turn one module into files for a supported FPGA board. The flash "
+            "stage also programs a connected board."
+        ),
+    )
+    fpga_module = fpga_parser.add_argument(
+        "module",
+        nargs="?",
+        metavar="MODULE",
+        help="top module or entity for the FPGA; omit when there is one clear top",
+    )
     fpga_module.completer = module_name_completer  # type: ignore[attr-defined]
     fpga_parser.add_argument(
         "--board",
         required=True,
         choices=["gowin", "tangnano9k", "ice40", "icebreaker"],
+        help="FPGA board or tool family to build for",
     )
     fpga_parser.add_argument(
-        "--stage", choices=["synth", "pnr", "pack", "flash"], default="pack"
+        "--stage",
+        choices=["synth", "pnr", "pack", "flash"],
+        default="pack",
+        help=(
+            "last step: synth converts the logic, pnr places and connects it, "
+            "pack makes the programming file, and flash programs the board"
+        ),
     )
-    fpga_parser.add_argument("--constraints")
-    fpga_parser.add_argument("-D", "--define", action="append", default=[])
-    fpga_parser.add_argument("-I", "--include", action="append", default=[])
+    fpga_parser.add_argument(
+        "--constraints",
+        metavar="FILE",
+        help="pin-assignment file; defaults to src/io.cst or src/io.pcf",
+    )
+    fpga_parser.add_argument(
+        "-D",
+        "--define",
+        action="append",
+        default=[],
+        metavar="NAME[=VALUE]",
+        help="set a Verilog/SystemVerilog compile-time name; repeat as needed",
+    )
+    fpga_parser.add_argument(
+        "-I",
+        "--include",
+        action="append",
+        default=[],
+        metavar="DIR",
+        help="add a folder searched by Verilog/SystemVerilog include statements",
+    )
 
-    clean_parser = subparsers.add_parser("clean", help="remove generated files")
+    clean_parser = subparsers.add_parser(
+        "clean",
+        help="remove files created by VWB",
+        description=(
+            "Delete only the selected group of generated files. Plain clean keeps "
+            "saved waveforms and synthesis, FPGA, and formal results."
+        ),
+    )
     clean_parser.add_argument(
         "scope",
         nargs="?",
         choices=["temp", "sim", "waves", "synth", "lint", "fpga", "formal", "all"],
         default="temp",
-        help="what to remove; plain clean preserves synthesis and saved waves",
+        help=(
+            "what to delete; temp removes simulation and source-check work, while "
+            "the other choices remove the named saved results"
+        ),
     )
 
-    doctor_parser = subparsers.add_parser("doctor", help="check project tools")
-    doctor_parser.add_argument("--json", action="store_true", dest="as_json")
+    doctor_parser = subparsers.add_parser(
+        "doctor",
+        help="show which required programs are installed",
+        description=(
+            "Check the programs used for simulation, waveforms, source checks, "
+            "circuit drawings, formal checks, and FPGA builds."
+        ),
+    )
+    doctor_parser.add_argument(
+        "--json",
+        action="store_true",
+        dest="as_json",
+        help="print the result as JSON for scripts",
+    )
     return parser
 
 

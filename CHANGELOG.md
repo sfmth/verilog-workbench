@@ -28,8 +28,8 @@ All notable changes to Verilog Workbench are recorded here.
 
 ### Changed
 
-- Renamed the old `show` operation to `synth` and kept the synthesis commands
-  aligned with the Makefile flows.
+- Renamed the old `show` operation to `synth`. The default makes a compact
+  circuit drawing, while `--full` exposes more internal logic.
 - Replaced `--kind` with `--test-language`; Cocotb is the default generated test
   language and `--max-array-words` now defaults to 32.
 - Synthesis now defaults to the compact flow with schematics enabled, preferred
@@ -46,8 +46,12 @@ All notable changes to Verilog Workbench are recorded here.
   cleanup requires an explicit scope.
 - Moved bundled designs and tests under `examples/`; root `src/` and `test/`
   remain available for user projects.
-- Reworked the README around novice logic-design vocabulary and added detailed
-  command option tables and guided examples.
+- Reworked every CLI help screen in plain logic-design language and replaced
+  confusing internal descriptions with direct explanations of each option.
+- Focused the README on the introduction, features, guided first project,
+  project layout, language support, and Docker/native installation. Exact
+  option details now live in `vwb.py COMMAND --help` instead of duplicate
+  command tables.
 
 ### Fixed
 

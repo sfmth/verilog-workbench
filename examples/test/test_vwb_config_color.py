@@ -27,6 +27,45 @@ class CommandLineConfigurationTests(unittest.TestCase):
             vwb.DEFAULT_MAX_ARRAY_WORDS,
         )
 
+    def test_help_uses_beginner_language_and_command_descriptions(self):
+        top_help = self.parser.format_help()
+        self.assertIn("Only basic digital logic knowledge is assumed", top_help)
+
+        command_action = next(
+            action for action in self.parser._actions if action.dest == "command"
+        )
+        command_names = (
+            "init",
+            "list",
+            "test",
+            "wave",
+            "lint",
+            "synth",
+            "formal",
+            "fpga",
+            "clean",
+            "doctor",
+        )
+        command_help = {
+            name: command_action.choices[name].format_help()
+            for name in command_names
+        }
+        for name, help_text in command_help.items():
+            with self.subTest(command=name):
+                for action in command_action.choices[name]._actions:
+                    self.assertIsNotNone(action.help)
+                self.assertNotIn("(default: None)", help_text)
+                self.assertNotIn("(default: [])", help_text)
+                self.assertNotIn("Makefile", help_text)
+
+        normalized_synth_help = " ".join(command_help["synth"].split())
+        normalized_wave_help = " ".join(command_help["wave"].split())
+        self.assertIn("show more internal logic", normalized_synth_help)
+        self.assertIn(
+            "run the same test on synthesized logic", normalized_wave_help
+        )
+        self.assertNotIn("--waves", command_help["wave"])
+
     def test_color_mode_defaults_to_auto_and_rejects_unknown_values(self):
         self.assertEqual(self.parser.parse_args(["list"]).color, "auto")
         for mode in ("auto", "always", "never"):
