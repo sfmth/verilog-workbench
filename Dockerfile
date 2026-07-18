@@ -51,7 +51,6 @@ RUN sudo apt-get update \
         gtkwave \
         inkscape \
         iverilog \
-        libgvplugin-neato-layout8 \
         librsvg2-bin \
         make \
         nextpnr-gowin \

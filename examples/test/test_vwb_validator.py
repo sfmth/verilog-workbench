@@ -350,6 +350,63 @@ class PortableToolValidationTests(unittest.TestCase):
         run_vwb.assert_not_called()
         self.assertEqual(runner.failures, [])
 
+    def test_portable_tool_work_skips_only_vhdl_without_ghdl(self):
+        runner = self.runner()
+        tests = [
+            validate_vwb.TestCase(
+                module=module,
+                design_language=language,
+                kind="cocotb",
+                language="cocotb",
+                path=f"examples/test/test_{module}.py",
+                top=None,
+                dependency_count=0,
+            )
+            for module, language in (
+                ("verilog_dut", "verilog"),
+                ("sv_dut", "systemverilog"),
+                ("vhdl_dut", "vhdl"),
+            )
+        ]
+        languages = {
+            "verilog_dut": "verilog",
+            "sv_dut": "systemverilog",
+            "vhdl_dut": "vhdl",
+        }
+
+        with mock.patch.object(validate_vwb.shutil, "which", return_value=None):
+            modules, selected_tests = validate_vwb.select_portable_tool_work(
+                runner, list(languages), tests, languages
+            )
+
+        self.assertEqual(modules, ["verilog_dut", "sv_dut"])
+        self.assertEqual(
+            [test.module for test in selected_tests],
+            ["verilog_dut", "sv_dut"],
+        )
+
+    def test_portable_tool_work_keeps_vhdl_when_ghdl_is_installed(self):
+        runner = self.runner()
+        test = validate_vwb.TestCase(
+            module="vhdl_dut",
+            design_language="vhdl",
+            kind="cocotb",
+            language="cocotb",
+            path="examples/test/test_vhdl_dut.py",
+            top=None,
+            dependency_count=0,
+        )
+
+        with mock.patch.object(
+            validate_vwb.shutil, "which", return_value="/usr/bin/ghdl"
+        ):
+            modules, selected_tests = validate_vwb.select_portable_tool_work(
+                runner, ["vhdl_dut"], [test], {"vhdl_dut": "vhdl"}
+            )
+
+        self.assertEqual(modules, ["vhdl_dut"])
+        self.assertEqual(selected_tests, [test])
+
 
 class OptionSpellingAuditTests(unittest.TestCase):
     @staticmethod

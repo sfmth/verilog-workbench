@@ -8,12 +8,21 @@ All notable changes to Verilog Workbench are recorded here.
 
 - The Docker image now uses Ubuntu 24.04 as its stable base instead of a
   development Ubuntu release.
+- Fedora full installs now use the package manager's broken-dependency skip for
+  optional tools, so one stale optional RPM cannot block the usable toolchain.
 - The representative CI profile keeps its large Verilog and VHDL coverage but
   uses the portable clocked SystemVerilog shift-register example instead of an
   interface-port example that requires an optional converter with Icarus.
 
 ### Fixed
 
+- The Ubuntu 24.04 Docker build no longer requests a Graphviz plugin package
+  that is absent from that release; the installed `graphviz` package provides
+  the renderer used by VWB.
+- Portable distro validation now skips real VHDL tool phases when GHDL is not
+  available, while still checking VHDL discovery, command parsing, and dry-run
+  behavior. This lets Arch and temporarily broken Fedora repositories validate
+  the tools they can install without treating an optional GHDL gap as a failure.
 - Local setup now installs a C++ compiler and Python development files only
   when Cocotb is unavailable from the distribution and must be installed with
   `pip`. This restores GHDL loading and lets rolling distributions build Cocotb.

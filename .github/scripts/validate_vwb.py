@@ -784,6 +784,32 @@ def report_optional_skip(label: str, missing: Sequence[str]) -> None:
     )
 
 
+def select_portable_tool_work(
+    runner: Runner,
+    modules: Sequence[str],
+    tests: Sequence[TestCase],
+    module_languages: dict[str, str],
+) -> tuple[list[str], list[TestCase]]:
+    if command_available(runner, "ghdl"):
+        return list(modules), list(tests)
+
+    vhdl_modules = [
+        module for module in modules if module_languages[module] == "vhdl"
+    ]
+    if not vhdl_modules:
+        return list(modules), list(tests)
+
+    report_optional_skip(
+        "VHDL simulation, waves, lint, synthesis, and FPGA checks",
+        ["ghdl"],
+    )
+    skipped = set(vhdl_modules)
+    return (
+        [module for module in modules if module not in skipped],
+        [test for test in tests if test.module not in skipped],
+    )
+
+
 def matrix_document(
     inventory: dict[str, Any],
     tests: Sequence[TestCase],
@@ -1681,7 +1707,9 @@ def validate_tests(runner: Runner, tests: Sequence[TestCase], seed: int) -> None
             )
 
 
-def validate_starter_tests(runner: Runner) -> None:
+def validate_starter_tests(
+    runner: Runner, *, vhdl_available: bool = True
+) -> None:
     with tempfile.TemporaryDirectory(prefix="vwb-starter-tests-") as directory:
         root = Path(directory)
         source = root / "src"
@@ -1770,7 +1798,10 @@ def validate_starter_tests(runner: Runner) -> None:
             test_dir="test",
             build_dir=root / "build",
         )
-        for module in ("clocked_sv", "clocked_vhdl", "array_input"):
+        starter_modules = ["clocked_sv", "array_input"]
+        if vhdl_available:
+            starter_modules.insert(1, "clocked_vhdl")
+        for module in starter_modules:
             arguments = ["test", module]
             if module == "array_input":
                 arguments.extend(["--waves", "--wave-format", "fst"])
@@ -1832,24 +1863,25 @@ def validate_starter_tests(runner: Runner) -> None:
             fixture.failures.append(
                 f"native array starter does not initialize its array: {native_array_starter}"
             )
-        native_vhdl_result = fixture.run_vwb(
-            [
-                "test",
-                "native_vhdl",
-                "--test-language",
-                "vhdl",
-                "--gate-level",
-            ],
-            label="native VHDL testbench opt-in gate handling",
-            capture=True,
-        )
-        if (
-            native_vhdl_result.returncode == 0
-            and "GATE SKIPPED" not in native_vhdl_result.stdout
-        ):
-            fixture.failures.append(
-                "native VHDL testbench did not report its gate skip"
+        if vhdl_available:
+            native_vhdl_result = fixture.run_vwb(
+                [
+                    "test",
+                    "native_vhdl",
+                    "--test-language",
+                    "vhdl",
+                    "--gate-level",
+                ],
+                label="native VHDL testbench opt-in gate handling",
+                capture=True,
             )
+            if (
+                native_vhdl_result.returncode == 0
+                and "GATE SKIPPED" not in native_vhdl_result.stdout
+            ):
+                fixture.failures.append(
+                    "native VHDL testbench did not report its gate skip"
+                )
         runner.failures.extend(fixture.failures)
 
 
@@ -3315,6 +3347,17 @@ def main() -> int:
                 + ", ".join(metadata.synth_formats)
             )
 
+        tool_modules = selected_modules
+        tool_tests = selected_tests
+        vhdl_available = command_available(runner, "ghdl")
+        if args.portable_tools:
+            tool_modules, tool_tests = select_portable_tool_work(
+                runner,
+                selected_modules,
+                selected_tests,
+                module_languages,
+            )
+
         print(
             f"Discovered {len(inventory['modules'])} modules and {len(tests)} tests; "
             f"selected {len(selected_modules)} modules and {len(selected_tests)} tests; "
@@ -3357,14 +3400,14 @@ def main() -> int:
                     runner, portable_tools=args.portable_tools
                 )
             elif phase == "tests":
-                if selected_tests:
-                    validate_tests(runner, selected_tests, seed=args.seed)
+                if tool_tests:
+                    validate_tests(runner, tool_tests, seed=args.seed)
                 if not generated_starter_coverage_done:
                     validate_discovered_starter_tests(
                         runner,
                         metadata,
-                        selected_modules,
-                        selected_tests,
+                        tool_modules,
+                        tool_tests,
                         seed=args.seed,
                         all_formats=args.all_wave_formats,
                     )
@@ -3372,7 +3415,12 @@ def main() -> int:
                 if not selected_tests and not selected_modules:
                     runner.failures.append("inventory contains no simulation candidates")
                 if not args.module and not args.test_index:
-                    validate_starter_tests(runner)
+                    validate_starter_tests(
+                        runner,
+                        vhdl_available=(
+                            vhdl_available or not args.portable_tools
+                        ),
+                    )
                     validate_escaped_identifier_fixture(runner)
                     validate_failure_aggregation(runner)
             elif phase == "waves":
@@ -3380,19 +3428,19 @@ def main() -> int:
                     validate_discovered_starter_tests(
                         runner,
                         metadata,
-                        selected_modules,
-                        selected_tests,
+                        tool_modules,
+                        tool_tests,
                         seed=args.seed,
                         all_formats=args.all_wave_formats,
                     )
                     generated_starter_coverage_done = True
                 if not selected_tests and not selected_modules:
                     runner.failures.append("inventory contains no waveform candidates")
-                elif selected_tests:
+                elif tool_tests:
                     validate_waves(
                         runner,
                         metadata,
-                        selected_tests,
+                        tool_tests,
                         seed=args.seed,
                         all_formats=args.all_wave_formats,
                     )
@@ -3400,7 +3448,7 @@ def main() -> int:
                 validate_lint(
                     runner,
                     metadata,
-                    selected_modules,
+                    tool_modules,
                     module_languages,
                     portable_tools=args.portable_tools,
                 )
@@ -3408,7 +3456,7 @@ def main() -> int:
                 validate_synthesis(
                     runner,
                     metadata,
-                    selected_modules,
+                    tool_modules,
                     output_format=args.synth_format,
                     schematic=args.synth_schematic,
                     option_matrix=args.synth_option_matrix,
@@ -3419,12 +3467,13 @@ def main() -> int:
                     runner, portable_tools=args.portable_tools
                 )
             elif phase == "fpga":
-                validate_fpga(
-                    runner,
-                    metadata,
-                    selected_modules,
-                    portable_tools=args.portable_tools,
-                )
+                if tool_modules:
+                    validate_fpga(
+                        runner,
+                        metadata,
+                        tool_modules,
+                        portable_tools=args.portable_tools,
+                    )
             elif phase == "clean":
                 validate_clean(runner, metadata)
 

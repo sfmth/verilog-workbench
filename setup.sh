@@ -260,7 +260,8 @@ if [[ ${#OPTIONAL_PACKAGES[@]} -gt 0 ]]; then
             ;;
         fedora)
             run_command "${SUDO[@]}" dnf install -y \
-                --setopt=install_weak_deps=False "${OPTIONAL_PACKAGES[@]}" || \
+                --setopt=install_weak_deps=False --skip-broken \
+                "${OPTIONAL_PACKAGES[@]}" || \
                 optional_install_failed=true
             ;;
         arch)

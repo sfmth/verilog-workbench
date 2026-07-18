@@ -76,6 +76,11 @@ class SetupScriptTests(unittest.TestCase):
         source = DOCKERFILE.read_text(encoding="utf-8")
         self.assertIn("FROM ubuntu:24.04", source)
         self.assertIn("python3-dev", source)
+        self.assertNotIn("libgvplugin-neato-layout8", source)
+
+    def test_fedora_skips_broken_optional_packages(self):
+        source = SETUP.read_text(encoding="utf-8")
+        self.assertIn("--setopt=install_weak_deps=False --skip-broken", source)
 
     def test_ci_runs_supported_distros_in_parallel_and_focuses_on_png(self):
         ci = CI_WORKFLOW.read_text(encoding="utf-8")
