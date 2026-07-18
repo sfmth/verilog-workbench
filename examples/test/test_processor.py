@@ -16,7 +16,7 @@ async def reset(dut):
 
 @cocotb.test()
 async def test_pwm(dut):
-    clock = Clock(dut.clk, 10, units="us")
+    clock = Clock(dut.clk, 10, "us")
     cocotb.fork(clock.start())
     await reset(dut)
     # dut.src_a.value = 45
@@ -35,24 +35,24 @@ async def test_pwm(dut):
         # set pwm to this level
         # await FallingEdge(dut.clk)
         # dut.alu_control.value = i
-        # await Timer(1, units='us')
+        # await Timer(1, 'us')
 
 
         for j in range(0,100):
             if (data[j]==i):
                 dut.stall.value = 1
                 # await ClockCycles(dut.clk, delay[j])
-                await Timer(3*delay[j], units='us')
+                await Timer(3*delay[j], 'us')
                 dut.stall.value = 0
 
 
         # data = random.randint(0, 4294967295)
         # dut.write_data.value = data
-        # await Timer(1000, units='ps')
+        # await Timer(1000, 'ps')
         # wait pwm level clock steps
 
         # await ClockCycles(dut.clk, 1)
-        await Timer(random.randint(1, 20), units='us')
+        await Timer(random.randint(1, 20), 'us')
 
         # assert still high
         # if (i != 0):

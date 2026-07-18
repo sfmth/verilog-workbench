@@ -176,23 +176,36 @@ GTKWave, NetlistSVG, Graphviz, Inkscape, formal tools, and supported FPGA tools.
 The stable `vwb` command and Bash Tab completion are enabled inside the
 container. Run `./run-docker.sh --help` to see its container option.
 
-### Local Ubuntu Or Debian
+### Local Linux
 
-The local installer adds the core simulator first and then installs optional
-tools that are available for the operating system and CPU:
+The local installer supports Ubuntu 24.04 and later, Debian, Fedora, Arch Linux,
+and common distributions based on those families. It asks the system package
+manager for tools first, so package names and versions follow your Linux
+release instead of being fixed inside VWB:
 
 ```sh
 git clone https://github.com/sfmth/verilog-workbench.git
 cd verilog-workbench
 ./setup.sh
-source ~/.bashrc
+# Start a new terminal after setup finishes, then run:
 vwb doctor
 ```
 
-`setup.sh` also makes `~/.local/bin` permanent in Bash, creates the `vwb`
-command, and enables terminal Tab completion. Optional tools can have different
-packages on different Linux releases. Doctor shows what is available, what is
-needed by the current project, and whether Docker is the simpler route.
+The default is a small core install for Verilog and common SystemVerilog. Use
+`./setup.sh --full` when you also want every available VHDL, lint, synthesis,
+schematic, formal, and FPGA tool. Optional packages that your release does not
+provide are skipped without breaking the core install.
+
+On Arch, the script uses official `pacman` packages first and can then use
+`paru` or `yay` for missing AUR packages. On every supported system, Cocotb and
+Tab completion use an isolated user Python environment only when the system
+package manager does not provide them. Run `./setup.sh --dry-run` to inspect the
+planned package commands without changing the computer.
+
+The script makes the `vwb` command and terminal Tab completion permanent for
+Bash, Zsh, or Fish. Start a new terminal after it finishes. Doctor shows what
+is available, what the current project needs, and which advanced features are
+still optional.
 
 ## Starting Your Own Project
 

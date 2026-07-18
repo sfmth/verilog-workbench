@@ -86,7 +86,7 @@ async def reset(dut):
 
 @cocotb.test()
 async def test_all(dut):
-    clock = Clock(dut.clk, 10, units="us")
+    clock = Clock(dut.clk, 10, "us")
 
     cocotb.fork(clock.start())
     dut.shift.value = 1

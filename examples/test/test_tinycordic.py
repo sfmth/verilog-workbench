@@ -11,9 +11,9 @@ async def clock_cycles(dut, io_value, count):
     """Pulse bit 0 of io_in while leaving reset and the angle unchanged."""
     for _ in range(count):
         dut.io_in.value = io_value & ~1
-        await Timer(CLOCK_HALF_PERIOD_US, units="us")
+        await Timer(CLOCK_HALF_PERIOD_US, "us")
         dut.io_in.value = io_value | 1
-        await Timer(CLOCK_HALF_PERIOD_US, units="us")
+        await Timer(CLOCK_HALF_PERIOD_US, "us")
 
 
 @cocotb.test()

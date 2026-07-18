@@ -1837,6 +1837,10 @@ class Workbench:
         self.tests = self._discover_tests()
         self._cocotb_library: tuple[str, str] | None = None
         self._ghdl_vpi_library: str | None = None
+        self._cocotb_runtime: dict[str, str] = {
+            "PYGPI_PYTHON_BIN": sys.executable,
+        }
+        self._cocotb_runtime_loaded = False
 
     def style(
         self, value: object, *codes: str, stream: TextIO | None = None
@@ -2021,19 +2025,19 @@ class Workbench:
             "        _vwb_initialize(_vwb_signal(dut, name))\n"
             + (
                 "\n    cocotb.start_soon(Clock("
-                f"_vwb_signal(dut, {clock!r}), 10, units=\"ns\").start(start_high=False))\n"
+                f"_vwb_signal(dut, {clock!r}), 10, \"ns\").start(start_high=False))\n"
                 if clock
                 else ""
             )
             + (
                 f"\n    reset = _vwb_signal(dut, {reset!r})\n"
                 f"    reset.value = {0 if reset_active_low else 1}\n"
-                "    await Timer(10, units=\"ns\")\n"
+                "    await Timer(10, \"ns\")\n"
                 f"    reset.value = {1 if reset_active_low else 0}\n"
                 if reset
                 else ""
             )
-            + "\n    await Timer(10, units=\"ns\")\n"
+            + "\n    await Timer(10, \"ns\")\n"
         )
 
     def _verilog_starter(self, module: str) -> tuple[str, str]:
@@ -2354,6 +2358,22 @@ class Workbench:
             raise VWBError(f"command failed: {shlex.join(command)}: {detail}")
         return result.stdout.strip()
 
+    def _load_cocotb_runtime(self) -> None:
+        if self._cocotb_runtime_loaded:
+            return
+        self._cocotb_runtime_loaded = True
+        if self.dry_run:
+            return
+        config = self.require_tool("cocotb-config")
+        for option, variable in (
+            ("--python-bin", "PYGPI_PYTHON_BIN"),
+            ("--libpython", "LIBPYTHON_LOC"),
+        ):
+            result = self.run([config, option], capture=True)
+            value = result.stdout.strip() if result.returncode == 0 else ""
+            if value:
+                self._cocotb_runtime[variable] = value
+
     def cocotb_library(self) -> tuple[str, str]:
         if self._cocotb_library is None:
             if self.dry_run:
@@ -2362,6 +2382,7 @@ class Workbench:
                     "<cocotb-vpi-library>",
                 )
                 return self._cocotb_library
+            self._load_cocotb_runtime()
             lib_dir = self.capture_tool(["cocotb-config", "--lib-dir"])
             lib_name = self.capture_tool(
                 ["cocotb-config", "--lib-name", "vpi", "icarus"]
@@ -2376,6 +2397,7 @@ class Workbench:
             if self.dry_run:
                 self._ghdl_vpi_library = "<cocotb-ghdl-vpi-library>"
             else:
+                self._load_cocotb_runtime()
                 self._ghdl_vpi_library = self.capture_tool(
                     ["cocotb-config", "--lib-name-path", "vpi", "ghdl"]
                 )
@@ -3001,6 +3023,7 @@ class Workbench:
                 "TOPLEVEL_LANG": top_language,
                 "COCOTB_RESULTS_FILE": str(results_file),
                 "PYTHONDONTWRITEBYTECODE": "1",
+                **self._cocotb_runtime,
             }
         )
         python_path = environment.get("PYTHONPATH", "")
@@ -5612,7 +5635,8 @@ def command_doctor(workbench: Workbench, args: argparse.Namespace) -> int:
             )
         if missing_required or missing_optional:
             print(workbench.style("Install missing tools:", Ansi.BOLD, Ansi.CYAN))
-            print("  Local Ubuntu/Debian: ./setup.sh")
+            print("  Local Linux core tools: ./setup.sh")
+            print("  Local Linux complete tools: ./setup.sh --full")
             print("  Docker (complete tool set): ./run-docker.sh")
             print("  Then run 'vwb doctor' again.")
     return 0 if all(find_tool(command) for command in required_commands) else 1

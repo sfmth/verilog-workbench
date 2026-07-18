@@ -643,6 +643,8 @@ class TestDiscoveryTests(unittest.TestCase):
             content = specs[0].path.read_text(encoding="utf-8")
             self.assertIn("INPUTS = ('clk', 'reset_n', 'data_in')", content)
             self.assertIn("Clock(_vwb_signal(dut, 'clk'), 10", content)
+            self.assertIn('10, "ns"', content)
+            self.assertNotIn("units=", content)
             self.assertIn("reset = _vwb_signal(dut, 'reset_n')", content)
             self.assertIn("reset.value = 0", content)
             self.assertIn("reset.value = 1", content)
@@ -673,7 +675,7 @@ class TestDiscoveryTests(unittest.TestCase):
             _top, verilog_content = workbench._verilog_starter("dut")
 
             self.assertNotIn("reset = _vwb_signal", content)
-            self.assertEqual(content.count('Timer(10, units="ns")'), 1)
+            self.assertEqual(content.count('Timer(10, "ns")'), 1)
             self.assertNotIn("Clock(", content)
             self.assertIn("#10 $finish", verilog_content)
             for name in (
@@ -888,6 +890,7 @@ class TestDiscoveryTests(unittest.TestCase):
             )
             self.assertEqual(environment["TOPLEVEL"], "work.odd.name")
             self.assertEqual(environment["COCOTB_TOPLEVEL"], "odd.name")
+            self.assertEqual(environment["PYGPI_PYTHON_BIN"], vwb.sys.executable)
 
             success = vwb.subprocess.CompletedProcess([], 0, "", "")
             with (
@@ -913,6 +916,38 @@ class TestDiscoveryTests(unittest.TestCase):
             dump = root / "dump.v"
             workbench._write_dump_module(dump, "\\odd.name", root / "wave.vcd")
             self.assertIn("$dumpvars(0, \\odd.name );", dump.read_text())
+
+    def test_cocotb_runtime_settings_accept_old_and_new_config_interfaces(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.write(root, "src/dut.v", "module dut; endmodule\n")
+            self.write(root, "test/.gitkeep", "")
+            workbench = self.make_workbench(root)
+
+            def config_result(command: list[str], **_kwargs: object) -> object:
+                if command[-1] == "--python-bin":
+                    return SimpleNamespace(
+                        returncode=0, stdout="/opt/cocotb/bin/python\n", stderr=""
+                    )
+                return SimpleNamespace(
+                    returncode=2, stdout="", stderr="unknown option --libpython"
+                )
+
+            with (
+                mock.patch.object(
+                    workbench,
+                    "require_tool",
+                    return_value="/opt/cocotb/bin/cocotb-config",
+                ),
+                mock.patch.object(workbench, "run", side_effect=config_result),
+            ):
+                workbench._load_cocotb_runtime()
+
+            self.assertEqual(
+                workbench._cocotb_runtime["PYGPI_PYTHON_BIN"],
+                "/opt/cocotb/bin/python",
+            )
+            self.assertNotIn("LIBPYTHON_LOC", workbench._cocotb_runtime)
 
     def test_generated_native_starter_sanitizes_an_escaped_top(self):
         with tempfile.TemporaryDirectory() as directory:

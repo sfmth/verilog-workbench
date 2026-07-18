@@ -31,7 +31,7 @@ async def run_encoder_test(encoder, dut_enc, max_count):
 
 @cocotb.test()
 async def test_all(dut):
-    clock = Clock(dut.clk, 10, units="us")
+    clock = Clock(dut.clk, 10, "us")
     encoder0 = Encoder(dut.clk, dut.enc0_a, dut.enc0_b, clocks_per_phase = clocks_per_phase, noise_cycles = clocks_per_phase / 4)
     encoder1 = Encoder(dut.clk, dut.enc1_a, dut.enc1_b, clocks_per_phase = clocks_per_phase, noise_cycles = clocks_per_phase / 4)
     encoder2 = Encoder(dut.clk, dut.enc2_a, dut.enc2_b, clocks_per_phase = clocks_per_phase, noise_cycles = clocks_per_phase / 4)
@@ -58,14 +58,14 @@ async def test_all(dut):
     # sample after a clock instead of treating an output glitch as a real edge.
     for _ in range(max_count * 2):
         await RisingEdge(dut.clk)
-        await Timer(1, units="ns")
+        await Timer(1, "ns")
         if not int(dut.pwm0_out) and not int(dut.pwm1_out) and not int(dut.pwm2_out):
             break
     else:
         assert False, "PWM outputs never reached their synchronized low clock"
 
     await RisingEdge(dut.clk)
-    await Timer(1, units="ns")
+    await Timer(1, "ns")
 
     # A level of 255 stays high for the next 255 clocks.
     for i in range(max_count):
@@ -74,4 +74,4 @@ async def test_all(dut):
         assert dut.pwm2_out == 1
         if i + 1 < max_count:
             await RisingEdge(dut.clk)
-            await Timer(1, units="ns")
+            await Timer(1, "ns")

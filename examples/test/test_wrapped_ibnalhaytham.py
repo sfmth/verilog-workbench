@@ -22,22 +22,22 @@ async def reset(dut):
 async def la_inst_mem(dut, inst, delay, unit):
 
     while True:
-        await Timer(random.randint(11, delay), units=unit)
+        await Timer(random.randint(11, delay), unit)
         
         # await RisingEdge(dut.clk)
         print(int(bin(dut.la1_data_out.value),2))
         # print(int(dut.la1_data_out.value,2))
         # if (dut.la1_data_out.value != 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'):
         dut.la1_data_in.value = int_16(inst[int(int_2(dut.la1_data_out.value)/4)])
-        await Timer(random.randint(11, delay), units=unit)
+        await Timer(random.randint(11, delay), unit)
         dut.la1_oenb.value = 0
-        await Timer(random.randint(11, delay), units=unit)
+        await Timer(random.randint(11, delay), unit)
         # while True:
         #     in_1 = dut.la1_data_out.value
-        #     await Timer(random.randint(0, delay), units=unit)
+        #     await Timer(random.randint(0, delay), unit)
         #     if (in_1 != dut.la1_data_out.value):
         #         break
-        # await Timer(random.randint(0, delay), units=unit)
+        # await Timer(random.randint(0, delay), unit)
         dut.la1_oenb.value = 1
 
 # async def set_write(i):
@@ -52,11 +52,11 @@ async def test_pwm(dut):
     dut.la1_oenb.value = 1
     dut.active.value = 1
 
-    await Timer(10, units='us')
+    await Timer(10, 'us')
 
     dut.io_in[11].value = 1 # set clock input
     dut.io_in[12].value = 0
-    clock = Clock(dut.wb_clk_i, 10, units="us")
+    clock = Clock(dut.wb_clk_i, 10, "us")
     cocotb.fork(clock.start())
 
     dut.io_in[8].value = 1 # set inst_mem mode
@@ -113,14 +113,14 @@ async def test_pwm(dut):
         # set pwm to this level
         # await FallingEdge(dut.clk)
         # # dut.address_1.value = i
-        # await Timer(1, units='us')
+        # await Timer(1, 'us')
         # # dut.address_2.value = i
-        # await Timer(1, units='us')
+        # await Timer(1, 'us')
         # dut.address_3.value = i
-        # await Timer(1, units='us')
+        # await Timer(1, 'us')
         # data = random.randint(0, 4294967295)
         # dut.write_data.value = data
-        # await Timer(1000, units='ps')
+        # await Timer(1000, 'ps')
         # wait pwm level clock steps
         await ClockCycles(dut.wb_clk_i, 5)
         # if (i > 150):

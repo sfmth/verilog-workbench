@@ -9,4 +9,4 @@ async def test_elaborates(dut):
     dut.la1_oenb.value = 0
     dut.io_in.value = 0
     dut.user_clock2.value = 0
-    await Timer(1, units="ns")
+    await Timer(1, "ns")

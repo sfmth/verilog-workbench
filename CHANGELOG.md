@@ -54,6 +54,17 @@ All notable changes to Verilog Workbench are recorded here.
   simulation is an opt-in extra check enabled with `--gate-level`.
 - External tools are quiet by default. Successful tool transcripts are hidden,
   failures show a short diagnostic tail, and `--verbose` shows full output.
+- Local setup now supports Ubuntu 24.04 and later, Debian, Fedora, Arch, and
+  related distributions. It installs a small core tool set by default, offers
+  advanced tools through `setup.sh --full`, asks the system package manager
+  first, and uses `paru` or `yay` as the Arch AUR fallback.
+- Cocotb and Argcomplete are no longer tied to one exact release. Distribution
+  packages are preferred; an isolated user environment accepts compatible
+  release ranges when those packages are unavailable. Generated tests and the
+  simulator environment work with both Cocotb 1.x and 2.x names.
+- Removed the Python development headers and direct pinned binary/source
+  installers from the normal local setup. Missing optional tools now stay
+  optional instead of making the core install fail.
 - `doctor` now marks only the tools needed by the current project as required,
   labels the rest as optional, and gives local and Docker installation steps.
 - Focused the README on the introduction, features, guided first project,

@@ -11,7 +11,7 @@ async def reset(dut):
 
 @cocotb.test()
 async def test_pwm(dut):
-    clock = Clock(dut.clk, 10, units="us")
+    clock = Clock(dut.clk, 10, "us")
     cocotb.fork(clock.start())
     
     # test a range of values

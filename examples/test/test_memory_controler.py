@@ -30,13 +30,13 @@ async def rambus(dut):
 async def la_inst_mem(dut):
     dut.io_in.value = 3
     while True:
-        await Timer(random.randint(0, 100), units='us')
+        await Timer(random.randint(0, 100), 'us')
         
         # await RisingEdge(dut.clk)
         dut.la_data_in.value = dut.inst_mem_addr.value
-        await Timer(random.randint(0, 100), units='us')
+        await Timer(random.randint(0, 100), 'us')
         dut.la_oenb.value = 0
-        await Timer(random.randint(0, 100), units='us')
+        await Timer(random.randint(0, 100), 'us')
         dut.la_oenb.value = 1
         # else:
             # dut.rambus_wb_ack_i.value = 0
@@ -49,7 +49,7 @@ async def la_inst_mem(dut):
 
 @cocotb.test()
 async def test_pwm(dut):
-    clock = Clock(dut.clk, 10, units="us")
+    clock = Clock(dut.clk, 10, "us")
     cocotb.fork(clock.start())
     await reset(dut)
     # dut.src_a.value = 45
@@ -68,7 +68,7 @@ async def test_pwm(dut):
         # set pwm to this level
         # await FallingEdge(dut.clk)
         # dut.alu_control.value = i
-        # await Timer(1, units='us')
+        # await Timer(1, 'us')
 
 
         # for j in range(0,100):
@@ -80,7 +80,7 @@ async def test_pwm(dut):
 
         # data = random.randint(0, 4294967295)
         # dut.write_data.value = data
-        # await Timer(1000, units='ps')
+        # await Timer(1000, 'ps')
         # wait pwm level clock steps
         await ClockCycles(dut.clk, 1)
 

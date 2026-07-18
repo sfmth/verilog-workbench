@@ -43,7 +43,7 @@ async def convert_values(dut):
         dut.read_x.value = text_to_decimal(str(round(int_to_value(sgined_bin_to_int(dut.reg_x.value)), 2)))
         dut.read_y.value = text_to_decimal(str(round(int_to_value(sgined_bin_to_int(dut.reg_y.value)), 2)))
         dut.read_z.value = text_to_decimal(str(round(int_to_angle(sgined_bin_to_int(dut.reg_z.value)), 2)))
-        await Timer(1, units='us')
+        await Timer(1, 'us')
 
 def shift_add_mult(beta, potential):
     potential_2 = int(potential/2) # >> 1
@@ -80,8 +80,8 @@ def shift_add_mult(beta, potential):
 @cocotb.test()
 async def test_shift_add_mult(dut):
     # dut.io_in.value = 0 # initialize
-    # await Timer(10, units='us')
-    clock = Clock(dut.clk, 10, units="us")
+    # await Timer(10, 'us')
+    clock = Clock(dut.clk, 10, "us")
     cocotb.fork(clock.start())
     
     # await reset(dut) # reset
@@ -116,7 +116,7 @@ async def test_shift_add_mult(dut):
             # await ClockCycles(dut.clk, 20)
         #     dut.beta.value = i
         #     dut.potential.value = j
-        #     await Timer(10, units='us')
+        #     await Timer(10, 'us')
         #     assert(shift_add_mult(i, j) == bin_to_int(dut.mult_ans.value))
             
         
@@ -135,14 +135,14 @@ async def test_shift_add_mult(dut):
         # set pwm to this level
         # await FallingEdge(dut.clk)
         # # dut.address_1.value = i
-        # await Timer(1, units='us')
+        # await Timer(1, 'us')
         # # dut.address_2.value = i
-        # await Timer(1, units='us')
+        # await Timer(1, 'us')
         # dut.address_3.value = i
-        # await Timer(1, units='us')
+        # await Timer(1, 'us')
         # data = random.randint(0, 4294967295)
         # dut.write_data.value = data
-        # await Timer(1000, units='ps')
+        # await Timer(1000, 'ps')
         # wait pwm level clock steps
         
 

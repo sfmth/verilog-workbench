@@ -28,7 +28,7 @@ async def reset(dut):
 
 @cocotb.test()
 async def test_debouncer(dut):
-    clock = Clock(dut.clk, 10, units="us")
+    clock = Clock(dut.clk, 10, "us")
     clocks_per_phase = 10
     switch = BouncingSwitch(dut)
     cocotb.fork(clock.start())

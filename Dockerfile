@@ -53,7 +53,6 @@ RUN sudo apt-get update \
         iverilog \
         libgvplugin-neato-layout8 \
         librsvg2-bin \
-        libpython3-dev \
         make \
         nextpnr-gowin \
         nextpnr-ice40 \
@@ -67,7 +66,10 @@ RUN sudo apt-get update \
         verilator \
         yosys \
     && sudo rm -rf /var/lib/apt/lists/*
-RUN pip install --break-system-packages argcomplete==3.6.3 cocotb==1.7.2 apycula click bitstring numpy pillow
+RUN pip install --break-system-packages \
+        "argcomplete>=3,<5" \
+        "cocotb>=1.9,<3" \
+        apycula bitstring click numpy pillow
 
 ARG SV2V_VERSION=v0.0.13
 ARG SV2V_REV=e5effb5e1ea4e0cf9b4af2c769d364e0ed4b6d84

@@ -13,7 +13,7 @@ async def add_with_carry(dut):
     for left, right, expected_sum, expected_carry in examples:
         dut.left.value = left
         dut.right.value = right
-        await Timer(1, units="ns")
+        await Timer(1, "ns")
 
         assert int(dut.sum.value) == expected_sum
         assert int(dut.carry.value) == expected_carry

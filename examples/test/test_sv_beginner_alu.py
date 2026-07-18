@@ -15,7 +15,7 @@ async def check_alu_operations(dut):
         dut.operation.value = operation
         dut.left.value = left
         dut.right.value = right
-        await Timer(1, units="ns")
+        await Timer(1, "ns")
 
         assert int(dut.result.value) == expected_result
         assert int(dut.carry.value) == expected_carry
