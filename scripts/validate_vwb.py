@@ -61,6 +61,22 @@ REPRESENTATIVE_MODULES: dict[str, str] = {
     "vhdl_beginner_counter": "VHDL entity and architecture split across files",
 }
 
+LINTER_COMMANDS = {
+    "iverilog": ("iverilog",),
+    "verilator": ("verilator",),
+    "yosys": ("yosys",),
+    "verible": ("verible-verilog-lint",),
+    "ghdl": ("ghdl",),
+}
+
+FPGA_PACK_COMMANDS = {
+    "gowin": (
+        ("nextpnr-himbaechel-gowin", "nextpnr-himbaechel", "nextpnr-gowin"),
+        ("gowin_pack",),
+    ),
+    "ice40": (("nextpnr-ice40",), ("icepack",)),
+}
+
 
 class HarnessError(RuntimeError):
     """Raised when the harness cannot construct a meaningful validation run."""
@@ -737,6 +753,35 @@ def applicable_linters(metadata: CliMetadata, language: str) -> tuple[str, ...]:
         else {"all", "iverilog", "verilator", "yosys", "verible"}
     )
     return tuple(linter for linter in metadata.linters if linter in supported)
+
+
+def command_available(runner: Runner, command: str) -> bool:
+    return shutil.which(command, path=runner.environment.get("PATH")) is not None
+
+
+def alternatives_available(runner: Runner, commands: Sequence[str]) -> bool:
+    return any(command_available(runner, command) for command in commands)
+
+
+def linter_available(runner: Runner, linter: str) -> bool:
+    commands = LINTER_COMMANDS.get(linter)
+    return commands is None or all(
+        command_available(runner, command) for command in commands
+    )
+
+
+def fpga_pack_available(runner: Runner, family: str) -> bool:
+    command_groups = FPGA_PACK_COMMANDS.get(family, ())
+    return bool(command_groups) and all(
+        alternatives_available(runner, commands) for commands in command_groups
+    )
+
+
+def report_optional_skip(label: str, missing: Sequence[str]) -> None:
+    print(
+        f"SKIP {label}: optional tools unavailable: {', '.join(sorted(missing))}",
+        file=sys.stderr,
+    )
 
 
 def matrix_document(
@@ -1534,7 +1579,7 @@ def validate_dry_runs(
             )
 
 
-def validate_doctor(runner: Runner) -> None:
+def validate_doctor(runner: Runner, *, portable_tools: bool = False) -> None:
     result = runner.run_vwb(
         ["doctor", "--json"],
         label="toolchain doctor",
@@ -1558,10 +1603,13 @@ def validate_doctor(runner: Runner) -> None:
         if not path
     ]
     if missing:
-        runner.failures.append(
-            "doctor reports tools missing from the exhaustive CI image: "
-            + ", ".join(sorted(missing))
-        )
+        if portable_tools:
+            report_optional_skip("doctor optional-tool audit", missing)
+        else:
+            runner.failures.append(
+                "doctor reports tools missing from the exhaustive CI image: "
+                + ", ".join(sorted(missing))
+            )
 
 
 def validate_tests(runner: Runner, tests: Sequence[TestCase], seed: int) -> None:
@@ -2184,6 +2232,8 @@ def validate_lint(
     metadata: CliMetadata,
     modules: Sequence[str],
     module_languages: dict[str, str],
+    *,
+    portable_tools: bool = False,
 ) -> None:
     for module in modules:
         result = runner.run_vwb(
@@ -2207,11 +2257,21 @@ def validate_lint(
         )
         if result.returncode != 0:
             continue
-        tools = [
+        applicable_tools = [
             tool
             for tool in applicable_linters(metadata, module_languages[module])
             if tool != "all"
         ]
+        tools = [
+            tool
+            for tool in applicable_tools
+            if not portable_tools or linter_available(runner, tool)
+        ]
+        missing_tools = sorted(set(applicable_tools) - set(tools))
+        if missing_tools:
+            report_optional_skip(
+                f"lint backends for {module}", missing_tools
+            )
         module_artifact = runner.artifact_component(module)
         for tool in tools:
             if f"with {tool}" not in result.stdout:
@@ -2229,7 +2289,9 @@ def validate_lint(
                     runner.failures.append(
                         f"Yosys lint did not keep its full transcript: {yosys_log}"
                     )
-        if module_languages[module] != "vhdl":
+        if module_languages[module] != "vhdl" and (
+            not portable_tools or linter_available(runner, "verible")
+        ):
             style = runner.run_vwb(
                 [
                     "lint",
@@ -2581,7 +2643,16 @@ def validate_synthesis_fixture(runner: Runner) -> None:
         runner.failures.extend(fixture.failures)
 
 
-def validate_formal(runner: Runner) -> None:
+def validate_formal(runner: Runner, *, portable_tools: bool = False) -> None:
+    formal_commands = ("sby", "yosys", "z3")
+    missing = [
+        command
+        for command in formal_commands
+        if not command_available(runner, command)
+    ]
+    if portable_tools and missing:
+        report_optional_skip("formal proof", missing)
+        return
     with tempfile.TemporaryDirectory(prefix="vwb-formal-smoke-") as directory:
         root = Path(directory)
         source = root / "formal_smoke.sv"
@@ -2618,7 +2689,11 @@ def validate_formal(runner: Runner) -> None:
 
 
 def validate_fpga(
-    runner: Runner, metadata: CliMetadata, modules: Sequence[str]
+    runner: Runner,
+    metadata: CliMetadata,
+    modules: Sequence[str],
+    *,
+    portable_tools: bool = False,
 ) -> None:
     if not modules:
         runner.failures.append("FPGA validation has no discovered module")
@@ -2694,6 +2769,16 @@ def validate_fpga(
             family = {"tangnano9k": "gowin", "icebreaker": "ice40"}.get(
                 board, board
             )
+            if portable_tools and not fpga_pack_available(runner, family):
+                report_optional_skip(
+                    f"bundled FPGA place-route-pack for {board}",
+                    [
+                        "/".join(commands)
+                        for commands in FPGA_PACK_COMMANDS.get(family, ())
+                        if not alternatives_available(runner, commands)
+                    ],
+                )
+                continue
             result = runner.run_vwb(
                 [
                     "fpga",
@@ -2721,10 +2806,17 @@ def validate_fpga(
                     f"missing bundled FPGA artifact for {board}: {artifact}"
                 )
 
-    validate_fpga_pack_fixture(runner, metadata)
+    validate_fpga_pack_fixture(
+        runner, metadata, portable_tools=portable_tools
+    )
 
 
-def validate_fpga_pack_fixture(runner: Runner, metadata: CliMetadata) -> None:
+def validate_fpga_pack_fixture(
+    runner: Runner,
+    metadata: CliMetadata,
+    *,
+    portable_tools: bool = False,
+) -> None:
     with tempfile.TemporaryDirectory(prefix="vwb-fpga-fixture-") as directory:
         root = Path(directory) / "project with spaces"
         source = root / "source files"
@@ -2773,6 +2865,16 @@ def validate_fpga_pack_fixture(runner: Runner, metadata: CliMetadata) -> None:
             family = {"tangnano9k": "gowin", "icebreaker": "ice40"}.get(
                 board, board
             )
+            if portable_tools and not fpga_pack_available(runner, family):
+                report_optional_skip(
+                    f"FPGA pack fixture for {board}",
+                    [
+                        "/".join(commands)
+                        for commands in FPGA_PACK_COMMANDS.get(family, ())
+                        if not alternatives_available(fixture, commands)
+                    ],
+                )
+                continue
             constraints = (
                 gowin_constraints if family == "gowin" else ice40_constraints
             )
@@ -3087,6 +3189,14 @@ def parse_arguments() -> argparse.Namespace:
         help="limit tool-heavy phases to the reviewed 10-module CI profile",
     )
     parser.add_argument(
+        "--portable-tools",
+        action="store_true",
+        help=(
+            "skip optional backends unavailable from a distribution while "
+            "still requiring the main simulation and synthesis toolchain"
+        ),
+    )
+    parser.add_argument(
         "--test-index",
         action="append",
         type=int,
@@ -3243,7 +3353,9 @@ def main() -> int:
                     seed=args.seed,
                 )
             elif phase == "doctor":
-                validate_doctor(runner)
+                validate_doctor(
+                    runner, portable_tools=args.portable_tools
+                )
             elif phase == "tests":
                 if selected_tests:
                     validate_tests(runner, selected_tests, seed=args.seed)
@@ -3290,6 +3402,7 @@ def main() -> int:
                     metadata,
                     selected_modules,
                     module_languages,
+                    portable_tools=args.portable_tools,
                 )
             elif phase == "synth":
                 validate_synthesis(
@@ -3302,9 +3415,16 @@ def main() -> int:
                 )
                 validate_synthesis_fixture(runner)
             elif phase == "formal":
-                validate_formal(runner)
+                validate_formal(
+                    runner, portable_tools=args.portable_tools
+                )
             elif phase == "fpga":
-                validate_fpga(runner, metadata, selected_modules)
+                validate_fpga(
+                    runner,
+                    metadata,
+                    selected_modules,
+                    portable_tools=args.portable_tools,
+                )
             elif phase == "clean":
                 validate_clean(runner, metadata)
 

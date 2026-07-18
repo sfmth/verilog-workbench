@@ -108,11 +108,17 @@ All notable changes to Verilog Workbench are recorded here.
 
 ### CI/CD
 
-- GitHub Actions runs local-install smoke tests concurrently on Ubuntu 24.04,
-  Debian stable, current Fedora, and rolling Arch, then tests the documented
-  encoder flow with the tools installed by each distribution path.
-- GitHub Actions builds the Docker image and audits the complete discovered
-  example inventory, including every Python test source.
+- GitHub Actions installs the full distribution-managed toolchain and runs the
+  same main ten-module validation concurrently on Ubuntu 24.04, Debian stable,
+  current Fedora, and rolling Arch. This verifies each installation path with
+  real Verilog, SystemVerilog, VHDL, lint, waveform, synthesis, and PNG work.
+- Distribution validation skips a backend only when that distribution does not
+  provide its optional tool, while core simulation, VHDL, synthesis, rendering,
+  inventory, and regression checks remain required. Missing optional stages are
+  labeled as skips in the log.
+- GitHub Actions separately builds the complete Docker image and runs a strict
+  toolchain audit; release validation still runs the full representative suite
+  in the release image before publishing it.
 - Added software regression tests, generated-starter integration checks, both
   waveform formats, language coverage, lint and synthesis coverage, option
   contract checks, and CI-safe dry runs for GUI and hardware-only operations.

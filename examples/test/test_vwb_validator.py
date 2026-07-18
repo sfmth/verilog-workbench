@@ -278,6 +278,67 @@ class RepresentativeModuleSelectionTests(unittest.TestCase):
             )
 
 
+class PortableToolValidationTests(unittest.TestCase):
+    @staticmethod
+    def runner() -> validate_vwb.Runner:
+        root = Path(__file__).resolve().parents[2]
+        return validate_vwb.Runner(
+            root=root,
+            vwb=root / "vwb.py",
+            src_dir="examples/src",
+            test_dir="examples/test",
+            build_dir=root / ".vwb-portable-test",
+        )
+
+    def test_portable_doctor_allows_only_reported_optional_gaps(self):
+        report = {
+            "simulation": {"iverilog": "/usr/bin/iverilog"},
+            "lint": {"verible-verilog-lint": None},
+        }
+        result = validate_vwb.subprocess.CompletedProcess(
+            ["vwb", "doctor", "--json"], 0, validate_vwb.json.dumps(report), ""
+        )
+        portable = self.runner()
+        strict = self.runner()
+
+        with mock.patch.object(portable, "run_vwb", return_value=result):
+            validate_vwb.validate_doctor(portable, portable_tools=True)
+        with mock.patch.object(strict, "run_vwb", return_value=result):
+            validate_vwb.validate_doctor(strict)
+
+        self.assertEqual(portable.failures, [])
+        self.assertEqual(len(strict.failures), 1)
+        self.assertIn("verible-verilog-lint", strict.failures[0])
+
+    def test_fpga_pack_accepts_supported_nextpnr_alternatives(self):
+        runner = self.runner()
+        available = {"nextpnr-himbaechel", "gowin_pack", "nextpnr-ice40"}
+
+        def fake_which(command: str, *, path: str | None = None) -> str | None:
+            del path
+            return f"/usr/bin/{command}" if command in available else None
+
+        with mock.patch.object(validate_vwb.shutil, "which", side_effect=fake_which):
+            self.assertTrue(validate_vwb.fpga_pack_available(runner, "gowin"))
+            self.assertFalse(validate_vwb.fpga_pack_available(runner, "ice40"))
+
+    def test_portable_formal_skips_when_the_solver_is_unavailable(self):
+        runner = self.runner()
+
+        def fake_which(command: str, *, path: str | None = None) -> str | None:
+            del path
+            return f"/usr/bin/{command}" if command in {"sby", "yosys"} else None
+
+        with (
+            mock.patch.object(validate_vwb.shutil, "which", side_effect=fake_which),
+            mock.patch.object(runner, "run_vwb") as run_vwb,
+        ):
+            validate_vwb.validate_formal(runner, portable_tools=True)
+
+        run_vwb.assert_not_called()
+        self.assertEqual(runner.failures, [])
+
+
 class OptionSpellingAuditTests(unittest.TestCase):
     @staticmethod
     def metadata_and_runner() -> tuple[

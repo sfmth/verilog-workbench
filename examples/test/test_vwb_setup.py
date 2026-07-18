@@ -45,6 +45,8 @@ class SetupScriptTests(unittest.TestCase):
                 self.assertIn("iverilog", report)
                 self.assertIn("cocotb", report)
                 self.assertIn("Dry run complete", report)
+                if distro == "arch":
+                    self.assertIn("pacman -Sy --noconfirm", report)
 
     def test_full_install_requests_optional_tools(self):
         result = self.run_dry("fedora", "--full")
@@ -55,6 +57,9 @@ class SetupScriptTests(unittest.TestCase):
         self.assertIn("yosys", report)
         self.assertIn("gtkwave", report)
         self.assertIn("npm install --global netlistsvg", report)
+        self.assertIn("bitstring", report)
+        self.assertIn("numpy", report)
+        self.assertIn("pillow", report)
 
     def test_installer_has_no_pinned_download_fallbacks(self):
         source = SETUP.read_text(encoding="utf-8")
@@ -75,8 +80,12 @@ class SetupScriptTests(unittest.TestCase):
             "archlinux:latest",
         ):
             self.assertIn(f"image: {image}", ci)
-        self.assertIn("./setup.sh --no-aur", ci)
-        self.assertIn("test encoder --seed 1", ci)
+        self.assertIn("./setup.sh --full --no-aur", ci)
+        self.assertIn("--representative-modules", ci)
+        self.assertIn("--portable-tools", ci)
+        self.assertIn("--phase doctor", ci)
+        self.assertNotIn("test encoder --seed 1", ci)
+        self.assertNotIn("--portable-tools", release)
         for workflow in (ci, release):
             self.assertIn("--synth-format png", workflow)
             self.assertNotIn("--all-wave-formats", workflow)

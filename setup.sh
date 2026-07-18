@@ -168,11 +168,7 @@ note "Reading package information"
 case "$DISTRO_FAMILY" in
     debian) run_command "${SUDO[@]}" apt-get update ;;
     fedora) run_command "${SUDO[@]}" dnf -q makecache ;;
-    arch)
-        if [[ "$DRY_RUN" != true ]] && ! pacman -Si iverilog >/dev/null 2>&1; then
-            warn "pacman package information is missing or stale; the install step will refresh it"
-        fi
-        ;;
+    arch) run_command "${SUDO[@]}" pacman -Sy --noconfirm ;;
 esac
 
 PACKAGES=()
@@ -189,7 +185,8 @@ case "$DISTRO_FAMILY" in
             add_optional_packages \
                 boolector fpga-icestorm ghdl geeqie graphviz gtkwave inkscape \
                 librsvg2-bin nextpnr-gowin nextpnr-ice40 nodejs npm \
-                openfpgaloader symbiyosys verilator verible yosys z3 sv2v
+                openfpgaloader python3-bitstring python3-numpy python3-pil \
+                symbiyosys verilator verible yosys z3 sv2v
         fi
         ;;
     fedora)
@@ -204,7 +201,8 @@ case "$DISTRO_FAMILY" in
             add_optional_packages \
                 boolector ghdl geeqie graphviz gtkwave inkscape librsvg2-tools \
                 nextpnr nodejs npm openFPGALoader symbiyosys verilator \
-                verible yosys z3 sv2v icestorm
+                verible yosys z3 sv2v icestorm python3-bitstring python3-numpy \
+                python3-pillow
         fi
         ;;
     arch)
@@ -218,7 +216,8 @@ case "$DISTRO_FAMILY" in
         if [[ "$PROFILE" == full ]]; then
             add_optional_packages \
                 boolector ghdl geeqie graphviz gtkwave inkscape librsvg \
-                nextpnr nodejs npm openfpgaloader verilator yosys z3 icestorm
+                nextpnr nodejs npm openfpgaloader verilator yosys z3 icestorm \
+                python-bitstring python-numpy python-pillow
         fi
         ;;
 esac
@@ -339,6 +338,15 @@ if [[ "$DRY_RUN" == true ]] || ! command -v cocotb-config >/dev/null 2>&1; then
 fi
 if [[ "$DRY_RUN" == true ]] || ! command -v register-python-argcomplete >/dev/null 2>&1; then
     VENV_REQUIREMENTS+=("argcomplete>=3,<5")
+fi
+if [[ "$PROFILE" == full ]]; then
+    for dependency in "bitstring:bitstring" "numpy:numpy" "PIL:pillow"; do
+        module="${dependency%%:*}"
+        package="${dependency#*:}"
+        if [[ "$DRY_RUN" == true ]] || ! "$PYTHON" -c "import ${module}" >/dev/null 2>&1; then
+            VENV_REQUIREMENTS+=("$package")
+        fi
+    done
 fi
 if [[ ${#VENV_REQUIREMENTS[@]} -gt 0 ]]; then
     note "Installing missing Python tools in an isolated user environment"

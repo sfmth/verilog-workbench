@@ -13,10 +13,10 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  local-setup:
-    name: Local setup - ${{ matrix.name }}
+  distro-validation:
+    name: Main validation - ${{ matrix.name }}
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 360
     strategy:
       fail-fast: false
       matrix:
@@ -34,7 +34,7 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Install core tools and test the encoder
+      - name: Install the full distro toolchain and run main validation
         run: |
           docker run --rm \
             -v "$PWD:/workspace:ro" \
@@ -42,20 +42,16 @@ jobs:
             "${{ matrix.image }}" \
             bash -lc '
               set -euo pipefail
-              ./setup.sh --no-aur
+              ./setup.sh --full --no-aur
               export PATH="$HOME/.local/share/verilog-workbench/venv/bin:$HOME/.local/bin:$PATH"
-              vwb doctor
-              vwb \
-                --root /workspace \
-                --src-dir examples/src \
-                --test-dir examples/test \
-                --build-dir /tmp/vwb-distro-smoke \
-                --color never \
-                test encoder --seed 1
+              python3 scripts/validate_vwb.py \
+                --representative-modules \
+                --synth-format png \
+                --portable-tools
             '
 
-  validate:
-    name: Representative modules, PNG pipeline, CLI, and fixtures
+  container-image:
+    name: Build and verify the complete Docker toolchain
     runs-on: ubuntu-latest
     timeout-minutes: 360
 
@@ -75,10 +71,9 @@ jobs:
           cache-from: type=gha,scope=ci
           cache-to: type=gha,mode=max,scope=ci
 
-      - name: Validate representative modules and the PNG pipeline
+      - name: Verify the Docker toolchain
         run: |
           docker run --rm --network none \
             verilog-workbench-ci:${{ github.sha }} \
             python3 scripts/validate_vwb.py \
-              --representative-modules \
-              --synth-format png
+              --phase doctor
