@@ -100,18 +100,8 @@ class CommandLineConfigurationTests(unittest.TestCase):
                     with self.assertRaises(SystemExit):
                         self.parser.parse_args([command, "--kind", "verilog"])
 
-    def test_test_defaults_gate_on_and_wave_requires_an_explicit_gate_flag(self):
-        for command in ("test", "sim"):
-            with self.subTest(command=command):
-                self.assertTrue(self.parser.parse_args([command]).gate_level)
-                self.assertFalse(
-                    self.parser.parse_args([command, "--no-gate-level"]).gate_level
-                )
-                with contextlib.redirect_stderr(io.StringIO()):
-                    with self.assertRaises(SystemExit):
-                        self.parser.parse_args([command, "--gate-level"])
-
-        for command in ("wave", "gtkwave"):
+    def test_simulation_defaults_to_rtl_and_gate_level_is_opt_in(self):
+        for command in ("test", "sim", "wave", "gtkwave"):
             with self.subTest(command=command):
                 self.assertFalse(self.parser.parse_args([command]).gate_level)
                 self.assertTrue(
@@ -232,6 +222,46 @@ class CommandLineConfigurationTests(unittest.TestCase):
             self.assertIn("alternate_dut", output.getvalue())
             self.assertNotIn("configured_dut", output.getvalue())
 
+    def test_relative_cli_directories_use_the_current_working_directory(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / "rtl"
+            tests = root / "verification"
+            source.mkdir()
+            tests.mkdir()
+            (source / "cwd_dut.v").write_text(
+                "module cwd_dut; endmodule\n", encoding="ascii"
+            )
+
+            args = self.parser.parse_args(
+                ["--src-dir", "rtl", "--test-dir", "verification", "list"]
+            )
+            settings = vwb.resolve_project_settings(args, cwd=root)
+
+            self.assertEqual(settings.root, root.resolve())
+            self.assertEqual(
+                vwb.project_path(settings.root, settings.src_dir), source.resolve()
+            )
+
+            output = io.StringIO()
+            with (
+                mock.patch("vwb.Path.cwd", return_value=root),
+                contextlib.redirect_stdout(output),
+            ):
+                status = vwb.main(
+                    [
+                        "--src-dir",
+                        "rtl",
+                        "--test-dir",
+                        "verification",
+                        "--color",
+                        "never",
+                        "list",
+                    ]
+                )
+            self.assertEqual(status, 0)
+            self.assertIn("cwd_dut", output.getvalue())
+
     def test_init_rejects_overlapping_project_directories(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -323,7 +353,6 @@ class CommandLineConfigurationTests(unittest.TestCase):
                     "dut",
                     "--test-language",
                     "cocotb",
-                    "--no-gate-level",
                 ]
             )
             with (

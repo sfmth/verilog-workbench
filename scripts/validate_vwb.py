@@ -556,6 +556,11 @@ def read_inventory(runner: Runner) -> dict[str, Any]:
                 f"module {name!r} has unsupported language metadata {language!r}"
             )
         discovered_languages.add(language)
+        problems = module.get("problems", [])
+        if not isinstance(problems, list) or problems:
+            raise HarnessError(
+                f"module {name!r} has discovery problems: {problems!r}"
+            )
         for source in module.get("files", []):
             if not project_path(runner.root, source).is_file():
                 raise HarnessError(f"module {name!r} references missing source {source}")
@@ -578,6 +583,27 @@ def read_inventory(runner: Runner) -> dict[str, Any]:
                 raise HarnessError(
                     f"package {package_name!r} references missing source {source}"
                 )
+    for kind in ("interfaces", "primitives"):
+        unit_names: set[str] = set()
+        for unit in inventory.get(kind, []):
+            unit_name = unit.get("name")
+            if not isinstance(unit_name, str) or not unit_name:
+                raise HarnessError(f"inventory contains a {kind[:-1]} without a name")
+            if unit_name in unit_names:
+                raise HarnessError(
+                    f"inventory contains duplicate {kind[:-1]} {unit_name!r}"
+                )
+            unit_names.add(unit_name)
+            problems = unit.get("problems", [])
+            if not isinstance(problems, list) or problems:
+                raise HarnessError(
+                    f"{kind[:-1]} {unit_name!r} has discovery problems: {problems!r}"
+                )
+            for source in unit.get("files", []):
+                if not project_path(runner.root, source).is_file():
+                    raise HarnessError(
+                        f"{kind[:-1]} {unit_name!r} references missing source {source}"
+                    )
     return inventory
 
 
@@ -1239,23 +1265,33 @@ def validate_dry_runs(
                 "--plusarg=VWB_VALIDATION",
             ]
         )
-        runner.run_vwb(
+        default_result = runner.run_vwb(
             arguments,
             label=f"dry-run test {test.module}:{test.kind}",
             dry_run=True,
             capture=True,
         )
-        no_gate_arguments = explicit_test_arguments(test, seed=seed)
-        no_gate_arguments.append("--no-gate-level")
-        no_gate_result = runner.run_vwb(
-            no_gate_arguments,
-            label=f"dry-run no-gate simulation {test.module}:{test.kind}",
+        if any(
+            stage in default_result.stdout
+            for stage in ("GATE PASS", "GATE FAIL", "GATE SKIPPED")
+        ):
+            runner.failures.append(
+                f"default test unexpectedly ran the gate phase for {test.module}"
+            )
+        gate_arguments = explicit_test_arguments(test, seed=seed)
+        gate_arguments.append("--gate-level")
+        gate_result = runner.run_vwb(
+            gate_arguments,
+            label=f"dry-run gate simulation {test.module}:{test.kind}",
             dry_run=True,
             capture=True,
         )
-        if "GATE PASS" in no_gate_result.stdout:
+        expected_gate_stage = (
+            "GATE SKIPPED" if test.language == "vhdl" else "GATE PASS"
+        )
+        if expected_gate_stage not in gate_result.stdout:
             runner.failures.append(
-                f"--no-gate-level still ran the gate phase for {test.module}"
+                f"--gate-level did not report its stage for {test.module}"
             )
 
     if tests:
@@ -1276,7 +1312,7 @@ def validate_dry_runs(
         )
         if any(
             stage in default_wave.stdout
-            for stage in ("GATE PASS", "GATE FAIL", "GATE SKIP")
+            for stage in ("GATE PASS", "GATE FAIL", "GATE SKIPPED")
         ):
             runner.failures.append("default wave unexpectedly ran the gate phase")
 
@@ -1287,7 +1323,7 @@ def validate_dry_runs(
             capture=True,
         )
         expected_gate_stage = (
-            "GATE SKIP" if tests[0].language == "vhdl" else "GATE PASS"
+            "GATE SKIPPED" if tests[0].language == "vhdl" else "GATE PASS"
         )
         if expected_gate_stage not in gated_wave.stdout:
             runner.failures.append(
@@ -1326,6 +1362,7 @@ def validate_dry_runs(
             "--sim-arg=",
             "--plusarg=VWB_VALIDATION",
             "--keep-going",
+            "--gate-level",
         ]
         cocotb_result = runner.run_vwb(
             cocotb_bundle,
@@ -1337,18 +1374,6 @@ def validate_dry_runs(
             runner.failures.append(
                 f"dry-run did not select a generated Cocotb starter for {module}"
             )
-        runner.run_vwb(
-            [
-                "test",
-                module,
-                "--test-language",
-                "cocotb",
-                "--no-gate-level",
-            ],
-            label=f"dry-run Cocotb no-gate option for {module}",
-            dry_run=True,
-            capture=True,
-        )
         if module_languages[module] != "vhdl":
             runner.run_vwb(
                 [
@@ -1553,19 +1578,45 @@ def validate_doctor(runner: Runner) -> None:
 
 def validate_tests(runner: Runner, tests: Sequence[TestCase], seed: int) -> None:
     for test in tests:
-        result = runner.run_vwb(
+        rtl_result = runner.run_vwb(
             explicit_test_arguments(test, seed=seed),
-            label=f"simulation {test.module}:{test.kind}",
+            label=f"RTL simulation {test.module}:{test.kind}",
             capture=True,
         )
-        if result.returncode != 0:
+        if rtl_result.returncode != 0:
             continue
-        expected_gate_report = "GATE SKIP" if test.kind == "vhdl" else "GATE PASS"
-        if "RTL PASS" not in result.stdout or expected_gate_report not in result.stdout:
+        if "RTL PASS" not in rtl_result.stdout:
             runner.failures.append(
-                f"default simulation did not report RTL PASS and "
-                f"{expected_gate_report}: "
+                f"default simulation did not report RTL PASS: {test.module}:{test.kind}"
+            )
+        if any(
+            stage in rtl_result.stdout
+            for stage in ("GATE PASS", "GATE FAIL", "GATE SKIPPED")
+        ):
+            runner.failures.append(
+                f"default simulation unexpectedly ran a gate stage: "
                 f"{test.module}:{test.kind}"
+            )
+
+        gate_arguments = explicit_test_arguments(test, seed=seed)
+        gate_arguments.append("--gate-level")
+        gate_result = runner.run_vwb(
+            gate_arguments,
+            label=f"gate simulation {test.module}:{test.kind}",
+            capture=True,
+        )
+        if gate_result.returncode != 0:
+            continue
+        expected_gate_report = (
+            "GATE SKIPPED" if test.kind == "vhdl" else "GATE PASS"
+        )
+        if (
+            "RTL PASS" not in gate_result.stdout
+            or expected_gate_report not in gate_result.stdout
+        ):
+            runner.failures.append(
+                f"opt-in gate simulation did not report RTL PASS and "
+                f"{expected_gate_report}: {test.module}:{test.kind}"
             )
         if test.kind == "vhdl":
             gate_netlist = None
@@ -1582,34 +1633,16 @@ def validate_tests(runner: Runner, tests: Sequence[TestCase], seed: int) -> None
             not gate_netlist.is_file() or gate_netlist.stat().st_size == 0
         ):
             runner.failures.append(
-                f"default simulation did not produce a gate netlist: {gate_netlist}"
+                f"gate simulation did not produce a gate netlist: {gate_netlist}"
             )
         gate_simlib = gate_netlist.parent / "yosys_simlib.v" if gate_netlist else None
         if gate_simlib is not None and (
             not gate_simlib.is_file() or gate_simlib.stat().st_size == 0
         ):
             runner.failures.append(
-                "default simulation did not preserve the Yosys generic-cell "
+                "gate simulation did not preserve the Yosys generic-cell "
                 f"library: {gate_simlib}"
             )
-        rtl_only = explicit_test_arguments(test, seed=seed)
-        rtl_only.append("--no-gate-level")
-        rtl_result = runner.run_vwb(
-            rtl_only,
-            label=f"RTL-only simulation {test.module}:{test.kind}",
-            capture=True,
-        )
-        if rtl_result.returncode == 0:
-            if "RTL PASS" not in rtl_result.stdout:
-                runner.failures.append(
-                    f"RTL-only simulation did not report a pass: "
-                    f"{test.module}:{test.kind}"
-                )
-            if "GATE PASS" in rtl_result.stdout or "GATE FAIL" in rtl_result.stdout:
-                runner.failures.append(
-                    f"--no-gate-level still reported a gate phase: "
-                    f"{test.module}:{test.kind}"
-                )
 
 
 def validate_starter_tests(runner: Runner) -> None:
@@ -1653,6 +1686,20 @@ def validate_starter_tests(runner: Runner) -> None:
             "endmodule\n",
             encoding="ascii",
         )
+        (source / "array_input.sv").write_text(
+            "module array_input(\n"
+            "  input logic clk_a,\n"
+            "  input logic arst_n,\n"
+            "  input logic [7:0] samples [0:1],\n"
+            "  output logic [8:0] total\n"
+            ");\n"
+            "  always_ff @(posedge clk_a or negedge arst_n) begin\n"
+            "    if (!arst_n) total <= '0;\n"
+            "    else total <= samples[0] + samples[1];\n"
+            "  end\n"
+            "endmodule\n",
+            encoding="ascii",
+        )
         (source / "native_vhdl.vhd").write_text(
             "library ieee;\n"
             "use ieee.std_logic_1164.all;\n"
@@ -1687,9 +1734,12 @@ def validate_starter_tests(runner: Runner) -> None:
             test_dir="test",
             build_dir=root / "build",
         )
-        for module in ("clocked_sv", "clocked_vhdl"):
+        for module in ("clocked_sv", "clocked_vhdl", "array_input"):
+            arguments = ["test", module]
+            if module == "array_input":
+                arguments.extend(["--waves", "--wave-format", "fst"])
             result = fixture.run_vwb(
-                ["test", module],
+                arguments,
                 label=f"generated Cocotb starter for {module}",
                 capture=True,
             )
@@ -1702,13 +1752,22 @@ def validate_starter_tests(runner: Runner) -> None:
                     fixture.failures.append(
                         f"starter test does not initialize clock and reset: {starter}"
                     )
+                if module == "array_input" and "_vwb_initialize" not in content:
+                    fixture.failures.append(
+                        f"array starter has no recursive input initialization: {starter}"
+                    )
+            if module == "array_input" and "conflict with an escaped identifier" in (
+                (result.stdout or "") + (result.stderr or "")
+            ):
+                fixture.failures.append(
+                    "successful FST array simulation leaked an Icarus warning"
+                )
         fixture.run_vwb(
             [
                 "test",
                 "plain_verilog",
                 "--test-language",
                 "verilog",
-                "--no-gate-level",
             ],
             label="generated native Verilog starter",
         )
@@ -1717,22 +1776,43 @@ def validate_starter_tests(runner: Runner) -> None:
             fixture.failures.append(
                 f"native Verilog starter was not generated: {native_starter}"
             )
+        fixture.run_vwb(
+            [
+                "test",
+                "array_input",
+                "--test-language",
+                "verilog",
+            ],
+            label="generated native SystemVerilog array starter",
+        )
+        native_array_starter = tests / "test_array_input_starter.sv"
+        if not native_array_starter.is_file():
+            fixture.failures.append(
+                f"native array starter was not generated: {native_array_starter}"
+            )
+        elif "foreach (samples[" not in native_array_starter.read_text(
+            encoding="utf-8"
+        ):
+            fixture.failures.append(
+                f"native array starter does not initialize its array: {native_array_starter}"
+            )
         native_vhdl_result = fixture.run_vwb(
             [
                 "test",
                 "native_vhdl",
                 "--test-language",
                 "vhdl",
+                "--gate-level",
             ],
-            label="native VHDL testbench default gate handling",
+            label="native VHDL testbench opt-in gate handling",
             capture=True,
         )
         if (
             native_vhdl_result.returncode == 0
-            and "GATE SKIP" not in native_vhdl_result.stdout
+            and "GATE SKIPPED" not in native_vhdl_result.stdout
         ):
             fixture.failures.append(
-                "native VHDL testbench did not report its default gate skip"
+                "native VHDL testbench did not report its gate skip"
             )
         runner.failures.extend(fixture.failures)
 
@@ -1766,7 +1846,14 @@ def validate_escaped_identifier_fixture(runner: Runner) -> None:
             build_dir=root / "build",
         )
         result = fixture.run_vwb(
-            ["test", module, "--waves", "--wave-format", "vcd"],
+            [
+                "test",
+                module,
+                "--waves",
+                "--wave-format",
+                "vcd",
+                "--gate-level",
+            ],
             label="escaped identifier starter, waveform, and gate simulation",
             capture=True,
         )
@@ -1867,6 +1954,7 @@ def validate_discovered_starter_tests(
                         "--waves",
                         "--wave-format",
                         wave_format,
+                        "--gate-level",
                     ]
                 else:
                     arguments = [
@@ -1881,7 +1969,6 @@ def validate_discovered_starter_tests(
                         "--waves",
                         "--wave-format",
                         wave_format,
-                        "--no-gate-level",
                     ]
                 result = fixture.run_vwb(
                     arguments,
@@ -1979,7 +2066,7 @@ def validate_failure_aggregation(runner: Runner) -> None:
             build_dir=root / "build",
         )
         result = fixture.run_vwb(
-            ["test", "--test-language", "verilog", "--no-gate-level"],
+            ["test", "--test-language", "verilog"],
             label="simulation failure aggregation",
             expected=(1,),
             capture=True,
@@ -2660,6 +2747,58 @@ def validate_fpga(
             ):
                 runner.failures.append(
                     f"missing FPGA synthesis artifact: {artifact}"
+                )
+
+    validation_module = "validation_fpga"
+    inventory_result = runner.run_vwb(
+        ["list", "--json"],
+        label="bundled FPGA constraint inventory",
+        capture=True,
+        record_failure=False,
+    )
+    try:
+        inventory_names = {
+            item["name"] for item in json.loads(inventory_result.stdout)["modules"]
+        }
+    except (KeyError, TypeError, json.JSONDecodeError) as error:
+        runner.failures.append(
+            f"could not inspect bundled FPGA example inventory: {error}"
+        )
+        inventory_names = set()
+    if validation_module not in inventory_names:
+        runner.failures.append(
+            f"bundled constraint files have no matching {validation_module!r} module"
+        )
+    else:
+        for board in metadata.fpga_boards:
+            family = {"tangnano9k": "gowin", "icebreaker": "ice40"}.get(
+                board, board
+            )
+            result = runner.run_vwb(
+                [
+                    "fpga",
+                    validation_module,
+                    "--board",
+                    board,
+                    "--stage",
+                    "pack",
+                ],
+                label=f"bundled default FPGA constraints for {board}",
+            )
+            suffix = ".fs" if family == "gowin" else ".bin"
+            module_artifact = runner.artifact_component(validation_module)
+            artifact = (
+                runner.build_dir
+                / "fpga"
+                / family
+                / module_artifact
+                / f"{module_artifact}{suffix}"
+            )
+            if result.returncode == 0 and (
+                not artifact.is_file() or artifact.stat().st_size == 0
+            ):
+                runner.failures.append(
+                    f"missing bundled FPGA artifact for {board}: {artifact}"
                 )
 
     validate_fpga_pack_fixture(runner, metadata)

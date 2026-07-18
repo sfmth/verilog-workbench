@@ -133,6 +133,17 @@ class VWBError(RuntimeError):
     """An expected user, project, or tool error."""
 
 
+class MissingToolError(VWBError):
+    """A requested stage cannot run because an external command is missing."""
+
+    def __init__(self, command: str, candidates: Sequence[str]):
+        self.command = command
+        self.candidates = tuple(candidates)
+        super().__init__(
+            "required command is not on PATH: " + " or ".join(self.candidates)
+        )
+
+
 def unique_paths(paths: Iterable[Path]) -> list[Path]:
     seen: set[Path] = set()
     result: list[Path] = []
@@ -259,7 +270,7 @@ def resolve_project_settings(
         root = (
             config_path.parent
             if config_path is not None
-            else Path(__file__).resolve().parent
+            else current
         )
     config = load_project_config(config_path) if config_path is not None else {}
     return ProjectSettings(
@@ -350,6 +361,59 @@ def strip_comments_and_strings(text: str) -> str:
         return "".join("\n" if char == "\n" else " " for char in match.group(0))
 
     return pattern.sub(blank, text)
+
+
+def preprocess_verilog_for_discovery(
+    text: str, predefined: Iterable[str] = ()
+) -> str:
+    """Blank inactive conditional branches while preserving source positions."""
+    macros = {
+        definition.partition("=")[0].strip()
+        for definition in predefined
+        if definition.partition("=")[0].strip()
+    }
+    frames: list[dict[str, bool]] = []
+    active = True
+    result: list[str] = []
+    directive_re = re.compile(
+        r"^\s*`(?P<kind>ifdef|ifndef|elsif|else|endif|define|undef)"
+        r"(?:\s+(?P<name>[A-Za-z_][A-Za-z0-9_$]*))?"
+    )
+
+    def blank(line: str) -> str:
+        return "".join("\n" if char == "\n" else " " for char in line)
+
+    for line in text.splitlines(keepends=True):
+        match = directive_re.match(line)
+        if match is None:
+            result.append(line if active else blank(line))
+            continue
+        kind = match.group("kind")
+        name = match.group("name") or ""
+        if kind in {"ifdef", "ifndef"}:
+            condition = name in macros
+            if kind == "ifndef":
+                condition = not condition
+            parent = active
+            active = parent and condition
+            frames.append({"parent": parent, "taken": active})
+        elif kind == "elsif" and frames:
+            frame = frames[-1]
+            active = frame["parent"] and not frame["taken"] and name in macros
+            frame["taken"] = frame["taken"] or active
+        elif kind == "else" and frames:
+            frame = frames[-1]
+            active = frame["parent"] and not frame["taken"]
+            frame["taken"] = frame["taken"] or active
+        elif kind == "endif" and frames:
+            frame = frames.pop()
+            active = frame["parent"]
+        elif kind == "define" and active and name:
+            macros.add(name)
+        elif kind == "undef" and active and name:
+            macros.discard(name)
+        result.append(blank(line))
+    return "".join(result)
 
 
 def verilog_source_needs_preprocessing(text: str, defines: Sequence[str]) -> bool:
@@ -565,30 +629,45 @@ def extract_raw_declarations(
         if match is None:
             break
         end_match = ending_re.search(cleaned, match.end())
-        body_end = end_match.start() if end_match else len(cleaned)
+        next_match = declaration_re.search(cleaned, match.end())
+        unterminated = next_match is not None and (
+            end_match is None or next_match.start() < end_match.start()
+        )
+        body_end = (
+            next_match.start()
+            if unterminated and next_match is not None
+            else end_match.start() if end_match else len(cleaned)
+        )
         declarations.append(
             RawModule(
                 name=match.group("name"),
                 path=path.resolve(),
                 body=cleaned[match.end() : body_end],
                 body_start=match.end(),
-                end_position=end_match.start() if end_match else None,
+                end_position=(
+                    end_match.start() if end_match is not None and not unterminated else None
+                ),
             )
         )
-        position = end_match.end() if end_match else len(cleaned)
+        if unterminated and next_match is not None:
+            position = next_match.start()
+        else:
+            position = end_match.end() if end_match else len(cleaned)
     return declarations
 
 
 def extract_raw_modules(path: Path) -> list[RawModule]:
     text = path.read_text(encoding="utf-8", errors="replace")
-    cleaned = strip_comments_and_strings(text)
+    cleaned = preprocess_verilog_for_discovery(strip_comments_and_strings(text))
     return extract_raw_declarations(path, cleaned, MODULE_RE, ENDMODULE_RE)
 
 
 def strip_vhdl_comments(text: str) -> str:
     return re.sub(
-        r"--[^\n]*",
-        lambda match: " " * len(match.group(0)),
+        r'"(?:[^"]|"")*"|--[^\n]*',
+        lambda match: "".join(
+            "\n" if char == "\n" else " " for char in match.group(0)
+        ),
         text,
     )
 
@@ -649,7 +728,7 @@ def verilog_module_sections(
     path: Path, module: str
 ) -> tuple[str | None, str, str] | None:
     raw_text = path.read_text(encoding="utf-8", errors="replace")
-    text = strip_comments_and_strings(raw_text)
+    text = preprocess_verilog_for_discovery(strip_comments_and_strings(raw_text))
     declaration = re.search(
         rf"\bmodule\s+(?:automatic\s+)?{re.escape(module)}\b", text
     )
@@ -695,9 +774,12 @@ def verilog_port_directions(path: Path, module: str) -> dict[str, str]:
         direction_match = re.search(r"\b(input|output|inout)\b", segment)
         if direction_match:
             current_direction = direction_match.group(1)
+        without_ranges = re.sub(r"\[[^\]]*\]", " ", segment)
         identifiers = [
             token
-            for token in re.findall(r"\\[^\s]+|[A-Za-z_][A-Za-z0-9_$]*", segment)
+            for token in re.findall(
+                r"\\[^\s]+|[A-Za-z_][A-Za-z0-9_$]*", without_ranges
+            )
             if token.startswith("\\")
             or (token not in ignored and token not in {"input", "output", "inout"})
         ]
@@ -707,8 +789,9 @@ def verilog_port_directions(path: Path, module: str) -> dict[str, str]:
     for match in re.finditer(r"\b(input|output|inout)\b([^;]*);", body):
         direction = match.group(1)
         for segment in _split_top_level(match.group(2), ","):
+            without_ranges = re.sub(r"\[[^\]]*\]", " ", segment)
             identifiers = re.findall(
-                r"\\[^\s]+|[A-Za-z_][A-Za-z0-9_$]*", segment
+                r"\\[^\s]+|[A-Za-z_][A-Za-z0-9_$]*", without_ranges
             )
             identifiers = [
                 item
@@ -787,6 +870,35 @@ def verilog_input_declarations(path: Path, module: str) -> dict[str, str]:
             initial_direction=match.group(1),
         )
     return declarations
+
+
+def verilog_required_parameters(path: Path, module: str) -> tuple[str, ...]:
+    sections = verilog_module_sections(path, module)
+    if sections is None or not sections[0]:
+        return ()
+    parameters = strip_comments_and_strings(sections[0])
+    required: list[str] = []
+    ignored = DATA_TYPES | {
+        "localparam",
+        "parameter",
+        "signed",
+        "type",
+        "unsigned",
+    }
+    for segment in _split_top_level(parameters, ","):
+        if "=" in segment:
+            continue
+        without_ranges = re.sub(r"\[[^\]]*\]", " ", segment)
+        identifiers = [
+            item
+            for item in re.findall(
+                r"\\[^\s]+|[A-Za-z_][A-Za-z0-9_$]*", without_ranges
+            )
+            if item.startswith("\\") or item not in ignored
+        ]
+        if identifiers:
+            required.append(identifiers[-1])
+    return tuple(required)
 
 
 def vhdl_port_directions(path: Path, entity: str) -> dict[str, str]:
@@ -1114,10 +1226,13 @@ def unit_dependencies(
 ) -> tuple[str, ...]:
     dependencies = set(module_dependencies(raw, known_units))
     for name in interface_names:
-        if name != raw.name and re.search(
-            rf"(?<![A-Za-z0-9_$]){re.escape(name)}(?![A-Za-z0-9_$])",
-            raw.body,
-        ):
+        interface_port = re.compile(
+            rf"(?<![A-Za-z0-9_$]){re.escape(name)}"
+            r"(?:\s*\.\s*[A-Za-z_][A-Za-z0-9_$]*)?"
+            r"\s+(?:\\\S+|[A-Za-z_][A-Za-z0-9_$]*)"
+            r"(?:\s*\[[^\]]+\])*\s*(?=[,);])"
+        )
+        if name != raw.name and interface_port.search(raw.body):
             dependencies.add(name)
     return tuple(sorted(dependencies))
 
@@ -1266,6 +1381,7 @@ class SourceCatalog:
         vhdl_entities: dict[Path, list[str]] = {}
         vhdl_architectures: dict[str, list[Path]] = {}
         vhdl_cleaned_sources: dict[Path, str] = {}
+        self.declaration_problems: dict[str, list[str]] = {}
         for path in self.files:
             text = path.read_text(encoding="utf-8", errors="replace")
             if path.suffix.lower() in VHDL_SUFFIXES:
@@ -1284,7 +1400,9 @@ class SourceCatalog:
                 if names or architecture_entities:
                     files_with_modules.add(path.resolve())
                 continue
-            cleaned = strip_comments_and_strings(text)
+            cleaned = preprocess_verilog_for_discovery(
+                strip_comments_and_strings(text)
+            )
             cleaned_sources[path] = cleaned
             found = extract_raw_declarations(path, cleaned, MODULE_RE, ENDMODULE_RE)
             raw_modules.extend(found)
@@ -1298,6 +1416,19 @@ class SourceCatalog:
             raw_primitives.extend(found_primitives)
             if found or found_interfaces or found_primitives:
                 files_with_modules.add(path.resolve())
+
+        for kind, declarations in (
+            ("module", raw_modules),
+            ("interface", raw_interfaces),
+            ("primitive", raw_primitives),
+        ):
+            for declaration in declarations:
+                if declaration.end_position is None:
+                    self.declaration_problems.setdefault(
+                        declaration.name, []
+                    ).append(
+                        f"{kind} has no matching end{kind}: {declaration.path}"
+                    )
 
         vhdl_name_map: dict[str, str] = {}
         for names in vhdl_entities.values():
@@ -1409,6 +1540,14 @@ class SourceCatalog:
 
     def names(self) -> list[str]:
         return sorted(self.modules)
+
+    def problems(self, name: str) -> list[str]:
+        problems = list(self.declaration_problems.get(name, ()))
+        definitions = self.units.get(name, ())
+        if len(definitions) > 1:
+            paths = ", ".join(str(item.path) for item in definitions)
+            problems.append(f"declared more than once: {paths}")
+        return problems
 
     def definition(self, name: str) -> ModuleDef:
         definitions = self.modules.get(name, [])
@@ -1577,13 +1716,13 @@ def module_from_test_stem(
     case_insensitive_names: Iterable[str] = (),
 ) -> str | None:
     matches: list[tuple[int, int, str]] = []
-    insensitive = set(case_insensitive_names)
+    del case_insensitive_names
     for name in module_names:
-        candidate_stem = stem.casefold() if name in insensitive else stem
+        candidate_stem = stem.casefold()
         aliases = {name, python_identifier_component(name)}
         matched: tuple[int, int, str] | None = None
         for alias in aliases:
-            candidate_name = alias.casefold() if name in insensitive else alias
+            candidate_name = alias.casefold()
             exact = {
                 f"test_{candidate_name}",
                 f"tb_{candidate_name}",
@@ -1671,6 +1810,7 @@ class Workbench:
         verbose: bool = False,
         dry_run: bool = False,
         color: str = "auto",
+        require_project_dirs: bool = True,
     ):
         self.root = root.resolve()
         self.src_dir = src_dir.resolve()
@@ -1680,9 +1820,9 @@ class Workbench:
         self.dry_run = dry_run
         self.colors = Colorizer(color)
 
-        if not self.src_dir.is_dir():
+        if require_project_dirs and not self.src_dir.is_dir():
             raise VWBError(f"source directory does not exist: {self.src_dir}")
-        if not self.test_dir.is_dir():
+        if require_project_dirs and not self.test_dir.is_dir():
             raise VWBError(f"test directory does not exist: {self.test_dir}")
         if (
             self.src_dir == self.test_dir
@@ -1708,7 +1848,11 @@ class Workbench:
         vhdl_names = {
             name
             for name in module_names
-            if self.catalog.definition(name).language == "vhdl"
+            if self.catalog.modules[name]
+            and all(
+                definition.language == "vhdl"
+                for definition in self.catalog.modules[name]
+            )
         }
         tests: list[TestSpec] = []
         for path in sorted(self.test_dir.rglob("*.py")):
@@ -1776,11 +1920,18 @@ class Workbench:
     @staticmethod
     def _clock_name(names: Sequence[str]) -> str | None:
         for name in names:
-            lowered = name.lower().lstrip("\\")
-            if (
-                lowered in {"clk", "clock"}
-                or lowered.endswith(("clk", "clock", "clk_i", "clock_i"))
-                or re.search(r"(?:^|_)(?:clk|clock)(?:_i|_in)$", lowered)
+            lowered = name.lower().lstrip("\\").replace("$", "_")
+            if lowered in {
+                "clock_enable",
+                "clock_en",
+                "clk_enable",
+                "clk_en",
+            }:
+                continue
+            if lowered in {"clk", "clock"} or lowered.endswith(("clk", "clock")):
+                return name
+            if re.fullmatch(
+                r"(?:clk|clock)(?:_[a-z0-9]+|[0-9]+|div[a-z0-9_]*)", lowered
             ):
                 return name
         return None
@@ -1788,24 +1939,47 @@ class Workbench:
     @staticmethod
     def _reset_name(names: Sequence[str]) -> str | None:
         for name in names:
-            lowered = name.lower().lstrip("\\")
-            if (
-                lowered in {"reset", "rst", "reset_n", "rst_n", "resetn", "rstn"}
-                or "reset" in lowered
-                or lowered.startswith("rst")
-            ):
+            lowered = name.lower().lstrip("\\").replace("$", "_")
+            conventional = re.fullmatch(
+                r"(?:(?:sys|global|async|sync|soft|hard|por)_)?"
+                r"(?:reset|rst)(?:_?(?:n|b|ni|i|in|button|sync|async))?",
+                lowered,
+            )
+            short_form = re.fullmatch(
+                r"(?:a|s)(?:reset|rst)(?:_?(?:n|b|ni))?|n(?:reset|rst)",
+                lowered,
+            )
+            if conventional or short_form:
                 return name
         return None
 
     @staticmethod
     def _reset_is_active_low(name: str) -> bool:
-        lowered = name.lower().lstrip("\\")
+        lowered = name.lower().lstrip("\\").replace("$", "_")
         return bool(
-            re.search(r"(?:^|_)(?:[as]?(?:reset|rst))_?n(?:_|$)", lowered)
-            or re.search(r"(?:^|_)(?:nreset|nrst)(?:_|$)", lowered)
+            re.fullmatch(
+                r"(?:(?:sys|global|async|sync|soft|hard|por)_)?"
+                r"(?:[as]?(?:reset|rst))_?(?:n|b|ni)",
+                lowered,
+            )
+            or re.fullmatch(r"n(?:reset|rst)", lowered)
         )
 
+    def _check_starter_parameters(self, module: str) -> None:
+        definition = self.catalog.definition(module)
+        if definition.language == "vhdl":
+            return
+        required = verilog_required_parameters(definition.path, definition.name)
+        if required:
+            raise VWBError(
+                f"cannot generate a starter for {definition.name}: parameter(s) "
+                + ", ".join(required)
+                + " have no default value; add defaults or write a testbench "
+                "that supplies them"
+            )
+
     def _cocotb_starter(self, module: str) -> str:
+        self._check_starter_parameters(module)
         directions = self.port_directions(module)
         inputs = [
             name
@@ -1830,11 +2004,21 @@ class Workbench:
             "        if child._name == simulator_name:\n"
             "            return child\n"
             "    raise AttributeError(f\"DUT has no signal {name}\")\n\n\n"
+            "def _vwb_initialize(handle):\n"
+            "    try:\n"
+            "        handle.value = 0\n"
+            "        return\n"
+            "    except (AttributeError, TypeError, ValueError, OverflowError):\n"
+            "        children = list(handle)\n"
+            "        if not children:\n"
+            "            raise\n"
+            "    for child in children:\n"
+            "        _vwb_initialize(child)\n\n\n"
             "@cocotb.test()\n"
             f"async def test_{python_identifier_component(module)}_starter(dut):\n"
             "    # Give every DUT input a known starting value.\n"
             "    for name in INPUTS:\n"
-            "        _vwb_signal(dut, name).value = 0\n"
+            "        _vwb_initialize(_vwb_signal(dut, name))\n"
             + (
                 "\n    cocotb.start_soon(Clock("
                 f"_vwb_signal(dut, {clock!r}), 10, units=\"ns\").start(start_high=False))\n"
@@ -1854,6 +2038,7 @@ class Workbench:
 
     def _verilog_starter(self, module: str) -> tuple[str, str]:
         definition = self.catalog.definition(module)
+        self._check_starter_parameters(module)
         directions = self.port_directions(module)
         inputs = [
             name for name, direction in directions.items() if direction == "input"
@@ -1872,9 +2057,30 @@ class Workbench:
             f"    .{hdl_reference(name)}({hdl_reference(name)})"
             for name in inputs
         )
-        initialization = "\n".join(
-            f"    {hdl_reference(name)} = '0;" for name in inputs
+        raw = next(
+            (
+                item
+                for item in extract_raw_modules(definition.path)
+                if item.name == module
+            ),
+            None,
         )
+        array_dimensions = {
+            array.name: array.dimensions for array in unpacked_arrays(raw)
+        } if raw is not None else {}
+
+        def initialize(name: str) -> str:
+            dimensions = array_dimensions.get(name, 0)
+            if not dimensions:
+                return f"    {hdl_reference(name)} = '0;"
+            indices = [f"__vwb_index_{index}" for index in range(dimensions)]
+            iterator = f"{hdl_reference(name)}[{','.join(indices)}]"
+            selected = hdl_reference(name) + "".join(
+                f"[{index}]" for index in indices
+            )
+            return f"    foreach ({iterator}) {selected} = '0;"
+
+        initialization = "\n".join(initialize(name) for name in inputs)
         clock_block = (
             f"\n  always #5 {hdl_reference(clock)} = ~{hdl_reference(clock)};\n"
             if clock
@@ -1970,7 +2176,12 @@ class Workbench:
         try:
             data = json.loads(marker_text)
         except json.JSONDecodeError:
-            if f"project={self.root}\n" in marker_text:
+            legacy_lines = marker_text.splitlines()
+            if (
+                len(legacy_lines) == 2
+                and legacy_lines[0].startswith("Verilog Work Bench ")
+                and legacy_lines[1] == f"project={self.root}"
+            ):
                 return
             raise VWBError(f"build directory belongs to another project: {build}")
         if not isinstance(data, dict) or data.get("schema") != BUILD_MARKER_SCHEMA:
@@ -2025,9 +2236,7 @@ class Workbench:
         candidates = TOOL_ALTERNATIVES.get(command, (command,))
         if self.dry_run:
             return candidates[0], candidates[0]
-        raise VWBError(
-            "required command is not on PATH: " + " or ".join(candidates)
-        )
+        raise MissingToolError(command, candidates)
 
     def require_tool(self, command: str) -> str:
         return self.require_tool_choice(command)[1]
@@ -2047,14 +2256,16 @@ class Workbench:
             print(f"$ {shlex.join(argv)}{location}")
         if self.dry_run:
             return subprocess.CompletedProcess(argv, 0, "", "")
+        quiet_capture = not self.verbose and not capture
+        pipe_output = capture or quiet_capture
         try:
             process = subprocess.Popen(
                 argv,
                 cwd=str(cwd) if cwd else None,
                 env=env,
                 text=True,
-                stdout=subprocess.PIPE if capture else None,
-                stderr=subprocess.PIPE if capture else None,
+                stdout=subprocess.PIPE if pipe_output else None,
+                stderr=subprocess.PIPE if pipe_output else None,
                 start_new_session=True,
             )
             try:
@@ -2065,21 +2276,21 @@ class Workbench:
                 except ProcessLookupError:
                     pass
                 try:
-                    stdout, stderr = process.communicate(timeout=2)
+                    process.wait(timeout=2)
                 except subprocess.TimeoutExpired:
                     try:
                         os.killpg(process.pid, signal.SIGKILL)
                     except ProcessLookupError:
                         pass
-                    stdout, stderr = process.communicate()
                 else:
-                    # The group leader may exit while a descendant ignores
-                    # SIGTERM. The isolated process group can still be killed
-                    # safely after communicate() has reaped the leader.
+                    # A child can keep captured pipes open after the group
+                    # leader exits, so kill any remaining group members before
+                    # draining output.
                     try:
                         os.killpg(process.pid, signal.SIGKILL)
                     except ProcessLookupError:
                         pass
+                stdout, stderr = process.communicate()
                 print(
                     f"error: command timed out after {timeout:g}s: {argv[0]}",
                     file=sys.stderr,
@@ -2106,9 +2317,32 @@ class Workbench:
                     except ProcessLookupError:
                         pass
                 raise
-            return subprocess.CompletedProcess(
+            result = subprocess.CompletedProcess(
                 argv, process.returncode, stdout, stderr
             )
+            if quiet_capture and result.returncode != 0:
+                output = "\n".join(
+                    part.rstrip()
+                    for part in (result.stderr, result.stdout)
+                    if part and part.strip()
+                )
+                lines = output.splitlines()
+                if len(lines) > 24:
+                    lines = [
+                        f"... {len(lines) - 24} earlier lines hidden ...",
+                        *lines[-24:],
+                    ]
+                print(
+                    f"{argv[0]} failed with exit status {result.returncode}",
+                    file=sys.stderr,
+                )
+                if lines:
+                    print("\n".join(lines), file=sys.stderr)
+                print(
+                    "Run again with --verbose for complete tool output.",
+                    file=sys.stderr,
+                )
+            return result
         except OSError as exc:
             raise VWBError(f"could not execute {argv[0]}: {exc}") from exc
 
@@ -2927,7 +3161,7 @@ class Workbench:
         if spec.kind == "vhdl":
             raise VWBError(
                 "a native VHDL testbench cannot drive a Verilog gate netlist; "
-                "use Cocotb or --no-gate-level"
+                "use Cocotb for the gate-level check"
             )
         work_dir = (
             self.build_dir
@@ -2981,7 +3215,8 @@ class Workbench:
             run_args = argparse.Namespace(**vars(args))
             run_args.seed = int.from_bytes(os.urandom(4), "big") & 0x7FFFFFFF
             args._effective_seed = run_args.seed
-            print(f"  Cocotb seed: {run_args.seed}")
+            if self.verbose:
+                print(f"  Cocotb seed: {run_args.seed}")
 
         rtl_passed, wave_path = self._run_rtl_test_spec(spec, run_args)
         print(
@@ -2996,13 +3231,23 @@ class Workbench:
         if spec.kind == "vhdl":
             print(
                 "  "
-                + self.style("GATE SKIP", Ansi.YELLOW)
+                + self.style("GATE SKIPPED", Ansi.YELLOW)
                 + " (native VHDL testbench cannot drive a Verilog netlist)"
             )
             return rtl_passed, wave_path
         try:
             netlist = self.gate_netlist(spec.dut, run_args.define, run_args.include)
             gate_passed = self._run_gate_test_spec(spec, run_args, netlist)
+        except MissingToolError as exc:
+            skipped = getattr(args, "_setup_skips", [])
+            skipped.append(f"gate-level simulation: {exc.command}")
+            args._setup_skips = skipped
+            print(
+                "  "
+                + self.style("GATE SKIPPED", Ansi.YELLOW)
+                + f" ({exc.command} not installed)"
+            )
+            return rtl_passed, wave_path
         except VWBError as exc:
             gate_passed = False
             print(f"error: gate-level simulation: {exc}", file=sys.stderr)
@@ -3024,8 +3269,10 @@ class Workbench:
                 "HDL testbenches are selected"
             )
         passed_count = 0
+        args._setup_skips = []
         wave_paths: list[Path] = []
         failures: list[tuple[TestSpec, str]] = []
+        setup_blocked: list[tuple[TestSpec, MissingToolError]] = []
         for index, spec in enumerate(specs, start=1):
             print(
                 self.style("==>", Ansi.BOLD, Ansi.CYAN)
@@ -3033,8 +3280,19 @@ class Workbench:
                 + self.style(spec.dut, Ansi.BOLD)
                 + f" ({spec.label})"
             )
+            setup_error: MissingToolError | None = None
             try:
                 passed, wave_path = self.run_test_spec(spec, args)
+            except MissingToolError as exc:
+                passed = False
+                wave_path = None
+                setup_error = exc
+                setup_blocked.append((spec, exc))
+                print(
+                    "  "
+                    + self.style("SIMULATION SKIPPED", Ansi.YELLOW)
+                    + f" ({exc.command} not installed)"
+                )
             except VWBError as exc:
                 passed = False
                 wave_path = None
@@ -3042,32 +3300,47 @@ class Workbench:
                 print(f"error: {exc}", file=sys.stderr)
             else:
                 reason = "one or more requested simulation stages failed"
-            print(
-                self.style(
-                    "PASS" if passed else "FAIL",
-                    Ansi.BOLD,
-                    Ansi.GREEN if passed else Ansi.RED,
-                )
-            )
             if passed:
                 passed_count += 1
+            elif setup_error is not None:
+                pass
             else:
                 failures.append((spec, reason))
             if wave_path is not None:
                 wave_paths.append(wave_path)
-        all_passed = passed_count == len(specs)
+        all_passed = passed_count == len(specs) and not setup_blocked
+        print(self.style("Result:", Ansi.BOLD, Ansi.CYAN))
+        if failures:
+            code_label, code_color = "FAIL", Ansi.RED
+        elif setup_blocked:
+            code_label, code_color = "NOT FULLY CHECKED", Ansi.YELLOW
+        else:
+            code_label, code_color = "PASS", Ansi.GREEN
+        code_status = self.style(code_label, Ansi.BOLD, code_color)
         print(
-            self.style("==>", Ansi.BOLD, Ansi.CYAN)
-            + " "
-            + self.style(
-                f"{passed_count}/{len(specs)} test runs passed",
-                Ansi.GREEN if all_passed else Ansi.RED,
-            )
+            f"  Your code: {code_status} - "
+            f"{passed_count}/{len(specs)} test runs passed"
         )
+        setup_skips = getattr(args, "_setup_skips", [])
+        setup_issue_count = len(setup_skips) + len(setup_blocked)
+        if setup_issue_count:
+            setup_status = self.style(
+                "TOOLS MISSING", Ansi.YELLOW, Ansi.BOLD
+            )
+            print(
+                f"  Your setup: {setup_status} - {setup_issue_count} stage(s) skipped; "
+                "run 'vwb doctor'"
+            )
+        else:
+            print(f"  Your setup: {self.style('OK', Ansi.GREEN, Ansi.BOLD)}")
         if failures:
             print(self.style("Failed test runs:", Ansi.BOLD, Ansi.RED))
             for spec, reason in failures:
                 print(f"  {spec.dut} ({spec.label}): {reason}")
+        if setup_blocked:
+            print(self.style("Setup-blocked test runs:", Ansi.BOLD, Ansi.YELLOW))
+            for spec, error in setup_blocked:
+                print(f"  {spec.dut} ({spec.label}): {error.command} is not installed")
         return all_passed, wave_paths
 
     def lint_module(
@@ -3215,8 +3488,21 @@ class Workbench:
                 for line in output.splitlines()
                 if re.search(r"\b(?:warning|error)\b", line, re.IGNORECASE)
             ]
-            for diagnostic in diagnostics:
-                print(diagnostic, file=sys.stderr)
+            if self.verbose:
+                if result.stdout:
+                    print(
+                        result.stdout,
+                        end="" if result.stdout.endswith("\n") else "\n",
+                    )
+                if result.stderr:
+                    print(
+                        result.stderr,
+                        end="" if result.stderr.endswith("\n") else "\n",
+                        file=sys.stderr,
+                    )
+            else:
+                for diagnostic in diagnostics:
+                    print(diagnostic, file=sys.stderr)
             if result.returncode != 0 and not diagnostics:
                 print(
                     f"error: Yosys lint failed; full log: {display_path(log, self.root)}",
@@ -4116,6 +4402,8 @@ class Workbench:
             raise VWBError(f"refusing to clean a directory not owned by vwb.py: {build}")
         self._validate_build_marker(marker, build)
         for target_path in target_paths:
+            if not target_path.exists() and not target_path.is_symlink():
+                continue
             if target_path.is_symlink():
                 if self.verbose or self.dry_run:
                     print(
@@ -4128,6 +4416,9 @@ class Workbench:
             target = target_path.resolve()
             if target != build and build not in target.parents:
                 raise VWBError(f"refusing to remove unsafe build path: {target}")
+            if scope == "temp" and target_path == individual_targets["sim"]:
+                self._clean_simulation_temporaries(target)
+                continue
             if self.verbose or self.dry_run:
                 print(
                     self.style("remove", Ansi.BOLD, Ansi.YELLOW),
@@ -4135,10 +4426,6 @@ class Workbench:
                 )
             if target.exists() and not target.is_dir():
                 raise VWBError(f"refusing to clean non-directory build target: {target}")
-            if scope == "temp" and target_path == individual_targets["sim"]:
-                if target.exists():
-                    self._clean_simulation_temporaries(target)
-                continue
             if target.exists() and not self.dry_run:
                 shutil.rmtree(target)
 
@@ -4174,7 +4461,7 @@ def saved_wave_completer(
 
 
 def add_simulation_options(
-    parser: argparse.ArgumentParser, *, gate_level_default: bool, wave_mode: bool
+    parser: argparse.ArgumentParser, *, wave_mode: bool
 ) -> None:
     modules = parser.add_argument(
         "modules",
@@ -4279,22 +4566,13 @@ def add_simulation_options(
         metavar="ARG",
         help="pass a +NAME or +NAME=VALUE option to the simulator (advanced)",
     )
-    if gate_level_default:
-        parser.add_argument(
-            "--no-gate-level",
-            dest="gate_level",
-            action="store_false",
-            default=True,
-            help="run only the source design; skip the test of synthesized logic",
-        )
-    else:
-        parser.add_argument(
-            "--gate-level",
-            dest="gate_level",
-            action="store_true",
-            default=False,
-            help="after the source test, run the same test on synthesized logic",
-        )
+    parser.add_argument(
+        "--gate-level",
+        dest="gate_level",
+        action="store_true",
+        default=False,
+        help="after the source test, run the same test on synthesized logic",
+    )
     parser.add_argument("--keep-going", action="store_true", help=argparse.SUPPRESS)
 
 
@@ -4354,7 +4632,7 @@ def make_parser() -> argparse.ArgumentParser:
         "-v",
         "--verbose",
         action="store_true",
-        help="show each external command before it runs",
+        help="show every external command and its complete output",
     )
     parser.add_argument(
         "--dry-run",
@@ -4429,13 +4707,11 @@ def make_parser() -> argparse.ArgumentParser:
         description=(
             "Run Cocotb, Verilog, or VHDL tests. With no module name, run every "
             "discovered test. If a named module has no test, create a starter "
-            "Cocotb test. By default, test both the source design and synthesized "
-            "logic."
+            "Cocotb test. The source design is tested by default; --gate-level "
+            "also tests synthesized logic."
         ),
     )
-    add_simulation_options(
-        test_parser, gate_level_default=True, wave_mode=False
-    )
+    add_simulation_options(test_parser, wave_mode=False)
 
     wave_parser = subparsers.add_parser(
         "wave",
@@ -4447,9 +4723,7 @@ def make_parser() -> argparse.ArgumentParser:
             "be opened later without rerunning the test."
         ),
     )
-    add_simulation_options(
-        wave_parser, gate_level_default=False, wave_mode=True
-    )
+    add_simulation_options(wave_parser, wave_mode=True)
     wave_parser.set_defaults(waves=True)
     wave_parser.add_argument(
         "--save",
@@ -4772,6 +5046,7 @@ def build_workbench(args: argparse.Namespace) -> Workbench:
         verbose=args.verbose,
         dry_run=args.dry_run,
         color=args.color,
+        require_project_dirs=args.command != "clean",
     )
 
 
@@ -4830,6 +5105,40 @@ def command_list(workbench: Workbench, args: argparse.Namespace) -> int:
     tests_by_dut: dict[str, list[TestSpec]] = {}
     for spec in workbench.tests:
         tests_by_dut.setdefault(spec.dut, []).append(spec)
+
+    def design_unit_data(
+        name: str, definitions: Sequence[ModuleDef], *, runnable: bool
+    ) -> dict[str, object]:
+        languages = {definition.language for definition in definitions}
+        language = next(iter(languages)) if len(languages) == 1 else "mixed"
+        files = unique_paths(definition.path for definition in definitions)
+        if runnable and language == "vhdl":
+            files.extend(workbench.catalog.vhdl_architectures.get(name.lower(), []))
+            files = unique_paths(files)
+        return {
+            "name": name,
+            "language": language,
+            "files": [display_path(path, workbench.root) for path in files],
+            "dependencies": sorted(
+                {
+                    dependency
+                    for definition in definitions
+                    for dependency in definition.dependencies
+                }
+            ),
+            "problems": workbench.catalog.problems(name),
+            "tests": [
+                {
+                    "kind": spec.kind,
+                    "path": display_path(spec.path, workbench.root),
+                    "top": spec.top,
+                }
+                for spec in tests_by_dut.get(name, [])
+            ]
+            if runnable
+            else [],
+        }
+
     data = {
         "packages": [
             {
@@ -4859,30 +5168,22 @@ def command_list(workbench: Workbench, args: argparse.Namespace) -> int:
             for name in sorted(workbench.catalog.vhdl_packages)
         ],
         "modules": [
-            {
-                "name": name,
-                "language": workbench.catalog.definition(name).language,
-                "files": [
-                    display_path(path, workbench.root)
-                    for path in workbench.catalog.implementation_files(name)
-                ],
-                "dependencies": sorted(
-                    {
-                        dependency
-                        for item in workbench.catalog.modules[name]
-                        for dependency in item.dependencies
-                    }
-                ),
-                "tests": [
-                    {
-                        "kind": spec.kind,
-                        "path": display_path(spec.path, workbench.root),
-                        "top": spec.top,
-                    }
-                    for spec in tests_by_dut.get(name, [])
-                ],
-            }
+            design_unit_data(
+                name, workbench.catalog.modules[name], runnable=True
+            )
             for name in workbench.catalog.names()
+        ],
+        "interfaces": [
+            design_unit_data(
+                name, workbench.catalog.units[name], runnable=False
+            )
+            for name in sorted(workbench.catalog.interfaces)
+        ],
+        "primitives": [
+            design_unit_data(
+                name, workbench.catalog.units[name], runnable=False
+            )
+            for name in sorted(workbench.catalog.primitives)
         ],
         "source_files_without_modules": [
             display_path(path, workbench.root)
@@ -4902,24 +5203,44 @@ def command_list(workbench: Workbench, args: argparse.Namespace) -> int:
             language = workbench.style(f"[{package['language']}]", Ansi.MAGENTA)
             print(f"  {name} {language} {files}")
     print(workbench.style("Modules:", Ansi.BOLD, Ansi.CYAN))
-    for module in data["modules"]:
-        dependencies = ", ".join(module["dependencies"]) or "-"
-        tests = ", ".join(
-            f"{item['kind']}:{item['path']}"
-            + (f" (top={item['top']})" if item["top"] else "")
-            for item in module["tests"]
-        ) or "-"
-        files = ", ".join(module["files"])
-        name = workbench.style(f"{module['name']:<20}", Ansi.BOLD, Ansi.GREEN)
-        print(f"  {name} {workbench.style(files, Ansi.DIM)}")
-        print(
-            f"    {workbench.style('dependencies:', Ansi.CYAN)} "
-            f"{workbench.style(dependencies, Ansi.YELLOW)}"
-        )
-        print(
-            f"    {workbench.style('tests:       ', Ansi.CYAN)} "
-            f"{workbench.style(tests, Ansi.MAGENTA)}"
-        )
+    def print_units(heading: str, units: Sequence[dict[str, object]]) -> None:
+        if heading != "Modules" and not units:
+            return
+        if heading != "Modules":
+            print(workbench.style(f"{heading}:", Ansi.BOLD, Ansi.CYAN))
+        for module in units:
+            dependencies = ", ".join(module["dependencies"]) or "-"
+            tests = ", ".join(
+                f"{item['kind']}:{item['path']}"
+                + (f" (top={item['top']})" if item["top"] else "")
+                for item in module["tests"]
+            ) or "-"
+            files = ", ".join(module["files"])
+            name = workbench.style(
+                f"{module['name']:<20}", Ansi.BOLD, Ansi.GREEN
+            )
+            language = workbench.style(
+                f"[{module['language']}]", Ansi.MAGENTA
+            )
+            print(f"  {name} {language} {workbench.style(files, Ansi.DIM)}")
+            print(
+                f"    {workbench.style('dependencies:', Ansi.CYAN)} "
+                f"{workbench.style(dependencies, Ansi.YELLOW)}"
+            )
+            if heading == "Modules":
+                print(
+                    f"    {workbench.style('tests:       ', Ansi.CYAN)} "
+                    f"{workbench.style(tests, Ansi.MAGENTA)}"
+                )
+            for problem in module["problems"]:
+                print(
+                    f"    {workbench.style('problem:     ', Ansi.RED, Ansi.BOLD)} "
+                    f"{problem}"
+                )
+
+    print_units("Modules", data["modules"])
+    print_units("Interfaces", data["interfaces"])
+    print_units("Primitives", data["primitives"])
     if data["source_files_without_modules"]:
         print(
             workbench.style(
@@ -5075,8 +5396,22 @@ def command_lint(workbench: Workbench, args: argparse.Namespace) -> int:
         raise VWBError("no modules selected for lint")
     requested_tools = list(dict.fromkeys(args.linter or ["all"]))
     checks: list[tuple[str, str]] = []
+    selection_failures: list[tuple[str, str, str]] = []
     for module in modules:
-        language = workbench.catalog.definition(module).language
+        definitions = workbench.catalog.modules.get(module, [])
+        if not definitions:
+            workbench.catalog.definition(module)
+        if len(definitions) > 1:
+            try:
+                workbench.catalog.definition(module)
+            except VWBError as exc:
+                selection_failures.append((module, "discovery", str(exc)))
+                print(
+                    workbench.style("DISCOVERY FAIL", Ansi.BOLD, Ansi.RED)
+                    + f" ({module}: {exc})"
+                )
+                continue
+        language = definitions[0].language
         if "all" in requested_tools:
             tools = (
                 ["ghdl", "iverilog", "verilator", "yosys"]
@@ -5088,7 +5423,9 @@ def command_lint(workbench: Workbench, args: argparse.Namespace) -> int:
             tools = requested_tools
         checks.extend((module, tool) for tool in dict.fromkeys(tools))
     passed = 0
-    failures: list[tuple[str, str, str]] = []
+    attempted = len(selection_failures)
+    failures: list[tuple[str, str, str]] = list(selection_failures)
+    skipped: list[tuple[str, str, str]] = []
     for index, (module, tool) in enumerate(checks, start=1):
         print(
             workbench.style("==>", Ansi.BOLD, Ansi.CYAN)
@@ -5109,10 +5446,18 @@ def command_lint(workbench: Workbench, args: argparse.Namespace) -> int:
                 verible_args=args.verible_arg,
                 ghdl_args=args.ghdl_arg,
             )
+        except MissingToolError as exc:
+            skipped.append((module, tool, exc.command))
+            print(
+                workbench.style("SKIPPED", Ansi.BOLD, Ansi.YELLOW)
+                + f" ({exc.command} not installed)"
+            )
+            continue
         except VWBError as exc:
             ok = False
             reason = str(exc)
             print(f"error: {exc}", file=sys.stderr)
+        attempted += 1
         print(
             workbench.style(
                 "PASS" if ok else "FAIL",
@@ -5123,19 +5468,37 @@ def command_lint(workbench: Workbench, args: argparse.Namespace) -> int:
         passed += int(ok)
         if not ok:
             failures.append((module, tool, reason))
+    print(workbench.style("Result:", Ansi.BOLD, Ansi.CYAN))
+    if failures:
+        code_label, code_color = "FAIL", Ansi.RED
+    elif attempted:
+        code_label, code_color = "PASS", Ansi.GREEN
+    else:
+        code_label, code_color = "NOT CHECKED", Ansi.YELLOW
+    denominator_label = "available lint checks" if skipped else "lint checks"
     print(
-        workbench.style("==>", Ansi.BOLD, Ansi.CYAN)
-        + " "
-        + workbench.style(
-            f"{passed}/{len(checks)} lint checks passed",
-            Ansi.GREEN if passed == len(checks) else Ansi.RED,
-        )
+        "  Your code: "
+        + workbench.style(code_label, Ansi.BOLD, code_color)
+        + f" - {passed}/{attempted} {denominator_label} passed"
     )
+    if skipped:
+        print(
+            "  Your setup: "
+            + workbench.style("OPTIONAL TOOLS MISSING", Ansi.BOLD, Ansi.YELLOW)
+            + f" - {len(skipped)} check(s) skipped; run 'vwb doctor'"
+        )
+    else:
+        print(
+            "  Your setup: "
+            + workbench.style("OK", Ansi.BOLD, Ansi.GREEN)
+        )
     if failures:
         print(workbench.style("Failed lint checks:", Ansi.BOLD, Ansi.RED))
         for module, tool, reason in failures:
             print(f"  {module}: {tool}: {reason}")
-    return 0 if passed == len(checks) else 1
+    if not attempted:
+        return 2
+    return 0 if not failures else 1
 
 
 def command_synth(workbench: Workbench, args: argparse.Namespace) -> int:
@@ -5187,6 +5550,22 @@ def command_doctor(workbench: Workbench, args: argparse.Namespace) -> int:
         group: {command: find_tool(command) for command in commands}
         for group, commands in groups.items()
     }
+    module_names = workbench.catalog.names()
+    module_languages = {
+        definition.language
+        for definitions in workbench.catalog.modules.values()
+        for definition in definitions
+    }
+    required_commands: set[str] = set()
+    if not module_names or module_languages - {"vhdl"}:
+        required_commands.update({"iverilog", "vvp"})
+    if "vhdl" in module_languages:
+        required_commands.add("ghdl")
+    if not workbench.tests or any(
+        spec.kind == "cocotb" for spec in workbench.tests
+    ):
+        required_commands.add("cocotb-config")
+
     if args.as_json:
         print(json.dumps(data, indent=2, sort_keys=True))
     else:
@@ -5194,28 +5573,49 @@ def command_doctor(workbench: Workbench, args: argparse.Namespace) -> int:
             print(workbench.style(f"{group}:", Ansi.BOLD, Ansi.CYAN))
             for command, path in commands.items():
                 name = workbench.style(f"{command:<18}", Ansi.BOLD)
-                status = workbench.style(
-                    path or "missing",
-                    Ansi.GREEN if path else Ansi.RED,
-                )
+                if path:
+                    status = workbench.style(f"[OK] {path}", Ansi.GREEN)
+                elif command in required_commands:
+                    status = workbench.style("[REQUIRED MISSING]", Ansi.RED)
+                else:
+                    status = workbench.style("[optional missing]", Ansi.YELLOW)
                 print(f"  {name} {status}")
         print(
             workbench.style("project:", Ansi.BOLD, Ansi.CYAN)
             + f" {len(workbench.catalog.names())} modules, "
             + f"{len(workbench.tests)} runnable tests"
         )
-    required = [data["simulation"]["iverilog"], data["simulation"]["vvp"]]
-    required.append(data["synthesis"]["yosys"])
-    if workbench.catalog.names():
-        required.append(data["simulation"]["cocotb-config"])
-    if any(
-        workbench.catalog.definition(name).language == "vhdl"
-        for name in workbench.catalog.names()
-    ):
-        required.append(data["simulation"]["ghdl"])
-    if any(path.suffix.lower() == ".sv" for path in workbench.catalog.files):
-        required.append(data["simulation"]["sv2v"])
-    return 0 if all(required) else 1
+        missing_required = sorted(
+            command for command in required_commands if find_tool(command) is None
+        )
+        missing_optional = sorted(
+            {
+                command
+                for commands in data.values()
+                for command, path in commands.items()
+                if path is None and command not in required_commands
+            }
+        )
+        if missing_required:
+            print(
+                workbench.style("CORE SETUP NEEDS ATTENTION", Ansi.BOLD, Ansi.RED)
+                + ": "
+                + ", ".join(missing_required)
+            )
+        else:
+            print(workbench.style("CORE SETUP READY", Ansi.BOLD, Ansi.GREEN))
+        if missing_optional:
+            print(
+                workbench.style("Optional features unavailable:", Ansi.YELLOW)
+                + " "
+                + ", ".join(missing_optional)
+            )
+        if missing_required or missing_optional:
+            print(workbench.style("Install missing tools:", Ansi.BOLD, Ansi.CYAN))
+            print("  Local Ubuntu/Debian: ./setup.sh")
+            print("  Docker (complete tool set): ./run-docker.sh")
+            print("  Then run 'vwb doctor' again.")
+    return 0 if all(find_tool(command) for command in required_commands) else 1
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -5247,6 +5647,17 @@ def main(argv: Sequence[str] | None = None) -> int:
             workbench.clean(args.scope)
             return 0
         return handlers[args.command](workbench, args)
+    except MissingToolError as exc:
+        colors = Colorizer(getattr(args, "color", "auto"))
+        label = colors.apply(
+            "setup error:", Ansi.BOLD, Ansi.YELLOW, stream=sys.stderr
+        )
+        print(f"{label} {exc}", file=sys.stderr)
+        print(
+            "Run 'vwb doctor' for local and Docker installation instructions.",
+            file=sys.stderr,
+        )
+        return 2
     except VWBError as exc:
         colors = Colorizer(getattr(args, "color", "auto"))
         label = colors.apply("error:", Ansi.BOLD, Ansi.RED, stream=sys.stderr)

@@ -93,6 +93,126 @@ class SourceCatalogTests(unittest.TestCase):
             with self.assertRaisesRegex(vwb.VWBError, "declared more than once"):
                 catalog.closure("duplicate")
 
+    def test_list_reports_duplicates_interfaces_and_primitives_without_aborting(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.write(root, "src/first.v", "module duplicate; endmodule\n")
+            self.write(root, "src/second.v", "module duplicate; endmodule\n")
+            self.write(root, "src/healthy.v", "module healthy; endmodule\n")
+            self.write(
+                root,
+                "src/units.sv",
+                "interface stream_if; logic value; endinterface\n"
+                "primitive pass_udp(out, in); output out; input in; "
+                "table 0 : 0; 1 : 1; endtable endprimitive\n",
+            )
+            self.write(root, "test/.gitkeep", "")
+            workbench = vwb.Workbench(
+                root=root,
+                src_dir=root / "src",
+                test_dir=root / "test",
+                build_dir=root / ".vwb",
+            )
+            output = io.StringIO()
+
+            with contextlib.redirect_stdout(output):
+                status = vwb.command_list(
+                    workbench, SimpleNamespace(as_json=True)
+                )
+
+            report = json.loads(output.getvalue())
+            modules = {item["name"]: item for item in report["modules"]}
+            self.assertEqual(status, 0)
+            self.assertIn("healthy", modules)
+            self.assertTrue(modules["duplicate"]["problems"])
+            self.assertEqual(
+                [item["name"] for item in report["interfaces"]], ["stream_if"]
+            )
+            self.assertEqual(
+                [item["name"] for item in report["primitives"]], ["pass_udp"]
+            )
+
+    def test_unterminated_module_does_not_swallow_the_next_module(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            path = self.write(
+                root,
+                "src/designs.v",
+                "module broken;\n"
+                "  wire unfinished;\n"
+                "module healthy;\n"
+                "endmodule\n",
+            )
+
+            catalog = vwb.SourceCatalog([path])
+
+            self.assertEqual(catalog.names(), ["broken", "healthy"])
+            self.assertTrue(catalog.problems("broken"))
+            self.assertEqual(catalog.problems("healthy"), [])
+            self.assertEqual(catalog.closure("healthy"), [path.resolve()])
+
+    def test_discovery_uses_only_the_active_preprocessor_branch(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            path = self.write(
+                root,
+                "src/conditional.sv",
+                "`ifdef NOT_DEFINED\n"
+                "module phantom; endmodule\n"
+                "`else\n"
+                "module live; endmodule\n"
+                "`endif\n"
+                "`define ENABLED\n"
+                "`ifdef ENABLED\n"
+                "module selected; endmodule\n"
+                "`else\n"
+                "module live; endmodule\n"
+                "`endif\n",
+            )
+
+            catalog = vwb.SourceCatalog([path])
+
+            self.assertEqual(catalog.names(), ["live", "selected"])
+            self.assertEqual(catalog.problems("live"), [])
+
+    def test_interface_dependencies_require_interface_syntax(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            path = self.write(
+                root,
+                "src/interfaces.sv",
+                "interface bus_if; modport source(output value); logic value; "
+                "endinterface\n"
+                "module local_names; logic bus_if; logic mem; logic data; endmodule\n"
+                "module interface_user(bus_if.source bus); endmodule\n",
+            )
+
+            catalog = vwb.SourceCatalog([path])
+
+            self.assertEqual(catalog.definition("local_names").dependencies, ())
+            self.assertEqual(
+                catalog.definition("interface_user").dependencies, ("bus_if",)
+            )
+
+    def test_vhdl_strings_do_not_create_entities_or_dependencies(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            path = self.write(
+                root,
+                "src/messages.vhd",
+                "entity real_child is end entity;\n"
+                "architecture rtl of real_child is begin end architecture;\n"
+                "entity reporter is end entity;\n"
+                "architecture rtl of reporter is begin\n"
+                '  assert false report "entity phantom is child: real_child port map";\n'
+                "end architecture;\n",
+            )
+
+            catalog = vwb.SourceCatalog([path])
+
+            self.assertEqual(catalog.names(), ["real_child", "reporter"])
+            self.assertEqual(catalog.definition("reporter").dependencies, ())
+
     def test_systemverilog_packages_precede_modules_that_use_them(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -442,6 +562,34 @@ class TestDiscoveryTests(unittest.TestCase):
             self.assertTrue(ready.exists(), "the TERM-ignoring child never started")
             self.assertFalse(marker.exists())
 
+    @unittest.skipUnless(shutil.which("sh"), "needs a POSIX shell")
+    def test_tools_are_quiet_on_success_and_concise_on_failure(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.write(root, "src/dut.v", "module dut; endmodule\n")
+            self.write(root, "test/.gitkeep", "")
+            workbench = self.make_workbench(root)
+
+            output = io.StringIO()
+            errors = io.StringIO()
+            with (
+                contextlib.redirect_stdout(output),
+                contextlib.redirect_stderr(errors),
+            ):
+                success = workbench.run(["sh", "-c", "printf noisy-success"])
+            self.assertEqual(success.returncode, 0)
+            self.assertEqual(output.getvalue(), "")
+            self.assertEqual(errors.getvalue(), "")
+
+            errors = io.StringIO()
+            with contextlib.redirect_stderr(errors):
+                failure = workbench.run(
+                    ["sh", "-c", "printf useful-error >&2; exit 7"]
+                )
+            self.assertEqual(failure.returncode, 7)
+            self.assertIn("useful-error", errors.getvalue())
+            self.assertIn("--verbose", errors.getvalue())
+
     def test_cocotb_helpers_are_not_runnable_tests(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -508,13 +656,15 @@ class TestDiscoveryTests(unittest.TestCase):
             self.assertEqual(repeated, specs)
             self.assertEqual(specs[0].path.read_text(encoding="utf-8"), content)
 
-    def test_generated_starter_only_treats_explicit_reset_n_names_as_active_low(self):
+    def test_starter_clock_and_reset_name_detection_uses_conventional_names(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             self.write(
                 root,
                 "src/dut.sv",
-                "module dut(input logic clk, input logic reset_condition); endmodule\n",
+                "module dut(input logic data, input logic reset_condition, "
+                "input logic preset, input logic reset_value, input logic rstate); "
+                "endmodule\n",
             )
             self.write(root, "test/.gitkeep", "")
             workbench = self.make_workbench(root)
@@ -522,23 +672,120 @@ class TestDiscoveryTests(unittest.TestCase):
             content = workbench._cocotb_starter("dut")
             _top, verilog_content = workbench._verilog_starter("dut")
 
-            self.assertIn("reset = _vwb_signal(dut, 'reset_condition')", content)
-            self.assertIn("reset.value = 1", content)
-            self.assertIn("reset.value = 0", content)
-            self.assertEqual(content.count('Timer(10, units="ns")'), 2)
-            self.assertIn("start(start_high=False)", content)
+            self.assertNotIn("reset = _vwb_signal", content)
+            self.assertEqual(content.count('Timer(10, units="ns")'), 1)
+            self.assertNotIn("Clock(", content)
             self.assertIn("#10 $finish", verilog_content)
-            self.assertNotIn("#100 $finish", verilog_content)
-            for name in ("reset_n", "resetn", "rst_n", "rstn", "nreset", "nrst"):
+            for name in (
+                "reset_n",
+                "resetn",
+                "rst_n",
+                "rstn",
+                "nreset",
+                "nrst",
+                "arst_n",
+                "srst_n",
+            ):
                 with self.subTest(name=name):
                     self.assertTrue(workbench._reset_is_active_low(name))
+                    self.assertEqual(workbench._reset_name([name]), name)
             for name in ("reset", "reset_condition", "reset_button", "rst_sync"):
                 with self.subTest(name=name):
                     self.assertFalse(workbench._reset_is_active_low(name))
-            for name in ("clk", "sys_clk", "clk_i", "clock_i", "aclk", "iClock"):
+            for name in (
+                "clk",
+                "sys_clk",
+                "clk_i",
+                "clock_i",
+                "aclk",
+                "iClock",
+                "clk_a",
+                "clk0",
+                "clk_100",
+                "clkdiv",
+            ):
                 with self.subTest(name=name):
                     self.assertEqual(workbench._clock_name([name]), name)
             self.assertIsNone(workbench._clock_name(["clock_enable"]))
+            for name in ("preset", "reset_value", "rstate"):
+                with self.subTest(name=name):
+                    self.assertIsNone(workbench._reset_name([name]))
+
+    def test_generated_starters_initialize_unpacked_array_inputs(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = self.write(
+                root,
+                "src/array_input.sv",
+                "module array_input(input logic clk_a, "
+                "input logic [7:0] samples [0:1], "
+                "input logic [3:0] grid [0:1][0:2]); endmodule\n",
+            )
+            self.write(root, "test/.gitkeep", "")
+            workbench = self.make_workbench(root)
+
+            self.assertEqual(
+                workbench.port_directions("array_input"),
+                {"clk_a": "input", "samples": "input", "grid": "input"},
+            )
+            cocotb_content = workbench._cocotb_starter("array_input")
+            top, verilog_content = workbench._verilog_starter("array_input")
+
+            self.assertIn("def _vwb_initialize(handle):", cocotb_content)
+            self.assertIn("for child in children:", cocotb_content)
+            self.assertIn("logic [7:0] samples [0:1];", verilog_content)
+            self.assertIn(
+                "foreach (samples[__vwb_index_0]) "
+                "samples[__vwb_index_0] = '0;",
+                verilog_content,
+            )
+            self.assertIn(
+                "foreach (grid[__vwb_index_0,__vwb_index_1]) "
+                "grid[__vwb_index_0][__vwb_index_1] = '0;",
+                verilog_content,
+            )
+
+            if shutil.which("iverilog"):
+                starter = self.write(
+                    root, "test/test_array_input_starter.sv", verilog_content
+                )
+                completed = vwb.subprocess.run(
+                    [
+                        "iverilog",
+                        "-g2012",
+                        "-s",
+                        top,
+                        "-o",
+                        root / "starter.vvp",
+                        source,
+                        starter,
+                    ],
+                    capture_output=True,
+                    text=True,
+                )
+                self.assertEqual(completed.returncode, 0, completed.stderr)
+
+    def test_starter_explains_required_parameters_without_defaults(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.write(
+                root,
+                "src/required_parameter.sv",
+                "module required_parameter #(parameter WIDTH) "
+                "(input logic [WIDTH-1:0] data); endmodule\n",
+            )
+            self.write(root, "test/.gitkeep", "")
+            workbench = self.make_workbench(root)
+
+            for generator in (
+                workbench._cocotb_starter,
+                lambda module: workbench._verilog_starter(module)[1],
+            ):
+                with self.subTest(generator=generator):
+                    with self.assertRaisesRegex(
+                        vwb.VWBError, "WIDTH.*no default value"
+                    ):
+                        generator("required_parameter")
 
     def test_cocotb_starter_sanitizes_dollar_in_module_name(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -713,7 +960,7 @@ class TestDiscoveryTests(unittest.TestCase):
             self.assertIn("logic [WIDTH-1:0] data;", content)
 
             args = vwb.make_parser().parse_args(
-                ["test", "dut", "--test-language", "verilog", "--no-gate-level"]
+                ["test", "dut", "--test-language", "verilog"]
             )
             passed, _wave = workbench.run_test_spec(spec, args)
             self.assertTrue(passed)
@@ -731,6 +978,36 @@ class TestDiscoveryTests(unittest.TestCase):
 
             with self.assertRaisesRegex(vwb.VWBError, "automatic VHDL testbench"):
                 workbench.specs_for(["dut"], "vhdl", None, None)
+
+    def test_verilog_test_matching_ignores_filename_case(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.write(
+                root,
+                "src/designs.v",
+                "module broken;\n"
+                "  wire unfinished;\n"
+                "module Counter;\n"
+                "endmodule\n",
+            )
+            test_path = self.write(
+                root,
+                "test/test_counter.py",
+                "import cocotb\n@cocotb.test()\nasync def check(dut):\n    pass\n",
+            )
+
+            workbench = self.make_workbench(root)
+
+            self.assertEqual(workbench.catalog.names(), ["Counter", "broken"])
+            self.assertEqual(workbench.catalog.problems("Counter"), [])
+            self.assertEqual(
+                workbench.tests,
+                [
+                    vwb.TestSpec(
+                        dut="Counter", kind="cocotb", path=test_path.resolve()
+                    )
+                ],
+            )
 
     def test_vhdl_entity_and_test_matching_are_case_insensitive(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -915,7 +1192,7 @@ printf 'wave:%s\n' "${COMPREPLY[@]}"
                 self.assertIn(name, output.getvalue())
             self.assertIn("second compile failed", errors.getvalue())
 
-    def test_run_test_spec_executes_gate_stage_unless_disabled(self):
+    def test_run_test_spec_runs_gate_stage_only_when_requested(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             self.write(root, "src/dut.v", "module dut; endmodule\n")
@@ -940,21 +1217,21 @@ printf 'wave:%s\n' "${COMPREPLY[@]}"
                 ) as run_gate,
                 contextlib.redirect_stdout(io.StringIO()),
             ):
-                default_args = vwb.make_parser().parse_args(["test", "dut"])
-                passed, _wave = workbench.run_test_spec(spec, default_args)
-                self.assertTrue(passed)
-                gate_netlist.assert_called_once_with("dut", [], [])
-                run_gate.assert_called_once_with(spec, default_args, netlist)
-
-                gate_netlist.reset_mock()
-                run_gate.reset_mock()
-                rtl_only_args = vwb.make_parser().parse_args(
-                    ["test", "dut", "--no-gate-level"]
-                )
+                rtl_only_args = vwb.make_parser().parse_args(["test", "dut"])
                 passed, _wave = workbench.run_test_spec(spec, rtl_only_args)
                 self.assertTrue(passed)
                 gate_netlist.assert_not_called()
                 run_gate.assert_not_called()
+
+                gate_netlist.reset_mock()
+                run_gate.reset_mock()
+                gate_args = vwb.make_parser().parse_args(
+                    ["test", "dut", "--gate-level"]
+                )
+                passed, _wave = workbench.run_test_spec(spec, gate_args)
+                self.assertTrue(passed)
+                gate_netlist.assert_called_once_with("dut", [], [])
+                run_gate.assert_called_once_with(spec, gate_args, netlist)
 
     def test_native_vhdl_test_reports_gate_skip_instead_of_guaranteed_failure(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -972,7 +1249,7 @@ printf 'wave:%s\n' "${COMPREPLY[@]}"
             )
             workbench = self.make_workbench(root)
             spec = vwb.TestSpec("dut", "vhdl", test, top="test_dut")
-            args = vwb.make_parser().parse_args(["test", "dut"])
+            args = vwb.make_parser().parse_args(["test", "dut", "--gate-level"])
             output = io.StringIO()
 
             with (
@@ -986,7 +1263,38 @@ printf 'wave:%s\n' "${COMPREPLY[@]}"
 
             self.assertTrue(passed)
             gate_netlist.assert_not_called()
-            self.assertIn("GATE SKIP", output.getvalue())
+            self.assertIn("GATE SKIPPED", output.getvalue())
+
+    def test_missing_gate_tool_is_a_setup_skip_not_a_code_failure(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.write(root, "src/dut.v", "module dut; endmodule\n")
+            test = self.write(
+                root,
+                "test/test_dut.sv",
+                "module test_dut; dut instance(); initial $finish; endmodule\n",
+            )
+            workbench = self.make_workbench(root)
+            spec = vwb.TestSpec("dut", "verilog", test, top="test_dut")
+            args = vwb.make_parser().parse_args(["test", "dut", "--gate-level"])
+            output = io.StringIO()
+
+            with (
+                mock.patch.object(
+                    workbench, "_run_rtl_test_spec", return_value=(True, None)
+                ),
+                mock.patch.object(
+                    workbench,
+                    "gate_netlist",
+                    side_effect=vwb.MissingToolError("yosys", ("yosys",)),
+                ),
+                contextlib.redirect_stdout(output),
+            ):
+                passed, _wave = workbench.run_test_spec(spec, args)
+
+            self.assertTrue(passed)
+            self.assertIn("GATE SKIPPED (yosys not installed)", output.getvalue())
+            self.assertEqual(args._setup_skips, ["gate-level simulation: yosys"])
 
     def test_cocotb_rtl_and_gate_stages_reuse_one_automatic_seed(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -999,7 +1307,7 @@ printf 'wave:%s\n' "${COMPREPLY[@]}"
             )
             workbench = self.make_workbench(root)
             spec = vwb.TestSpec("dut", "cocotb", test)
-            args = vwb.make_parser().parse_args(["test", "dut"])
+            args = vwb.make_parser().parse_args(["test", "dut", "--gate-level"])
             netlist = root / ".vwb" / "synth" / "dut" / "gate" / "dut_gate.v"
 
             with (
@@ -1527,6 +1835,37 @@ printf 'wave:%s\n' "${COMPREPLY[@]}"
             self.assertIn("first: iverilog: tool reported errors", output.getvalue())
             self.assertIn("first: yosys: Yosys unavailable", output.getvalue())
             self.assertIn("Yosys unavailable", errors.getvalue())
+
+    def test_lint_succeeds_with_one_available_checker(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.write(root, "src/dut.v", "module dut; endmodule\n")
+            self.write(root, "test/.gitkeep", "")
+            workbench = self.make_workbench(root)
+            args = vwb.make_parser().parse_args(["lint", "dut"])
+
+            def lint(
+                _module: str, tool: str, *_args: object, **_kwargs: object
+            ) -> bool:
+                if tool == "iverilog":
+                    return True
+                command = (
+                    "verible-verilog-lint" if tool == "verible" else tool
+                )
+                raise vwb.MissingToolError(command, (command,))
+
+            output = io.StringIO()
+            with (
+                mock.patch.object(workbench, "lint_with_tool", side_effect=lint),
+                contextlib.redirect_stdout(output),
+            ):
+                status = vwb.command_lint(workbench, args)
+
+            self.assertEqual(status, 0)
+            report = output.getvalue()
+            self.assertIn("1/1 available lint checks passed", report)
+            self.assertIn("3 check(s) skipped", report)
+            self.assertNotIn("FAIL", report)
 
     def test_hdl_testbench_top_is_inferred(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -2121,6 +2460,34 @@ printf 'wave:%s\n' "${COMPREPLY[@]}"
             )
             self.assertEqual(report["lint"]["iverilog"], "/usr/bin/iverilog")
             self.assertEqual(report["synthesis"]["inkscape"], "/usr/bin/inkscape")
+
+    def test_doctor_allows_missing_optional_tools_and_explains_installation(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.write(root, "src/dut.v", "module dut; endmodule\n")
+            self.write(root, "test/test_dut.sv", "module test_dut; endmodule\n")
+            workbench = self.make_workbench(root)
+
+            def which(command: str) -> str | None:
+                if command in {"iverilog", "vvp"}:
+                    return f"/usr/bin/{command}"
+                return None
+
+            output = io.StringIO()
+            with (
+                mock.patch("vwb.shutil.which", side_effect=which),
+                contextlib.redirect_stdout(output),
+            ):
+                status = vwb.command_doctor(
+                    workbench, SimpleNamespace(as_json=False)
+                )
+
+            self.assertEqual(status, 0)
+            report = output.getvalue()
+            self.assertIn("CORE SETUP READY", report)
+            self.assertIn("[optional missing]", report)
+            self.assertIn("./setup.sh", report)
+            self.assertIn("./run-docker.sh", report)
 
     def test_formal_dry_run_with_view_does_not_require_a_trace(self):
         with tempfile.TemporaryDirectory() as directory:

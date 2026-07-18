@@ -171,7 +171,7 @@ class GeneratedStarterWaveAuditTests(unittest.TestCase):
             calls[0][calls[0].index("--wave-format") + 1],
             metadata.default_wave_format,
         )
-        self.assertNotIn("--no-gate-level", calls[0])
+        self.assertIn("--gate-level", calls[0])
         self.assertTrue(fixture_roots)
         self.assertTrue(all(not path.exists() for path in fixture_roots))
 
@@ -188,10 +188,10 @@ class GeneratedStarterWaveAuditTests(unittest.TestCase):
         self.assertEqual(failures, [])
         self.assertEqual(actual_formats, expected_formats)
         self.assertNotIn("--test", calls[0])
-        self.assertNotIn("--no-gate-level", calls[0])
+        self.assertIn("--gate-level", calls[0])
         for call in calls[1:]:
             self.assertIn("--test", call)
-            self.assertIn("--no-gate-level", call)
+            self.assertNotIn("--gate-level", call)
 
     def test_empty_generated_waveform_is_reported(self):
         _metadata, _calls, failures, _fixture_roots = self.run_audit(

@@ -13,13 +13,15 @@ All notable changes to Verilog Workbench are recorded here.
 - Added automatic Cocotb starter tests for units without tests. Starters detect
   common clock and reset ports, initialize inputs, and run the design briefly.
 - Added RTL and post-synthesis gate-level simulation using the same testbench.
-  `test` enables the gate check by default and accepts `--no-gate-level`;
-  `wave` runs RTL by default and accepts `--gate-level` to enable it.
+  Both `test` and `wave` run RTL by default and accept `--gate-level` to enable
+  the slower post-synthesis check.
 - Added source-independent FST and VCD generation, including bounded dumping of
   static arrays. HDL source files no longer need conditional `$dump*` blocks.
 - Added saved waveform tags, saved GTKWave layouts, automatic layout reuse, and
   commands for listing and reopening known-good waves.
 - Added aggregate linting with Icarus, Verilator, Yosys, Verible, and GHDL.
+- Added `setup.sh` for a permanent local Ubuntu/Debian installation, including
+  the `vwb` command, PATH setup, and terminal Tab completion.
 - Added project configuration through `vwb init`, shell colors, machine-readable
   reports, FPGA flows, formal checks, and shell completion callbacks.
 - Added real terminal Tab completion for commands, options, module/entity names,
@@ -48,6 +50,12 @@ All notable changes to Verilog Workbench are recorded here.
   remain available for user projects.
 - Reworked every CLI help screen in plain logic-design language and replaced
   confusing internal descriptions with direct explanations of each option.
+- Source simulation is now the default for both `test` and `wave`. Gate-level
+  simulation is an opt-in extra check enabled with `--gate-level`.
+- External tools are quiet by default. Successful tool transcripts are hidden,
+  failures show a short diagnostic tail, and `--verbose` shows full output.
+- `doctor` now marks only the tools needed by the current project as required,
+  labels the rest as optional, and gives local and Docker installation steps.
 - Focused the README on the introduction, features, guided first project,
   project layout, language support, and Docker/native installation. Exact
   option details now live in `vwb.py COMMAND --help` instead of duplicate
@@ -55,6 +63,22 @@ All notable changes to Verilog Workbench are recorded here.
 
 ### Fixed
 
+- Relative `--src-dir`, `--test-dir`, and `--build-dir` paths now use the
+  directory where `vwb` was started when no saved project root is present.
+- Discovery now reports duplicate and unterminated declarations per design
+  unit without hiding healthy modules or aborting `list`. Inactive
+  preprocessor branches and VHDL strings no longer create phantom designs.
+- Interfaces and Verilog primitives appear in `list`, interface dependencies
+  require real interface syntax, and Verilog test filenames match module names
+  without case surprises.
+- Generated Cocotb and SystemVerilog starters initialize unpacked array inputs,
+  recognize common suffixed clocks and active-low resets, avoid reset-name false
+  positives, and explain parameters that need an explicit value.
+- Bundled Tang Nano 9K and iCEBreaker constraint files now match the bundled
+  `validation_fpga` design. CI place-routes and packs it with both default files.
+- `clean` works even after source or test folders are removed, reports accurate
+  dry-run actions, ignores missing scope folders, and strictly validates legacy
+  ownership markers.
 - Simulation, lint, and validation batches now continue after individual
   failures and report all failures together.
 - NetlistSVG is now tried for every schematic request regardless of design
@@ -63,6 +87,8 @@ All notable changes to Verilog Workbench are recorded here.
   never substitutes a port table or smaller overview.
 - Yosys lint now prints only warnings and errors in the terminal while saving
   its complete transcript under the lint build directory.
+- Lint now runs every available suitable checker and skips missing optional
+  backends. Result summaries separate HDL failures from setup limitations.
 - Fixed escaped HDL identifiers across discovery, generated starters, Cocotb,
   Icarus, Yosys, waveform instrumentation, and artifact names.
 - Fixed Yosys rendering command quoting while preserving safe module selection.

@@ -455,6 +455,69 @@ class WaveLifecycleTests(ProjectMixin, unittest.TestCase):
                 workbench.clean(scope)
                 self.assertFalse((root / ".vwb" / directory_name).exists())
 
+    def test_clean_works_after_source_and_test_directories_are_removed(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            workbench = self.make_project(root)
+            workbench.prepare_build_dir()
+            temporary = self.write(root, ".vwb/lint/report.txt", "temporary\n")
+            for tree in (root / "src", root / "test"):
+                for path in tree.iterdir():
+                    path.unlink()
+                tree.rmdir()
+
+            status = vwb.main(["--root", str(root), "clean"])
+
+            self.assertEqual(status, 0)
+            self.assertFalse(temporary.exists())
+
+    def test_clean_dry_run_lists_only_artifacts_that_would_be_removed(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            workbench = self.make_project(root)
+            workbench.prepare_build_dir()
+            stale = self.write(root, ".vwb/sim/dut/run/stale.vvp", "stale\n")
+            layout = self.write(root, ".vwb/sim/dut/run/dut.gtkw", "layout\n")
+            dry_run = vwb.Workbench(
+                root=root,
+                src_dir=root / "src",
+                test_dir=root / "test",
+                build_dir=root / ".vwb",
+                dry_run=True,
+            )
+            output = io.StringIO()
+
+            with contextlib.redirect_stdout(output):
+                dry_run.clean("temp")
+                dry_run.clean("formal")
+
+            report = output.getvalue()
+            lines = report.splitlines()
+            self.assertIn(str(stale), report)
+            self.assertNotIn(str(layout), report)
+            self.assertNotIn(f"remove {root / '.vwb' / 'sim'}", lines)
+            self.assertNotIn(str(root / ".vwb" / "formal"), report)
+            self.assertTrue(stale.is_file())
+            self.assertTrue(layout.is_file())
+
+    def test_clean_rejects_legacy_marker_with_extra_text(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            workbench = self.make_project(root)
+            marker = self.write(
+                root,
+                f".vwb/{vwb.BUILD_MARKER}",
+                "not-owned Verilog Work Bench old\n"
+                f"project={root.resolve()}\n",
+            )
+            self.write(root, ".vwb/lint/keep.txt", "keep\n")
+
+            with self.assertRaisesRegex(vwb.VWBError, "another project"):
+                workbench.clean("lint")
+
+            self.assertTrue(marker.is_file())
+            self.assertTrue((root / ".vwb" / "lint" / "keep.txt").is_file())
+
     def test_saved_wave_payload_symlinks_are_rejected(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
