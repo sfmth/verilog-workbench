@@ -71,10 +71,14 @@ All notable changes to Verilog Workbench are recorded here.
 
 ### CI/CD
 
-- GitHub Actions now builds the Docker image and discovers all example designs
-  and tests dynamically instead of maintaining a design-name list.
+- GitHub Actions builds the Docker image and audits the complete discovered
+  example inventory, including every Python test source.
 - Added software regression tests, generated-starter integration checks, both
   waveform formats, language coverage, lint and synthesis coverage, option
   contract checks, and CI-safe dry runs for GUI and hardware-only operations.
+- Tool-heavy simulation, wave, lint, synthesis, and FPGA matrices now use a
+  reviewed ten-module profile covering all supported languages, both discovered
+  test styles, generated starters, large hierarchies, arrays, interfaces,
+  packages, and split-file VHDL.
 - Added a synthesis option matrix and artifact validation to both CI and release
-  workflows so future examples are included automatically.
+  workflows for every module in that representative profile.

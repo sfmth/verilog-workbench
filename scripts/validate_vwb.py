@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Dynamic integration harness for the Verilog Workbench CLI.
+"""Integration harness for the Verilog Workbench CLI.
 
-The harness treats ``vwb.py list --json`` as the source of truth.  It never
-contains a DUT or testbench name, so adding a discovered design or test grows
-the validation matrix without requiring this file to change.
+The harness treats ``vwb.py list --json`` as the source of truth. It always
+audits the complete inventory, while CI can limit tool-heavy phases to a small,
+reviewed group of representative modules.
 """
 
 from __future__ import annotations
@@ -44,6 +44,22 @@ ALL_PHASES = (
 )
 COMMAND_TIMEOUT_SECONDS = 600
 PNG_MAX_PIXELS = 16_000_000
+
+# Keep this profile small and reviewable. Together these modules cover large
+# hierarchies, generated starters, arrays, native HDL tests, SystemVerilog
+# packages/interfaces/includes, and hierarchical plus split-file VHDL.
+REPRESENTATIVE_MODULES: dict[str, str] = {
+    "processor": "large pipelined Verilog hierarchy with six child modules",
+    "processing_array": "largest source with generated instances and 2D arrays",
+    "processing_element": "untested parameterized array design; generates a starter",
+    "tinycordic": "wide ports, sequential arithmetic, state machine, and ROM array",
+    "encoder": "small parameterized sequential baseline",
+    "array_example": "SystemVerilog memory and the native HDL testbench path",
+    "sv_beginner_alu": "SystemVerilog package, function, and always_comb",
+    "sv_beginner_interface": "SystemVerilog include, interface, modports, and helpers",
+    "vhdl_beginner_accumulator": "hierarchical VHDL with combinational and clocked logic",
+    "vhdl_beginner_counter": "VHDL entity and architecture split across files",
+}
 
 
 class HarnessError(RuntimeError):
@@ -2886,6 +2902,71 @@ def select_modules(all_modules: Sequence[str], requested: Sequence[str]) -> list
     return [module for module in all_modules if module in requested_set]
 
 
+def select_representative_modules(
+    inventory: dict[str, Any],
+    all_modules: Sequence[str],
+    tests: Sequence[TestCase],
+) -> list[str]:
+    if len(REPRESENTATIVE_MODULES) != 10:
+        raise HarnessError("the representative CI profile must contain 10 modules")
+
+    available = set(all_modules)
+    selected = list(REPRESENTATIVE_MODULES)
+    missing = sorted(set(selected) - available)
+    if missing:
+        raise HarnessError(
+            "representative CI modules are missing from the inventory: "
+            + ", ".join(missing)
+        )
+
+    inventory_by_name = {
+        module["name"]: module for module in inventory["modules"]
+    }
+    languages = {
+        inventory_by_name[name]["language"] for name in selected
+    }
+    required_languages = {"verilog", "systemverilog", "vhdl"}
+    if languages != required_languages:
+        raise HarnessError(
+            "representative CI modules must cover Verilog, SystemVerilog, and VHDL"
+        )
+    for language in required_languages:
+        count = sum(
+            inventory_by_name[name]["language"] == language for name in selected
+        )
+        if count < 2:
+            raise HarnessError(
+                f"representative CI profile needs at least two {language} modules"
+            )
+
+    selected_set = set(selected)
+    all_test_kinds = {test.kind for test in tests}
+    selected_test_kinds = {
+        test.kind for test in tests if test.module in selected_set
+    }
+    missing_test_kinds = sorted(all_test_kinds - selected_test_kinds)
+    if missing_test_kinds:
+        raise HarnessError(
+            "representative CI modules do not cover discovered test kinds: "
+            + ", ".join(missing_test_kinds)
+        )
+
+    has_tests = {
+        name: bool(inventory_by_name[name].get("tests")) for name in selected
+    }
+    if not any(has_tests.values()) or all(has_tests.values()):
+        raise HarnessError(
+            "representative CI modules must include tested and untested designs"
+        )
+    if not any(inventory_by_name[name].get("dependencies") for name in selected):
+        raise HarnessError("representative CI modules must include a hierarchy")
+    if not any(
+        len(inventory_by_name[name].get("files", [])) > 1 for name in selected
+    ):
+        raise HarnessError("representative CI modules must include a multi-file design")
+    return selected
+
+
 def select_tests(
     all_tests: Sequence[TestCase],
     indices: Sequence[int],
@@ -2915,7 +2996,8 @@ def select_tests(
 def parse_arguments() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=(
-            "Discover the vwb.py inventory and run a name-free integration matrix."
+            "Audit the complete vwb.py inventory and run tool-heavy checks on "
+            "the selected modules."
         )
     )
     parser.add_argument("--root", default=str(REPOSITORY_ROOT))
@@ -2933,11 +3015,17 @@ def parse_arguments() -> argparse.Namespace:
         help="run one phase; repeat as needed (default: all phases)",
     )
     parser.add_argument("--seed", type=int, default=1)
-    parser.add_argument(
+    module_selection = parser.add_mutually_exclusive_group()
+    module_selection.add_argument(
         "--module",
         action="append",
         default=[],
         help="limit module phases to one discovered module; repeat as needed",
+    )
+    module_selection.add_argument(
+        "--representative-modules",
+        action="store_true",
+        help="limit tool-heavy phases to the reviewed 10-module CI profile",
     )
     parser.add_argument(
         "--test-index",
@@ -3035,13 +3123,23 @@ def main() -> int:
             print(json.dumps(document, indent=2))
             return 1 if runner.failures else 0
 
-        selected_modules = select_modules(modules, args.module)
-        selected_tests = select_tests(tests, args.test_index, args.module)
-        if args.test_index and not args.module:
-            test_modules = {test.module for test in selected_tests}
-            selected_modules = [
-                module for module in modules if module in test_modules
-            ]
+        if args.representative_modules and args.test_index:
+            raise HarnessError(
+                "--representative-modules cannot be combined with --test-index"
+            )
+        if args.representative_modules:
+            selected_modules = select_representative_modules(
+                inventory, modules, tests
+            )
+            selected_tests = select_tests(tests, [], selected_modules)
+        else:
+            selected_modules = select_modules(modules, args.module)
+            selected_tests = select_tests(tests, args.test_index, args.module)
+            if args.test_index and not args.module:
+                test_modules = {test.module for test in selected_tests}
+                selected_modules = [
+                    module for module in modules if module in test_modules
+                ]
         if args.synth_format and args.synth_format not in metadata.synth_formats:
             raise HarnessError(
                 f"unsupported --synth-format {args.synth_format!r}; choose from: "
@@ -3054,6 +3152,13 @@ def main() -> int:
             f"build directory: {build_dir}",
             file=sys.stderr,
         )
+        if args.representative_modules:
+            print("Representative module profile:", file=sys.stderr)
+            for module in selected_modules:
+                print(
+                    f"  {module}: {REPRESENTATIVE_MODULES[module]}",
+                    file=sys.stderr,
+                )
         generated_starter_coverage_done = False
         for phase in phases:
             print(f"\n== {phase} ==", file=sys.stderr, flush=True)

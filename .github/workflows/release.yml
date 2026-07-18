@@ -16,7 +16,7 @@ env:
 
 jobs:
   publish:
-    name: Real CI-safe runs plus dry-run GUI and flash checks
+    name: Validate ten representative modules and publish
     runs-on: ubuntu-latest
     timeout-minutes: 360
 
@@ -36,11 +36,12 @@ jobs:
           cache-from: type=gha,scope=release
           cache-to: type=gha,mode=max,scope=release
 
-      - name: Run real CI-safe checks and parse or dry-run GUI and flash options
+      - name: Validate the representative module profile and all CLI options
         run: |
           docker run --rm --network none \
             verilog-workbench-release:${{ github.sha }} \
             python3 scripts/validate_vwb.py \
+              --representative-modules \
               --all-wave-formats \
               --synth-option-matrix
 

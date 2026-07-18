@@ -203,6 +203,81 @@ class GeneratedStarterWaveAuditTests(unittest.TestCase):
         self.assertIn("missing or empty generated-starter waveform", failures[0])
 
 
+class RepresentativeModuleSelectionTests(unittest.TestCase):
+    def test_profile_covers_languages_test_styles_and_complex_designs(self):
+        root = Path(__file__).resolve().parents[2]
+        with tempfile.TemporaryDirectory(prefix="vwb-profile-test-") as directory:
+            runner = validate_vwb.Runner(
+                root=root,
+                vwb=root / "vwb.py",
+                src_dir="examples/src",
+                test_dir="examples/test",
+                build_dir=Path(directory) / "build",
+            )
+            with mock.patch.object(validate_vwb.Runner, "_display"):
+                inventory = validate_vwb.read_inventory(runner)
+
+        tests = validate_vwb.flatten_tests(inventory, root)
+        all_modules = validate_vwb.module_names(inventory)
+        selected = validate_vwb.select_representative_modules(
+            inventory, all_modules, tests
+        )
+        selected_tests = validate_vwb.select_tests(tests, [], selected)
+        inventory_by_name = {
+            module["name"]: module for module in inventory["modules"]
+        }
+
+        self.assertEqual(selected, list(validate_vwb.REPRESENTATIVE_MODULES))
+        self.assertEqual(len(selected), 10)
+        self.assertEqual(
+            {inventory_by_name[name]["language"] for name in selected},
+            {"verilog", "systemverilog", "vhdl"},
+        )
+        self.assertEqual(
+            {test.kind for test in selected_tests},
+            {test.kind for test in tests},
+        )
+        self.assertEqual(
+            {name for name in selected if not inventory_by_name[name]["tests"]},
+            {"processing_element"},
+        )
+        self.assertGreaterEqual(
+            len(inventory_by_name["processor"]["dependencies"]), 6
+        )
+        self.assertGreater(
+            (root / "examples/src/processing_array.v").stat().st_size,
+            10_000,
+        )
+        self.assertEqual(
+            len(inventory_by_name["vhdl_beginner_counter"]["files"]), 2
+        )
+        self.assertTrue(
+            all(test.module in set(selected) for test in selected_tests)
+        )
+
+    def test_profile_fails_loudly_when_a_selected_module_disappears(self):
+        modules = [
+            {
+                "name": name,
+                "language": "verilog",
+                "files": [f"{name}.v"],
+                "dependencies": [],
+                "tests": [],
+            }
+            for name in list(validate_vwb.REPRESENTATIVE_MODULES)[1:]
+        ]
+
+        with self.assertRaisesRegex(
+            validate_vwb.HarnessError,
+            "representative CI modules are missing",
+        ):
+            validate_vwb.select_representative_modules(
+                {"modules": modules},
+                [module["name"] for module in modules],
+                [],
+            )
+
+
 class OptionSpellingAuditTests(unittest.TestCase):
     @staticmethod
     def metadata_and_runner() -> tuple[
