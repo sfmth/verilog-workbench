@@ -74,6 +74,14 @@ module processor (
     // 5bit wires
     wire [4:0] rs1_d, rs2_d, rd_d, alu_control_d;
 
+    // memory-stall and hazard state
+    wire stall_f_h, stall_d_h;
+    wire flush_f_h, flush_d_h, flush_e_h, flush_m_h, flush_w_h;
+    wire [31:0] pc_f_next_not_stall;
+    reg stall_1, stall_2, stall_3;
+    reg pc_src_e_hold, flush_e_hold, flush_d_hold;
+    reg [31:0] pc_target_e_hold;
+
    
 
 
@@ -134,8 +142,6 @@ module processor (
 
 	// handle memory stall hazards
 	// signals ending with _h are coming from the hazard_unit
-    wire stall_f_h, stall_d_h;
-    reg stall_1, stall_2, stall_3;
     always @(posedge clk) begin // save the stall state for using it on different pipeline stages 
         if (reset) begin
             stall_1 <= 0;
@@ -147,22 +153,15 @@ module processor (
             stall_3 <= stall_2;
         end
     end
-    wire flush_d_h;
     assign flush_d = flush_e_h | flush_d_hold; // flush the d stage (idk why it uses flush_e_h but it works!)
-    wire flush_w_h;
     assign flush_w = stall_3 | flush_w_h; // flush the w stage when the processor is stalled and there is nothing to do
-    wire flush_e_h;
     assign flush_e = stall_1 | flush_e_h | flush_e_hold; // flush the e stage 
-    wire flush_m_h;
     assign flush_m = stall_2 | flush_m_h;
     assign stall_f = stall | stall_f_h; // stall the pipeline for memory stall
     assign stall_d = stall | stall_d_h;
     assign stall_e = stall_1; 
     assign stall_m = stall_2;
     assign stall_w = stall_3;
-    wire [31:0] pc_f_next_not_stall; // pc_f_next when there is a beq or jal instruction but the processor is not under memory stall
-    reg pc_src_e_hold, flush_e_hold, flush_d_hold; // hold these signals when a memory stall occurs
-    reg [31:0] pc_target_e_hold;
     always @(posedge clk) begin
         if (reset) begin
             flush_d_hold <= 0;
@@ -176,7 +175,6 @@ module processor (
             flush_d_hold <= pc_src_e & stall; // hold flush_d on stall
         end        
     end
-    wire flush_f_h;
     assign flush_f = (stall & stall_1 & pc_src_e) | flush_f_h; // flush pc_f when a stall occurs to avoid reading unwanted instructions
 
 	// hazard unit

@@ -199,6 +199,7 @@ case "$DISTRO_FAMILY" in
         select_package "Icarus Verilog" required iverilog
         if ! select_package "Cocotb" fallback python3-cocotb python-cocotb; then
             select_package "C++ compiler for Cocotb" required gcc-c++
+            select_package "static C++ runtime for Cocotb" required libstdc++-static
             select_package "Python development files for Cocotb" required python3-devel
         fi
         select_package "Tab completion" fallback python3-argcomplete || true

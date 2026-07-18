@@ -10,6 +10,8 @@ All notable changes to Verilog Workbench are recorded here.
   development Ubuntu release.
 - Fedora full installs now use the package manager's broken-dependency skip for
   optional tools, so one stale optional RPM cannot block the usable toolchain.
+- Fedora installs now include the distribution's static C++ runtime when
+  Cocotb must be compiled for a newer Python release.
 - The representative CI profile keeps its large Verilog and VHDL coverage but
   uses the portable clocked SystemVerilog shift-register example instead of an
   interface-port example that requires an optional converter with Icarus.
@@ -23,6 +25,10 @@ All notable changes to Verilog Workbench are recorded here.
   available, while still checking VHDL discovery, command parsing, and dry-run
   behavior. This lets Arch and temporarily broken Fedora repositories validate
   the tools they can install without treating an optional GHDL gap as a failure.
+- Portable `doctor` validation now accepts its documented missing-tool status,
+  and waveform validation reloads only tags that were saved successfully.
+- The processor and TinyCORDIC examples declare signals before use so they
+  elaborate with the stricter checks in Icarus Verilog 13.
 - Local setup now installs a C++ compiler and Python development files only
   when Cocotb is unavailable from the distribution and must be installed with
   `pip`. This restores GHDL loading and lets rolling distributions build Cocotb.

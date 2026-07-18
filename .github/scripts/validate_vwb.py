@@ -1609,9 +1609,11 @@ def validate_doctor(runner: Runner, *, portable_tools: bool = False) -> None:
     result = runner.run_vwb(
         ["doctor", "--json"],
         label="toolchain doctor",
+        expected=(0, 1) if portable_tools else (0,),
         capture=True,
     )
-    if result.returncode != 0:
+    accepted_statuses = (0, 1) if portable_tools else (0,)
+    if result.returncode not in accepted_statuses:
         return
     try:
         report = json.loads(result.stdout)
@@ -2197,7 +2199,7 @@ def validate_waves(
         saved: list[tuple[TestCase, str]] = []
         for test_index, test in enumerate(tests):
             tag = f"ci-wave-{os.getpid()}-{test_index}"
-            saved.append((test, tag))
+            tag_saved = False
             for format_index, wave_format in enumerate(formats):
                 arguments = explicit_test_arguments(
                     test, seed=seed, command="wave"
@@ -2213,7 +2215,7 @@ def validate_waves(
                         tag,
                     ]
                 )
-                if format_index:
+                if tag_saved:
                     arguments.append("--replace-tag")
                 if test_index == 0 and format_index == 0:
                     arguments.extend(["--save", str(explicit_layout)])
@@ -2223,13 +2225,14 @@ def validate_waves(
                 )
                 if result.returncode != 0:
                     continue
+                tag_saved = True
                 artifact = waveform_path(runner, test, wave_format)
                 if not artifact.is_file() or artifact.stat().st_size == 0:
                     runner.failures.append(
                         f"missing or empty waveform artifact: {artifact}"
                     )
 
-            if len(formats) == 1 and test_index == 0:
+            if len(formats) == 1 and test_index == 0 and tag_saved:
                 replacement = explicit_test_arguments(
                     test, seed=seed, command="wave"
                 )
@@ -2243,6 +2246,8 @@ def validate_waves(
                     ]
                 )
                 runner.run_vwb(replacement, label="explicit saved-wave replacement")
+            if tag_saved:
+                saved.append((test, tag))
 
         for test, tag in saved:
             runner.run_vwb(

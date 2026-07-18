@@ -215,6 +215,75 @@ class GeneratedStarterWaveAuditTests(unittest.TestCase):
         self.assertIn("missing or empty generated-starter waveform", failures[0])
 
 
+class SavedWaveAuditTests(unittest.TestCase):
+    def test_failed_wave_run_is_not_reloaded_as_a_saved_tag(self):
+        root = Path(__file__).resolve().parents[2]
+        metadata = validate_vwb.load_cli_metadata(root / "vwb.py")
+        failed = validate_vwb.TestCase(
+            module="failed_dut",
+            design_language="verilog",
+            kind="cocotb",
+            language="cocotb",
+            path="examples/test/test_failed_dut.py",
+            top=None,
+            dependency_count=0,
+        )
+        passed = validate_vwb.TestCase(
+            module="passed_dut",
+            design_language="verilog",
+            kind="cocotb",
+            language="cocotb",
+            path="examples/test/test_passed_dut.py",
+            top=None,
+            dependency_count=0,
+        )
+
+        with tempfile.TemporaryDirectory(prefix="vwb-wave-audit-") as directory:
+            runner = validate_vwb.Runner(
+                root=root,
+                vwb=root / "vwb.py",
+                src_dir="examples/src",
+                test_dir="examples/test",
+                build_dir=Path(directory) / "build",
+            )
+            calls: list[tuple[str, ...]] = []
+
+            def fake_run_vwb(
+                arguments: list[str], **_kwargs: object
+            ) -> object:
+                invocation = tuple(str(argument) for argument in arguments)
+                calls.append(invocation)
+                is_simulation = "--test" in invocation
+                if is_simulation and invocation[1] == failed.module:
+                    return validate_vwb.subprocess.CompletedProcess(
+                        invocation, 1, "", "simulation failed"
+                    )
+                if is_simulation and invocation[1] == passed.module:
+                    waveform = validate_vwb.waveform_path(
+                        runner, passed, metadata.default_wave_format
+                    )
+                    waveform.parent.mkdir(parents=True, exist_ok=True)
+                    waveform.write_bytes(b"wave data")
+                return validate_vwb.subprocess.CompletedProcess(
+                    invocation, 0, "", ""
+                )
+
+            with mock.patch.object(
+                runner, "run_vwb", side_effect=fake_run_vwb
+            ):
+                validate_vwb.validate_waves(
+                    runner,
+                    metadata,
+                    [failed, passed],
+                    seed=1,
+                    all_formats=False,
+                )
+
+        loads = [call for call in calls if "--load" in call]
+        self.assertEqual(len(loads), 1)
+        self.assertEqual(loads[0][1], passed.module)
+
+
 class RepresentativeModuleSelectionTests(unittest.TestCase):
     def test_profile_covers_languages_test_styles_and_complex_designs(self):
         root = Path(__file__).resolve().parents[2]
@@ -321,6 +390,34 @@ class PortableToolValidationTests(unittest.TestCase):
         self.assertEqual(portable.failures, [])
         self.assertEqual(len(strict.failures), 1)
         self.assertIn("verible-verilog-lint", strict.failures[0])
+
+    def test_portable_doctor_accepts_missing_tool_exit_status(self):
+        report = {
+            "simulation": {
+                "iverilog": "/usr/bin/iverilog",
+                "ghdl": None,
+            }
+        }
+        result = validate_vwb.subprocess.CompletedProcess(
+            ["vwb", "doctor", "--json"],
+            1,
+            validate_vwb.json.dumps(report),
+            "",
+        )
+        runner = self.runner()
+
+        with mock.patch.object(
+            runner, "run_vwb", return_value=result
+        ) as run_vwb:
+            validate_vwb.validate_doctor(runner, portable_tools=True)
+
+        run_vwb.assert_called_once_with(
+            ["doctor", "--json"],
+            label="toolchain doctor",
+            expected=(0, 1),
+            capture=True,
+        )
+        self.assertEqual(runner.failures, [])
 
     def test_fpga_pack_accepts_supported_nextpnr_alternatives(self):
         runner = self.runner()

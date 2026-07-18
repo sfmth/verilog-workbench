@@ -71,6 +71,10 @@ class SetupScriptTests(unittest.TestCase):
         self.assertIn("yay", source)
         self.assertIn("COCOTB_IGNORE_PYTHON_REQUIRES=1", source)
         self.assertIn('select_package "C++ compiler for Cocotb"', source)
+        self.assertIn(
+            'select_package "static C++ runtime for Cocotb" required libstdc++-static',
+            source,
+        )
 
     def test_docker_uses_stable_python_base_and_development_library(self):
         source = DOCKERFILE.read_text(encoding="utf-8")

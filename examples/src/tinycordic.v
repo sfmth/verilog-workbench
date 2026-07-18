@@ -35,6 +35,7 @@ module tinycordic (
     // Registers 
     reg [5:0] reg_x, reg_y, reg_x_next, reg_y_next, reg_z, reg_z_next;
     reg en;
+    reg [2:0] i;
     always @(posedge clk) begin
         if (reset) begin
             reg_x <= x0;
@@ -132,7 +133,6 @@ module tinycordic (
     `define RESET 2'b0
     `define CALC 2'd1
     `define DONE 2'd2
-    reg [2:0]i;
     reg done;
     always @(posedge clk) begin
         if (reset) begin
