@@ -209,7 +209,11 @@ def require_yosys_identifier(value: str) -> str:
 def cocotb_toplevel_names(value: str) -> tuple[str, str]:
     normalized = tool_identifier(value)
     legacy = f"work.{normalized}" if value.startswith("\\") else normalized
-    return legacy, normalized
+    # Cocotb 2 removes one library component from dotted top-level names.
+    # Retaining "work." prevents a dot inside an escaped Verilog name from
+    # being mistaken for that library separator.
+    modern = legacy if value.startswith("\\") else normalized
+    return legacy, modern
 
 
 def find_project_config(start: Path) -> Path | None:

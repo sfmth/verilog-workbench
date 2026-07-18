@@ -2,6 +2,28 @@
 
 All notable changes to Verilog Workbench are recorded here.
 
+## [Unreleased]
+
+### Changed
+
+- The Docker image now uses Ubuntu 24.04 as its stable base instead of a
+  development Ubuntu release.
+- The representative CI profile keeps its large Verilog and VHDL coverage but
+  uses the portable clocked SystemVerilog shift-register example instead of an
+  interface-port example that requires an optional converter with Icarus.
+
+### Fixed
+
+- Local setup now installs a C++ compiler and Python development files only
+  when Cocotb is unavailable from the distribution and must be installed with
+  `pip`. This restores GHDL loading and lets rolling distributions build Cocotb.
+- Python 3.14 installations use Cocotb's compatibility override until a wheel
+  declaring Python 3.14 support is published.
+- Cocotb 2 now receives escaped dotted top-level names in the form it expects,
+  so generated RTL and gate-level starter tests can find the design root.
+- Full-install dry runs now report the NetlistSVG fallback consistently even
+  when the machine running the regression suite already has NetlistSVG.
+
 ## [0.2.0] - 2026-07-17
 
 ### Added

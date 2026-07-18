@@ -47,7 +47,7 @@ PNG_MAX_PIXELS = 16_000_000
 
 # Keep this profile small and reviewable. Together these modules cover large
 # hierarchies, generated starters, arrays, native HDL tests, SystemVerilog
-# packages/interfaces/includes, and hierarchical plus split-file VHDL.
+# packages, clocked logic, arrays, and hierarchical plus split-file VHDL.
 REPRESENTATIVE_MODULES: dict[str, str] = {
     "processor": "large pipelined Verilog hierarchy with six child modules",
     "processing_array": "largest source with generated instances and 2D arrays",
@@ -56,7 +56,7 @@ REPRESENTATIVE_MODULES: dict[str, str] = {
     "encoder": "small parameterized sequential baseline",
     "array_example": "SystemVerilog memory and the native HDL testbench path",
     "sv_beginner_alu": "SystemVerilog package, function, and always_comb",
-    "sv_beginner_interface": "SystemVerilog include, interface, modports, and helpers",
+    "sv_beginner_shift_register": "clocked SystemVerilog with reset and array indexing",
     "vhdl_beginner_accumulator": "hierarchical VHDL with combinational and clocked logic",
     "vhdl_beginner_counter": "VHDL entity and architecture split across files",
 }

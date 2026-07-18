@@ -178,7 +178,10 @@ case "$DISTRO_FAMILY" in
         select_package "Python" required python3
         select_package "Python virtual environment" required python3-venv
         select_package "Icarus Verilog" required iverilog
-        select_package "Cocotb" fallback python3-cocotb || true
+        if ! select_package "Cocotb" fallback python3-cocotb; then
+            select_package "C++ compiler for Cocotb" required g++
+            select_package "Python development files for Cocotb" required python3-dev
+        fi
         select_package "Tab completion" fallback python3-argcomplete || true
         CORE_PACKAGE_COUNT=${#PACKAGES[@]}
         if [[ "$PROFILE" == full ]]; then
@@ -194,7 +197,10 @@ case "$DISTRO_FAMILY" in
         select_package "Python" required python3
         select_package "Python package installer" required python3-pip
         select_package "Icarus Verilog" required iverilog
-        select_package "Cocotb" fallback python3-cocotb python-cocotb || true
+        if ! select_package "Cocotb" fallback python3-cocotb python-cocotb; then
+            select_package "C++ compiler for Cocotb" required gcc-c++
+            select_package "Python development files for Cocotb" required python3-devel
+        fi
         select_package "Tab completion" fallback python3-argcomplete || true
         CORE_PACKAGE_COUNT=${#PACKAGES[@]}
         if [[ "$PROFILE" == full ]]; then
@@ -210,7 +216,9 @@ case "$DISTRO_FAMILY" in
         select_package "Python" required python
         select_package "Python package installer" required python-pip
         select_package "Icarus Verilog" required iverilog
-        select_package "Cocotb" fallback python-cocotb || true
+        if ! select_package "Cocotb" fallback python-cocotb; then
+            select_package "C++ compiler for Cocotb" required gcc
+        fi
         select_package "Tab completion" fallback python-argcomplete || true
         CORE_PACKAGE_COUNT=${#PACKAGES[@]}
         if [[ "$PROFILE" == full ]]; then
@@ -351,8 +359,19 @@ fi
 if [[ ${#VENV_REQUIREMENTS[@]} -gt 0 ]]; then
     note "Installing missing Python tools in an isolated user environment"
     run_command "$PYTHON" -m venv --system-site-packages "$VENV_DIR"
-    run_command "$VENV_DIR/bin/python" -m pip install --upgrade \
-        "${VENV_REQUIREMENTS[@]}"
+    PIP_ENV=()
+    NEEDS_COCOTB=false
+    for requirement in "${VENV_REQUIREMENTS[@]}"; do
+        [[ "$requirement" == cocotb* ]] && NEEDS_COCOTB=true
+    done
+    if [[ "$DRY_RUN" != true && "$NEEDS_COCOTB" == true ]] \
+        && "$PYTHON" -c 'import sys; raise SystemExit(sys.version_info < (3, 14))'; then
+        # Cocotb 2.0 builds and runs on current Python 3.14, but its release
+        # metadata predates 3.14. This is Cocotb's documented escape hatch.
+        PIP_ENV=(env COCOTB_IGNORE_PYTHON_REQUIRES=1)
+    fi
+    run_command "${PIP_ENV[@]}" "$VENV_DIR/bin/python" -m pip install \
+        --upgrade "${VENV_REQUIREMENTS[@]}"
 fi
 
 if [[ "$PROFILE" == full && "$DISTRO_FAMILY" == arch && -n "$AUR_HELPER" ]]; then
@@ -366,8 +385,9 @@ if [[ "$PROFILE" == full && "$DISTRO_FAMILY" == arch && -n "$AUR_HELPER" ]]; the
         aur_install_candidates "NetlistSVG schematics" netlistsvg netlistsvg-git || true
 fi
 
-if [[ "$PROFILE" == full ]] && ! command -v netlistsvg >/dev/null 2>&1 \
-    && command -v npm >/dev/null 2>&1; then
+if [[ "$PROFILE" == full ]] \
+    && { [[ "$DRY_RUN" == true ]] || ! command -v netlistsvg >/dev/null 2>&1; } \
+    && { [[ "$DRY_RUN" == true ]] || command -v npm >/dev/null 2>&1; }; then
     note "Installing NetlistSVG with the Node package manager"
     if ! run_command "${SUDO[@]}" npm install --global netlistsvg; then
         warn "NetlistSVG could not be installed; Graphviz schematics remain available"

@@ -866,7 +866,7 @@ class TestDiscoveryTests(unittest.TestCase):
             vwb.require_yosys_identifier("\\odd;name")
         self.assertEqual(
             vwb.cocotb_toplevel_names("\\odd.name"),
-            ("work.odd.name", "odd.name"),
+            ("work.odd.name", "work.odd.name"),
         )
 
         with tempfile.TemporaryDirectory() as directory:
@@ -889,7 +889,7 @@ class TestDiscoveryTests(unittest.TestCase):
                 spec, root / ".vwb" / "sim", args, "verilog"
             )
             self.assertEqual(environment["TOPLEVEL"], "work.odd.name")
-            self.assertEqual(environment["COCOTB_TOPLEVEL"], "odd.name")
+            self.assertEqual(environment["COCOTB_TOPLEVEL"], "work.odd.name")
             self.assertEqual(environment["PYGPI_PYTHON_BIN"], vwb.sys.executable)
 
             success = vwb.subprocess.CompletedProcess([], 0, "", "")

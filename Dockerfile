@@ -1,4 +1,4 @@
-FROM ubuntu:26.04
+FROM ubuntu:24.04
 
 ARG USERNAME=docker
 ARG USER_UID=1000
@@ -61,6 +61,7 @@ RUN sudo apt-get update \
         openfpgaloader \
         curl \
         python3 \
+        python3-dev \
         python3-pip \
         unzip \
         verilator \
