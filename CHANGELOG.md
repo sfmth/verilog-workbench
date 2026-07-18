@@ -12,8 +12,9 @@ All notable changes to Verilog Workbench are recorded here.
   conversion paths plus beginner examples for each language.
 - Added automatic Cocotb starter tests for units without tests. Starters detect
   common clock and reset ports, initialize inputs, and run the design briefly.
-- Added RTL and default post-synthesis gate-level simulation using the same
-  testbench. Use `--no-gate-level` to skip the gate-level check.
+- Added RTL and post-synthesis gate-level simulation using the same testbench.
+  `test` enables the gate check by default and accepts `--no-gate-level`;
+  `wave` runs RTL by default and accepts `--gate-level` to enable it.
 - Added source-independent FST and VCD generation, including bounded dumping of
   static arrays. HDL source files no longer need conditional `$dump*` blocks.
 - Added saved waveform tags, saved GTKWave layouts, automatic layout reuse, and
@@ -31,11 +32,15 @@ All notable changes to Verilog Workbench are recorded here.
   aligned with the Makefile flows.
 - Replaced `--kind` with `--test-language`; Cocotb is the default generated test
   language and `--max-array-words` now defaults to 32.
-- Synthesis now defaults to the compact flow with schematics enabled, PNG output,
-  and Geeqie viewing. `--full`, `--no-schematic`, `--format`, and `--view` control
+- Synthesis now defaults to the compact flow with schematics enabled, preferred
+  PNG output, and artifact-aware viewing. Geeqie opens PNG files and Inkscape
+  opens SVG files. `--full`, `--no-schematic`, `--format`, and `--view` control
   those choices independently.
+- Removed the misspelled `--schemetic` and `--no-schemetic` option aliases so
+  shell completion presents only the canonical schematic options.
 - PNG schematics now use a higher rendering density and an opaque white
-  background.
+  background. A PNG that would require density reduction is returned as SVG
+  instead.
 - Plain `clean` removes simulation temporaries and lint work while preserving
   synthesis, saved waveforms, FPGA results, and formal results. Destructive
   cleanup requires an explicit scope.
@@ -48,8 +53,12 @@ All notable changes to Verilog Workbench are recorded here.
 
 - Simulation, lint, and validation batches now continue after individual
   failures and report all failures together.
-- Large NetlistSVG inputs now use bounded rendering and fall back to the Yosys
-  schematic path when NetlistSVG cannot render the design.
+- NetlistSVG is now tried for every schematic request regardless of design
+  size. The real full-netlist Yosys schematic is used only after NetlistSVG
+  actually fails, times out, is unavailable, or returns invalid SVG; synthesis
+  never substitutes a port table or smaller overview.
+- Yosys lint now prints only warnings and errors in the terminal while saving
+  its complete transcript under the lint build directory.
 - Fixed escaped HDL identifiers across discovery, generated starters, Cocotb,
   Icarus, Yosys, waveform instrumentation, and artifact names.
 - Fixed Yosys rendering command quoting while preserving safe module selection.

@@ -8,7 +8,6 @@ import argparse
 import ast
 from datetime import datetime, timezone
 import hashlib
-import html
 import json
 import os
 import re
@@ -31,10 +30,6 @@ CONFIG_VERSION = 1
 DEFAULT_MAX_ARRAY_WORDS = 32
 FULL_GATE_NETLIST_LIMIT_BYTES = 1024 * 1024
 SCALABLE_LAYOUT_JSON_LIMIT_BYTES = 256 * 1024
-NETLISTSVG_JSON_LIMIT_BYTES = 512 * 1024
-VISUAL_OVERVIEW_JSON_LIMIT_BYTES = 4 * 1024 * 1024
-VISUAL_OVERVIEW_PORT_LIMIT_BITS = 512
-VISUAL_OVERVIEW_CELL_LIMIT = 5_000
 MAX_PNG_PIXELS = 16_000_000
 VERILOG_SUFFIXES = {".v", ".sv"}
 VHDL_SUFFIXES = {".vhd", ".vhdl"}
@@ -3195,6 +3190,7 @@ class Workbench:
         if tool == "yosys":
             self.require_tool("yosys")
             script = output_dir / "lint.ys"
+            log = output_dir / "yosys.log"
             commands = [
                 self._yosys_read_sources_command(sources, defines, includes),
                 self._yosys_tcl_command(
@@ -3206,7 +3202,27 @@ class Workbench:
             commands.extend(yosys_args)
             if not self.dry_run:
                 script.write_text("\n".join(commands) + "\n", encoding="utf-8")
-            return self.run(["yosys", "-c", script], cwd=self.root).returncode == 0
+            result = self.run(
+                ["yosys", "-c", script], cwd=self.root, capture=True
+            )
+            output = "\n".join(
+                part.rstrip() for part in (result.stdout, result.stderr) if part
+            )
+            if not self.dry_run:
+                log.write_text(output + ("\n" if output else ""), encoding="utf-8")
+            diagnostics = [
+                line
+                for line in output.splitlines()
+                if re.search(r"\b(?:warning|error)\b", line, re.IGNORECASE)
+            ]
+            for diagnostic in diagnostics:
+                print(diagnostic, file=sys.stderr)
+            if result.returncode != 0 and not diagnostics:
+                print(
+                    f"error: Yosys lint failed; full log: {display_path(log, self.root)}",
+                    file=sys.stderr,
+                )
+            return result.returncode == 0
 
         if tool == "verible":
             self.require_tool("verible-verilog-lint")
@@ -3586,16 +3602,12 @@ class Workbench:
         return width, height
 
     @classmethod
-    def _png_zoom(cls, svg_path: Path) -> float:
+    def _png_would_exceed_limit(cls, svg_path: Path) -> bool:
         dimensions = cls._svg_dimensions(svg_path)
         if dimensions is None:
-            return 2.0
+            return False
         width, height = dimensions
-        requested_pixels = width * height * 4.0
-        if requested_pixels <= MAX_PNG_PIXELS:
-            return 2.0
-        # Leave a small margin for renderer rounding at fractional pixel sizes.
-        return (MAX_PNG_PIXELS * 0.99 / (width * height)) ** 0.5
+        return width * height * 4.0 > MAX_PNG_PIXELS
 
     def synthesize(self, module: str, args: argparse.Namespace) -> Path:
         module = self.catalog.definition(module).name
@@ -3646,173 +3658,6 @@ class Workbench:
         artifact = json_path
         prefix = output_dir / output_name
         render_json_path = json_path
-        interface_dot_path: Path | None = None
-
-        def make_visual_overview() -> Path:
-            overview_path = output_dir / f"{output_name}.visual.json"
-            overview_script = output_dir / "visual-overview.tcl"
-            overview_commands = [
-                self._yosys_read_sources_command(
-                    sources, args.define, args.include
-                ),
-                self._yosys_tcl_command(
-                    ["hierarchy", "-check", "-top", yosys_top]
-                ),
-                self._yosys_tcl_command(["proc"]),
-                self._yosys_tcl_command(["opt", "-full"]),
-                self._yosys_tcl_command(["write_json", overview_path]),
-            ]
-            if not self.dry_run:
-                overview_script.write_text(
-                    "\n".join(overview_commands) + "\n", encoding="utf-8"
-                )
-            overview_result = self.run(
-                ["yosys", "-c", overview_script], cwd=self.root
-            )
-            if overview_result.returncode != 0 or (
-                not self.dry_run
-                and (
-                    not overview_path.is_file()
-                    or overview_path.stat().st_size == 0
-                )
-            ):
-                raise VWBError(
-                    f"could not create a visual overview for {module}; "
-                    f"full synthesis JSON remains at {json_path}"
-                )
-            return overview_path
-
-        def visual_overview_needs_interface(
-            overview_path: Path, *, enforce_size_limit: bool
-        ) -> bool:
-            try:
-                data = json.loads(overview_path.read_text(encoding="utf-8"))
-                module_data = data["modules"][yosys_top]
-                ports = module_data.get("ports", {})
-                cells = module_data.get("cells", {})
-            except (OSError, UnicodeError, json.JSONDecodeError, KeyError, TypeError):
-                return True
-            return (
-                (
-                    enforce_size_limit
-                    and overview_path.stat().st_size
-                    > NETLISTSVG_JSON_LIMIT_BYTES
-                )
-                or len(cells) > VISUAL_OVERVIEW_CELL_LIMIT
-                or any(
-                    len(port.get("bits", ())) > VISUAL_OVERVIEW_PORT_LIMIT_BITS
-                    for port in ports.values()
-                    if isinstance(port, dict)
-                )
-            )
-
-        def make_interface_dot(overview_path: Path) -> Path:
-            try:
-                data = json.loads(overview_path.read_text(encoding="utf-8"))
-                module_data = data["modules"][yosys_top]
-                ports = module_data.get("ports", {})
-                cells = module_data.get("cells", {})
-            except (
-                OSError,
-                UnicodeError,
-                json.JSONDecodeError,
-                KeyError,
-                TypeError,
-            ) as exc:
-                raise VWBError(
-                    f"could not read the visual overview for {module}; "
-                    f"full synthesis JSON remains at {json_path}"
-                ) from exc
-            if not isinstance(ports, dict) or not isinstance(cells, dict):
-                raise VWBError(
-                    f"visual overview has an invalid module record for {module}; "
-                    f"full synthesis JSON remains at {json_path}"
-                )
-
-            rows: list[str] = []
-            for name, port in sorted(ports.items()):
-                if not isinstance(port, dict):
-                    continue
-                direction = str(port.get("direction", "port"))
-                bits = port.get("bits", ())
-                width = len(bits) if isinstance(bits, list) else 0
-                rows.append(
-                    "    <TR>"
-                    f'<TD ALIGN="LEFT">{html.escape(direction)}</TD>'
-                    f'<TD ALIGN="LEFT"><B>{html.escape(str(name))}</B></TD>'
-                    f'<TD ALIGN="RIGHT">{width or "?"} bit'
-                    f'{"s" if width != 1 else ""}</TD>'
-                    "</TR>"
-                )
-            if not rows:
-                rows.append('    <TR><TD COLSPAN="3">No ports</TD></TR>')
-
-            interface_path = output_dir / f"{output_name}.interface.dot"
-            interface_lines = [
-                f"digraph {json.dumps(module)} {{",
-                '  graph [bgcolor="white", pad="0.2", rankdir="LR"];',
-                '  node [fontname="Helvetica", shape="plain"];',
-                "  interface [label=<",
-                '  <TABLE BORDER="1" CELLBORDER="1" CELLSPACING="0" '
-                'CELLPADDING="6" COLOR="#555555">',
-                '    <TR><TD COLSPAN="3" BGCOLOR="#E8EEF5"><B>'
-                f"{html.escape(module)}</B><BR/><FONT POINT-SIZE=\"10\">"
-                "large-netlist interface overview</FONT></TD></TR>",
-                '    <TR><TD><B>Direction</B></TD><TD><B>Port</B></TD>'
-                '<TD><B>Width</B></TD></TR>',
-                *rows,
-                '    <TR><TD COLSPAN="3" ALIGN="LEFT"><FONT POINT-SIZE="10">'
-                f"{len(cells)} internal cells are kept in {html.escape(json_path.name)}"
-                "</FONT></TD></TR>",
-                "  </TABLE>",
-                "  >];",
-                "}",
-            ]
-            if not self.dry_run:
-                interface_path.write_text(
-                    "\n".join(interface_lines) + "\n", encoding="utf-8"
-                )
-            return interface_path
-
-        used_visual_overview = False
-        if (
-            args.format in {"svg", "png"}
-            and not self.dry_run
-            and json_path.stat().st_size > VISUAL_OVERVIEW_JSON_LIMIT_BYTES
-        ):
-            print(
-                self.style(
-                    "warning: the full netlist is too large for a reliable "
-                    "drawing; rendering a smaller hierarchical overview "
-                    f"instead. Full JSON remains at {json_path}",
-                    Ansi.BOLD,
-                    Ansi.YELLOW,
-                    stream=sys.stderr,
-                ),
-                file=sys.stderr,
-            )
-            render_json_path = make_visual_overview()
-            used_visual_overview = True
-        if (
-            args.format in {"svg", "png"}
-            and not self.dry_run
-            and visual_overview_needs_interface(
-                render_json_path,
-                enforce_size_limit=used_visual_overview,
-            )
-        ):
-            print(
-                self.style(
-                    "warning: the drawing input is still too detailed for a "
-                    "reliable layout; drawing a compact module interface "
-                    "instead",
-                    Ansi.BOLD,
-                    Ansi.YELLOW,
-                    stream=sys.stderr,
-                ),
-                file=sys.stderr,
-            )
-            interface_dot_path = make_interface_dot(render_json_path)
 
         def render_with_sfdp(dot_path: Path, target: Path) -> bool:
             try:
@@ -3934,36 +3779,7 @@ class Workbench:
         elif args.format in {"svg", "png"}:
             svg_path = output_dir / f"{output_name}.svg"
             rendered = False
-            if interface_dot_path is not None:
-                if not self.dry_run and svg_path.exists():
-                    svg_path.unlink()
-                rendered = render_with_dot(interface_dot_path, svg_path)
-                if not rendered:
-                    rendered = render_with_sfdp(interface_dot_path, svg_path)
-                if not rendered:
-                    raise VWBError(
-                        f"module-interface rendering failed for {module}; "
-                        f"synthesis JSON remains at {json_path}"
-                    )
-            large_netlist = (
-                not self.dry_run
-                and render_json_path.stat().st_size
-                > NETLISTSVG_JSON_LIMIT_BYTES
-            )
-            if rendered:
-                pass
-            elif args.schematic and large_netlist:
-                print(
-                    self.style(
-                        "warning: netlist is too large for NetlistSVG; using "
-                        "the scalable Yosys layout",
-                        Ansi.BOLD,
-                        Ansi.YELLOW,
-                        stream=sys.stderr,
-                    ),
-                    file=sys.stderr,
-                )
-            elif args.schematic:
+            if args.schematic:
                 try:
                     self.require_tool("netlistsvg")
                 except VWBError:
@@ -3985,10 +3801,11 @@ class Workbench:
                     elif not self.dry_run and temporary_svg.exists():
                         temporary_svg.unlink()
             if not rendered:
-                if args.schematic and not large_netlist:
+                if args.schematic:
                     print(
                         self.style(
-                            "warning: NetlistSVG could not render this design; using Yosys instead",
+                            "warning: NetlistSVG could not render this design; "
+                            "using the Yosys schematic instead",
                             Ansi.BOLD,
                             Ansi.YELLOW,
                             stream=sys.stderr,
@@ -3998,50 +3815,55 @@ class Workbench:
                 svg_path = render_with_yosys("svg")
             artifact = svg_path
             if args.format == "png":
-                self.require_tool("rsvg-convert")
                 png_path = output_dir / f"{output_name}.png"
                 temporary_png = output_dir / f".{output_name}.png.tmp"
-                if not self.dry_run and temporary_png.exists():
-                    temporary_png.unlink()
-                zoom = self._png_zoom(svg_path) if not self.dry_run else 2.0
-                if zoom < 2.0:
+                if not self.dry_run:
+                    if temporary_png.exists():
+                        temporary_png.unlink()
+                    if png_path.exists():
+                        png_path.unlink()
+                if not self.dry_run and self._png_would_exceed_limit(svg_path):
                     print(
                         self.style(
-                            "warning: schematic is very large; limiting PNG to "
-                            "16 megapixels",
+                            "warning: a full-density PNG would exceed 16 "
+                            "megapixels; keeping the SVG instead",
                             Ansi.BOLD,
                             Ansi.YELLOW,
                             stream=sys.stderr,
                         ),
                         file=sys.stderr,
                     )
-                raster_result = self.run(
-                    [
-                        "rsvg-convert",
-                        "--format", "png",
-                        "--zoom", f"{zoom:.6g}",
-                        "--background-color", "white",
-                        "--unlimited",
-                        "--output", temporary_png,
-                        svg_path,
-                    ],
-                    cwd=self.root,
-                    timeout=120,
-                )
-                if raster_result.returncode != 0 or (
-                    not self.dry_run and not temporary_png.is_file()
-                ):
-                    raise VWBError(f"SVG rasterization failed for {module}")
-                if not self.dry_run:
-                    os.replace(temporary_png, png_path)
-                artifact = png_path
+                else:
+                    self.require_tool("rsvg-convert")
+                    raster_result = self.run(
+                        [
+                            "rsvg-convert",
+                            "--format", "png",
+                            "--zoom", "2",
+                            "--background-color", "white",
+                            "--unlimited",
+                            "--output", temporary_png,
+                            svg_path,
+                        ],
+                        cwd=self.root,
+                        timeout=120,
+                    )
+                    if raster_result.returncode != 0 or (
+                        not self.dry_run and not temporary_png.is_file()
+                    ):
+                        raise VWBError(f"SVG rasterization failed for {module}")
+                    if not self.dry_run:
+                        os.replace(temporary_png, png_path)
+                    artifact = png_path
 
         if not self.dry_run and not artifact.is_file():
             raise VWBError(f"synthesis artifact was not produced: {artifact}")
-        viewer = args.view.strip() if args.view else "none"
-        explicit_options = set(getattr(args, "_explicit_options", ()))
-        if args.format in {"json", "dot"} and "view" not in explicit_options:
-            viewer = "none"
+        viewer = args.view.strip() if args.view else "auto"
+        if viewer.lower() == "auto":
+            viewer = {
+                ".png": "geeqie",
+                ".svg": "inkscape",
+            }.get(artifact.suffix.lower(), "none")
         if viewer.lower() not in {"none", "off", "false", "0"}:
             self.require_tool(viewer)
             if self.run([viewer, artifact], cwd=self.root).returncode != 0:
@@ -4351,7 +4173,9 @@ def saved_wave_completer(
         return []
 
 
-def add_simulation_options(parser: argparse.ArgumentParser) -> None:
+def add_simulation_options(
+    parser: argparse.ArgumentParser, *, gate_level_default: bool
+) -> None:
     modules = parser.add_argument("modules", nargs="*", metavar="MODULE")
     modules.completer = module_name_completer  # type: ignore[attr-defined]
     parser.add_argument("--test", help="explicit Cocotb, Verilog, or VHDL test file")
@@ -4383,13 +4207,22 @@ def add_simulation_options(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--compile-arg", action="append", default=[], metavar="ARG")
     parser.add_argument("--sim-arg", action="append", default=[], metavar="ARG")
     parser.add_argument("--plusarg", action="append", default=[], metavar="ARG")
-    parser.add_argument(
-        "--no-gate-level",
-        dest="gate_level",
-        action="store_false",
-        default=True,
-        help="skip the default post-synthesis functional simulation",
-    )
+    if gate_level_default:
+        parser.add_argument(
+            "--no-gate-level",
+            dest="gate_level",
+            action="store_false",
+            default=True,
+            help="skip the default post-synthesis functional simulation",
+        )
+    else:
+        parser.add_argument(
+            "--gate-level",
+            dest="gate_level",
+            action="store_true",
+            default=False,
+            help="also run post-synthesis functional simulation",
+        )
     parser.add_argument("--keep-going", action="store_true", help=argparse.SUPPRESS)
 
 
@@ -4441,12 +4274,12 @@ def make_parser() -> argparse.ArgumentParser:
     test_parser = subparsers.add_parser(
         "test", aliases=["sim"], help="compile and run discovered tests"
     )
-    add_simulation_options(test_parser)
+    add_simulation_options(test_parser, gate_level_default=True)
 
     wave_parser = subparsers.add_parser(
         "wave", aliases=["gtkwave"], help="run, open, and manage waveforms"
     )
-    add_simulation_options(wave_parser)
+    add_simulation_options(wave_parser, gate_level_default=False)
     wave_parser.set_defaults(waves=True)
     wave_parser.add_argument("--save", help="explicit GTKWave save file")
     wave_tag = wave_parser.add_argument(
@@ -4501,7 +4334,7 @@ def make_parser() -> argparse.ArgumentParser:
         "--format",
         choices=["json", "svg", "png", "dot"],
         default="png",
-        help="final synthesis artifact format",
+        help="preferred synthesis artifact format",
     )
     synth_parser.add_argument(
         "--full", action="store_true", help="use the Makefile's full preparation flow"
@@ -4509,22 +4342,23 @@ def make_parser() -> argparse.ArgumentParser:
     synth_parser.add_argument("--flatten", action="store_true", help="flatten hierarchy")
     synth_parser.add_argument(
         "--schematic",
-        "--schemetic",
         dest="schematic",
         action="store_true",
         default=True,
-        help="render through netlistsvg",
+        help="try netlistsvg before the Yosys fallback",
     )
     synth_parser.add_argument(
         "--no-schematic",
-        "--no-schemetic",
         dest="schematic",
         action="store_false",
         default=argparse.SUPPRESS,
         help="render images through Yosys show instead of netlistsvg",
     )
     synth_parser.add_argument(
-        "--view", default="geeqie", metavar="VIEWER", help="artifact viewer or 'none'"
+        "--view",
+        default="auto",
+        metavar="VIEWER",
+        help="artifact viewer, 'auto', or 'none'",
     )
     synth_parser.add_argument(
         "--no-view",
@@ -4628,7 +4462,7 @@ def wave_management_overrides(args: argparse.Namespace) -> list[str]:
         ("compile_arg", "--compile-arg"),
         ("sim_arg", "--sim-arg"),
         ("plusarg", "--plusarg"),
-        ("gate_level", "--no-gate-level"),
+        ("gate_level", "--gate-level"),
         ("keep_going", "--keep-going"),
     ]
     return [name for dest, name in options if dest in explicit]
@@ -4984,6 +4818,7 @@ def command_doctor(workbench: Workbench, args: argparse.Namespace) -> int:
             "netlistsvg",
             "rsvg-convert",
             "geeqie",
+            "inkscape",
         ],
         "completion": ["register-python-argcomplete"],
         "formal": ["sby"],

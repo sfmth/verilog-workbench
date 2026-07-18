@@ -61,8 +61,8 @@ class CommandLineConfigurationTests(unittest.TestCase):
                     with self.assertRaises(SystemExit):
                         self.parser.parse_args([command, "--kind", "verilog"])
 
-    def test_gate_level_simulation_defaults_on_and_has_one_disable_flag(self):
-        for command in ("test", "sim", "wave", "gtkwave"):
+    def test_test_defaults_gate_on_and_wave_requires_an_explicit_gate_flag(self):
+        for command in ("test", "sim"):
             with self.subTest(command=command):
                 self.assertTrue(self.parser.parse_args([command]).gate_level)
                 self.assertFalse(
@@ -71,6 +71,16 @@ class CommandLineConfigurationTests(unittest.TestCase):
                 with contextlib.redirect_stderr(io.StringIO()):
                     with self.assertRaises(SystemExit):
                         self.parser.parse_args([command, "--gate-level"])
+
+        for command in ("wave", "gtkwave"):
+            with self.subTest(command=command):
+                self.assertFalse(self.parser.parse_args([command]).gate_level)
+                self.assertTrue(
+                    self.parser.parse_args([command, "--gate-level"]).gate_level
+                )
+                with contextlib.redirect_stderr(io.StringIO()):
+                    with self.assertRaises(SystemExit):
+                        self.parser.parse_args([command, "--no-gate-level"])
 
     def test_multi_linter_options_and_backend_arguments_parse(self):
         args = self.parser.parse_args(

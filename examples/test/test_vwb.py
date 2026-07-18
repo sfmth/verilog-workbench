@@ -1414,6 +1414,39 @@ printf 'wave:%s\n' "${COMPREPLY[@]}"
                 self.assertIn("yosys check\n", script)
                 self.assertNotIn("check -assert", script)
 
+    def test_yosys_lint_prints_only_diagnostics_and_keeps_the_full_log(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.write(root, "src/dut.v", "module dut; endmodule\n")
+            self.write(root, "test/.gitkeep", "")
+            workbench = self.make_workbench(root)
+            result = vwb.subprocess.CompletedProcess(
+                [],
+                1,
+                "Yosys banner\n1. Executing frontend\n"
+                "Warning: unused signal\nERROR: invalid connection\nEnd of script\n",
+                "",
+            )
+            diagnostics = io.StringIO()
+
+            with (
+                mock.patch.object(workbench, "require_tool"),
+                mock.patch.object(workbench, "run", return_value=result) as run,
+                contextlib.redirect_stderr(diagnostics),
+            ):
+                passed = workbench.lint_with_tool("dut", "yosys", [], [])
+
+            self.assertFalse(passed)
+            visible = diagnostics.getvalue()
+            self.assertIn("Warning: unused signal", visible)
+            self.assertIn("ERROR: invalid connection", visible)
+            self.assertNotIn("Yosys banner", visible)
+            self.assertNotIn("Executing frontend", visible)
+            self.assertNotIn("End of script", visible)
+            log = root / ".vwb/lint/dut/yosys/yosys.log"
+            self.assertIn("Yosys banner", log.read_text(encoding="utf-8"))
+            self.assertTrue(run.call_args.kwargs["capture"])
+
     def test_verible_preprocessor_failure_prints_the_diagnostic(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -2087,6 +2120,7 @@ printf 'wave:%s\n' "${COMPREPLY[@]}"
                 "/usr/bin/nextpnr-himbaechel-gowin",
             )
             self.assertEqual(report["lint"]["iverilog"], "/usr/bin/iverilog")
+            self.assertEqual(report["synthesis"]["inkscape"], "/usr/bin/inkscape")
 
     def test_formal_dry_run_with_view_does_not_require_a_trace(self):
         with tempfile.TemporaryDirectory() as directory:

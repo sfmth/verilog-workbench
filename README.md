@@ -27,7 +27,7 @@ cd verilog-workbench
 
 `run-docker.sh` builds the image, mounts this checkout into the container, and
 opens a shell. It also forwards a Linux X11 display when one is available, so
-GTKWave and Geeqie can open windows.
+GTKWave, Geeqie, and Inkscape can open windows.
 
 Inside the container, try the bundled project:
 
@@ -399,8 +399,9 @@ The defaults are:
   -Wno-COMBDLY -Wno-DECLFILENAME -Wno-INCABSPATH`. Warnings are printed but
   do not hide later checker results or turn into tool errors.
 - Yosys: read the hierarchy, run `hierarchy -check`, `proc`, then
-  `check`. Yosys warnings remain visible; syntax and hierarchy errors still
-  fail the check.
+  `check`. The terminal shows only Yosys warnings and errors; the complete
+  Yosys transcript is saved as `.vwb/lint/<unit>/yosys/yosys.log` when more
+  detail is needed. Syntax and hierarchy errors still fail the check.
 - Verible: use its standard rule set. Pass `--verible-arg=--ruleset=all` for
   every available style rule, or `--verible-arg=--ruleset=none` for syntax only.
   When a source uses `` `include`` or refers to a macro supplied with `-D`, VWB
@@ -411,7 +412,8 @@ The defaults are:
 
 ## Synthesis and Schematics
 
-The default command creates and opens a PNG:
+The default command prefers and opens a PNG. For a very large drawing it
+returns and opens the SVG instead:
 
 ```sh
 ../vwb.py synth counter
@@ -423,24 +425,19 @@ Use `--no-view` in Docker without a display, over SSH, or in CI:
 ../vwb.py synth counter --no-view
 ```
 
-Yosys always writes a JSON netlist first. For SVG and PNG, VWB normally asks
-NetlistSVG for a readable schematic. If NetlistSVG is unavailable, rejects the
-netlist, or reaches its 120-second limit, VWB prints a warning and falls back
-to Yosys `show` plus Graphviz. If Graphviz's normal `dot` layout also reaches
-the limit, VWB retries the generated DOT file with the scalable `sfdp` layout;
-for a large Yosys JSON netlist it chooses `sfdp` immediately. The valid
-synthesis JSON remains available even if every visual renderer fails.
+Yosys always writes a JSON netlist first. For SVG and PNG, VWB always asks
+NetlistSVG for a readable schematic when schematic mode is enabled. NetlistSVG
+is not skipped because a design looks large. VWB falls back to Yosys `show`
+plus Graphviz only when NetlistSVG is missing, times out, returns an error, or
+does not produce a valid SVG. If Graphviz's normal `dot` layout also reaches
+the limit, VWB retries the generated DOT file with the scalable `sfdp` layout.
+The drawing always comes from the requested JSON netlist, including with
+`--full`, and that JSON remains available if every visual renderer fails.
 
-Some synthesized designs contain too many gates or one very wide bus for any
-Graphviz layout to handle reliably. For SVG and PNG only, VWB then creates a
-smaller unflattened drawing input. If that is still too detailed, the picture
-becomes a compact table of the module's ports and widths. The requested full
-netlist is not replaced: it remains in `<unit>.json` for tools and later use.
-
-PNG output passes through `rsvg-convert` with 2x scaling and an opaque white
-background. This makes text sharper and avoids the transparent or dark
-backgrounds that image viewers can otherwise show. Very large schematics keep
-their shape but are limited to 16 megapixels so they do not exhaust memory.
+PNG output passes through `rsvg-convert` at 2x scale with an opaque white
+background. If that full-density PNG would exceed 16 megapixels, VWB keeps and
+returns the SVG instead of shrinking the image. PNG files open in Geeqie by
+default; SVG files, including this automatic fallback, open in Inkscape.
 
 ```sh
 ../vwb.py synth counter --format json --no-view
@@ -507,7 +504,7 @@ For an advanced native Ubuntu 26.04 setup, install the packaged tools first:
 sudo apt update
 sudo apt install iverilog yosys ghdl gtkwave verilator graphviz \
   libgvplugin-neato-layout8 librsvg2-bin \
-  nodejs npm geeqie git make python3 python3-pip libpython3-dev \
+  nodejs npm geeqie inkscape git make python3 python3-pip libpython3-dev \
   nextpnr-ice40 nextpnr-gowin fpga-icestorm openfpgaloader boolector z3
 ```
 
@@ -646,9 +643,15 @@ exit and a nonempty passing results file.
 
 ### `wave` / `gtkwave`
 
-`wave` accepts every `test` option above. Waves are always enabled, exactly one
-test must be selected, and the command opens GTKWave only after the selected
-RTL and default gate-level checks pass.
+`wave` uses the simulation options above, but runs only the RTL simulation by
+default. Waves are always enabled and exactly one test must be selected. Add
+`--gate-level` when you also want the same testbench run against the synthesized
+Verilog netlist. GTKWave opens only after every selected stage passes.
+
+```sh
+../vwb.py wave counter                 # RTL waveform only
+../vwb.py wave counter --gate-level    # RTL plus gate-level check
+```
 
 ```text
 ./vwb.py wave [TEST OPTIONS] [WAVE OPTIONS] [MODULE ...]
@@ -656,6 +659,7 @@ RTL and default gate-level checks pass.
 
 | Additional option | Default | Behavior |
 | --- | --- | --- |
+| `--gate-level` | Off | Also run post-synthesis functional simulation before opening GTKWave. Without this option, `wave` runs RTL only. |
 | `--save FILE` | `<wave>.gtkw` | Use an existing GTKWave save file. With `--load`, apply it to the archived wave. |
 | `--tag NAME` | None | Archive a passing wave, metadata, and layout. Tags start with a letter/digit and then use letters, digits, `.`, `_`, or `-`. |
 | `--replace-tag` | Off | Permit `--tag` to atomically replace an existing tag; invalid without `--tag`. |
@@ -701,22 +705,20 @@ Arguments beginning with `-` should use the equals form, for example
 | Argument or option | Default | Behavior |
 | --- | --- | --- |
 | `MODULE` | Unique tested top/root | Select the unit to synthesize. Ambiguous projects must name it. |
-| `--format {json,svg,png,dot}` | `png` | Select the returned artifact. JSON is always generated. JSON skips rendering; DOT always uses Yosys. Oversized SVG/PNG drawings automatically use a smaller overview while keeping the full JSON. |
+| `--format {json,svg,png,dot}` | `png` | Select the preferred artifact. JSON is always generated. JSON skips rendering; DOT always uses Yosys. A PNG request returns SVG instead when a full-density PNG would exceed 16 megapixels. |
 | `--full` | Off | Use `prep -flatten` with schematic preparation, or `synth -top` with direct Yosys preparation. |
 | `--flatten` | Off | Run `flatten; opt_clean` after preparation unless the full schematic path already flattened the design. |
-| `--schematic`, `--schemetic` | On | Prefer NetlistSVG for SVG/PNG, with automatic Yosys fallback. The misspelled alias is kept for compatibility. |
-| `--no-schematic`, `--no-schemetic` | Off | Skip NetlistSVG and render SVG/PNG directly with Yosys `show`. |
-| `--view VIEWER` | `geeqie` for SVG/PNG | Open the final artifact with an executable. JSON and DOT do not open a viewer unless this option is explicitly supplied. `none`, `off`, `false`, or `0` disables viewing. |
+| `--schematic` | On | Try NetlistSVG for every SVG/PNG request. Use the full-netlist Yosys fallback only if NetlistSVG is missing, fails, times out, or returns invalid SVG. |
+| `--no-schematic` | Off | Skip NetlistSVG and render SVG/PNG directly with Yosys `show`. |
+| `--view VIEWER` | Automatic | Open the final artifact with an executable. Automatic mode uses Geeqie for PNG and Inkscape for SVG; JSON and DOT stay closed. An explicit viewer overrides this choice. `none`, `off`, `false`, or `0` disables viewing. |
 | `--no-view` | Off | Alias for `--view none`. |
 | `-D VALUE`, `--define VALUE` | None | Add a repeatable synthesis preprocessing definition. |
 | `-I DIR`, `--include DIR` | None | Add a repeatable synthesis include directory. |
 | `-h`, `--help` | Off | Show `synth` help. |
 
-Scripts, converted sources, JSON, SVG, PNG, and DOT files are stored under
-`.vwb/synth/<unit>/`. Large pictures may also create `.visual.json` and
-`.interface.dot` helper files there. Visual rendering and rasterization have
-120-second limits. PNG files use 2x density when the result fits within the
-16-megapixel limit.
+Scripts, converted sources, JSON, SVG, PNG, and Yosys DOT files are stored under
+`.vwb/synth/<unit>/`. Visual rendering and rasterization have 120-second limits.
+PNG files always use 2x density; oversized PNG requests return SVG instead.
 
 ### `formal`
 

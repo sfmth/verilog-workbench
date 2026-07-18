@@ -49,6 +49,7 @@ RUN sudo apt-get update \
         git \
         graphviz \
         gtkwave \
+        inkscape \
         iverilog \
         libgvplugin-neato-layout8 \
         librsvg2-bin \

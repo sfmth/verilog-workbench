@@ -443,9 +443,7 @@ OPTION_ALIAS_SPELLINGS: dict[str, dict[str, set[str]]] = {
     "synth": {
         "schematic": {
             "--schematic",
-            "--schemetic",
             "--no-schematic",
-            "--no-schemetic",
         },
         "view": {"--no-view", "--view"},
         "define": {"-D", "--define"},
@@ -1251,6 +1249,34 @@ def validate_dry_runs(
             dry_run=True,
             capture=True,
         )
+        default_wave_arguments = explicit_test_arguments(
+            tests[0], seed=seed, command="wave"
+        )
+        default_wave = runner.run_vwb(
+            default_wave_arguments,
+            label="dry-run default RTL-only wave",
+            dry_run=True,
+            capture=True,
+        )
+        if any(
+            stage in default_wave.stdout
+            for stage in ("GATE PASS", "GATE FAIL", "GATE SKIP")
+        ):
+            runner.failures.append("default wave unexpectedly ran the gate phase")
+
+        gated_wave = runner.run_vwb(
+            [*default_wave_arguments, "--gate-level"],
+            label="dry-run opt-in gate-level wave",
+            dry_run=True,
+            capture=True,
+        )
+        expected_gate_stage = (
+            "GATE SKIP" if tests[0].language == "vhdl" else "GATE PASS"
+        )
+        if expected_gate_stage not in gated_wave.stdout:
+            runner.failures.append(
+                "wave --gate-level did not run or report the gate phase"
+            )
         for wave_format in metadata.wave_formats:
             arguments = explicit_test_arguments(tests[0], seed=seed)
             arguments.extend(["--waves", "--wave-format", wave_format])
@@ -1383,17 +1409,7 @@ def validate_dry_runs(
                 for full in (False, True):
                     for flatten in (False, True):
                         schematic_option = (
-                            "--schemetic"
-                            if schematic and output_format == metadata.synth_formats[0]
-                            and not full and not flatten
-                            else "--no-schemetic"
-                            if not schematic
-                            and output_format == metadata.synth_formats[0]
-                            and not full
-                            and not flatten
-                            else "--schematic"
-                            if schematic
-                            else "--no-schematic"
+                            "--schematic" if schematic else "--no-schematic"
                         )
                         arguments = [
                             "synth",
@@ -2116,6 +2132,12 @@ def validate_lint(
                 runner.failures.append(
                     f"lint {tool} did not create its result directory: {output_dir}"
                 )
+            if tool == "yosys":
+                yosys_log = output_dir / "yosys.log"
+                if not yosys_log.is_file() or yosys_log.stat().st_size == 0:
+                    runner.failures.append(
+                        f"Yosys lint did not keep its full transcript: {yosys_log}"
+                    )
         if module_languages[module] != "vhdl":
             style = runner.run_vwb(
                 [
@@ -2143,12 +2165,27 @@ def validate_lint(
 
 def synthesis_artifact(runner: Runner, module: str, output_format: str) -> Path:
     module_artifact = runner.artifact_component(module)
-    return (
+    requested = (
         runner.build_dir
         / "synth"
         / module_artifact
         / f"{module_artifact}.{output_format}"
     )
+    if output_format == "png" and not requested.is_file():
+        svg_fallback = requested.with_suffix(".svg")
+        if svg_fallback.is_file():
+            return svg_fallback
+    return requested
+
+
+def validate_svg_artifact(runner: Runner, path: Path, *, label: str) -> None:
+    try:
+        first = next(ET.iterparse(path, events=("start",)), None)
+    except (OSError, ET.ParseError) as error:
+        runner.failures.append(f"invalid SVG for {label}: {path}: {error}")
+        return
+    if first is None or first[1].tag.rsplit("}", 1)[-1].lower() != "svg":
+        runner.failures.append(f"invalid SVG root for {label}: {path}")
 
 
 def svg_pixel_dimensions(path: Path) -> tuple[float, float] | None:
@@ -2257,6 +2294,9 @@ def validate_png_artifact(
         if dimensions is not None:
             svg_width, svg_height = dimensions
             if svg_width * svg_height * 4.0 > PNG_MAX_PIXELS:
+                runner.failures.append(
+                    f"oversized SVG was rasterized instead of returned for {label}"
+                )
                 return
             if width < svg_width * 1.9 or height < svg_height * 1.9:
                 runner.failures.append(
@@ -2323,12 +2363,21 @@ def validate_synthesis(
                     f"missing or empty synthesis artifact: {artifact}"
                 )
             elif candidate_format == "png":
-                validate_png_artifact(
-                    runner,
-                    artifact,
-                    svg_path=artifact.with_suffix(".svg"),
-                    label=f"{module} synthesis",
-                )
+                if artifact.suffix == ".svg":
+                    validate_svg_artifact(
+                        runner, artifact, label=f"{module} synthesis SVG fallback"
+                    )
+                    if "keeping the SVG instead" not in result.stderr:
+                        runner.failures.append(
+                            f"PNG-to-SVG fallback was not reported for {module}"
+                        )
+                else:
+                    validate_png_artifact(
+                        runner,
+                        artifact,
+                        svg_path=artifact.with_suffix(".svg"),
+                        label=f"{module} synthesis",
+                    )
 
 
 def validate_synthesis_fixture(runner: Runner, metadata: CliMetadata) -> None:
@@ -2403,16 +2452,26 @@ def validate_synthesis_fixture(runner: Runner, metadata: CliMetadata) -> None:
                                 f"missing fixture synthesis artifact: {artifact}"
                             )
                         elif output_format == "png":
-                            validate_png_artifact(
-                                fixture,
-                                artifact,
-                                svg_path=artifact.with_suffix(".svg"),
-                                label=(
-                                    "fixture synthesis "
-                                    f"schematic={schematic}/full={full}/"
-                                    f"flatten={flatten}"
-                                ),
+                            label = (
+                                "fixture synthesis "
+                                f"schematic={schematic}/full={full}/"
+                                f"flatten={flatten}"
                             )
+                            if artifact.suffix == ".svg":
+                                validate_svg_artifact(
+                                    fixture, artifact, label=f"{label} SVG fallback"
+                                )
+                                if "keeping the SVG instead" not in result.stderr:
+                                    fixture.failures.append(
+                                        f"PNG-to-SVG fallback was not reported for {label}"
+                                    )
+                            else:
+                                validate_png_artifact(
+                                    fixture,
+                                    artifact,
+                                    svg_path=artifact.with_suffix(".svg"),
+                                    label=label,
+                                )
 
         viewer_marker = root / "default-viewer-called"
         with fake_executable(
@@ -2437,6 +2496,31 @@ def validate_synthesis_fixture(runner: Runner, metadata: CliMetadata) -> None:
                 "default synthesis did not invoke the configured geeqie viewer"
             )
 
+        svg_viewer_marker = root / "default-svg-viewer-called"
+        with fake_executable(
+            fixture,
+            "inkscape",
+            marker=svg_viewer_marker,
+        ):
+            fixture.run_vwb(
+                [
+                    "synth",
+                    "validation_design",
+                    "--format",
+                    "svg",
+                    "-D",
+                    'VWB_VALIDATION="docker smoke"',
+                    "-I",
+                    "include files",
+                ],
+                label="default SVG viewer",
+                capture=True,
+            )
+        if not svg_viewer_marker.is_file():
+            fixture.failures.append(
+                "SVG synthesis did not invoke the configured Inkscape viewer"
+            )
+
         with fake_executable(fixture, "netlistsvg", exit_code=1):
             fallback = fixture.run_vwb(
                 [
@@ -2456,7 +2540,7 @@ def validate_synthesis_fixture(runner: Runner, metadata: CliMetadata) -> None:
             )
         fallback_png = synthesis_artifact(fixture, "validation_design", "png")
         if fallback.returncode == 0:
-            if "using Yosys instead" not in fallback.stderr:
+            if "using the Yosys schematic instead" not in fallback.stderr:
                 fixture.failures.append(
                     "NetlistSVG failure did not report the Yosys renderer fallback"
                 )
