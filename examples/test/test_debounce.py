@@ -10,20 +10,20 @@ class BouncingSwitch():
 
     async def set(self, value, bounce_cycles = 5):
         for i in range(bounce_cycles):
-            self.dut.button <= random.randint(0, 1)
+            self.dut.button.value = random.randint(0, 1)
             await ClockCycles(self.dut.clk, 1)
 
         # finally set to what it should be
-        self.dut.button <= value
+        self.dut.button.value = value
         await ClockCycles(self.dut.clk, 1)
 
 
 async def reset(dut):
-    dut.reset <= 1
-    dut.button <= 0
+    dut.reset.value = 1
+    dut.button.value = 0
 
     await ClockCycles(dut.clk, 5)
-    dut.reset <= 0;
+    dut.reset.value = 0
     await ClockCycles(dut.clk, 5)
 
 @cocotb.test()
@@ -31,7 +31,7 @@ async def test_debouncer(dut):
     clock = Clock(dut.clk, 10, "us")
     clocks_per_phase = 10
     switch = BouncingSwitch(dut)
-    cocotb.fork(clock.start())
+    cocotb.start_soon(clock.start())
 
     await reset(dut)
     assert dut.debounced == 0
@@ -60,4 +60,3 @@ async def test_debouncer(dut):
         await ClockCycles(dut.clk, 9)
 
         assert dut.debounced == 0
-

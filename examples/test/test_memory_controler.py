@@ -50,7 +50,7 @@ async def la_inst_mem(dut):
 @cocotb.test()
 async def test_pwm(dut):
     clock = Clock(dut.clk, 10, "us")
-    cocotb.fork(clock.start())
+    cocotb.start_soon(clock.start())
     await reset(dut)
     # dut.src_a.value = 45
     # dut.src_b.value = -67
@@ -61,8 +61,8 @@ async def test_pwm(dut):
         data.append(random.randint(0, 150))
 
     dut.stall.value = 0
-    cocotb.fork(processor_sim(dut))
-    cocotb.fork(la_inst_mem(dut))
+    cocotb.start_soon(processor_sim(dut))
+    cocotb.start_soon(la_inst_mem(dut))
     # test a range of values
     for i in range(0, 150):
         # set pwm to this level
@@ -96,4 +96,3 @@ async def test_pwm(dut):
         #     assert(dut.alu_result_m.value == 100 & dut.mem_write_m.value == 1)
         # if (dut.alu_result_m.value == 100 & dut.mem_write_m.value == 1):
         #     assert(dut.write_data_m.value == 25)
-

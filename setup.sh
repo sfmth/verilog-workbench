@@ -195,6 +195,7 @@ case "$DISTRO_FAMILY" in
     fedora)
         select_package "CA certificates" required ca-certificates
         select_package "Python" required python3
+        select_package "Python package installer" required python3-pip
         select_package "Icarus Verilog" required iverilog
         select_package "Cocotb" fallback python3-cocotb python-cocotb || true
         select_package "Tab completion" fallback python3-argcomplete || true
@@ -209,6 +210,7 @@ case "$DISTRO_FAMILY" in
     arch)
         select_package "CA certificates" required ca-certificates
         select_package "Python" required python
+        select_package "Python package installer" required python-pip
         select_package "Icarus Verilog" required iverilog
         select_package "Cocotb" fallback python-cocotb || true
         select_package "Tab completion" fallback python-argcomplete || true
@@ -420,7 +422,8 @@ append_shell_setup() {
     fi
 }
 
-case "${SHELL##*/}" in
+LOGIN_SHELL="${SHELL:-/bin/bash}"
+case "${LOGIN_SHELL##*/}" in
     zsh) append_shell_setup "$HOME/.zshrc" zsh ;;
     fish) append_shell_setup "$HOME/.config/fish/config.fish" fish ;;
     *) append_shell_setup "$HOME/.bashrc" bash ;;

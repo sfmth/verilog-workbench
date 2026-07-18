@@ -82,7 +82,7 @@ async def test_shift_add_mult(dut):
     # dut.io_in.value = 0 # initialize
     # await Timer(10, 'us')
     clock = Clock(dut.clk, 10, "us")
-    cocotb.fork(clock.start())
+    cocotb.start_soon(clock.start())
     
     # await reset(dut) # reset
     # cocotb.fork(convert_values(dut))

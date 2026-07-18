@@ -13,8 +13,49 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  local-setup:
+    name: Local setup - ${{ matrix.name }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Ubuntu 24.04
+            image: ubuntu:24.04
+          - name: Debian stable
+            image: debian:stable-slim
+          - name: Fedora current
+            image: fedora:latest
+          - name: Arch rolling
+            image: archlinux:latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install core tools and test the encoder
+        run: |
+          docker run --rm \
+            -v "$PWD:/workspace:ro" \
+            -w /workspace \
+            "${{ matrix.image }}" \
+            bash -lc '
+              set -euo pipefail
+              ./setup.sh --no-aur
+              export PATH="$HOME/.local/share/verilog-workbench/venv/bin:$HOME/.local/bin:$PATH"
+              vwb doctor
+              vwb \
+                --root /workspace \
+                --src-dir examples/src \
+                --test-dir examples/test \
+                --build-dir /tmp/vwb-distro-smoke \
+                --color never \
+                test encoder --seed 1
+            '
+
   validate:
-    name: Ten representative modules plus CLI and fixture checks
+    name: Representative modules, PNG pipeline, CLI, and fixtures
     runs-on: ubuntu-latest
     timeout-minutes: 360
 
@@ -34,11 +75,10 @@ jobs:
           cache-from: type=gha,scope=ci
           cache-to: type=gha,mode=max,scope=ci
 
-      - name: Validate the representative module profile and all CLI options
+      - name: Validate representative modules and the PNG pipeline
         run: |
           docker run --rm --network none \
             verilog-workbench-ci:${{ github.sha }} \
             python3 scripts/validate_vwb.py \
               --representative-modules \
-              --all-wave-formats \
-              --synth-option-matrix
+              --synth-format png

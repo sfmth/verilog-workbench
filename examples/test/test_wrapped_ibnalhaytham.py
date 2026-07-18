@@ -57,7 +57,7 @@ async def test_pwm(dut):
     dut.io_in[11].value = 1 # set clock input
     dut.io_in[12].value = 0
     clock = Clock(dut.wb_clk_i, 10, "us")
-    cocotb.fork(clock.start())
+    cocotb.start_soon(clock.start())
 
     dut.io_in[8].value = 1 # set inst_mem mode
     dut.io_in[9].value = 1
@@ -95,7 +95,7 @@ async def test_pwm(dut):
         "00210063",
         "00210063"
     ]
-    cocotb.fork(la_inst_mem(dut, inst, 100, 'us'))
+    cocotb.start_soon(la_inst_mem(dut, inst, 100, 'us'))
     # print(op)
     # print(funct3)
     # print(funct7_5)

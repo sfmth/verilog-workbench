@@ -7,16 +7,16 @@ from .encoder import Encoder
 clocks_per_phase = 10
 
 async def reset(dut):
-    dut.enc0_a <= 0
-    dut.enc0_b <= 0
-    dut.enc1_a <= 0
-    dut.enc1_b <= 0
-    dut.enc2_a <= 0
-    dut.enc2_b <= 0
-    dut.reset  <= 1
+    dut.enc0_a.value = 0
+    dut.enc0_b.value = 0
+    dut.enc1_a.value = 0
+    dut.enc1_b.value = 0
+    dut.enc2_a.value = 0
+    dut.enc2_b.value = 0
+    dut.reset.value = 1
 
     await ClockCycles(dut.clk, 5)
-    dut.reset <= 0;
+    dut.reset.value = 0
     await ClockCycles(dut.clk, 5) # how long to wait for the debouncers to clear
 
 async def run_encoder_test(encoder, dut_enc, max_count):
@@ -36,7 +36,7 @@ async def test_all(dut):
     encoder1 = Encoder(dut.clk, dut.enc1_a, dut.enc1_b, clocks_per_phase = clocks_per_phase, noise_cycles = clocks_per_phase / 4)
     encoder2 = Encoder(dut.clk, dut.enc2_a, dut.enc2_b, clocks_per_phase = clocks_per_phase, noise_cycles = clocks_per_phase / 4)
 
-    cocotb.fork(clock.start())
+    cocotb.start_soon(clock.start())
 
     await reset(dut)
     assert dut.enc0 == 0

@@ -108,6 +108,9 @@ All notable changes to Verilog Workbench are recorded here.
 
 ### CI/CD
 
+- GitHub Actions runs local-install smoke tests concurrently on Ubuntu 24.04,
+  Debian stable, current Fedora, and rolling Arch, then tests the documented
+  encoder flow with the tools installed by each distribution path.
 - GitHub Actions builds the Docker image and audits the complete discovered
   example inventory, including every Python test source.
 - Added software regression tests, generated-starter integration checks, both
@@ -117,5 +120,10 @@ All notable changes to Verilog Workbench are recorded here.
   reviewed ten-module profile covering all supported languages, both discovered
   test styles, generated starters, large hierarchies, arrays, interfaces,
   packages, and split-file VHDL.
-- Added a synthesis option matrix and artifact validation to both CI and release
-  workflows for every module in that representative profile.
+- CI and release perform one real PNG synthesis for each representative module,
+  plus focused default-renderer and forced-fallback PNG fixtures. Alternate
+  formats and switch combinations use parser tests or dry runs instead of
+  repeating expensive synthesis work.
+- FPGA option probes cover each board and stage once, and actual FPGA synthesis
+  rotates one representative design per board before the board-specific pack
+  fixtures. This replaces redundant module-by-board Cartesian products.

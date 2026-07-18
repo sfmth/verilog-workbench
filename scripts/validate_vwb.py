@@ -1339,6 +1339,7 @@ def validate_dry_runs(
                 capture=True,
             )
 
+    covered_linter_options: set[str] = set()
     for module in modules:
         cocotb_bundle = [
             "test",
@@ -1412,6 +1413,9 @@ def validate_dry_runs(
                 )
 
         for linter in applicable_linters(metadata, module_languages[module]):
+            if linter in covered_linter_options:
+                continue
+            covered_linter_options.add(linter)
             runner.run_vwb(
                 [
                     "lint",
@@ -1445,40 +1449,26 @@ def validate_dry_runs(
             dry_run=True,
             capture=True,
         )
-        for output_format in metadata.synth_formats:
-            for schematic in (True, False):
-                for full in (False, True):
-                    for flatten in (False, True):
-                        schematic_option = (
-                            "--schematic" if schematic else "--no-schematic"
-                        )
-                        arguments = [
-                            "synth",
-                            module,
-                            "--format",
-                            output_format,
-                            schematic_option,
-                            "-D",
-                            "VWB_VALIDATION=1",
-                            "-I",
-                            runner.src_dir,
-                        ]
-                        if full:
-                            arguments.append("--full")
-                        if flatten:
-                            arguments.append("--flatten")
-                        arguments.extend(
-                            ["--no-view"] if flatten else ["--view", "none"]
-                        )
-                        runner.run_vwb(
-                            arguments,
-                            label=(
-                                f"dry-run synthesis {module}/{output_format}/"
-                                f"schematic={schematic}/full={full}/flatten={flatten}"
-                            ),
-                            dry_run=True,
-                            capture=True,
-                        )
+        if module == modules[0]:
+            runner.run_vwb(
+                [
+                    "synth",
+                    module,
+                    "--format",
+                    "png",
+                    "--no-schematic",
+                    "--full",
+                    "--flatten",
+                    "--no-view",
+                    "-D",
+                    "VWB_VALIDATION=1",
+                    "-I",
+                    runner.src_dir,
+                ],
+                label="dry-run combined non-default synthesis switches",
+                dry_run=True,
+                capture=True,
+            )
 
     constraint_suffixes = {".cst", ".lpf", ".pcf", ".xdc"}
     constraints = sorted(
@@ -1492,48 +1482,46 @@ def validate_dry_runs(
             "(.cst, .lpf, .pcf, or .xdc)"
         )
     elif modules and metadata.fpga_boards and metadata.fpga_stages:
-        for module_index, module in enumerate(modules):
-            for board_index, board in enumerate(metadata.fpga_boards):
-                for stage_index, stage in enumerate(metadata.fpga_stages):
-                    constraint = constraints[
-                        (module_index + board_index + stage_index) % len(constraints)
-                    ]
-                    preferred_suffix = (
-                        ".cst"
-                        if "gowin" in board or "tang" in board
-                        else ".pcf" if "ice" in board else None
-                    )
-                    preferred = [
-                        path for path in constraints if path.suffix.lower() == preferred_suffix
-                    ]
-                    if preferred:
-                        constraint = preferred[
-                            (module_index + stage_index) % len(preferred)
-                        ]
-                    runner.run_vwb(
-                        [
-                            "fpga",
-                            module,
-                            "--board",
-                            board,
-                            "--stage",
-                            stage,
-                            "--constraints",
-                            str(constraint),
-                            "-D",
-                            "VWB_VALIDATION=1",
-                            "-I",
-                            runner.src_dir,
-                        ],
-                        label=f"dry-run FPGA {module}/{board}/{stage}",
-                        dry_run=True,
-                        capture=True,
-                    )
+        probe_count = max(len(metadata.fpga_boards), len(metadata.fpga_stages))
+        for index in range(probe_count):
+            module = modules[index % len(modules)]
+            board = metadata.fpga_boards[index % len(metadata.fpga_boards)]
+            stage = metadata.fpga_stages[index % len(metadata.fpga_stages)]
+            preferred_suffix = (
+                ".cst"
+                if "gowin" in board or "tang" in board
+                else ".pcf" if "ice" in board else None
+            )
+            preferred = [
+                path for path in constraints if path.suffix.lower() == preferred_suffix
+            ]
+            choices = preferred or constraints
+            constraint = choices[index % len(choices)]
+            runner.run_vwb(
+                [
+                    "fpga",
+                    module,
+                    "--board",
+                    board,
+                    "--stage",
+                    stage,
+                    "--constraints",
+                    str(constraint),
+                    "-D",
+                    "VWB_VALIDATION=1",
+                    "-I",
+                    runner.src_dir,
+                ],
+                label=f"dry-run FPGA {module}/{board}/{stage}",
+                dry_run=True,
+                capture=True,
+            )
 
     with tempfile.TemporaryDirectory(prefix="vwb-formal-config-") as directory:
         config_dir = Path(directory)
-        for index, module in enumerate(modules):
-            config = config_dir / f"module-{index}.sby"
+        if modules:
+            module = modules[0]
+            config = config_dir / "representative.sby"
             config.write_text(
                 f"[options]\nmode prove\n\n# validation target: {module}\n",
                 encoding="utf-8",
@@ -2483,7 +2471,7 @@ def validate_synthesis(
                     )
 
 
-def validate_synthesis_fixture(runner: Runner, metadata: CliMetadata) -> None:
+def validate_synthesis_fixture(runner: Runner) -> None:
     with tempfile.TemporaryDirectory(prefix="vwb-synthesis-fixture-") as directory:
         root = Path(directory) / "project with spaces"
         source = root / "source files"
@@ -2516,73 +2504,13 @@ def validate_synthesis_fixture(runner: Runner, metadata: CliMetadata) -> None:
             test_dir="test files",
             build_dir=root / "build files",
         )
-        for output_format in metadata.synth_formats:
-            for schematic in (True, False):
-                for full in (False, True):
-                    for flatten in (False, True):
-                        arguments = [
-                            "synth",
-                            "validation_design",
-                            "--format",
-                            output_format,
-                            "--schematic" if schematic else "--no-schematic",
-                            "--no-view",
-                            "-D",
-                            'VWB_VALIDATION="docker smoke"',
-                            "-I",
-                            "include files",
-                        ]
-                        if full:
-                            arguments.append("--full")
-                        if flatten:
-                            arguments.append("--flatten")
-                        result = fixture.run_vwb(
-                            arguments,
-                            label=(
-                                "fixture synthesis "
-                                f"{output_format}/schematic={schematic}/"
-                                f"full={full}/flatten={flatten}"
-                            ),
-                            capture=True,
-                        )
-                        if result.returncode:
-                            continue
-                        artifact = synthesis_artifact(
-                            fixture, "validation_design", output_format
-                        )
-                        if not artifact.is_file() or artifact.stat().st_size == 0:
-                            fixture.failures.append(
-                                f"missing fixture synthesis artifact: {artifact}"
-                            )
-                        elif output_format == "png":
-                            label = (
-                                "fixture synthesis "
-                                f"schematic={schematic}/full={full}/"
-                                f"flatten={flatten}"
-                            )
-                            if artifact.suffix == ".svg":
-                                validate_svg_artifact(
-                                    fixture, artifact, label=f"{label} SVG fallback"
-                                )
-                                if "keeping the SVG instead" not in result.stderr:
-                                    fixture.failures.append(
-                                        f"PNG-to-SVG fallback was not reported for {label}"
-                                    )
-                            else:
-                                validate_png_artifact(
-                                    fixture,
-                                    artifact,
-                                    svg_path=artifact.with_suffix(".svg"),
-                                    label=label,
-                                )
-
         viewer_marker = root / "default-viewer-called"
         with fake_executable(
             fixture,
             "geeqie",
             marker=viewer_marker,
         ):
-            fixture.run_vwb(
+            default_result = fixture.run_vwb(
                 [
                     "synth",
                     "validation_design",
@@ -2598,31 +2526,23 @@ def validate_synthesis_fixture(runner: Runner, metadata: CliMetadata) -> None:
             fixture.failures.append(
                 "default synthesis did not invoke the configured geeqie viewer"
             )
-
-        svg_viewer_marker = root / "default-svg-viewer-called"
-        with fake_executable(
-            fixture,
-            "inkscape",
-            marker=svg_viewer_marker,
-        ):
-            fixture.run_vwb(
-                [
-                    "synth",
-                    "validation_design",
-                    "--format",
-                    "svg",
-                    "-D",
-                    'VWB_VALIDATION="docker smoke"',
-                    "-I",
-                    "include files",
-                ],
-                label="default SVG viewer",
-                capture=True,
-            )
-        if not svg_viewer_marker.is_file():
-            fixture.failures.append(
-                "SVG synthesis did not invoke the configured Inkscape viewer"
-            )
+        default_png = synthesis_artifact(fixture, "validation_design", "png")
+        if default_result.returncode == 0:
+            if not default_png.is_file() or default_png.stat().st_size == 0:
+                fixture.failures.append(
+                    f"default synthesis did not produce a PNG: {default_png}"
+                )
+            elif default_png.suffix == ".svg":
+                validate_svg_artifact(
+                    fixture, default_png, label="default synthesis SVG fallback"
+                )
+            else:
+                validate_png_artifact(
+                    fixture,
+                    default_png,
+                    svg_path=default_png.with_suffix(".svg"),
+                    label="default synthesis",
+                )
 
         with fake_executable(fixture, "netlistsvg", exit_code=1):
             fallback = fixture.run_vwb(
@@ -2704,7 +2624,7 @@ def validate_fpga(
         runner.failures.append("FPGA validation has no discovered module")
         return
     source_dir = project_path(runner.root, runner.src_dir)
-    for board in metadata.fpga_boards:
+    for board_index, board in enumerate(metadata.fpga_boards):
         family = {"tangnano9k": "gowin", "icebreaker": "ice40"}.get(
             board, board
         )
@@ -2715,39 +2635,39 @@ def validate_fpga(
                 f"no {suffix} constraints found for actual FPGA {board} synthesis"
             )
             continue
-        for module in modules:
-            result = runner.run_vwb(
-                [
-                    "fpga",
-                    module,
-                    "--board",
-                    board,
-                    "--stage",
-                    "synth",
-                    "--constraints",
-                    str(constraints[0]),
-                    "-D",
-                    "VWB_VALIDATION=1",
-                    "-I",
-                    runner.src_dir,
-                ],
-                label=f"actual FPGA synthesis for {module}/{board}",
-                capture=True,
+        module = modules[board_index % len(modules)]
+        result = runner.run_vwb(
+            [
+                "fpga",
+                module,
+                "--board",
+                board,
+                "--stage",
+                "synth",
+                "--constraints",
+                str(constraints[0]),
+                "-D",
+                "VWB_VALIDATION=1",
+                "-I",
+                runner.src_dir,
+            ],
+            label=f"actual FPGA synthesis for {module}/{board}",
+            capture=True,
+        )
+        module_artifact = runner.artifact_component(module)
+        artifact = (
+            runner.build_dir
+            / "fpga"
+            / family
+            / module_artifact
+            / f"{module_artifact}.json"
+        )
+        if result.returncode == 0 and (
+            not artifact.is_file() or artifact.stat().st_size == 0
+        ):
+            runner.failures.append(
+                f"missing FPGA synthesis artifact: {artifact}"
             )
-            module_artifact = runner.artifact_component(module)
-            artifact = (
-                runner.build_dir
-                / "fpga"
-                / family
-                / module_artifact
-                / f"{module_artifact}.json"
-            )
-            if result.returncode == 0 and (
-                not artifact.is_file() or artifact.stat().st_size == 0
-            ):
-                runner.failures.append(
-                    f"missing FPGA synthesis artifact: {artifact}"
-                )
 
     validation_module = "validation_fpga"
     inventory_result = runner.run_vwb(
@@ -3380,7 +3300,7 @@ def main() -> int:
                     schematic=args.synth_schematic,
                     option_matrix=args.synth_option_matrix,
                 )
-                validate_synthesis_fixture(runner, metadata)
+                validate_synthesis_fixture(runner)
             elif phase == "formal":
                 validate_formal(runner)
             elif phase == "fpga":

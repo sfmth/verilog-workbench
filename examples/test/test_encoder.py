@@ -4,12 +4,12 @@ from cocotb.triggers import RisingEdge, FallingEdge, ClockCycles
 from .encoder import Encoder
 
 async def reset(dut):
-    dut.a <= 0
-    dut.b <= 0
-    dut.reset <= 1
+    dut.a.value = 0
+    dut.b.value = 0
+    dut.reset.value = 1
 
     await ClockCycles(dut.clk, 5)
-    dut.reset <= 0;
+    dut.reset.value = 0
     await ClockCycles(dut.clk, 5)
 
 
@@ -19,20 +19,20 @@ async def test_perfect_encoder(dut):
     clocks_per_phase = 5
     # no noise
     encoder = Encoder(dut.clk, dut.a, dut.b, clocks_per_phase = clocks_per_phase, noise_cycles = 0)
-    cocotb.fork(clock.start())
+    cocotb.start_soon(clock.start())
 
     await reset(dut)
-    assert dut.value == 0
+    assert int(dut.value.value) == 0
 
     # count up
     for i in range(clocks_per_phase * 2 *  255):
         await encoder.update(1)
 
-    assert(dut.value == 255)
+    assert int(dut.value.value) == 255
 
     # count down
     for i in range(clocks_per_phase * 2  * 255):
         await encoder.update(-1)
 
     await ClockCycles(dut.clk, 5)
-    assert(dut.value == 0)
+    assert int(dut.value.value) == 0

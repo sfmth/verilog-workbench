@@ -121,7 +121,7 @@ def and_wspk(w,spk):
 async def test_control_unit(dut):
     # dut.io_in.value = 0 # initialize
     clock = Clock(dut.clk, 40, "ns")
-    cocotb.fork(clock.start())
+    cocotb.start_soon(clock.start())
     
     await reset(dut) # reset
 

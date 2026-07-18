@@ -17,7 +17,7 @@ async def reset(dut):
 @cocotb.test()
 async def test_pwm(dut):
     clock = Clock(dut.clk, 10, "us")
-    cocotb.fork(clock.start())
+    cocotb.start_soon(clock.start())
     await reset(dut)
     # dut.src_a.value = 45
     # dut.src_b.value = -67
@@ -64,4 +64,3 @@ async def test_pwm(dut):
         # instruction/data memories are connected.
         # if (dut.alu_result_m.value == 100 and dut.mem_write_m.value == 1):
         #     assert(dut.write_data_m.value == 25)
-

@@ -88,7 +88,7 @@ async def reset(dut):
 async def test_all(dut):
     clock = Clock(dut.clk, 10, "us")
 
-    cocotb.fork(clock.start())
+    cocotb.start_soon(clock.start())
     dut.shift.value = 1
 
     # load kernel
@@ -191,4 +191,3 @@ async def test_all(dut):
     print("Verilog output image (with padding):")
     print(out_module.astype(int))
     print(out_module.shape)
-

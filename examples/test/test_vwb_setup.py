@@ -6,6 +6,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 SETUP = ROOT / "setup.sh"
+CI_WORKFLOW = ROOT / ".github" / "workflows" / "ci.yml"
+RELEASE_WORKFLOW = ROOT / ".github" / "workflows" / "release.yml"
 
 
 class SetupScriptTests(unittest.TestCase):
@@ -61,6 +63,24 @@ class SetupScriptTests(unittest.TestCase):
         self.assertIn('"cocotb>=1.9,<3"', source)
         self.assertIn("paru", source)
         self.assertIn("yay", source)
+
+    def test_ci_runs_supported_distros_in_parallel_and_focuses_on_png(self):
+        ci = CI_WORKFLOW.read_text(encoding="utf-8")
+        release = RELEASE_WORKFLOW.read_text(encoding="utf-8")
+        self.assertIn("fail-fast: false", ci)
+        for image in (
+            "ubuntu:24.04",
+            "debian:stable-slim",
+            "fedora:latest",
+            "archlinux:latest",
+        ):
+            self.assertIn(f"image: {image}", ci)
+        self.assertIn("./setup.sh --no-aur", ci)
+        self.assertIn("test encoder --seed 1", ci)
+        for workflow in (ci, release):
+            self.assertIn("--synth-format png", workflow)
+            self.assertNotIn("--all-wave-formats", workflow)
+            self.assertNotIn("--synth-option-matrix", workflow)
 
 
 if __name__ == "__main__":

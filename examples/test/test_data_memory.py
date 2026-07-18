@@ -17,7 +17,7 @@ async def reset(dut):
 @cocotb.test()
 async def test_pwm(dut):
     clock = Clock(dut.clk, 10, "us")
-    cocotb.fork(clock.start())
+    cocotb.start_soon(clock.start())
     # await reset(dut)
     dut.write_enable.value = 1
 
@@ -40,4 +40,3 @@ async def test_pwm(dut):
             assert(dut.read_data.value == data)
         else:
             assert(dut.read_data.value == 0)
-
