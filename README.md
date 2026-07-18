@@ -56,8 +56,8 @@ digital logic. Put Verilog, SystemVerilog, or VHDL source in `src/`, put tests
 in `test/`, and let VWB find the files, design blocks, and matching tests.
 
 You only need basic digital logic knowledge: inputs, outputs, gates, and, for a
-clocked design, what its clock and reset do. You do not need to know Makefiles,
-simulator command lines, Cocotb setup, or FPGA tool commands before starting.
+clocked design, what its clock and reset do. You do not need to know simulator
+command lines, Cocotb setup, or FPGA tool commands before starting.
 
 ## Features
 
@@ -108,7 +108,7 @@ such as `test_counter.py`, `test_counter.sv`, `tb_counter.vhd`, or
 `counter_test.py`. A Python file is treated as a test only when it contains a
 Cocotb test marked with `@cocotb.test()`.
 
-The root `src/` and `test/` folders are intentionally empty for your designs.
+Create `src/` and `test/` in your project when you are ready to add a design.
 Bundled learning designs and VWB's own regression tests live under `examples/`.
 
 ## Language Support
@@ -188,7 +188,7 @@ git clone https://github.com/sfmth/verilog-workbench.git
 cd verilog-workbench
 ./setup.sh
 # Start a new terminal after setup finishes, then run:
-vwb doctor
+vwb --src-dir examples/src --test-dir examples/test doctor
 ```
 
 The default is a small core install for Verilog and common SystemVerilog. Use

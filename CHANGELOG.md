@@ -46,8 +46,8 @@ All notable changes to Verilog Workbench are recorded here.
 - Plain `clean` removes simulation temporaries and lint work while preserving
   synthesis, saved waveforms, FPGA results, and formal results. Destructive
   cleanup requires an explicit scope.
-- Moved bundled designs and tests under `examples/`; root `src/` and `test/`
-  remain available for user projects.
+- Moved bundled designs and tests under `examples/`. New projects create their
+  own `src/` and `test/` folders with `vwb init`.
 - Reworked every CLI help screen in plain logic-design language and replaced
   confusing internal descriptions with direct explanations of each option.
 - Source simulation is now the default for both `test` and `wave`. Gate-level
@@ -108,6 +108,9 @@ All notable changes to Verilog Workbench are recorded here.
 
 ### CI/CD
 
+- Moved the internal integration harness under `.github/scripts/` so it is
+  clearly separated from user-facing commands, and removed the obsolete
+  Makefiles and tracked empty project folders.
 - GitHub Actions installs the full distribution-managed toolchain and runs the
   same main ten-module validation concurrently on Ubuntu 24.04, Debian stable,
   current Fedora, and rolling Arch. This verifies each installation path with

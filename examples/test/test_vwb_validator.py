@@ -1,10 +1,22 @@
+import importlib.util
+import sys
 import tempfile
 import unittest
 from dataclasses import replace
 from pathlib import Path
 from unittest import mock
 
-from scripts import validate_vwb
+
+ROOT = Path(__file__).resolve().parents[2]
+VALIDATOR_PATH = ROOT / ".github" / "scripts" / "validate_vwb.py"
+VALIDATOR_SPEC = importlib.util.spec_from_file_location(
+    "_vwb_ci_validator", VALIDATOR_PATH
+)
+if VALIDATOR_SPEC is None or VALIDATOR_SPEC.loader is None:
+    raise RuntimeError(f"cannot load CI validator: {VALIDATOR_PATH}")
+validate_vwb = importlib.util.module_from_spec(VALIDATOR_SPEC)
+sys.modules[VALIDATOR_SPEC.name] = validate_vwb
+VALIDATOR_SPEC.loader.exec_module(validate_vwb)
 
 
 class PythonTestDiscoveryAuditTests(unittest.TestCase):

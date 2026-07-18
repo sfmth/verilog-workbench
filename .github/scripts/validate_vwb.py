@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Integration harness for the Verilog Workbench CLI.
+"""GitHub Actions integration harness for the Verilog Workbench CLI.
 
 The harness treats ``vwb.py list --json`` as the source of truth. It always
 audits the complete inventory, while CI can limit tool-heavy phases to a small,
@@ -27,7 +27,7 @@ from pathlib import Path
 from typing import Any, Iterable, Sequence
 
 
-REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
+REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
 ALL_PHASES = (
     "help",
     "regressions",

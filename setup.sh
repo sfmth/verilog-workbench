@@ -446,5 +446,9 @@ command -v iverilog >/dev/null 2>&1 || die "Icarus Verilog is still missing afte
 command -v cocotb-config >/dev/null 2>&1 || die "Cocotb is still missing after the package and virtual-environment attempts"
 
 note "Checking the installation"
-(cd "$REPO_ROOT" && "$LOCAL_BIN/vwb" doctor) || true
-printf '\nSetup complete. Start a new terminal, then run: vwb doctor\n'
+"$LOCAL_BIN/vwb" \
+    --root "$REPO_ROOT" \
+    --src-dir examples/src \
+    --test-dir examples/test \
+    doctor || true
+printf '\nSetup complete. Start a new terminal, then run: vwb init\n'

@@ -40,7 +40,7 @@ jobs:
         run: |
           docker run --rm --network none \
             verilog-workbench-release:${{ github.sha }} \
-            python3 scripts/validate_vwb.py \
+            python3 .github/scripts/validate_vwb.py \
               --representative-modules \
               --synth-format png
 
