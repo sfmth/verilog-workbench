@@ -6,6 +6,12 @@ All notable changes to Verilog Workbench are recorded here.
 
 ### Changed
 
+- Local Linux installation is now the recommended README path. The README keeps
+  the quick start, project overview, features, layout, language support, and
+  installation notes without turning into an HDL glossary or command tutorial.
+- The Docker launcher now forwards the Linux USB bus, USB device cgroup access,
+  and the host user's supplemental groups so FPGA programmers can be used from
+  the persistent container and remain available across USB reconnects.
 - The Docker image now uses Ubuntu 24.04 as its stable base instead of a
   development Ubuntu release.
 - Fedora full installs now use the package manager's broken-dependency skip for

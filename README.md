@@ -2,16 +2,17 @@
 
 ## First Five Minutes
 
-Docker is the quickest way to get the same tools on every computer. Install
-[Docker](https://docs.docker.com/get-docker/) and Git, then run:
+The local Linux install is recommended. It gives VWB direct access to your
+files, display, and FPGA hardware. Install Git, then run:
 
 ```sh
 git clone https://github.com/sfmth/verilog-workbench.git
 cd verilog-workbench
-./run-docker.sh
+./setup.sh --full
 ```
 
-Inside the Docker shell, point VWB at the bundled examples and check the setup:
+Start a new terminal after setup finishes. Point VWB at the bundled examples
+and check the setup:
 
 ```sh
 vwb init --src-dir examples/src --test-dir examples/test --build-dir .vwb
@@ -46,18 +47,15 @@ vwb wave encoder
 ```
 
 GTKWave shows the encoder inputs and outputs changing over time. On Linux,
-`run-docker.sh` forwards the display automatically when a graphical session is
-available.
+VWB opens it automatically.
 
 ## What VWB Is
 
-Verilog Workbench (`vwb.py`) is a command-line tool for learning and checking
-digital logic. Put Verilog, SystemVerilog, or VHDL source in `src/`, put tests
-in `test/`, and let VWB find the files, design blocks, and matching tests.
-
-You only need basic digital logic knowledge: inputs, outputs, gates, and, for a
-clocked design, what its clock and reset do. You do not need to know simulator
-command lines, Cocotb setup, or FPGA tool commands before starting.
+Verilog Workbench (`vwb.py`) is a command-line tool for people who know basic
+digital logic and are starting to work with HDL. Put Verilog, SystemVerilog, or
+VHDL source in `src/`, put tests in `test/`, and let VWB find the files, design
+blocks, and matching tests. VWB handles the tool commands and keeps their
+output focused on the result.
 
 ## Features
 
@@ -125,40 +123,32 @@ or synthesis tool supports every possible language feature.
 A native VHDL testbench cannot directly drive the Verilog netlist made by
 Yosys. Use a Cocotb test when you want the optional gate-level check for VHDL.
 
-## Tests And Results
-
-Run a test by giving VWB a module or entity name:
-
-```sh
-vwb test counter
-```
-
-VWB tests the source design, called RTL, by default. Gate-level simulation is
-slower and is an extra learning check, so it is opt-in:
-
-```sh
-vwb test counter --gate-level
-```
-
-When no matching test exists, VWB creates a Cocotb starter. It initializes DUT
-inputs, recognizes common clock and reset names, starts the clock, releases the
-reset, and lets the design run briefly. The starter proves that the design can
-compile and run; add assertions to check that its outputs are correct.
-
-Results deliberately separate design problems from setup problems:
-
-- `Your code: FAIL` means a checker or test ran and found a problem.
-- `Your setup: TOOLS MISSING` means a stage could not run. Use `vwb doctor`.
-- `SKIPPED (verible-verilog-lint not installed)` does not mean the HDL is bad.
-
-Linting uses all suitable tools that are installed. For example, a Verilog
-project can still run `vwb lint counter` with only Icarus installed; Verilator,
-Yosys, and Verible are reported as optional skips. A lint command needs at
-least one available checker to inspect the code.
-
 ## Installation
 
-### Docker (Recommended)
+### Local Linux (Recommended)
+
+The local installer supports Ubuntu 24.04 and later, Debian, Fedora, Arch Linux,
+and common distributions based on those families:
+
+```sh
+git clone https://github.com/sfmth/verilog-workbench.git
+cd verilog-workbench
+./setup.sh
+```
+
+The default installs the core Verilog tools. Use `./setup.sh --full` to add the
+available VHDL, lint, synthesis, schematic, formal, waveform-viewing, and FPGA
+tools. Start a new terminal when setup finishes, then run `vwb doctor`.
+
+The installer uses your distribution's package manager first. On Arch it can
+use `paru` or `yay` for packages that are only in the AUR. Optional packages
+that are unavailable on your Linux release do not prevent the core setup from
+working. Use `./setup.sh --dry-run` to preview the package commands.
+
+Setup installs the `vwb` command and terminal Tab completion for Bash, Zsh, or
+Fish.
+
+### Docker
 
 Install Docker Desktop, or Docker Engine on Linux, and Git. From a terminal:
 
@@ -176,36 +166,16 @@ GTKWave, NetlistSVG, Graphviz, Inkscape, formal tools, and supported FPGA tools.
 The stable `vwb` command and Bash Tab completion are enabled inside the
 container. Run `./run-docker.sh --help` to see its container option.
 
-### Local Linux
+On Linux, `run-docker.sh` also forwards `/dev/bus/usb` and your account's device
+groups into the container. This lets FPGA programming commands reach a USB
+programmer, including one connected after the container starts. USB forwarding
+does not bypass the host's device permissions, so install the udev rules for
+your board or add your account to the group required by your distribution.
+After changing permissions, sign out and back in.
 
-The local installer supports Ubuntu 24.04 and later, Debian, Fedora, Arch Linux,
-and common distributions based on those families. It asks the system package
-manager for tools first, so package names and versions follow your Linux
-release instead of being fixed inside VWB:
-
-```sh
-git clone https://github.com/sfmth/verilog-workbench.git
-cd verilog-workbench
-./setup.sh
-# Start a new terminal after setup finishes, then run:
-vwb --src-dir examples/src --test-dir examples/test doctor
-```
-
-The default is a small core install for Verilog and common SystemVerilog. Use
-`./setup.sh --full` when you also want every available VHDL, lint, synthesis,
-schematic, formal, and FPGA tool. Optional packages that your release does not
-provide are skipped without breaking the core install.
-
-On Arch, the script uses official `pacman` packages first and can then use
-`paru` or `yay` for missing AUR packages. On every supported system, Cocotb and
-Tab completion use an isolated user Python environment only when the system
-package manager does not provide them. Run `./setup.sh --dry-run` to inspect the
-planned package commands without changing the computer.
-
-The script makes the `vwb` command and terminal Tab completion permanent for
-Bash, Zsh, or Fish. Start a new terminal after it finishes. Doctor shows what
-is available, what the current project needs, and which advanced features are
-still optional.
+Run `./run-docker.sh --recreate` once if the persistent container was created
+before USB forwarding was added. Docker Desktop on macOS and Windows does not
+provide this Linux USB path; program the board from the host on those systems.
 
 ## Starting Your Own Project
 
@@ -228,20 +198,6 @@ Use Tab after a partial module name to complete it. VWB writes generated work
 under `.vwb/`. Plain `vwb clean` removes temporary simulation and lint files.
 Saved wave tags and synthesis results require the explicit `clean waves` or
 `clean synth` scopes.
-
-## Useful Words
-
-| Word | Plain meaning |
-| --- | --- |
-| **HDL** | Code used to describe digital logic. Verilog, SystemVerilog, and VHDL are HDLs. |
-| **DUT** | The design under test: the module or entity being checked. |
-| **RTL** | Your HDL source before synthesis turns it into logic cells. |
-| **Testbench** | Code that drives DUT inputs and checks DUT outputs. Cocotb testbenches use Python. |
-| **Waveform** | A time chart showing how signal values change. |
-| **Lint** | A source check for likely mistakes without running a simulation. |
-| **Synthesis** | Turning HDL source into connected logic cells and registers. |
-| **Gate-level / netlist** | The synthesized logic cells and their connections. |
-| **Hierarchy** | A design block using smaller design blocks inside it. |
 
 ## Command Help
 

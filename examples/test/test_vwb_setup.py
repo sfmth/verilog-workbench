@@ -7,6 +7,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 SETUP = ROOT / "setup.sh"
 DOCKERFILE = ROOT / "Dockerfile"
+DOCKER_RUNNER = ROOT / "run-docker.sh"
+README = ROOT / "README.md"
 CI_WORKFLOW = ROOT / ".github" / "workflows" / "ci.yml"
 RELEASE_WORKFLOW = ROOT / ".github" / "workflows" / "release.yml"
 
@@ -81,6 +83,23 @@ class SetupScriptTests(unittest.TestCase):
         self.assertIn("FROM ubuntu:24.04", source)
         self.assertIn("python3-dev", source)
         self.assertNotIn("libgvplugin-neato-layout8", source)
+
+    def test_docker_runner_forwards_linux_usb_programmers(self):
+        source = DOCKER_RUNNER.read_text(encoding="utf-8")
+        self.assertIn('USB_BUS="/dev/bus/usb"', source)
+        self.assertIn('USB_CGROUP_RULE="c 189:* rwm"', source)
+        self.assertIn('--device-cgroup-rule "${USB_CGROUP_RULE}"', source)
+        self.assertIn('DOCKER_ARGS+=(--group-add "${GROUP_ID}")', source)
+        self.assertIn("Existing container is missing the current USB", source)
+
+    def test_readme_recommends_local_install_without_a_glossary(self):
+        readme = README.read_text(encoding="utf-8")
+        self.assertIn("### Local Linux (Recommended)", readme)
+        self.assertNotIn("Docker (Recommended)", readme)
+        self.assertNotIn("## Useful Words", readme)
+        self.assertNotIn("## Tests And Results", readme)
+        self.assertLess(readme.index("### Local Linux"), readme.index("### Docker"))
+        self.assertIn("/dev/bus/usb", readme)
 
     def test_fedora_skips_broken_optional_packages(self):
         source = SETUP.read_text(encoding="utf-8")
