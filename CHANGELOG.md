@@ -35,6 +35,10 @@ All notable changes to Verilog Workbench are recorded here.
   launcher also verifies the checkout mount before attaching.
 - After rebuilding, the Docker launcher compares image IDs and automatically
   recreates a container whose installed tool image is stale.
+- Checkout-specific Docker names no longer require Git at launcher runtime;
+  standard SHA-256 tools are used when available, with a POSIX checksum fallback.
+- The Docker launcher uses Bash's host name instead of requiring the optional
+  `hostname` executable, keeping it usable on minimal Fedora and Arch systems.
 - The Ubuntu 24.04 Docker build no longer requests a Graphviz plugin package
   that is absent from that release; the installed `graphviz` package provides
   the renderer used by VWB.

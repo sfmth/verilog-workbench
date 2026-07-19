@@ -38,6 +38,15 @@ class SetupScriptTests(unittest.TestCase):
             encoding="utf-8",
         )
         executable.chmod(0o755)
+        for command, status in (("git", 99), ("hostname", 98)):
+            blocked = executable.parent / command
+            blocked.write_text(
+                "#!/usr/bin/env bash\n"
+                f"echo 'run-docker.sh must not require {command}' >&2\n"
+                f"exit {status}\n",
+                encoding="utf-8",
+            )
+            blocked.chmod(0o755)
         return executable.parent
 
     def run_mocked_docker(
@@ -146,6 +155,11 @@ class SetupScriptTests(unittest.TestCase):
         self.assertIn('--device-cgroup-rule "${USB_CGROUP_RULE}"', source)
         self.assertIn('DOCKER_ARGS+=(--group-add "${GROUP_ID}")', source)
         self.assertIn("Existing container is missing the current USB", source)
+        self.assertNotIn("git hash-object", source)
+        self.assertIn("sha256sum", source)
+        self.assertIn("shasum -a 256", source)
+        self.assertIn("cksum", source)
+        self.assertNotIn("$(hostname)", source)
 
     def test_docker_runner_uses_different_names_for_two_checkouts(self):
         with tempfile.TemporaryDirectory() as directory:

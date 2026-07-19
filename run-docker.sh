@@ -2,7 +2,17 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
-PROJECT_HASH="$(printf '%s' "${SCRIPT_DIR}" | git hash-object --stdin)"
+if command -v sha256sum >/dev/null 2>&1; then
+  PROJECT_HASH="$(printf '%s' "${SCRIPT_DIR}" | sha256sum)"
+elif command -v shasum >/dev/null 2>&1; then
+  PROJECT_HASH="$(printf '%s' "${SCRIPT_DIR}" | shasum -a 256)"
+elif command -v cksum >/dev/null 2>&1; then
+  PROJECT_HASH="$(printf '%s' "${SCRIPT_DIR}" | cksum)"
+else
+  echo "Unable to create a checkout ID: sha256sum, shasum, or cksum is required." >&2
+  exit 1
+fi
+PROJECT_HASH="${PROJECT_HASH%%[[:space:]]*}"
 PROJECT_KEY="${PROJECT_HASH:0:12}"
 IMAGE_NAME="verilog-workbench-ubuntu-${PROJECT_KEY}"
 CONTAINER_NAME="verilog-workbench-${PROJECT_KEY}"
@@ -31,7 +41,7 @@ fi
 DOCKER_ARGS=(
   -it
   --name "${CONTAINER_NAME}"
-  --hostname "$(hostname)"
+  --hostname "${HOSTNAME:-verilog-workbench}"
   -v "${SCRIPT_DIR}:${WORKDIR}"
   -w "${WORKDIR}"
 )
