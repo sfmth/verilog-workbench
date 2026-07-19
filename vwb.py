@@ -4961,8 +4961,8 @@ def make_parser() -> argparse.ArgumentParser:
         action="store_true",
         default=True,
         help=(
-            "draw SVG/PNG with NetlistSVG; fall back to Yosys only if it fails "
-            "(default)"
+            "generate the normal circuit schematic; fall back to raw synthesized "
+            "output only if it fails (default)"
         ),
     )
     synth_parser.add_argument(
@@ -4970,7 +4970,7 @@ def make_parser() -> argparse.ArgumentParser:
         dest="schematic",
         action="store_false",
         default=argparse.SUPPRESS,
-        help="draw SVG/PNG with Yosys instead of NetlistSVG",
+        help="use raw synthesized output instead of the normal schematic",
     )
     synth_parser.add_argument(
         "--view",

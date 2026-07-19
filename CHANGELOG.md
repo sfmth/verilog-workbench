@@ -6,9 +6,17 @@ All notable changes to Verilog Workbench are recorded here.
 
 ### Changed
 
+- The README now includes test-file naming rules, starter-test behavior,
+  task-focused command examples with a description before every shell command,
+  saved-wave workflows, synthesis output choices, and complete Tang Nano 9K
+  and iCEBreaker build instructions without duplicating the complete built-in
+  option reference. Each command has a prominent task-oriented heading for
+  faster scanning.
+- Project licensing changed from the MIT License to the GNU General Public
+  License, version 2 only (`GPL-2.0-only`).
 - Local Linux installation is now the recommended README path. The README keeps
-  the quick start, project overview, features, layout, language support, and
-  installation notes without turning into an HDL glossary or command tutorial.
+  the first-five-minutes path, project overview, layout, language support, and
+  installation notes without turning into an HDL glossary.
 - The Docker launcher now forwards the Linux USB bus, USB device cgroup access,
   and the host user's supplemental groups so FPGA programmers can be used from
   the persistent container and remain available across USB reconnects.
