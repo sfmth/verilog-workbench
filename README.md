@@ -452,9 +452,10 @@ vwb wave counter --testcase test_reset
 vwb wave counter --gate-level
 ```
 
-The viewer's **Write Save File** action stores the layout under `.vwb/sim/`,
-and VWB reopens it on the next run of that test. `--save FILE` selects an
-existing layout instead.
+In GTKWave, use **File > Write Save File** or press `Ctrl+S` to save the current
+signals, ordering, colors, zoom, and other viewer state under `.vwb/sim/`. VWB
+automatically loads that saved state the next time the same test is opened.
+`--save FILE` selects an existing layout instead.
 
 A passing waveform can be tagged and reopened without another simulation:
 
