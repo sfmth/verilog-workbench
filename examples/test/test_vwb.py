@@ -175,6 +175,39 @@ class SourceCatalogTests(unittest.TestCase):
             self.assertEqual(catalog.names(), ["live", "selected"])
             self.assertEqual(catalog.problems("live"), [])
 
+    def test_command_line_define_selects_top_and_dependency_branches(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            child = self.write(
+                root,
+                "src/child.sv",
+                "`ifdef FEATURE\n"
+                "module feature_child; endmodule\n"
+                "`else\n"
+                "module fallback_child; endmodule\n"
+                "`endif\n",
+            )
+            top = self.write(
+                root,
+                "src/top.sv",
+                "`ifdef FEATURE\n"
+                "module feature_top; feature_child child(); endmodule\n"
+                "`endif\n",
+            )
+
+            catalog = vwb.SourceCatalog(
+                [top, child], predefined=["FEATURE=1"]
+            )
+
+            self.assertEqual(
+                catalog.names(), ["feature_child", "feature_top"]
+            )
+            self.assertEqual(
+                catalog.definition("feature_top").dependencies,
+                ("feature_child",),
+            )
+            self.assertEqual(catalog.closure("feature_top"), [child, top])
+
     def test_interface_dependencies_require_interface_syntax(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -536,6 +569,58 @@ class TestDiscoveryTests(unittest.TestCase):
             test_dir=root / "test",
             build_dir=root / ".vwb",
         )
+
+    @unittest.skipUnless(
+        shutil.which("iverilog") and shutil.which("vvp"),
+        "needs Icarus",
+    )
+    def test_cli_define_is_applied_before_workbench_discovery(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.write(
+                root,
+                "src/feature.sv",
+                "`ifdef FEATURE\n"
+                "module feature_top(input logic value, output logic copy);\n"
+                "  assign copy = value;\n"
+                "endmodule\n"
+                "`endif\n",
+            )
+            self.write(
+                root,
+                "test/test_feature_top.sv",
+                "module test_feature_top;\n"
+                "  logic value = 0;\n"
+                "  wire copy;\n"
+                "  feature_top dut(.value(value), .copy(copy));\n"
+                "  initial begin\n"
+                "    #1; if (copy !== 0) $fatal(1, \"low copy failed\");\n"
+                "    value = 1;\n"
+                "    #1; if (copy !== 1) $fatal(1, \"high copy failed\");\n"
+                "    $finish;\n"
+                "  end\n"
+                "endmodule\n",
+            )
+            output = io.StringIO()
+            args = vwb.make_parser().parse_args(
+                [
+                    "--root",
+                    str(root),
+                    "test",
+                    "feature_top",
+                    "--test-language",
+                    "verilog",
+                    "-D",
+                    "FEATURE",
+                ]
+            )
+            workbench = vwb.build_workbench(args)
+
+            with contextlib.redirect_stdout(output):
+                status = vwb.command_test(workbench, args)
+
+            self.assertEqual(status, 0)
+            self.assertIn("RTL PASS", output.getvalue())
 
     @unittest.skipUnless(shutil.which("sh"), "needs a POSIX shell")
     def test_tool_timeout_terminates_spawned_process_group(self):
@@ -1815,6 +1900,34 @@ printf 'wave:%s\n' "${COMPREPLY[@]}"
             self.assertFalse(passed)
             self.assertIn("missing.svh: file not found", errors.getvalue())
 
+    def test_lint_uses_canonical_vhdl_entity_name(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.write(
+                root,
+                "src/adder.vhd",
+                "entity Beginner_Adder is end entity;\n"
+                "architecture rtl of Beginner_Adder is begin end architecture;\n",
+            )
+            self.write(root, "test/.gitkeep", "")
+            workbench = self.make_workbench(root)
+            args = vwb.make_parser().parse_args(
+                ["lint", "BEGINNER_ADDER", "--linter", "ghdl"]
+            )
+            calls: list[tuple[str, str]] = []
+
+            def lint(module: str, tool: str, *_args: object, **_kwargs: object) -> bool:
+                calls.append((module, tool))
+                return True
+
+            with mock.patch.object(
+                workbench, "lint_with_tool", side_effect=lint
+            ):
+                status = vwb.command_lint(workbench, args)
+
+            self.assertEqual(status, 0)
+            self.assertEqual(calls, [("Beginner_Adder", "ghdl")])
+
     def test_lint_runs_every_selected_tool_and_reports_all_failures(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -2570,6 +2683,37 @@ printf 'wave:%s\n' "${COMPREPLY[@]}"
             with self.assertRaisesRegex(vwb.VWBError, "source or test"):
                 source_build.prepare_build_dir()
 
+    @unittest.skipUnless(
+        shutil.which("iverilog")
+        and shutil.which("vvp")
+        and shutil.which("cocotb-config"),
+        "needs Icarus and Cocotb",
+    )
+    def test_all_skipped_cocotb_suite_fails_end_to_end(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.write(root, "src/dut.v", "module dut; endmodule\n")
+            self.write(
+                root,
+                "test/test_dut.py",
+                "import cocotb\n\n"
+                "@cocotb.test(skip=True)\n"
+                "async def test_is_skipped(dut):\n"
+                "    pass\n",
+            )
+            workbench = self.make_workbench(root)
+            args = vwb.make_parser().parse_args(
+                ["test", "dut", "--seed", "1"]
+            )
+            output = io.StringIO()
+
+            with contextlib.redirect_stdout(output):
+                status = vwb.command_test(workbench, args)
+
+            self.assertEqual(status, 1)
+            self.assertIn("RTL FAIL", output.getvalue())
+            self.assertIn("0/1 test runs passed", output.getvalue())
+
     def test_cocotb_results_require_a_passing_testcase(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -2588,10 +2732,32 @@ printf 'wave:%s\n' "${COMPREPLY[@]}"
                 "failed.xml",
                 '<testsuite tests="1" failures="1"><testcase><failure/></testcase></testsuite>',
             )
+            skipped = self.write(
+                root,
+                "skipped.xml",
+                '<testsuite tests="1" failures="0" skipped="1">'
+                '<testcase name="not-run"><skipped/></testcase></testsuite>',
+            )
+            skipped_by_count = self.write(
+                root,
+                "skipped-by-count.xml",
+                '<testsuite tests="1" failures="0" skipped="1">'
+                '<testcase name="not-run"/></testsuite>',
+            )
+            mixed = self.write(
+                root,
+                "mixed.xml",
+                '<testsuite tests="2" failures="0" skipped="1">'
+                '<testcase name="not-run"><skipped/></testcase>'
+                '<testcase name="passed"/></testsuite>',
+            )
 
             self.assertTrue(vwb.Workbench._results_passed(passed))
             self.assertFalse(vwb.Workbench._results_passed(empty))
             self.assertFalse(vwb.Workbench._results_passed(failed))
+            self.assertFalse(vwb.Workbench._results_passed(skipped))
+            self.assertFalse(vwb.Workbench._results_passed(skipped_by_count))
+            self.assertTrue(vwb.Workbench._results_passed(mixed))
 
 
 if __name__ == "__main__":

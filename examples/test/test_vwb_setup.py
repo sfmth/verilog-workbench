@@ -1,5 +1,6 @@
 import os
 import subprocess
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -14,6 +15,60 @@ RELEASE_WORKFLOW = ROOT / ".github" / "workflows" / "release.yml"
 
 
 class SetupScriptTests(unittest.TestCase):
+    def make_mock_docker(self, root: Path) -> Path:
+        executable = root / "bin" / "docker"
+        executable.parent.mkdir(parents=True)
+        executable.write_text(
+            "#!/usr/bin/env bash\n"
+            "printf '%s\\n' \"$*\" >> \"${DOCKER_LOG}\"\n"
+            "if [[ \"$1 $2\" == \"container inspect\" ]]; then\n"
+            "  exit \"${MOCK_CONTAINER_EXISTS:-1}\"\n"
+            "fi\n"
+            "if [[ \"$1 $2\" == \"image inspect\" ]]; then\n"
+            "  printf '%s\\n' \"${MOCK_IMAGE_ID:-sha256:new}\"\n"
+            "  exit 0\n"
+            "fi\n"
+            "if [[ \"$1\" == \"inspect\" && \"$2\" == \"-f\" ]]; then\n"
+            "  case \"$3\" in\n"
+            "    *'.Image'*) printf '%s\\n' \"${MOCK_CONTAINER_IMAGE:-sha256:new}\" ;;\n"
+            "    *'/home/docker/verilog-workbench'*) printf '%s\\n' \"${MOCK_WORKDIR:-}\" ;;\n"
+            "    *'.State.Running'*) printf 'false\\n' ;;\n"
+            "  esac\n"
+            "fi\n",
+            encoding="utf-8",
+        )
+        executable.chmod(0o755)
+        return executable.parent
+
+    def run_mocked_docker(
+        self,
+        checkout: Path,
+        fake_bin: Path,
+        log: Path,
+        **settings: str,
+    ) -> subprocess.CompletedProcess[str]:
+        checkout.mkdir(parents=True)
+        runner = checkout / "run-docker.sh"
+        runner.write_text(DOCKER_RUNNER.read_text(encoding="utf-8"), encoding="utf-8")
+        runner.chmod(0o755)
+        environment = os.environ.copy()
+        environment.pop("DISPLAY", None)
+        environment.update(
+            {
+                "PATH": f"{fake_bin}:{environment['PATH']}",
+                "DOCKER_LOG": str(log),
+                **settings,
+            }
+        )
+        return subprocess.run(
+            [str(runner)],
+            cwd=checkout,
+            env=environment,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+
     def run_dry(self, distro: str, *options: str) -> subprocess.CompletedProcess[str]:
         environment = os.environ.copy()
         environment.update(
@@ -91,6 +146,82 @@ class SetupScriptTests(unittest.TestCase):
         self.assertIn('--device-cgroup-rule "${USB_CGROUP_RULE}"', source)
         self.assertIn('DOCKER_ARGS+=(--group-add "${GROUP_ID}")', source)
         self.assertIn("Existing container is missing the current USB", source)
+
+    def test_docker_runner_uses_different_names_for_two_checkouts(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            fake_bin = self.make_mock_docker(root)
+            run_lines: list[str] = []
+            for name in ("checkout-a", "checkout-b"):
+                checkout = root / name
+                log = root / f"{name}.log"
+                result = self.run_mocked_docker(
+                    checkout,
+                    fake_bin,
+                    log,
+                    MOCK_CONTAINER_EXISTS="1",
+                )
+                self.assertEqual(result.returncode, 0, result.stderr)
+                run_line = next(
+                    line
+                    for line in log.read_text(encoding="utf-8").splitlines()
+                    if line.startswith("run ")
+                )
+                self.assertIn(
+                    f"{checkout}:/home/docker/verilog-workbench", run_line
+                )
+                run_lines.append(run_line)
+
+            first = run_lines[0].split()
+            second = run_lines[1].split()
+            first_name = first[first.index("--name") + 1]
+            second_name = second[second.index("--name") + 1]
+            self.assertNotEqual(first_name, second_name)
+            self.assertNotEqual(first[-1], second[-1])
+
+    def test_docker_runner_recreates_container_for_changed_image(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            fake_bin = self.make_mock_docker(root)
+            checkout = root / "checkout"
+            log = root / "docker.log"
+            result = self.run_mocked_docker(
+                checkout,
+                fake_bin,
+                log,
+                MOCK_CONTAINER_EXISTS="0",
+                MOCK_IMAGE_ID="sha256:new",
+                MOCK_CONTAINER_IMAGE="sha256:old",
+                MOCK_WORKDIR=str(checkout),
+            )
+
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn("Docker image changed", result.stdout)
+            commands = log.read_text(encoding="utf-8").splitlines()
+            self.assertTrue(any(line.startswith("rm -f ") for line in commands))
+            self.assertTrue(any(line.startswith("run ") for line in commands))
+
+    def test_docker_runner_recreates_container_with_wrong_checkout_mount(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            fake_bin = self.make_mock_docker(root)
+            checkout = root / "checkout"
+            log = root / "docker.log"
+            result = self.run_mocked_docker(
+                checkout,
+                fake_bin,
+                log,
+                MOCK_CONTAINER_EXISTS="0",
+                MOCK_IMAGE_ID="sha256:same",
+                MOCK_CONTAINER_IMAGE="sha256:same",
+                MOCK_WORKDIR=str(root / "different-checkout"),
+            )
+
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn("Container checkout changed", result.stdout)
+            commands = log.read_text(encoding="utf-8").splitlines()
+            self.assertTrue(any(line.startswith("rm -f ") for line in commands))
+            self.assertTrue(any(line.startswith("run ") for line in commands))
 
     def test_readme_recommends_local_install_without_a_glossary(self):
         readme = README.read_text(encoding="utf-8")

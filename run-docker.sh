@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
-IMAGE_NAME="verilog-workbench-ubuntu"
-CONTAINER_NAME="verilog-workbench"
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
+PROJECT_HASH="$(printf '%s' "${SCRIPT_DIR}" | git hash-object --stdin)"
+PROJECT_KEY="${PROJECT_HASH:0:12}"
+IMAGE_NAME="verilog-workbench-ubuntu-${PROJECT_KEY}"
+CONTAINER_NAME="verilog-workbench-${PROJECT_KEY}"
 WORKDIR="/home/docker/verilog-workbench"
 RECREATE=0
 USB_BUS="/dev/bus/usb"
@@ -103,9 +105,27 @@ docker build \
   --build-arg USER_GID="$(id -g)" \
   -t "${IMAGE_NAME}" \
   "${SCRIPT_DIR}"
+BUILT_IMAGE_ID="$(docker image inspect --format '{{.Id}}' "${IMAGE_NAME}")"
 
 if docker container inspect "${CONTAINER_NAME}" >/dev/null 2>&1; then
   if [[ "${RECREATE}" == "1" ]]; then
+    docker rm -f "${CONTAINER_NAME}" >/dev/null
+    docker run "${DOCKER_ARGS[@]}" "${IMAGE_NAME}"
+    exit 0
+  fi
+
+  CURRENT_CONTAINER_IMAGE="$(docker inspect -f '{{.Image}}' "${CONTAINER_NAME}")"
+  CURRENT_WORKDIR_MOUNT="$(docker inspect -f '{{range .Mounts}}{{if eq .Destination "/home/docker/verilog-workbench"}}{{.Source}}{{end}}{{end}}' "${CONTAINER_NAME}")"
+
+  if [[ "${CURRENT_WORKDIR_MOUNT}" != "${SCRIPT_DIR}" ]]; then
+    echo "Container checkout changed; recreating it for ${SCRIPT_DIR}."
+    docker rm -f "${CONTAINER_NAME}" >/dev/null
+    docker run "${DOCKER_ARGS[@]}" "${IMAGE_NAME}"
+    exit 0
+  fi
+
+  if [[ "${CURRENT_CONTAINER_IMAGE}" != "${BUILT_IMAGE_ID}" ]]; then
+    echo "Docker image changed; recreating the container with the updated tools."
     docker rm -f "${CONTAINER_NAME}" >/dev/null
     docker run "${DOCKER_ARGS[@]}" "${IMAGE_NAME}"
     exit 0

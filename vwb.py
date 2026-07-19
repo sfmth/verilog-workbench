@@ -660,9 +660,13 @@ def extract_raw_declarations(
     return declarations
 
 
-def extract_raw_modules(path: Path) -> list[RawModule]:
+def extract_raw_modules(
+    path: Path, predefined: Iterable[str] = ()
+) -> list[RawModule]:
     text = path.read_text(encoding="utf-8", errors="replace")
-    cleaned = preprocess_verilog_for_discovery(strip_comments_and_strings(text))
+    cleaned = preprocess_verilog_for_discovery(
+        strip_comments_and_strings(text), predefined
+    )
     return extract_raw_declarations(path, cleaned, MODULE_RE, ENDMODULE_RE)
 
 
@@ -729,10 +733,12 @@ def _split_top_level(text: str, separator: str) -> list[str]:
 
 
 def verilog_module_sections(
-    path: Path, module: str
+    path: Path, module: str, predefined: Iterable[str] = ()
 ) -> tuple[str | None, str, str] | None:
     raw_text = path.read_text(encoding="utf-8", errors="replace")
-    text = preprocess_verilog_for_discovery(strip_comments_and_strings(raw_text))
+    text = preprocess_verilog_for_discovery(
+        strip_comments_and_strings(raw_text), predefined
+    )
     declaration = re.search(
         rf"\bmodule\s+(?:automatic\s+)?{re.escape(module)}\b", text
     )
@@ -764,8 +770,10 @@ def verilog_module_sections(
     return parameters, text[port_start + 1 : port_end], body
 
 
-def verilog_port_directions(path: Path, module: str) -> dict[str, str]:
-    sections = verilog_module_sections(path, module)
+def verilog_port_directions(
+    path: Path, module: str, predefined: Iterable[str] = ()
+) -> dict[str, str]:
+    sections = verilog_module_sections(path, module, predefined)
     if sections is None:
         return {}
     _parameters, header, body = sections
@@ -807,8 +815,10 @@ def verilog_port_directions(path: Path, module: str) -> dict[str, str]:
     return directions
 
 
-def verilog_input_declarations(path: Path, module: str) -> dict[str, str]:
-    sections = verilog_module_sections(path, module)
+def verilog_input_declarations(
+    path: Path, module: str, predefined: Iterable[str] = ()
+) -> dict[str, str]:
+    sections = verilog_module_sections(path, module, predefined)
     if sections is None:
         return {}
     _parameters, header, body = sections
@@ -876,8 +886,10 @@ def verilog_input_declarations(path: Path, module: str) -> dict[str, str]:
     return declarations
 
 
-def verilog_required_parameters(path: Path, module: str) -> tuple[str, ...]:
-    sections = verilog_module_sections(path, module)
+def verilog_required_parameters(
+    path: Path, module: str, predefined: Iterable[str] = ()
+) -> tuple[str, ...]:
+    sections = verilog_module_sections(path, module, predefined)
     if sections is None or not sections[0]:
         return ()
     parameters = strip_comments_and_strings(sections[0])
@@ -1375,8 +1387,11 @@ def instrument_source_arrays(path: Path, max_array_words: int) -> str | None:
 
 
 class SourceCatalog:
-    def __init__(self, files: Sequence[Path]):
+    def __init__(
+        self, files: Sequence[Path], predefined: Iterable[str] = ()
+    ):
         self.files = unique_paths(files)
+        self.predefined = tuple(predefined)
         raw_modules: list[RawModule] = []
         raw_interfaces: list[RawModule] = []
         raw_primitives: list[RawModule] = []
@@ -1405,7 +1420,7 @@ class SourceCatalog:
                     files_with_modules.add(path.resolve())
                 continue
             cleaned = preprocess_verilog_for_discovery(
-                strip_comments_and_strings(text)
+                strip_comments_and_strings(text), self.predefined
             )
             cleaned_sources[path] = cleaned
             found = extract_raw_declarations(path, cleaned, MODULE_RE, ENDMODULE_RE)
@@ -1748,7 +1763,9 @@ def module_from_test_stem(
     return tied[0][2] if len(tied) == 1 else None
 
 
-def infer_hdl_test_top(path: Path, dut: str) -> str | None:
+def infer_hdl_test_top(
+    path: Path, dut: str, predefined: Iterable[str] = ()
+) -> str | None:
     if path.suffix.lower() in VHDL_SUFFIXES:
         names = extract_vhdl_entity_names(path)
         preferred = [f"test_{dut}", f"tb_{dut}", f"{dut}_test", f"{dut}_tb"]
@@ -1757,7 +1774,7 @@ def infer_hdl_test_top(path: Path, dut: str) -> str | None:
         if len(preferred_found) == 1:
             return preferred_found[0]
         return names[0] if len(names) == 1 else None
-    modules = extract_raw_modules(path)
+    modules = extract_raw_modules(path, predefined)
     names = [module.name for module in modules]
     preferred = [f"test_{dut}", f"tb_{dut}", f"{dut}_test", f"{dut}_tb"]
     preferred_found = [name for name in preferred if name in names]
@@ -1815,6 +1832,7 @@ class Workbench:
         dry_run: bool = False,
         color: str = "auto",
         require_project_dirs: bool = True,
+        defines: Iterable[str] = (),
     ):
         self.root = root.resolve()
         self.src_dir = src_dir.resolve()
@@ -1823,6 +1841,7 @@ class Workbench:
         self.verbose = verbose
         self.dry_run = dry_run
         self.colors = Colorizer(color)
+        self.defines = tuple(defines)
 
         if require_project_dirs and not self.src_dir.is_dir():
             raise VWBError(f"source directory does not exist: {self.src_dir}")
@@ -1835,9 +1854,13 @@ class Workbench:
         ):
             raise VWBError("source and test directories must not overlap")
 
-        self.catalog = SourceCatalog(find_hdl_files(self.src_dir))
+        self.catalog = SourceCatalog(
+            find_hdl_files(self.src_dir), predefined=self.defines
+        )
         self.test_hdl_files = find_hdl_files(self.test_dir)
-        self.test_catalog = SourceCatalog(self.test_hdl_files)
+        self.test_catalog = SourceCatalog(
+            self.test_hdl_files, predefined=self.defines
+        )
         self.tests = self._discover_tests()
         self._cocotb_library: tuple[str, str] | None = None
         self._ghdl_vpi_library: str | None = None
@@ -1880,7 +1903,7 @@ class Workbench:
                         dut=dut,
                         kind=kind,
                         path=path,
-                        top=infer_hdl_test_top(path, dut),
+                        top=infer_hdl_test_top(path, dut, self.defines),
                     )
                 )
         declared_tops = {
@@ -1923,7 +1946,9 @@ class Workbench:
         definition = self.catalog.definition(module)
         if definition.language == "vhdl":
             return vhdl_port_directions(definition.path, definition.name)
-        return verilog_port_directions(definition.path, definition.name)
+        return verilog_port_directions(
+            definition.path, definition.name, self.defines
+        )
 
     @staticmethod
     def _clock_name(names: Sequence[str]) -> str | None:
@@ -1977,7 +2002,9 @@ class Workbench:
         definition = self.catalog.definition(module)
         if definition.language == "vhdl":
             return
-        required = verilog_required_parameters(definition.path, definition.name)
+        required = verilog_required_parameters(
+            definition.path, definition.name, self.defines
+        )
         if required:
             raise VWBError(
                 f"cannot generate a starter for {definition.name}: parameter(s) "
@@ -2051,8 +2078,12 @@ class Workbench:
         inputs = [
             name for name, direction in directions.items() if direction == "input"
         ]
-        input_declarations = verilog_input_declarations(definition.path, module)
-        sections = verilog_module_sections(definition.path, module)
+        input_declarations = verilog_input_declarations(
+            definition.path, definition.name, self.defines
+        )
+        sections = verilog_module_sections(
+            definition.path, definition.name, self.defines
+        )
         parameters = sections[0] if sections is not None else None
         clock = self._clock_name(inputs)
         reset = self._reset_name(inputs)
@@ -2068,8 +2099,8 @@ class Workbench:
         raw = next(
             (
                 item
-                for item in extract_raw_modules(definition.path)
-                if item.name == module
+                for item in extract_raw_modules(definition.path, self.defines)
+                if item.name == definition.name
             ),
             None,
         )
@@ -2458,7 +2489,7 @@ class Workbench:
                 raise VWBError("--test-top only applies to HDL testbenches")
             top = explicit_test_top
             if detected_kind in {"verilog", "vhdl"} and top is None:
-                top = infer_hdl_test_top(path, dut)
+                top = infer_hdl_test_top(path, dut, self.defines)
             return [TestSpec(dut=dut, kind=detected_kind, path=path, top=top)]
 
         allowed = TEST_KINDS if kind == "auto" else {kind}
@@ -2696,7 +2727,12 @@ class Workbench:
             return False
         elements = list(root.iter())
         local_names = [element.tag.rsplit("}", 1)[-1] for element in elements]
-        if "testcase" not in local_names:
+        testcases = [
+            element
+            for element in elements
+            if element.tag.rsplit("}", 1)[-1] == "testcase"
+        ]
+        if not testcases:
             return False
         if "failure" in local_names or "error" in local_names:
             return False
@@ -2709,11 +2745,22 @@ class Workbench:
             try:
                 failures = int(suite.attrib.get("failures", "0"))
                 errors = int(suite.attrib.get("errors", "0"))
+                skipped = int(suite.attrib.get("skipped", "0"))
+                tests = int(suite.attrib.get("tests", "0"))
             except ValueError:
                 return False
-            if failures > 0 or errors > 0:
+            if failures > 0 or errors > 0 or skipped < 0 or tests < 0:
                 return False
-        return True
+            if tests > 0 and skipped >= tests:
+                return False
+        return any(
+            not any(
+                child.tag.rsplit("}", 1)[-1]
+                in {"failure", "error", "skipped"}
+                for child in testcase
+            )
+            for testcase in testcases
+        )
 
     def _reset_sim_work_dir(self, work_dir: Path) -> None:
         if self.dry_run:
@@ -4463,7 +4510,10 @@ def module_name_completer(
     try:
         settings = resolve_project_settings(parsed_args)
         source = project_path(settings.root, settings.src_dir)
-        names = SourceCatalog(find_hdl_files(source)).names()
+        names = SourceCatalog(
+            find_hdl_files(source),
+            predefined=getattr(parsed_args, "define", ()),
+        ).names()
     except (OSError, VWBError):
         return []
     folded_prefix = prefix.casefold()
@@ -5074,6 +5124,7 @@ def build_workbench(args: argparse.Namespace) -> Workbench:
         dry_run=args.dry_run,
         color=args.color,
         require_project_dirs=args.command != "clean",
+        defines=getattr(args, "define", ()),
     )
 
 
@@ -5424,21 +5475,20 @@ def command_lint(workbench: Workbench, args: argparse.Namespace) -> int:
     requested_tools = list(dict.fromkeys(args.linter or ["all"]))
     checks: list[tuple[str, str]] = []
     selection_failures: list[tuple[str, str, str]] = []
-    for module in modules:
-        definitions = workbench.catalog.modules.get(module, [])
-        if not definitions:
-            workbench.catalog.definition(module)
-        if len(definitions) > 1:
-            try:
-                workbench.catalog.definition(module)
-            except VWBError as exc:
-                selection_failures.append((module, "discovery", str(exc)))
-                print(
-                    workbench.style("DISCOVERY FAIL", Ansi.BOLD, Ansi.RED)
-                    + f" ({module}: {exc})"
-                )
-                continue
-        language = definitions[0].language
+    for requested_module in modules:
+        try:
+            definition = workbench.catalog.definition(requested_module)
+        except VWBError as exc:
+            selection_failures.append(
+                (requested_module, "discovery", str(exc))
+            )
+            print(
+                workbench.style("DISCOVERY FAIL", Ansi.BOLD, Ansi.RED)
+                + f" ({requested_module}: {exc})"
+            )
+            continue
+        module = definition.name
+        language = definition.language
         if "all" in requested_tools:
             tools = (
                 ["ghdl", "iverilog", "verilator", "yosys"]

@@ -24,6 +24,17 @@ All notable changes to Verilog Workbench are recorded here.
 
 ### Fixed
 
+- Cocotb result files now require at least one test case that actually ran;
+  an all-skipped suite fails instead of being reported as a passing test run.
+- Command-line Verilog defines now apply during design and testbench discovery,
+  dependency selection, terminal completion, and generated-starter inspection.
+- Lint resolves VHDL entity names case-insensitively once and uses the canonical
+  entity name instead of crashing on a differently cased spelling.
+- Docker image and container names are now derived from the checkout path, so
+  separate clones cannot attach to each other's persistent containers. The
+  launcher also verifies the checkout mount before attaching.
+- After rebuilding, the Docker launcher compares image IDs and automatically
+  recreates a container whose installed tool image is stale.
 - The Ubuntu 24.04 Docker build no longer requests a Graphviz plugin package
   that is absent from that release; the installed `graphviz` package provides
   the renderer used by VWB.
