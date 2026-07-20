@@ -61,6 +61,36 @@ vwb wave encoder
 The waveform viewer opens automatically and shows the encoder inputs and
 outputs changing over time.
 
+## Starting A Project
+
+Create and enter a project folder, then initialize it:
+
+```sh
+# Create a folder for the new project.
+mkdir learning-counter
+# Enter the project folder.
+cd learning-counter
+# Create the default source, test, and build configuration.
+vwb init
+```
+
+Add HDL under `src/`, then check what VWB found:
+
+```sh
+# Show the designs and tests VWB discovered.
+vwb list
+# Check that the required tools are installed.
+vwb doctor
+# Run the counter test or create its starter test.
+vwb test counter
+# Run the counter test and open its waveform.
+vwb wave counter
+```
+
+Use Tab after a partial module name to complete it, for example
+`vwb wave cou<Tab>`. Generated work goes under `.vwb/` unless another build
+folder was saved by `init`.
+
 ## Features
 
 | Feature | What VWB does |
@@ -301,36 +331,6 @@ those permissions.
 
 Docker Desktop on macOS and Windows does not expose the Linux USB device path.
 Build in Docker and program the board from the host on those systems.
-
-## Starting A Project
-
-Create and enter a project folder, then initialize it:
-
-```sh
-# Create a folder for the new project.
-mkdir learning-counter
-# Enter the project folder.
-cd learning-counter
-# Create the default source, test, and build configuration.
-vwb init
-```
-
-Add HDL under `src/`, then check what VWB found:
-
-```sh
-# Show the designs and tests VWB discovered.
-vwb list
-# Check that the required tools are installed.
-vwb doctor
-# Run the counter test or create its starter test.
-vwb test counter
-# Run the counter test and open its waveform.
-vwb wave counter
-```
-
-Use Tab after a partial module name to complete it, for example
-`vwb wave cou<Tab>`. Generated work goes under `.vwb/` unless another build
-folder was saved by `init`.
 
 ## Command Basics
 
