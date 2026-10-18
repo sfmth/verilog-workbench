@@ -19,6 +19,7 @@ class ProjectMixin:
         return path
 
     def make_project(self, root: Path, *, dry_run: bool = False) -> vwb.Workbench:
+        root = root.resolve()
         self.write(root, "src/dut.v", "module dut; endmodule\n")
         self.write(
             root,
@@ -112,7 +113,7 @@ class WaveParserTests(unittest.TestCase):
 class WaveLifecycleTests(ProjectMixin, unittest.TestCase):
     def test_simulation_cleanup_preserves_gtkw_but_removes_stale_outputs(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             workbench = self.make_project(root)
             workbench.prepare_build_dir()
             spec = workbench.tests[0]
@@ -151,7 +152,7 @@ class WaveLifecycleTests(ProjectMixin, unittest.TestCase):
 
     def test_tagged_wave_is_self_contained_and_can_be_loaded_after_cleanup(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             workbench = self.make_project(root)
             workbench.prepare_build_dir()
             work_dir = root / ".vwb" / "sim" / "dut" / "verilog-test_dut"
@@ -228,7 +229,7 @@ class WaveLifecycleTests(ProjectMixin, unittest.TestCase):
 
     def test_saved_wave_listing_and_invalid_tags(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             workbench = self.make_project(root)
             workbench.prepare_build_dir()
             wave = self.write(
@@ -269,7 +270,7 @@ class WaveLifecycleTests(ProjectMixin, unittest.TestCase):
 
     def test_saved_wave_replacement_is_explicit_and_atomic(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             workbench = self.make_project(root)
             args = self.simulation_args()
             first = self.write(root, "first.vcd", "first waveform\n")
@@ -313,7 +314,7 @@ class WaveLifecycleTests(ProjectMixin, unittest.TestCase):
 
     def test_gtkwave_uses_autosave_and_simulation_directory_as_cwd(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             workbench = self.make_project(root, dry_run=True)
             self.write(
                 root,
@@ -349,7 +350,7 @@ class WaveLifecycleTests(ProjectMixin, unittest.TestCase):
 
     def test_explicit_gtkwave_save_file_is_loaded_from_wave_directory(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             workbench = self.make_project(root)
             wave = self.write(root, ".vwb/sim/dut/run/dut.vcd", "waveform\n")
             layout = self.write(root, "views/dut.gtkw", "[*] saved layout\n")
@@ -371,7 +372,7 @@ class WaveLifecycleTests(ProjectMixin, unittest.TestCase):
 
     def test_layout_next_to_configured_source_tree_is_loaded_automatically(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             self.write(root, "examples/src/dut.v", "module dut; endmodule\n")
             self.write(
                 root,
@@ -407,7 +408,7 @@ class WaveLifecycleTests(ProjectMixin, unittest.TestCase):
 
     def test_cleaning_symlinked_scope_does_not_follow_it(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             workbench = self.make_project(root)
             workbench.prepare_build_dir()
             outside = root / "outside"
@@ -424,7 +425,7 @@ class WaveLifecycleTests(ProjectMixin, unittest.TestCase):
 
     def test_default_clean_removes_temporary_outputs_but_preserves_results(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             workbench = self.make_project(root)
             workbench.prepare_build_dir()
             for scope in ("sim", "lint", "fpga", "formal", "synth", "saved-waves"):
@@ -457,7 +458,7 @@ class WaveLifecycleTests(ProjectMixin, unittest.TestCase):
 
     def test_clean_works_after_source_and_test_directories_are_removed(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             workbench = self.make_project(root)
             workbench.prepare_build_dir()
             temporary = self.write(root, ".vwb/lint/report.txt", "temporary\n")
@@ -473,7 +474,7 @@ class WaveLifecycleTests(ProjectMixin, unittest.TestCase):
 
     def test_clean_dry_run_lists_only_artifacts_that_would_be_removed(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             workbench = self.make_project(root)
             workbench.prepare_build_dir()
             stale = self.write(root, ".vwb/sim/dut/run/stale.vvp", "stale\n")
@@ -502,7 +503,7 @@ class WaveLifecycleTests(ProjectMixin, unittest.TestCase):
 
     def test_clean_rejects_legacy_marker_with_extra_text(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             workbench = self.make_project(root)
             marker = self.write(
                 root,
@@ -520,7 +521,7 @@ class WaveLifecycleTests(ProjectMixin, unittest.TestCase):
 
     def test_saved_wave_payload_symlinks_are_rejected(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             workbench = self.make_project(root)
             wave = self.write(root, "run.vcd", "waveform\n")
             saved = workbench.archive_wave(
@@ -540,7 +541,7 @@ class WaveLifecycleTests(ProjectMixin, unittest.TestCase):
 
     def test_saved_wave_layout_sync_does_not_follow_destination_symlink(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             workbench = self.make_project(root)
             wave = self.write(root, "run.vcd", "waveform\n")
             saved = workbench.archive_wave(
@@ -564,7 +565,7 @@ class WaveLifecycleTests(ProjectMixin, unittest.TestCase):
 
     def test_saved_wave_root_symlink_is_rejected_before_archive_write(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             workbench = self.make_project(root)
             workbench.prepare_build_dir()
             outside = root / "outside-archives"
@@ -589,7 +590,7 @@ class WaveLifecycleTests(ProjectMixin, unittest.TestCase):
 class SynthesisTests(ProjectMixin, unittest.TestCase):
     def test_large_svg_requires_svg_instead_of_a_limited_png(self):
         with tempfile.TemporaryDirectory() as directory:
-            svg = Path(directory) / "large.svg"
+            svg = Path(directory).resolve() / "large.svg"
             svg.write_text(
                 '<svg xmlns="http://www.w3.org/2000/svg" '
                 'width="10000pt" height="10000pt"/>\n',
@@ -651,6 +652,7 @@ class SynthesisTests(ProjectMixin, unittest.TestCase):
         missing_dot: bool = False,
         missing_sfdp: bool = False,
     ) -> tuple[Path, str, list[tuple[list[str], Path | None]]]:
+        root = root.resolve()
         workbench = self.make_project(root)
         args = vwb.make_parser().parse_args(argv)
         calls: list[tuple[list[str], Path | None]] = []
@@ -815,7 +817,7 @@ class SynthesisTests(ProjectMixin, unittest.TestCase):
 
     def test_default_synthesis_uses_makefile_style_flow_and_netlistsvg(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
 
             artifact, script, calls = self._synthesize_with_fake_tools(
                 root, ["synth", "dut"]
@@ -843,7 +845,7 @@ class SynthesisTests(ProjectMixin, unittest.TestCase):
     def test_svg_uses_inkscape_as_its_default_viewer(self):
         with tempfile.TemporaryDirectory() as directory:
             artifact, _script, calls = self._synthesize_with_fake_tools(
-                Path(directory), ["synth", "dut", "--format", "svg"]
+                Path(directory).resolve(), ["synth", "dut", "--format", "svg"]
             )
 
         commands = [command for command, _cwd in calls]
@@ -856,7 +858,7 @@ class SynthesisTests(ProjectMixin, unittest.TestCase):
             with self.subTest(output_format=output_format):
                 with tempfile.TemporaryDirectory() as directory:
                     _artifact, _script, calls = self._synthesize_with_fake_tools(
-                        Path(directory), ["synth", "dut", "--format", output_format]
+                        Path(directory).resolve(), ["synth", "dut", "--format", output_format]
                     )
 
                 commands = [command for command, _cwd in calls]
@@ -866,7 +868,7 @@ class SynthesisTests(ProjectMixin, unittest.TestCase):
 
     def test_netlistsvg_failure_falls_back_to_yosys_svg_rendering(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             errors = io.StringIO()
 
             with contextlib.redirect_stderr(errors):
@@ -893,7 +895,7 @@ class SynthesisTests(ProjectMixin, unittest.TestCase):
 
     def test_invalid_netlistsvg_output_falls_back_to_yosys_svg_rendering(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
 
             artifact, _script, calls = self._synthesize_with_fake_tools(
                 root,
@@ -908,7 +910,7 @@ class SynthesisTests(ProjectMixin, unittest.TestCase):
 
     def test_large_yosys_svg_uses_scalable_graphviz_fallback(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             errors = io.StringIO()
 
             with contextlib.redirect_stderr(errors):
@@ -934,7 +936,7 @@ class SynthesisTests(ProjectMixin, unittest.TestCase):
 
     def test_large_json_uses_scalable_layout_without_waiting_for_dot(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             errors = io.StringIO()
 
             with contextlib.redirect_stderr(errors):
@@ -961,7 +963,7 @@ class SynthesisTests(ProjectMixin, unittest.TestCase):
 
     def test_large_json_uses_dot_when_sfdp_is_unavailable(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
 
             artifact, _script, calls = self._synthesize_with_fake_tools(
                 root,
@@ -985,7 +987,7 @@ class SynthesisTests(ProjectMixin, unittest.TestCase):
 
     def test_large_json_still_uses_netlistsvg_when_it_succeeds(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             errors = io.StringIO()
 
             with contextlib.redirect_stderr(errors):
@@ -1011,7 +1013,7 @@ class SynthesisTests(ProjectMixin, unittest.TestCase):
 
     def test_full_large_netlist_renders_full_yosys_schematic_and_keeps_json(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             errors = io.StringIO()
 
             with contextlib.redirect_stderr(errors):
@@ -1055,7 +1057,7 @@ class SynthesisTests(ProjectMixin, unittest.TestCase):
 
     def test_full_large_png_returns_svg_and_opens_inkscape(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             errors = io.StringIO()
 
             with contextlib.redirect_stderr(errors):
@@ -1091,7 +1093,7 @@ class SynthesisTests(ProjectMixin, unittest.TestCase):
 
     def test_failed_scalable_layout_keeps_json_and_removes_partial_svg(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
 
             with self.assertRaisesRegex(vwb.VWBError, "visual rendering failed"):
                 self._synthesize_with_fake_tools(
@@ -1137,7 +1139,7 @@ class SynthesisTests(ProjectMixin, unittest.TestCase):
                     if full:
                         argv.append("--full")
                     _artifact, script, _calls = self._synthesize_with_fake_tools(
-                        Path(directory), argv
+                        Path(directory).resolve(), argv
                     )
                     commands = [
                         item.removeprefix("yosys ")
@@ -1170,7 +1172,7 @@ class SynthesisTests(ProjectMixin, unittest.TestCase):
                                 argv.append("--full")
 
                             artifact, _script, _calls = (
-                                self._synthesize_with_fake_tools(Path(directory), argv)
+                                self._synthesize_with_fake_tools(Path(directory).resolve(), argv)
                             )
 
                             self.assertEqual(artifact.suffix, f".{output_format}")
@@ -1178,7 +1180,7 @@ class SynthesisTests(ProjectMixin, unittest.TestCase):
 
     def test_full_synthesis_and_yosys_rendering_backend(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
 
             artifact, script, calls = self._synthesize_with_fake_tools(
                 root,
@@ -1208,7 +1210,7 @@ class SynthesisTests(ProjectMixin, unittest.TestCase):
 
     def test_yosys_read_script_separates_spaced_include_option_and_value(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory) / "project with spaces"
+            root = Path(directory).resolve() / "project with spaces"
             include_dir = root / "include files"
             include_dir.mkdir(parents=True)
 
@@ -1227,12 +1229,12 @@ class SynthesisTests(ProjectMixin, unittest.TestCase):
                 ],
             )
 
-            self.assertIn(f'"-I{include_dir}"', script)
-            self.assertIn(f'"{root / "src" / "dut.v"}"', script)
+            self.assertIn(vwb.Workbench._tcl_quote(f"-I{include_dir}"), script)
+            self.assertIn(vwb.Workbench._tcl_quote(root / "src" / "dut.v"), script)
 
     def test_yosys_read_script_quotes_string_valued_definition(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
 
             _artifact, script, _calls = self._synthesize_with_fake_tools(
                 root,
@@ -1253,7 +1255,7 @@ class SynthesisTests(ProjectMixin, unittest.TestCase):
 
     def test_yosys_render_script_runs_from_spaced_output_directory(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory) / "project with spaces"
+            root = Path(directory).resolve() / "project with spaces"
 
             artifact, _script, calls = self._synthesize_with_fake_tools(
                 root,

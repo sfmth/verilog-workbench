@@ -6,6 +6,7 @@ import io
 import json
 import os
 from pathlib import Path
+import subprocess
 import tarfile
 import tempfile
 import unittest
@@ -147,6 +148,49 @@ class AcquisitionTests(unittest.TestCase):
         self.assertEqual(json.loads(output.read_text())["state"], "failed")
         self.assertIn("size differs", stderr.getvalue())
         self.assertEqual(stdout.getvalue(), "")
+
+    def test_explicit_tool_prefix_does_not_replace_bundled_probe_python(self):
+        suite, external = self.root / "suite", self.root / "external"
+        (suite / "py3bin").mkdir(parents=True); external.mkdir()
+        (suite / "py3bin/python3").write_bytes(b"suite-python")
+        (external / "python3").write_bytes(b"other-python")
+        environment = acquire.native_environment(suite, "darwin-arm64", {"PATH": "old"}, tool_bins=[external])
+        self.assertEqual(environment["PATH"].split(os.pathsep)[0], str(external.resolve()))
+        self.assertEqual(acquire.suite_python(suite), str(suite / "py3bin/python3"))
+
+    @unittest.skipIf(os.name == "nt", "Mac Yosys overlay executes POSIX upstream launchers")
+    def test_explicit_overlay_survives_suite_launcher_path_reset(self):
+        suite, external = self.root / "suite", self.root / "external-yosys"
+        (suite / "bin").mkdir(parents=True)
+        launcher = suite / "bin/yosys"
+        original = b"#!/bin/sh\nprintf original"
+        launcher.write_bytes(original); launcher.chmod(0o755)
+        external.write_bytes(b"#!/bin/sh\nprintf external"); external.chmod(0o755)
+        records = acquire.overlay_tools(suite, {"yosys": external})
+        self.assertEqual((suite / ".vwb-overlays/originals/yosys").read_bytes(), original)
+        self.assertEqual(records[0]["original_sha256"], hashlib.sha256(original).hexdigest())
+        self.assertEqual(records[0]["external_sha256"], hashlib.sha256(external.read_bytes()).hexdigest())
+        self.assertTrue(records[0]["externally_managed"])
+        self.assertFalse(records[0]["relocatable"])
+        # The upstream Python wrapper prepends suite/bin again, defeating any
+        # external PATH prefix. Exercise that reset and a real tool subprocess.
+        wrapper = suite / "bin/python-wrapper"
+        wrapper.write_text('#!/bin/sh\nPATH="' + str(suite / "bin") + ':$PATH"\nexport PATH\nexec yosys\n')
+        wrapper.chmod(0o755)
+        result = subprocess.run([str(wrapper)], env={**os.environ, "PATH": str(external.parent)}, capture_output=True, text=True, check=True)
+        self.assertEqual(result.stdout, "external")
+
+    def test_overlay_failure_restores_original_launcher(self):
+        suite, external = self.root / "suite", self.root / "external-yosys"
+        (suite / "bin").mkdir(parents=True)
+        launcher = suite / "bin/yosys"
+        launcher.write_bytes(b"original")
+        external.write_bytes(b"external"); external.chmod(0o755)
+        with mock.patch.object(Path, "symlink_to", side_effect=OSError("symlink unavailable")):
+            with self.assertRaisesRegex(OSError, "symlink unavailable"):
+                acquire.overlay_tools(suite, {"yosys": external})
+        self.assertEqual(launcher.read_bytes(), b"original")
+        self.assertFalse((suite / ".vwb-overlays/originals/yosys").exists())
 
 
 if __name__ == "__main__":

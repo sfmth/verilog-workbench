@@ -1,6 +1,7 @@
 import contextlib
 import io
 import json
+import os
 import shlex
 import shutil
 import tempfile
@@ -22,7 +23,7 @@ class SourceCatalogTests(unittest.TestCase):
 
     def test_module_closure_excludes_unrelated_designs(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             self.write(root, "src/debounce.v", "module debounce; endmodule\n")
             self.write(root, "src/encoder.v", "module encoder; endmodule\n")
             self.write(root, "src/pwm.v", "module pwm; endmodule\n")
@@ -44,7 +45,7 @@ class SourceCatalogTests(unittest.TestCase):
 
     def test_declarations_do_not_depend_on_file_names(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             path = self.write(
                 root,
                 "src/design_blocks.sv",
@@ -65,7 +66,7 @@ class SourceCatalogTests(unittest.TestCase):
 
     def test_comments_and_strings_do_not_create_modules(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             path = self.write(
                 root,
                 "src/real.v",
@@ -83,7 +84,7 @@ class SourceCatalogTests(unittest.TestCase):
 
     def test_duplicate_module_is_rejected_only_when_selected(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             first = self.write(root, "src/a.v", "module duplicate; endmodule\n")
             second = self.write(root, "src/b.v", "module duplicate; endmodule\n")
             valid = self.write(root, "src/valid.v", "module valid; endmodule\n")
@@ -95,7 +96,7 @@ class SourceCatalogTests(unittest.TestCase):
 
     def test_list_reports_duplicates_interfaces_and_primitives_without_aborting(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             self.write(root, "src/first.v", "module duplicate; endmodule\n")
             self.write(root, "src/second.v", "module duplicate; endmodule\n")
             self.write(root, "src/healthy.v", "module healthy; endmodule\n")
@@ -134,7 +135,7 @@ class SourceCatalogTests(unittest.TestCase):
 
     def test_unterminated_module_does_not_swallow_the_next_module(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             path = self.write(
                 root,
                 "src/designs.v",
@@ -153,7 +154,7 @@ class SourceCatalogTests(unittest.TestCase):
 
     def test_discovery_uses_only_the_active_preprocessor_branch(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             path = self.write(
                 root,
                 "src/conditional.sv",
@@ -177,7 +178,7 @@ class SourceCatalogTests(unittest.TestCase):
 
     def test_command_line_define_selects_top_and_dependency_branches(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             child = self.write(
                 root,
                 "src/child.sv",
@@ -210,7 +211,7 @@ class SourceCatalogTests(unittest.TestCase):
 
     def test_interface_dependencies_require_interface_syntax(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             path = self.write(
                 root,
                 "src/interfaces.sv",
@@ -229,7 +230,7 @@ class SourceCatalogTests(unittest.TestCase):
 
     def test_vhdl_strings_do_not_create_entities_or_dependencies(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             path = self.write(
                 root,
                 "src/messages.vhd",
@@ -248,7 +249,7 @@ class SourceCatalogTests(unittest.TestCase):
 
     def test_systemverilog_packages_precede_modules_that_use_them(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             package = self.write(
                 root,
                 "src/constants_pkg.sv",
@@ -273,7 +274,7 @@ class SourceCatalogTests(unittest.TestCase):
 
     def test_vhdl_entities_dependencies_and_test_language_are_discovered(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             child = self.write(
                 root,
                 "src/vhdl_child.vhd",
@@ -350,7 +351,7 @@ class SourceCatalogTests(unittest.TestCase):
 
     def test_vhdl_closure_excludes_unrelated_designs_and_keeps_local_packages(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             package = self.write(
                 root,
                 "src/values_pkg.vhd",
@@ -406,7 +407,7 @@ class SourceCatalogTests(unittest.TestCase):
 
     def test_vhdl_closure_includes_a_separate_architecture_file(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             entity = self.write(
                 root,
                 "src/counter_entity.vhd",
@@ -428,7 +429,7 @@ class SourceCatalogTests(unittest.TestCase):
 
     def test_vhdl_duplicate_entity_names_are_case_insensitive(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             self.write(root, "src/first.vhd", "entity Counter is end entity;\n")
             self.write(root, "src/second.vhd", "entity counter is end entity;\n")
             catalog = vwb.SourceCatalog(vwb.find_hdl_files(root / "src"))
@@ -438,7 +439,7 @@ class SourceCatalogTests(unittest.TestCase):
 
     def test_interfaces_and_primitives_are_included_in_the_design_closure(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             interface = self.write(
                 root,
                 "src/sample_bus.sv",
@@ -465,7 +466,7 @@ class SourceCatalogTests(unittest.TestCase):
 
     def test_unpacked_array_declarations_are_discovered(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             path = self.write(
                 root,
                 "src/memories.sv",
@@ -496,7 +497,7 @@ class SourceCatalogTests(unittest.TestCase):
 
     def test_procedural_array_dump_is_skipped_with_a_warning(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             path = self.write(
                 root,
                 "procedural.sv",
@@ -519,7 +520,7 @@ class SourceCatalogTests(unittest.TestCase):
 
     def test_final_block_array_dump_is_skipped_with_a_warning(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             path = self.write(
                 root,
                 "final_array.sv",
@@ -536,7 +537,7 @@ class SourceCatalogTests(unittest.TestCase):
 
     def test_aggregate_member_array_does_not_block_supported_arrays(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             path = self.write(
                 root,
                 "aggregate_array.sv",
@@ -576,7 +577,7 @@ class TestDiscoveryTests(unittest.TestCase):
     )
     def test_cli_define_is_applied_before_workbench_discovery(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             self.write(
                 root,
                 "src/feature.sv",
@@ -622,10 +623,10 @@ class TestDiscoveryTests(unittest.TestCase):
             self.assertEqual(status, 0)
             self.assertIn("RTL PASS", output.getvalue())
 
-    @unittest.skipUnless(shutil.which("sh"), "needs a POSIX shell")
+    @unittest.skipUnless(os.name == "posix" and shutil.which("sh"), "needs native POSIX process groups and shell")
     def test_tool_timeout_terminates_spawned_process_group(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             self.write(root, "src/dut.v", "module dut; endmodule\n")
             self.write(root, "test/.gitkeep", "")
             marker = root / "orphan-finished"
@@ -650,7 +651,7 @@ class TestDiscoveryTests(unittest.TestCase):
     @unittest.skipUnless(shutil.which("sh"), "needs a POSIX shell")
     def test_tools_are_quiet_on_success_and_concise_on_failure(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             self.write(root, "src/dut.v", "module dut; endmodule\n")
             self.write(root, "test/.gitkeep", "")
             workbench = self.make_workbench(root)
@@ -677,7 +678,7 @@ class TestDiscoveryTests(unittest.TestCase):
 
     def test_cocotb_helpers_are_not_runnable_tests(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             self.write(root, "src/dut.v", "module dut; endmodule\n")
             self.write(
                 root,
@@ -699,7 +700,7 @@ class TestDiscoveryTests(unittest.TestCase):
 
     def test_missing_module_generates_an_idempotent_cocotb_starter(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             self.write(
                 root,
                 "src/dut.sv",
@@ -745,7 +746,7 @@ class TestDiscoveryTests(unittest.TestCase):
 
     def test_starter_clock_and_reset_name_detection_uses_conventional_names(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             self.write(
                 root,
                 "src/dut.sv",
@@ -800,7 +801,7 @@ class TestDiscoveryTests(unittest.TestCase):
 
     def test_generated_starters_initialize_unpacked_array_inputs(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             source = self.write(
                 root,
                 "src/array_input.sv",
@@ -854,7 +855,7 @@ class TestDiscoveryTests(unittest.TestCase):
 
     def test_starter_explains_required_parameters_without_defaults(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             self.write(
                 root,
                 "src/required_parameter.sv",
@@ -876,7 +877,7 @@ class TestDiscoveryTests(unittest.TestCase):
 
     def test_cocotb_starter_sanitizes_dollar_in_module_name(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             self.write(
                 root,
                 "src/dut.v",
@@ -901,7 +902,7 @@ class TestDiscoveryTests(unittest.TestCase):
 
     def test_generated_starters_preserve_escaped_port_names(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             source = self.write(
                 root,
                 "src/dut.v",
@@ -955,7 +956,7 @@ class TestDiscoveryTests(unittest.TestCase):
         )
 
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             source = self.write(
                 root,
                 "src/odd.v",
@@ -1004,7 +1005,7 @@ class TestDiscoveryTests(unittest.TestCase):
 
     def test_cocotb_runtime_settings_accept_old_and_new_config_interfaces(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             self.write(root, "src/dut.v", "module dut; endmodule\n")
             self.write(root, "test/.gitkeep", "")
             workbench = self.make_workbench(root)
@@ -1036,7 +1037,7 @@ class TestDiscoveryTests(unittest.TestCase):
 
     def test_generated_native_starter_sanitizes_an_escaped_top(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             source = self.write(
                 root,
                 "src/odd.v",
@@ -1065,7 +1066,7 @@ class TestDiscoveryTests(unittest.TestCase):
     @unittest.skipUnless(shutil.which("iverilog") and shutil.which("vvp"), "needs Icarus")
     def test_parameterized_verilog_starter_preserves_input_bus_widths(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             self.write(
                 root,
                 "src/dut.v",
@@ -1088,7 +1089,7 @@ class TestDiscoveryTests(unittest.TestCase):
 
     def test_explicit_vhdl_starter_request_is_not_silently_changed_to_cocotb(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             self.write(
                 root,
                 "src/dut.vhd",
@@ -1102,7 +1103,7 @@ class TestDiscoveryTests(unittest.TestCase):
 
     def test_verilog_test_matching_ignores_filename_case(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             self.write(
                 root,
                 "src/designs.v",
@@ -1132,7 +1133,7 @@ class TestDiscoveryTests(unittest.TestCase):
 
     def test_vhdl_entity_and_test_matching_are_case_insensitive(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             self.write(
                 root,
                 "src/counter.vhd",
@@ -1159,12 +1160,12 @@ class TestDiscoveryTests(unittest.TestCase):
             )
 
     @unittest.skipUnless(
-        shutil.which("bash") and shutil.which("register-python-argcomplete"),
-        "needs Bash and argcomplete",
+        os.name == "posix" and shutil.which("bash") and shutil.which("register-python-argcomplete"),
+        "needs native POSIX Bash completion and argcomplete",
     )
     def test_bash_tab_completion_returns_modules_and_saved_waves(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             self.write(root, "src/counter.v", "module counter; endmodule\n")
             self.write(root, "test/.gitkeep", "")
             (root / ".vwb/saved-waves/known-good").mkdir(parents=True)
@@ -1224,7 +1225,7 @@ printf 'wave:%s\n' "${COMPREPLY[@]}"
 
     def test_split_file_vhdl_testbench_is_discovered_once(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             self.write(
                 root,
                 "src/dut.vhd",
@@ -1254,7 +1255,7 @@ printf 'wave:%s\n' "${COMPREPLY[@]}"
 
     def test_missing_module_starter_dry_run_does_not_write(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             self.write(root, "src/dut.v", "module dut(input clk); endmodule\n")
             self.write(root, "test/.gitkeep", "")
             workbench = vwb.Workbench(
@@ -1275,7 +1276,7 @@ printf 'wave:%s\n' "${COMPREPLY[@]}"
 
     def test_run_tests_continues_and_aggregates_every_failure(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             self.write(root, "src/dut.v", "module dut; endmodule\n")
             self.write(root, "test/.gitkeep", "")
             workbench = self.make_workbench(root)
@@ -1315,7 +1316,7 @@ printf 'wave:%s\n' "${COMPREPLY[@]}"
 
     def test_run_test_spec_runs_gate_stage_only_when_requested(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             self.write(root, "src/dut.v", "module dut; endmodule\n")
             self.write(
                 root,
@@ -1356,7 +1357,7 @@ printf 'wave:%s\n' "${COMPREPLY[@]}"
 
     def test_native_vhdl_test_reports_gate_skip_instead_of_guaranteed_failure(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             self.write(
                 root,
                 "src/dut.vhd",
@@ -1388,7 +1389,7 @@ printf 'wave:%s\n' "${COMPREPLY[@]}"
 
     def test_missing_gate_tool_is_a_setup_skip_not_a_code_failure(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             self.write(root, "src/dut.v", "module dut; endmodule\n")
             test = self.write(
                 root,
@@ -1419,7 +1420,7 @@ printf 'wave:%s\n' "${COMPREPLY[@]}"
 
     def test_cocotb_rtl_and_gate_stages_reuse_one_automatic_seed(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             self.write(root, "src/dut.v", "module dut; endmodule\n")
             test = self.write(
                 root,
@@ -1454,7 +1455,7 @@ printf 'wave:%s\n' "${COMPREPLY[@]}"
 
     def test_gate_netlist_supplies_yosys_simlib(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             self.write(root, "src/dut.v", "module dut(input wire a, output wire y); assign y = a; endmodule\n")
             self.write(root, "test/.gitkeep", "")
             workbench = self.make_workbench(root)
@@ -1506,7 +1507,7 @@ printf 'wave:%s\n' "${COMPREPLY[@]}"
 
     def test_large_gate_netlist_uses_word_level_fallback(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             self.write(root, "src/dut.v", "module dut; endmodule\n")
             self.write(root, "test/.gitkeep", "")
             workbench = self.make_workbench(root)
@@ -1551,7 +1552,7 @@ printf 'wave:%s\n' "${COMPREPLY[@]}"
 
     def test_failed_full_gate_synthesis_uses_word_level_fallback(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             self.write(root, "src/dut.v", "module dut; endmodule\n")
             self.write(root, "test/.gitkeep", "")
             workbench = self.make_workbench(root)
@@ -1588,7 +1589,7 @@ printf 'wave:%s\n' "${COMPREPLY[@]}"
 
     def test_systemverilog_simulation_is_native_first_with_sv2v_fallback(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             self.write(root, "src/dut.sv", "module dut; endmodule\n")
             self.write(
                 root,
@@ -1641,7 +1642,7 @@ printf 'wave:%s\n' "${COMPREPLY[@]}"
 
     def test_iverilog_lint_is_native_first_with_sv2v_fallback(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             self.write(root, "src/dut.sv", "module dut; endmodule\n")
             self.write(root, "test/.gitkeep", "")
             workbench = self.make_workbench(root)
@@ -1672,7 +1673,7 @@ printf 'wave:%s\n' "${COMPREPLY[@]}"
 
     def test_verible_uses_standard_rules_unless_overridden(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             self.write(root, "src/dut.sv", "module dut; endmodule\n")
             self.write(root, "test/.gitkeep", "")
             workbench = self.make_workbench(root)
@@ -1699,7 +1700,7 @@ printf 'wave:%s\n' "${COMPREPLY[@]}"
 
     def test_verible_preprocesses_shared_defines_and_include_directories(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             child = self.write(
                 root,
                 "src/child.sv",
@@ -1746,7 +1747,7 @@ printf 'wave:%s\n' "${COMPREPLY[@]}"
 
     def test_verible_does_not_preprocess_unused_defines_or_include_paths(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             source = self.write(
                 root,
                 "src/dut.sv",
@@ -1785,7 +1786,7 @@ printf 'wave:%s\n' "${COMPREPLY[@]}"
 
     def test_verible_preprocesses_a_referenced_command_line_define(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             self.write(
                 root,
                 "src/dut.sv",
@@ -1821,7 +1822,7 @@ printf 'wave:%s\n' "${COMPREPLY[@]}"
 
     def test_verilator_and_yosys_report_warnings_without_making_them_fatal(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             self.write(root, "src/dut.sv", "module dut; endmodule\n")
             self.write(root, "test/.gitkeep", "")
             workbench = self.make_workbench(root)
@@ -1845,7 +1846,7 @@ printf 'wave:%s\n' "${COMPREPLY[@]}"
 
     def test_yosys_lint_prints_only_diagnostics_and_keeps_the_full_log(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             self.write(root, "src/dut.v", "module dut; endmodule\n")
             self.write(root, "test/.gitkeep", "")
             workbench = self.make_workbench(root)
@@ -1878,7 +1879,7 @@ printf 'wave:%s\n' "${COMPREPLY[@]}"
 
     def test_verible_preprocessor_failure_prints_the_diagnostic(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             self.write(
                 root,
                 "src/dut.sv",
@@ -1903,7 +1904,7 @@ printf 'wave:%s\n' "${COMPREPLY[@]}"
 
     def test_lint_uses_canonical_vhdl_entity_name(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             self.write(
                 root,
                 "src/adder.vhd",
@@ -1931,7 +1932,7 @@ printf 'wave:%s\n' "${COMPREPLY[@]}"
 
     def test_lint_runs_every_selected_tool_and_reports_all_failures(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             self.write(
                 root,
                 "src/designs.v",
@@ -1987,7 +1988,7 @@ printf 'wave:%s\n' "${COMPREPLY[@]}"
 
     def test_lint_succeeds_with_one_available_checker(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             self.write(root, "src/dut.v", "module dut; endmodule\n")
             self.write(root, "test/.gitkeep", "")
             workbench = self.make_workbench(root)
@@ -2018,7 +2019,7 @@ printf 'wave:%s\n' "${COMPREPLY[@]}"
 
     def test_hdl_testbench_top_is_inferred(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             self.write(
                 root,
                 "src/passthrough.v",
@@ -2054,7 +2055,7 @@ printf 'wave:%s\n' "${COMPREPLY[@]}"
     @unittest.skipUnless(shutil.which("iverilog") and shutil.which("vvp"), "needs Icarus")
     def test_hdl_testbench_runs_end_to_end(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             self.write(
                 root,
                 "src/passthrough.v",
@@ -2104,7 +2105,7 @@ printf 'wave:%s\n' "${COMPREPLY[@]}"
     @unittest.skipUnless(shutil.which("iverilog") and shutil.which("vvp"), "needs Icarus")
     def test_time_zero_finish_still_creates_waveform(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             self.write(
                 root,
                 "src/instant.v",
@@ -2138,7 +2139,7 @@ printf 'wave:%s\n' "${COMPREPLY[@]}"
     @unittest.skipUnless(shutil.which("iverilog") and shutil.which("vvp"), "needs Icarus")
     def test_waveform_contains_every_unpacked_array_word(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             self.write(
                 root,
                 "src/memory_decl.svh",
@@ -2257,7 +2258,7 @@ printf 'wave:%s\n' "${COMPREPLY[@]}"
     @unittest.skipUnless(shutil.which("iverilog") and shutil.which("vvp"), "needs Icarus")
     def test_array_word_limit_caps_each_array_without_failing_simulation(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             self.write(
                 root,
                 "src/limited.sv",
@@ -2298,7 +2299,7 @@ printf 'wave:%s\n' "${COMPREPLY[@]}"
     @unittest.skipUnless(shutil.which("iverilog") and shutil.which("vvp"), "needs Icarus")
     def test_explicit_hdl_test_is_authoritative(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             self.write(root, "src/dut.v", "module dut; endmodule\n")
             self.write(
                 root,
@@ -2334,7 +2335,7 @@ printf 'wave:%s\n' "${COMPREPLY[@]}"
 
     def test_explicit_test_rejects_unknown_suffix(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             self.write(root, "src/dut.v", "module dut; endmodule\n")
             invalid = self.write(root, "test/test_dut.txt", "not HDL\n")
             workbench = self.make_workbench(root)
@@ -2344,7 +2345,7 @@ printf 'wave:%s\n' "${COMPREPLY[@]}"
 
     def test_dry_run_has_no_filesystem_side_effects_and_orders_sim_args(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             self.write(root, "src/dut.v", "module dut; endmodule\n")
             self.write(
                 root,
@@ -2386,7 +2387,7 @@ printf 'wave:%s\n' "${COMPREPLY[@]}"
 
     def test_cocotb_wave_dump_is_injected_only_when_requested(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             self.write(root, "src/dut.v", "module dut; endmodule\n")
             self.write(
                 root,
@@ -2450,7 +2451,7 @@ printf 'wave:%s\n' "${COMPREPLY[@]}"
 
     def test_fpga_defaults_constraints_to_configured_source_directory(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             source_dir = root / "examples" / "src"
             test_dir = root / "examples" / "test"
             self.write(source_dir, "dut.v", "module dut; endmodule\n")
@@ -2481,7 +2482,7 @@ printf 'wave:%s\n' "${COMPREPLY[@]}"
 
     def test_fpga_supports_modern_generic_and_legacy_gowin_tools(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             self.write(root, "src/dut.v", "module dut; endmodule\n")
             constraints = self.write(root, "src/io.cst", "IO_LOC \"clk\" 52;\n")
             self.write(root, "test/.gitkeep", "")
@@ -2499,11 +2500,12 @@ printf 'wave:%s\n' "${COMPREPLY[@]}"
                 define=[],
                 include=[],
             )
-
+            cst_option = shlex.quote(f"cst={constraints}")
+            quoted_constraints = shlex.quote(str(constraints))
             cases = [
                 (
                     "nextpnr-himbaechel-gowin",
-                    ["--vopt family=GW1N-9C", f"--vopt cst={constraints}"],
+                    ["--vopt family=GW1N-9C", f"--vopt {cst_option}"],
                     [" --uarch ", " --family ", " --cst "],
                 ),
                 (
@@ -2511,13 +2513,13 @@ printf 'wave:%s\n' "${COMPREPLY[@]}"
                     [
                         "--uarch gowin",
                         "--vopt family=GW1N-9C",
-                        f"--vopt cst={constraints}",
+                        f"--vopt {cst_option}",
                     ],
                     [" --family ", " --cst "],
                 ),
                 (
                     "nextpnr-gowin",
-                    ["--family GW1N-9C", f"--cst {constraints}"],
+                    ["--family GW1N-9C", f"--cst {quoted_constraints}"],
                     [" --uarch ", " --vopt "],
                 ),
             ]
@@ -2548,7 +2550,7 @@ printf 'wave:%s\n' "${COMPREPLY[@]}"
 
     def test_gowin_tool_resolution_prefers_modern_and_dry_run_defaults_to_it(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             self.write(root, "src/dut.v", "module dut; endmodule\n")
             self.write(root, "test/.gitkeep", "")
             workbench = vwb.Workbench(
@@ -2571,7 +2573,7 @@ printf 'wave:%s\n' "${COMPREPLY[@]}"
 
     def test_gowin_tool_error_and_doctor_report_all_supported_variants(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             self.write(root, "src/dut.v", "module dut; endmodule\n")
             self.write(root, "test/.gitkeep", "")
             workbench = vwb.Workbench(
@@ -2612,7 +2614,7 @@ printf 'wave:%s\n' "${COMPREPLY[@]}"
 
     def test_doctor_allows_missing_optional_tools_and_explains_installation(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             self.write(root, "src/dut.v", "module dut; endmodule\n")
             self.write(root, "test/test_dut.sv", "module test_dut; endmodule\n")
             workbench = self.make_workbench(root)
@@ -2640,7 +2642,7 @@ printf 'wave:%s\n' "${COMPREPLY[@]}"
 
     def test_formal_dry_run_with_view_does_not_require_a_trace(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             self.write(root, "src/dut.v", "module dut; endmodule\n")
             self.write(root, "test/test_dut.v", "module test_dut; endmodule\n")
             config = self.write(root, "properties.sby", "[options]\nmode prove\n")
@@ -2662,7 +2664,7 @@ printf 'wave:%s\n' "${COMPREPLY[@]}"
 
     def test_clean_refuses_unowned_or_source_directories(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             self.write(root, "src/dut.v", "module dut; endmodule\n")
             self.write(root, "test/test_dut.v", "module test_dut; endmodule\n")
             unowned = self.write(root, "existing/keep.txt", "keep\n").parent
@@ -2692,7 +2694,7 @@ printf 'wave:%s\n' "${COMPREPLY[@]}"
     )
     def test_all_skipped_cocotb_suite_fails_end_to_end(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             self.write(root, "src/dut.v", "module dut; endmodule\n")
             self.write(
                 root,
@@ -2717,7 +2719,7 @@ printf 'wave:%s\n' "${COMPREPLY[@]}"
 
     def test_cocotb_results_require_a_passing_testcase(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             passed = self.write(
                 root,
                 "passed.xml",

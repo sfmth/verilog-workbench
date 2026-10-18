@@ -16,7 +16,7 @@ import urllib.request
 REPO = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO))
 from companion.process import run_process
-from companion.toolchains import host_platform
+from companion.toolchains import binary_architecture, host_platform
 
 LOCK = REPO / "toolchains" / "native-lock.json"
 MAX_MEMBERS = 150_000
@@ -160,13 +160,14 @@ def extract_archive(archive: Path, directory: Path, *, max_members: int = MAX_ME
         raise
 
 
-def native_environment(suite: Path, target: str, base: dict | None = None) -> dict:
+def native_environment(suite: Path, target: str, base: dict | None = None, *, tool_bins: list[Path] | None = None) -> dict:
     environment = dict(os.environ if base is None else base)
     environment.pop("PYTHONHOME", None)
     directories = [suite / "bin", suite / "py3bin"]
     if target.startswith("windows-"):
         # Windows' loader needs bundled DLLs as well as executable directories.
         directories.insert(1, suite / "lib")
+    directories = [*(path.resolve() for path in tool_bins or []), *directories]
     environment.update(PATH=os.pathsep.join([*(str(path) for path in directories), environment.get("PATH", "")]),
                        VIRTUAL_ENV=str(suite), VERILATOR_ROOT=str(suite / "share" / "verilator"),
                        GHDL_PREFIX=str(suite / "lib" / "ghdl"))
@@ -188,7 +189,45 @@ def suite_python(suite: Path) -> str:
     raise ValueError("suite has no bundled Python runtime; system Python is not a substitute for simulator runtime compatibility")
 
 
-def acquire(lock: dict, target: str, directory: Path, *, archive: Path | None = None, cache: Path | None = None) -> tuple[dict, dict]:
+def overlay_tools(suite: Path, overlays: dict[str, Path]) -> list[dict]:
+    """Explicit, receipted external Yosys override, resilient to PATH resets.
+
+    The original launcher is retained. An absolute external symlink makes this
+    installation dependent on that separately managed package and nonportable.
+    No downloaded archive bytes are changed or relabelled as the external tool.
+    """
+    records = []
+    for name, source in overlays.items():
+        if name != "yosys":
+            raise ValueError("only the explicitly supported yosys overlay is accepted")
+        external = source.resolve(strict=True)
+        if not external.is_file() or not os.access(external, os.X_OK):
+            raise ValueError(f"external {name} is not an executable file: {external}")
+        launcher = suite / "bin" / name
+        if not launcher.is_file():
+            raise ValueError(f"suite has no original {name} launcher to preserve")
+        backup = suite / ".vwb-overlays" / "originals" / name
+        backup.parent.mkdir(parents=True, exist_ok=True)
+        record = {"tool": name, "original_launcher": f"bin/{name}",
+                  "original_sha256": hashlib.sha256(launcher.read_bytes()).hexdigest(),
+                  "original_symlink": os.readlink(launcher) if launcher.is_symlink() else None,
+                  "original_backup": str(backup.relative_to(suite)),
+                  "external_executable": str(external),
+                  "external_sha256": hashlib.sha256(external.read_bytes()).hexdigest(),
+                  "external_binary": binary_architecture(external),
+                  "externally_managed": True, "relocatable": False,
+                  "reason": "Explicit native Tcl-enabled Yosys candidate; suite wrappers prepend suite/bin to PATH."}
+        launcher.rename(backup)
+        try:
+            launcher.symlink_to(external)
+        except BaseException:
+            backup.rename(launcher)
+            raise
+        records.append(record)
+    return records
+
+
+def acquire(lock: dict, target: str, directory: Path, *, archive: Path | None = None, cache: Path | None = None, tool_bins: list[Path] | None = None, overlays: dict[str, Path] | None = None) -> tuple[dict, dict]:
     route = lock["targets"][target]
     asset = lock["suite"]["assets"][route["archive_target"]]
     directory = directory.resolve()
@@ -204,17 +243,21 @@ def acquire(lock: dict, target: str, directory: Path, *, archive: Path | None = 
         extract_archive(archive, stage)
         if not (stage / "oss-cad-suite" / "bin").is_dir():
             raise ValueError("archive is missing expected suite/bin")
-        receipt = {"release": lock["suite"]["release"], "archive": asset["name"], "sha256": asset["sha256"], "size_bytes": asset["size_bytes"]}
+        overlay_records = overlay_tools(stage / "oss-cad-suite", overlays or {})
+        receipt = {"release": lock["suite"]["release"], "archive": asset["name"], "sha256": asset["sha256"], "size_bytes": asset["size_bytes"],
+                   "external_tool_overlays": overlay_records, "relocatable": not bool(overlay_records)}
         (stage / "vwb-toolchain-receipt.json").write_text(json.dumps(receipt, indent=2) + "\n", encoding="utf-8")
         os.rename(stage, destination)
     finally:
         if stage.exists():
             shutil.rmtree(stage)
     suite = destination / "oss-cad-suite"
-    environment = native_environment(suite, target)
+    environment = native_environment(suite, target, tool_bins=tool_bins)
     report = {"schema_version": "vwb.toolchain-acquisition/1", "state": "acquired", "target": target,
               "suitePath": str(suite), "archive": receipt, "binaryArchitecture": route["binary_architecture"],
               "compatibility": route["translation"], "workflowSupport": "not-tested",
+              "external_tool_bins": [str(path.resolve()) for path in tool_bins or []],
+              "external_tool_overlays": receipt["external_tool_overlays"], "relocatable": receipt["relocatable"],
               "blockers": route.get("blockers", []), "environment": {key: environment[key] for key in ("PATH", "VIRTUAL_ENV", "VERILATOR_ROOT", "GHDL_PREFIX", "YOSYSHQ_ROOT", "PYTHON_EXECUTABLE", "SSL_CERT_FILE", "OPENFPGALOADER_SOJ_DIR") if key in environment}}
     return report, environment
 
@@ -225,6 +268,8 @@ def main() -> int:
     parser.add_argument("--directory", type=Path, required=True, help="versioned install parent; existing package is never overwritten")
     parser.add_argument("--archive", type=Path, help="reuse this exact locked archive instead of downloading")
     parser.add_argument("--cache-dir", type=Path)
+    parser.add_argument("--tool-bin", action="append", type=Path, default=[], help="explicit external tool directory placed before suite tools; bundled probe Python remains fixed (repeatable)")
+    parser.add_argument("--overlay-tool", action="append", default=[], metavar="yosys=ABS_EXE", help="explicit external Yosys symlink inside suite/bin, with original backup and integrity receipt; installation becomes nonportable")
     parser.add_argument("--output", type=Path, help="write acquisition JSON here")
     parser.add_argument("--probe-output", type=Path, help="run actual native CLI probe; missing/failed workflow returns 1")
     parser.add_argument("--probe-work-dir", type=Path, help="retain probe projects/logs/artifacts beneath this parent (requires --probe-output)")
@@ -233,7 +278,16 @@ def main() -> int:
         parser.error("--probe-work-dir requires --probe-output")
     report = {}
     try:
-        report, environment = acquire(json.loads(LOCK.read_text()), args.target, args.directory, archive=args.archive, cache=args.cache_dir)
+        for directory in args.tool_bin:
+            if not directory.is_dir():
+                raise ValueError(f"external tool directory does not exist: {directory}")
+        overlays = {}
+        for value in args.overlay_tool:
+            name, separator, path = value.partition("=")
+            if not separator or name != "yosys" or name in overlays or not Path(path).is_absolute():
+                raise ValueError("--overlay-tool requires one explicit yosys=ABS_EXE path")
+            overlays[name] = Path(path)
+        report, environment = acquire(json.loads(LOCK.read_text()), args.target, args.directory, archive=args.archive, cache=args.cache_dir, tool_bins=args.tool_bin, overlays=overlays)
         status = 0
         if args.probe_output:
             if args.target != host_platform()["target"]:

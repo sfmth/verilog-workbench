@@ -1,4 +1,40 @@
-# First native toolchain CI observation
+# Native toolchain CI observations
+
+## Second run: retained diagnoses
+
+[Run 39150641107](https://github.com/sfmth/verilog-workbench/actions/runs/39150641107)
+tested commit `2797969c500bfd0c61a73174dc35d7314bc75db0` on 2026-10-18. All seven
+toolchain jobs acquired their exact locked archive and retained diagnostic
+artifacts. The following are actual native probe results, not inferred causes:
+
+| Host | Passed checks | Remaining failed or blocked checks |
+| --- | --- | --- |
+| [Linux x64](https://github.com/sfmth/verilog-workbench/actions/runs/39150641107/job/117743398282) | 14/14 | None in this smoke gate; physical programming is still not run. |
+| [Linux ARM64](https://github.com/sfmth/verilog-workbench/actions/runs/39150641107/job/117743398324) | 11/14 | Native VHDL, Cocotb/VHDL and VHDL synthesis blocked by missing GHDL. |
+| [macOS Intel](https://github.com/sfmth/verilog-workbench/actions/runs/39150641107/job/117743398395) | 11/14 | The same three workflows blocked by missing GHDL. |
+| [macOS Apple Silicon](https://github.com/sfmth/verilog-workbench/actions/runs/39150641107/job/117743398301) | 8/14 | Five Yosys synthesis/schematic/FPGA checks fail because the supplied Yosys lacks Tcl `-c`; Cocotb/VHDL cannot load bundled libpython's `libintl.8.dylib` dependency from the generated GHDL executable location. |
+| [Windows x64](https://github.com/sfmth/verilog-workbench/actions/runs/39150641107/job/117743398298) | 8/14 | Cocotb/Verilog, VHDL, Cocotb/VHDL, lint, SVG and VHDL synthesis blocked by missing discovered Cocotb configuration, GHDL, Verilator launcher and Graphviz. |
+| [Windows ARM64](https://github.com/sfmth/verilog-workbench/actions/runs/39150641107/job/117743398333) | 8/14 | The same six blocked workflows; the eight passes exercise the allowed OS x64 translation route, not ARM64-native tool binaries. |
+| [Arch x64 userspace](https://github.com/sfmth/verilog-workbench/actions/runs/39150641107/job/117743398257) | 11/14 | Three VHDL workflows fail explicitly with GHDL `installation problem: cc not found`; LLVM GHDL needs a native C compiler/linker. |
+
+The Windows archive's 16,967 member names were also inspected directly: it
+contains `bin/verilator_bin.exe` and a bare Perl `bin/verilator` front-end, but
+no Cocotb package/configuration files or Graphviz `dot` executable. Discovery
+and lint now accept the native Verilator engine for this lint-only operation;
+that fix still needs a native CI rerun. Cocotb, Graphviz and GHDL remain genuine
+Windows distribution gaps. Arch's developer test host now provisions GCC;
+compiler availability must also be accounted for in native installer planning.
+Mac runtime/Yosys integration fixes likewise require another actual run.
+
+The [Linux x64 native bundle job](https://github.com/sfmth/verilog-workbench/actions/runs/39150641107/job/117743398269)
+and [Linux ARM64 native bundle job](https://github.com/sfmth/verilog-workbench/actions/runs/39150641107/job/117743398278)
+both passed their unit/CLI/browser-client checks, built their pinned runtime
+packages and exercised the bundles. Other four native jobs passed the new unit
+checks but stopped at existing CLI regression checks before bundle generation.
+The browser job also passed. None of these native runtime proofs implies full
+HDL support on a row whose toolchain checks remain blocked.
+
+## First run: diagnosis upload gap
 
 [M0 run 39150223882](https://github.com/sfmth/verilog-workbench/actions/runs/39150223882)
 executed commit `24d3b5d3c2c929f14e1a72feb59264a67f636b22` on 2026-10-18.
@@ -30,7 +66,8 @@ workflow is inferred to have passed.
 Follow-up changes make the explicitly selected evidence paths uploadable and
 print concise acquisition errors and per-workflow missing-tool/failure summaries
 to stderr even when JSON is written to a file. The diagnostic changes pass the
-20 focused acquisition/toolchain unit checks, and an actual missing-GHDL probe
+22 focused acquisition/toolchain unit checks, including JSON-output diagnostic
+regressions, and an actual missing-GHDL probe
 prints its blocked state while retaining exit 1. A second CI run is required to
 obtain the missing platform diagnoses and verify fixes; it has not been counted
 as passing here.
@@ -38,3 +75,29 @@ as passing here.
 Neither this run nor the local toolchain probes exercise physical FPGA
 programming. Actual host drivers/cables and observed board behavior remain
 separate required evidence.
+
+## Apple Silicon Tcl-enabled Yosys candidate
+
+The second native run showed that the Apple Silicon suite's Yosys rejects
+`-c` because that binary was built without Tcl. VWB's Tcl scripts preserve
+include paths and macro values containing spaces or Unicode; switching their
+text to the native Yosys command parser would change argument handling.
+
+The next CI candidate therefore retains those scripts and provisions the
+native Homebrew Yosys 0.70 bottle on Apple Silicon. Its official
+[formula](https://github.com/Homebrew/homebrew-core/blob/master/Formula/y/yosys.rb)
+depends on Tcl/Tk. The version, observed formula digest, upstream source digest,
+and `arm64_sequoia` bottle digest are recorded under
+`supplemental_candidates.yosys-darwin-arm64-homebrew-tcl` in the toolchain lock.
+CI verifies the formula version and bottle digest, checks the installed version,
+and requires an actual `yosys -c` script to execute successfully before probing
+the HDL workflows. An isolated directory exposes only that Yosys binary through
+`--overlay-tool yosys=ABS_EXE`; the acquired suite's Python remains the selected
+probe interpreter. The original launcher is backed up and both executable
+hashes are receipted. The external symlink survives suite wrapper PATH resets
+and marks this installation nonportable.
+
+This is an **external Homebrew prerequisite candidate**, pending native CI
+evidence. Homebrew and its transitive libraries are not a fully pinned managed
+runtime, and this route does not establish clean-machine support or physical
+FPGA programming. The other platform jobs retain their existing tool selection.

@@ -23,7 +23,7 @@ SCHEMA_VERSION = "vwb.toolchains/1"
 TOOLS = {
     "iverilog": (("iverilog",), ("-V",)),
     "vvp": (("vvp",), ("-V",)),
-    "verilator": (("verilator",), ("--version",)),
+    "verilator": (("verilator", "verilator_bin"), ("--version",)),
     "ghdl": (("ghdl",), ("--version",)),
     "cocotb-config": (("cocotb-config",), ("--version",)),
     "sv2v": (("sv2v",), ("--version",)),

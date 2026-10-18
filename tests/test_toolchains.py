@@ -95,6 +95,20 @@ class ToolchainTests(unittest.TestCase):
                 vwb.make_parser().parse_args(arguments)
                 self.assertNotIn("flash", arguments)
 
+    def test_verilator_native_engine_fallback_is_used_for_lint(self):
+        import vwb
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "src").mkdir(); (root / "test").mkdir()
+            (root / "src/gate.v").write_text("module gate(input a, output y); assign y=a; endmodule\n")
+            workbench = vwb.Workbench(root, root / "src", root / "test", root / "build")
+            executable = str(root / "verilator_bin.exe")
+            with mock.patch.object(workbench, "require_tool", return_value=executable), mock.patch.object(workbench, "run", return_value=subprocess.CompletedProcess([], 0, "", "")) as run:
+                self.assertTrue(workbench.lint_with_tool("gate", "verilator", (), ()))
+            command = run.call_args.args[0]
+            self.assertEqual(command[0], executable)
+            self.assertIn("--lint-only", command)
+
     def test_missing_workflows_do_not_execute_or_pass(self):
         with mock.patch("companion.toolchains.shutil.which", return_value=None):
             report = capability_report(probe_versions=False)

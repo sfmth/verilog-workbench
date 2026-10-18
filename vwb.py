@@ -46,6 +46,9 @@ TCL_BARE_WORD_RE = re.compile(r"^[A-Za-z0-9_./:@%+=,-]+$")
 YOSYS_BARE_WORD_RE = re.compile(r"^[A-Za-z0-9_./:@%+=,$-]+$")
 YOSYS_IDENTIFIER_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_.$-]*$")
 TOOL_ALTERNATIVES = {
+    # The Windows suite ships the native engine plus a Perl front-end whose
+    # bare script is not a Windows executable. Lint needs only the engine.
+    "verilator": ("verilator", "verilator_bin"),
     "nextpnr-gowin": (
         "nextpnr-himbaechel-gowin",
         "nextpnr-himbaechel",
@@ -3123,6 +3126,7 @@ class Workbench:
         command: list[str | Path] = [
             "ghdl", "-r", "--std=08", f"--workdir={work_library}", top
         ]
+        runtime_arguments_start = len(command)
         environment = os.environ.copy()
         results_file: Path | None = None
         if spec.kind == "cocotb":
@@ -3140,6 +3144,24 @@ class Workbench:
         command.extend(
             item if item.startswith("+") else f"+{item}" for item in args.plusarg
         )
+        if sys.platform == "darwin" and spec.kind == "cocotb":
+            # LLVM/GCC GHDL produces a standalone simulator. Launch it directly
+            # so SIP-protected shell wrappers cannot discard the dynamic-library
+            # search path needed by the matching bundled Python dependencies.
+            # Mcode has no generated executable and keeps the normal -r route.
+            executable = work_dir / tool_identifier(top).lower()
+            libpython = environment.get("LIBPYTHON_LOC")
+            if executable.is_file() and libpython:
+                with executable.open("rb") as stream:
+                    magic = stream.read(4)
+                if magic in {b"\xfe\xed\xfa\xce", b"\xce\xfa\xed\xfe",
+                             b"\xfe\xed\xfa\xcf", b"\xcf\xfa\xed\xfe",
+                             b"\xca\xfe\xba\xbe", b"\xbe\xba\xfe\xca"}:
+                    existing = environment.get("DYLD_LIBRARY_PATH", "")
+                    environment["DYLD_LIBRARY_PATH"] = str(Path(libpython).parent) + (
+                        os.pathsep + existing if existing else ""
+                    )
+                    command = [executable, *command[runtime_arguments_start:]]
         result = self.run(command, cwd=work_dir, env=environment)
         if self.dry_run:
             return True, wave_path
@@ -3507,9 +3529,10 @@ class Workbench:
             return result.returncode == 0
 
         if tool == "verilator":
-            self.require_tool("verilator")
+            executable = self.require_tool("verilator")
+            lint_executable = executable if Path(str(executable)).stem.lower() == "verilator_bin" else "verilator"
             command = [
-                "verilator", "--lint-only", "--top-module", external_top,
+                lint_executable, "--lint-only", "--top-module", external_top,
                 "--timing", "-Wall", "-Wno-fatal", "-Wno-COMBDLY",
                 "-Wno-DECLFILENAME", "-Wno-INCABSPATH",
             ]

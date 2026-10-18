@@ -92,8 +92,45 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - name: Prove native Homebrew Tcl-enabled Yosys candidate on Apple Silicon
+        if: matrix.target == 'darwin-arm64'
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          import re
+          import subprocess
+          import tempfile
+
+          candidate = json.loads(Path('toolchains/native-lock.json').read_text())['supplemental_candidates']['yosys-darwin-arm64-homebrew-tcl']
+          subprocess.run(['brew', 'update'], check=True)
+          formula = json.loads(subprocess.check_output(['brew', 'info', '--json=v2', 'yosys'], text=True))['formulae'][0]
+          if formula['versions']['stable'] != candidate['version']:
+              raise SystemExit('Homebrew Yosys version differs from the recorded candidate')
+          bottle = formula['bottle']['stable']['files'][candidate['bottle_tag']]
+          if bottle['sha256'] != candidate['bottle_sha256']:
+              raise SystemExit('Homebrew Yosys bottle digest differs from the recorded candidate')
+          subprocess.run(['brew', 'install', '--force-bottle', 'yosys'], check=True)
+          prefix = Path(subprocess.check_output(['brew', '--prefix', 'yosys'], text=True).strip())
+          binary = (prefix / 'bin' / 'yosys').resolve(strict=True)
+          version = subprocess.check_output([str(binary), '-V'], text=True)
+          if not re.search(r'\bYosys 0\.70(?:\s|$)', version):
+              raise SystemExit('Installed Yosys is not the guarded version 0.70')
+          with tempfile.TemporaryDirectory() as temporary:
+              script = Path(temporary) / 'tcl-probe.tcl'
+              script.write_text('yosys design -reset\nputs "VWB_TCL_READY"\n')
+              result = subprocess.run([str(binary), '-Q', '-T', '-c', str(script)], text=True, capture_output=True, check=True)
+              if 'VWB_TCL_READY' not in result.stdout:
+                  raise SystemExit('Installed Yosys did not execute the real Tcl probe')
+          override = Path('.m0-yosys-bin')
+          override.mkdir()
+          (override / 'yosys').symlink_to(binary)
+          print(version.strip())
+          print('Native Tcl Yosys candidate verified; only Yosys is exposed through the explicit override')
+          PY
       - name: Acquire exact native package and run real HDL workflows
-        run: python scripts/acquire_toolchain.py --target ${{ matrix.target }} --directory .m0-tools --output .m0-evidence/acquisition-${{ matrix.target }}.json --probe-output .m0-evidence/workflows-${{ matrix.target }}.json --probe-work-dir .m0-evidence/toolchain-logs
+        run: python scripts/acquire_toolchain.py --target ${{ matrix.target }} --directory .m0-tools --output .m0-evidence/acquisition-${{ matrix.target }}.json --probe-output .m0-evidence/workflows-${{ matrix.target }}.json --probe-work-dir .m0-evidence/toolchain-logs ${{ matrix.target == 'darwin-arm64' && format('--overlay-tool yosys={0}/.m0-yosys-bin/yosys', github.workspace) || '' }}
       - name: Retain passes, missing workflows, failures and native logs
         if: always()
         uses: actions/upload-artifact@v4
@@ -114,7 +151,7 @@ jobs:
     timeout-minutes: 30
     steps:
       - name: Prepare development test host
-        run: pacman -Syu --noconfirm python git ca-certificates tar gzip
+        run: pacman -Syu --noconfirm python git ca-certificates tar gzip gcc
       - uses: actions/checkout@v4
       - name: Acquire exact suite and execute real HDL workflows on Arch
         run: python scripts/acquire_toolchain.py --target linux-x64 --directory .m0-tools --output .m0-evidence/acquisition-arch-x64.json --probe-output .m0-evidence/workflows-arch-x64.json --probe-work-dir .m0-evidence/toolchain-logs

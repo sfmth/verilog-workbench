@@ -11,22 +11,24 @@ cases: 42 executions** across ordinary paths, spaces, and Unicode/spaces. Native
 runtime packaging and semantic editor probes also have local evidence. Those
 results do not turn other platform or hardware cells into passes.
 
-The [first observed CI run](M0_CI_TOOLCHAINS.md) passed the Linux x86-64 real
-toolchain gate and the Chromium browser job. All six native core jobs ran checks
-but failed before their runtime package build steps. The other five toolchain
-jobs and Arch userspace job failed; their workflow details were lost to the
-hidden-artifact upload issue. Follow-up fixes are awaiting another CI run.
+The [retained CI observations](M0_CI_TOOLCHAINS.md) now include a second run.
+Both Linux architectures built and exercised their native runtime bundles;
+all six hosts passed the companion/process/packaging/LSP unit step. Four hosts
+stopped at legacy CLI fixture portability failures before bundle construction.
+Linux x86-64 passed all 14 HDL workflows; the retained reports identify the
+remaining tool gaps and loader failures on other hosts. Chromium passed again.
+Follow-up portability and tool fixes await native confirmation.
 
 | Plan task | Outcome at this checkpoint | Evidence and remaining gate |
 | --- | --- | --- |
 | M0-01 — Protocol and capabilities | Implemented proof | [Protocol](M0_PROTOCOL.md), [reference schema](../protocol/companion-v1.schema.json), [companion](../companion/README.md), and [tool discovery](M0_TOOLCHAINS.md). Project files, authenticated jobs/status, revisions/staleness, and artifacts are exposed. Production diagnostics/editor transport contracts remain integration work. |
 | M0-02 — Runtime/tool acquisition | Partial | [Pinned native runtimes and bundle proof](M0_PACKAGING.md); [managed HDL acquisition and architecture routes](M0_TOOLCHAINS.md). A newly checksum-verified/extracted Linux suite passes all 14 real workflow checks. Other targets, complete managed tools, minimum OS verification, and GHDL gaps remain open. |
-| M0-03 — Portable processes | Implemented; native CI checks started | [Runner](../companion/process.py) and [process tests](../tests/test_process.py) cover tree cancellation, timeout and bounded output. Six native core jobs executed unit checks; complete jobs failed before packaging and need the follow-up CI fixes verified. |
-| M0-04 — Local-folder I/O | Local proof | [HTTP tests](../tests/test_companion.py) verify launch-authorized folders, inventory/read, atomic revision saves, mode/CRLF preservation, external/concurrent conflicts and path boundaries. Native folder UI, watches, full file lifecycle/recovery, and all-OS checks remain open. |
+| M0-03 — Portable processes | Implemented; six-host unit checks passed | [Runner](../companion/process.py) and [process tests](../tests/test_process.py) cover tree cancellation, timeout and bounded output. All six native hosts passed their applicable checks, including Windows Job Objects; platform-specific skips stay explicit. |
+| M0-04 — Local-folder I/O | Local and six-host HTTP unit proof | [HTTP tests](../tests/test_companion.py) verify launch-authorized folders, inventory/read, atomic revision saves, mode/CRLF preservation, external/concurrent conflicts and path boundaries. Native folder UI, watches, full file lifecycle/recovery, and broad project acceptance remain open. |
 | M0-05 — Pages connection | Local and CI Chromium proof; HTTPS gate open | [Browser evidence and reproduction](M0_BROWSER.md) verifies pairing, CORS, file read/save, conflict protection and a native job in Chromium; the CI browser job also passed. [Pages configuration](https://github.com/sfmth/verilog-workbench/actions/runs/39150223828) failed with site Not Found. Publication enablement and actual HTTPS origin, supported browser/OS matrix, denied permission and reconnect remain gates. |
-| M0-06 — Full toolchain probe | Linux x86-64 local and CI proof | [Ordinary](m0-evidence/toolchains-linux-x64.json), [spaces](m0-evidence/toolchains-linux-x64-spaces.json), and [Unicode/spaces](m0-evidence/toolchains-linux-x64-unicode-spaces.json) each pass 14 non-programming checks. A [custom formal build directory containing whitespace/Unicode](m0-evidence/formal-custom-build-path.json) also passes proof and genuine counterexample checks without moving input sources. The [first CI toolchain gate](M0_CI_TOOLCHAINS.md) passed Linux x86-64; the other five targets failed with individual workflow diagnoses unavailable pending the upload/logging fix and rerun. |
+| M0-06 — Full toolchain probe | Linux x86-64 full proof; other-host gaps measured | [Ordinary](m0-evidence/toolchains-linux-x64.json), [spaces](m0-evidence/toolchains-linux-x64-spaces.json), and [Unicode/spaces](m0-evidence/toolchains-linux-x64-unicode-spaces.json) each pass 14 non-programming checks. The custom formal build-path proof also passes. [Native CI reports](M0_CI_TOOLCHAINS.md) record 14/14 Linux x86-64, 11/14 Linux ARM64 and Intel Mac, 8/14 Apple Silicon and each Windows architecture, and 11/14 Arch userspace. Failed/blocked workflows remain open; follow-up fixes require rerun. |
 | M0-07 — Host FPGA programming | Not run | Tang Nano 9K and iCEBreaker packing passed locally. Physical boards/cables were unavailable; programming, native drivers/permissions and observed device behavior are unverified. |
-| M0-08 — Clean native installation | Partial | The [official Linux runtime bundle proof](../packaging/m0-linux-evidence.json) runs relocated with no system Python on PATH and poisoned Python environment variables. The first [six-target CI](../.github/workflows/m0.yml) executed checks but failed before native runtime package builds. Full tool installation, repair/uninstall, signing, and clean target-machine evidence remain open. |
+| M0-08 — Clean native installation | Partial | The official Linux runtime proof runs relocated with no system Python and poisoned Python environment variables. Both Linux architectures now build pinned bundles and pass isolated bundled-interpreter smoke checks in CI. Four other hosts pass source unit checks but need legacy fixture fixes before package verification. Full tool installation, repair/uninstall, signing and clean target-machine evidence remain open. |
 | M0-09 — Semantic editor workflows | Local feasibility proof | [Editor evidence](M0_EDITOR.md) establishes configured cross-file completion/hover/definition/references and exact rename previews for SV, VHDL and Python fixtures with post-edit checks. The production browser/LSP bridge is M1 integration work; safe commit/rollback, collisions, dirty buffers, undo/recovery and all-OS coverage remain required release gates. |
 
 ## Scope of observed passes

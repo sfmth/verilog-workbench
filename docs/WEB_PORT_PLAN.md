@@ -149,7 +149,9 @@ Its documented targets do not include Windows ARM64, and it warns Intel Mac
 distribution will stop. Therefore it is a candidate package source, not the
 complete six-platform solution. Independent builds/packages or owner-approved
 OS-provided compatibility routes must close gaps. These findings are documentary;
-no runtime support is proved.
+the original review alone proves no runtime support. The
+[M0 evidence matrix](M0_STATUS.md) now records actual native executions and
+remaining platform gaps separately.
 
 Plan per-user installers/downloads with managed, pinned native tools. A launch
 target cannot be marked supported by requiring Docker, WSL or a remote service.

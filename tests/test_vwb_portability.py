@@ -2,6 +2,7 @@
 
 import contextlib
 import io
+import os
 import shutil
 import subprocess
 import sys
@@ -62,6 +63,42 @@ class VwbPortabilityTests(unittest.TestCase):
                 command = [str(item) for item in call.args[0]]
                 if command[1] in {"-m", "-r"}:
                     self.assertEqual(call.kwargs["cwd"], simulation)
+
+    def test_darwin_compiled_ghdl_uses_direct_runtime_and_matching_python_libraries(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = self.copy_project(directory, "project with spaces µ")
+            workbench = vwb.Workbench(root, root / "src", root / "test", root / "build")
+            spec = vwb.TestSpec("m0_vhdl", "cocotb", root / "test" / "test_m0_cocotb.py")
+            args = vwb.make_parser().parse_args(["test", "m0_vhdl"])
+            simulation = root / "build" / "simulation"
+            runtime = simulation / "m0_vhdl"
+            libpython = root / "suite" / "lib" / "libpython3.11.dylib"
+            for compiled in (True, False):
+                with self.subTest(compiled=compiled):
+                    if runtime.exists():
+                        runtime.unlink()
+
+                    def run(argv, **_kwargs):
+                        if argv[1] == "-m" and compiled:
+                            runtime.write_bytes(b"\xcf\xfa\xed\xfe" + b"test executable")
+                        return subprocess.CompletedProcess(argv, 0, "", "")
+
+                    environment = {"LIBPYTHON_LOC": str(libpython), "DYLD_LIBRARY_PATH": "/existing"}
+                    with (
+                        mock.patch.object(vwb.sys, "platform", "darwin"),
+                        mock.patch.object(workbench, "require_tool"),
+                        mock.patch.object(workbench, "ghdl_vpi_library", return_value="/suite/vpi.so"),
+                        mock.patch.object(workbench, "_cocotb_environment", return_value=(environment, simulation / "results.xml")),
+                        mock.patch.object(workbench, "_results_passed", return_value=True),
+                        mock.patch.object(workbench, "run", side_effect=run) as execute,
+                    ):
+                        self.assertTrue(workbench._run_vhdl_test(spec, args, simulation)[0])
+                    command = execute.call_args.args[0]
+                    self.assertEqual(command[0], runtime if compiled else "ghdl")
+                    self.assertIn("--vpi=/suite/vpi.so", command)
+                    self.assertEqual(execute.call_args.kwargs["cwd"], simulation)
+                    self.assertEqual(environment["DYLD_LIBRARY_PATH"],
+                                     str(libpython.parent) + os.pathsep + "/existing" if compiled else "/existing")
 
     def test_interrupted_formal_job_publishes_partial_results_and_cleans_staging(self):
         with tempfile.TemporaryDirectory() as directory:

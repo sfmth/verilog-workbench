@@ -174,7 +174,9 @@ report rather than described as stable upstream releases.
 Checked-in reports under `docs/m0-evidence/` are execution snapshots, not a
 platform-support promise. The machine used here is a Linux x64 development
 environment. Native Windows, macOS, ARM machines, Tang Nano 9K and iCEBreaker
-hardware were not available. A container used as a development host does not
+hardware were not available for the original local runs. The later
+[native CI observations](M0_CI_TOOLCHAINS.md) now provide real per-platform
+toolchain outcomes and explicitly retained failure causes. A container used as a development host does not
 satisfy the owner's clean-machine/no-Docker installation gate.
 
 The two FPGA fixtures run through VWB's fixed existing board profiles to the
@@ -188,6 +190,24 @@ Separate ordinary, space and Unicode path runs prevent an upstream quoting or
 encoding problem from being hidden behind a baseline pass. Any unsupported
 path case remains a release blocker; a suggested workaround is not support
 until implemented and exercised.
+
+LLVM/GCC GHDL backends can need a native C compiler/linker in addition to the
+suite. The Arch CI probe verified this dependency by failing with `cc not
+found`; its developer host now installs GCC. A managed suite archive alone
+therefore does not establish complete native prerequisites. The Windows
+archive inspection also confirmed absent Cocotb and Graphviz packages; its
+native `verilator_bin.exe` can supply lint without the Perl launcher. The
+corresponding discovery fix is pending native rerun evidence.
+
+The optional Mac ARM Tcl-enabled Yosys candidate is an explicitly external
+Homebrew dependency. `--overlay-tool yosys=/absolute/path/to/yosys` preserves
+the original suite launcher under `.vwb-overlays/originals`, installs an
+absolute symlink in `suite/bin`, and records both executable hashes and the
+external binary architecture in the acquisition receipt. This survives the
+suite Python launcher's PATH reset; a PATH prefix alone does not. Such an
+installation is marked nonportable and depends on that external package.
+The locked downloaded archive retains its original digest; its contents are
+not described as the external Yosys distribution.
 
 ## Primary sources checked 2026-10-18
 

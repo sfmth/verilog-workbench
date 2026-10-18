@@ -137,7 +137,7 @@ class CommandLineConfigurationTests(unittest.TestCase):
 
     def test_init_persists_project_directories_and_cli_override_wins(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve(strict=True)
             configured_src = root / "rtl"
             configured_test = root / "verification"
             alternate_src = root / "alternate-rtl"
@@ -224,7 +224,7 @@ class CommandLineConfigurationTests(unittest.TestCase):
 
     def test_relative_cli_directories_use_the_current_working_directory(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve(strict=True)
             source = root / "rtl"
             tests = root / "verification"
             source.mkdir()
@@ -264,7 +264,7 @@ class CommandLineConfigurationTests(unittest.TestCase):
 
     def test_init_rejects_overlapping_project_directories(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve(strict=True)
             cases = [
                 ("src", "src/tests", ".vwb"),
                 ("test/sources", "test", ".vwb"),
@@ -290,7 +290,7 @@ class CommandLineConfigurationTests(unittest.TestCase):
 
     def test_invalid_array_limits_return_argument_error_status(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve(strict=True)
             (root / "src").mkdir()
             (root / "test").mkdir()
             for value in ("-1", str(1 << 128)):
@@ -312,7 +312,7 @@ class CommandLineConfigurationTests(unittest.TestCase):
 
     def test_cocotb_test_tree_may_be_outside_project_root(self):
         with tempfile.TemporaryDirectory() as directory:
-            base = Path(directory)
+            base = Path(directory).resolve(strict=True)
             root = base / "project"
             source = root / "src"
             tests = base / "external" / "verification"
@@ -378,7 +378,7 @@ class CommandLineConfigurationTests(unittest.TestCase):
 
     def test_build_marker_is_portable_across_mount_paths(self):
         with tempfile.TemporaryDirectory() as directory:
-            base = Path(directory)
+            base = Path(directory).resolve(strict=True)
             first = base / "host" / "project"
             second = base / "container" / "project"
             for root in (first, second):
@@ -432,7 +432,7 @@ class ReportColorTests(unittest.TestCase):
 
     def test_human_reports_honor_color_modes(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve(strict=True)
             (root / "src").mkdir()
             (root / "test").mkdir()
             (root / "src" / "dut.v").write_text(
@@ -458,7 +458,7 @@ class ReportColorTests(unittest.TestCase):
 
     def test_json_reports_remain_valid_and_uncolored(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve(strict=True)
             (root / "src").mkdir()
             (root / "test").mkdir()
             (root / "src" / "dut.v").write_text(

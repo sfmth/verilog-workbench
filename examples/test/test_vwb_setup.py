@@ -1,5 +1,6 @@
 import os
 import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -14,6 +15,7 @@ CI_WORKFLOW = ROOT / ".github" / "workflows" / "ci.yml"
 RELEASE_WORKFLOW = ROOT / ".github" / "workflows" / "release.yml"
 
 
+@unittest.skipUnless(sys.platform.startswith("linux"), "legacy Linux distribution and Docker installer checks")
 class SetupScriptTests(unittest.TestCase):
     def make_mock_docker(self, root: Path) -> Path:
         executable = root / "bin" / "docker"
@@ -163,7 +165,7 @@ class SetupScriptTests(unittest.TestCase):
 
     def test_docker_runner_uses_different_names_for_two_checkouts(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             fake_bin = self.make_mock_docker(root)
             run_lines: list[str] = []
             for name in ("checkout-a", "checkout-b"):
@@ -195,7 +197,7 @@ class SetupScriptTests(unittest.TestCase):
 
     def test_docker_runner_recreates_container_for_changed_image(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             fake_bin = self.make_mock_docker(root)
             checkout = root / "checkout"
             log = root / "docker.log"
@@ -217,7 +219,7 @@ class SetupScriptTests(unittest.TestCase):
 
     def test_docker_runner_recreates_container_with_wrong_checkout_mount(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             fake_bin = self.make_mock_docker(root)
             checkout = root / "checkout"
             log = root / "docker.log"
