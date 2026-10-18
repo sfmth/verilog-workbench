@@ -8,8 +8,11 @@ cannot spawn unowned children between process creation and job assignment.
 from __future__ import annotations
 
 import os
+import errno
+import functools
 import signal
 import subprocess
+import sys
 import threading
 import time
 from pathlib import Path
@@ -174,6 +177,54 @@ class _Output:
         return self.buffer.decode("utf-8", errors="replace").replace("\r\n", "\n").replace("\r", "\n")
 
 
+@functools.lru_cache(maxsize=1)
+def _darwin_waitid_api():
+    """Darwin exposes waitid in libc before Python exposed it in 3.13."""
+    import ctypes
+
+    class SigValue(ctypes.Union):
+        _fields_ = [("integer", ctypes.c_int), ("pointer", ctypes.c_void_p)]
+
+    # Darwin's public <sys/signal.h> siginfo_t, for both supported 64-bit ABIs.
+    class SigInfo(ctypes.Structure):
+        _fields_ = [
+            ("si_signo", ctypes.c_int), ("si_errno", ctypes.c_int),
+            ("si_code", ctypes.c_int), ("si_pid", ctypes.c_int),
+            ("si_uid", ctypes.c_uint), ("si_status", ctypes.c_int),
+            ("si_addr", ctypes.c_void_p), ("si_value", SigValue),
+            ("si_band", ctypes.c_long), ("padding", ctypes.c_ulong * 7),
+        ]
+
+    waitid = ctypes.CDLL(None, use_errno=True).waitid
+    waitid.argtypes = [ctypes.c_int, ctypes.c_uint, ctypes.POINTER(SigInfo), ctypes.c_int]
+    waitid.restype = ctypes.c_int
+    return waitid, SigInfo
+
+
+def _exit_pending(process: subprocess.Popen) -> bool:
+    """Observe termination while retaining the child PID until group cleanup."""
+    if process.returncode is not None:
+        return True
+    if os.name == "nt":
+        return process.poll() is not None
+    if hasattr(os, "waitid"):
+        options = os.WEXITED | os.WNOHANG | os.WNOWAIT
+        return os.waitid(os.P_PID, process.pid, options) is not None
+    if sys.platform == "darwin":
+        import ctypes
+        waitid, SigInfo = _darwin_waitid_api()
+        information = SigInfo()
+        # Public Darwin <sys/wait.h>: Python <=3.12 can omit these constants
+        # along with os.waitid, so do not depend on the os module exporting them.
+        options = 0x00000004 | 0x00000001 | 0x00000020  # WEXITED | WNOHANG | WNOWAIT
+        while waitid(1, process.pid, ctypes.byref(information), options) != 0:  # P_PID
+            error = ctypes.get_errno()
+            if error != errno.EINTR:
+                raise OSError(error, os.strerror(error))
+        return information.si_pid == process.pid
+    raise OSError("non-reaping child-status observation is unavailable on this host")
+
+
 def _terminate_tree(
     process: subprocess.Popen, job: _WindowsJob | None, grace: float = 0.2
 ) -> None:
@@ -185,12 +236,12 @@ def _terminate_tree(
         os.killpg(process.pid, signal.SIGTERM)
     except ProcessLookupError:
         pass
-    try:
-        process.wait(timeout=grace)
-    except subprocess.TimeoutExpired:
-        pass
+    deadline = time.monotonic() + grace
+    while not _exit_pending(process) and time.monotonic() < deadline:
+        time.sleep(0.01)
     # The leader can exit while a descendant ignores TERM and retains a pipe.
-    # Always kill the remaining group, even if waiting for the leader succeeded.
+    # Always kill the remaining group, even if the leader's exit was observed.
+    # Reap only after the final signal, keeping its PID reserved throughout.
     try:
         os.killpg(process.pid, signal.SIGKILL)
     except ProcessLookupError:
@@ -278,14 +329,14 @@ def run_process(
                         _terminate_tree(process, job, termination_grace)
                         returncode = 130 if cancelled else 124
                         break
-                    if process.poll() is not None and not any(
+                    if _exit_pending(process) and not any(
                         output.thread.is_alive() for output in outputs
                     ):
-                        returncode = process.returncode
                         # A successful launcher can leave children whose
                         # stdout/stderr were redirected elsewhere. Keep job
                         # ownership consistent with Windows kill-on-close.
                         _terminate_tree(process, job, termination_grace)
+                        returncode = process.returncode
                         break
                     time.sleep(0.02)
             except BaseException:

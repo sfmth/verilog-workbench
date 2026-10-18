@@ -400,7 +400,7 @@ class SourceCatalogTests(unittest.TestCase):
                 {
                     "name": "values_pkg",
                     "language": "vhdl",
-                    "files": ["src/values_pkg.vhd"],
+                    "files": [str(Path("src") / "values_pkg.vhd")],
                 },
                 packages,
             )

@@ -115,7 +115,8 @@ jobs:
           prefix = Path(subprocess.check_output(['brew', '--prefix', 'yosys'], text=True).strip())
           binary = (prefix / 'bin' / 'yosys').resolve(strict=True)
           version = subprocess.check_output([str(binary), '-V'], text=True)
-          if not re.search(r'\bYosys 0\.70(?:\s|$)', version):
+          print('Installed Yosys version output:', repr(version), flush=True)
+          if not re.search(r'\b0\.70(?=[\s+(]|$)', version):
               raise SystemExit('Installed Yosys is not the guarded version 0.70')
           with tempfile.TemporaryDirectory() as temporary:
               script = Path(temporary) / 'tcl-probe.tcl'

@@ -196,8 +196,9 @@ suite. The Arch CI probe verified this dependency by failing with `cc not
 found`; its developer host now installs GCC. A managed suite archive alone
 therefore does not establish complete native prerequisites. The Windows
 archive inspection also confirmed absent Cocotb and Graphviz packages; its
-native `verilator_bin.exe` can supply lint without the Perl launcher. The
-corresponding discovery fix is pending native rerun evidence.
+native `verilator_bin.exe` supplies lint without the Perl launcher. The third
+native CI run verified that lint passes on both Windows targets; their Cocotb,
+Graphviz and GHDL workflows remain blocked.
 
 The optional Mac ARM Tcl-enabled Yosys candidate is an explicitly external
 Homebrew dependency. `--overlay-tool yosys=/absolute/path/to/yosys` preserves

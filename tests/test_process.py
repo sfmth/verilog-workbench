@@ -48,6 +48,28 @@ def process_running(pid):
 
 
 class ProcessTests(unittest.TestCase):
+    def test_darwin_waitid_fallback_does_not_require_os_wait_constants(self):
+        import ctypes
+        from types import SimpleNamespace
+
+        class SigInfo(ctypes.Structure):
+            _fields_ = [("si_pid", ctypes.c_int)]
+
+        observed = []
+
+        def waitid(kind, pid, information, flags):
+            observed.append((kind, pid, flags))
+            ctypes.cast(information, ctypes.POINTER(SigInfo)).contents.si_pid = pid
+            return 0
+
+        with (
+            mock.patch.object(runner, "os", SimpleNamespace(name="posix")),
+            mock.patch.object(runner.sys, "platform", "darwin"),
+            mock.patch.object(runner, "_darwin_waitid_api", return_value=(waitid, SigInfo)),
+        ):
+            self.assertTrue(runner._exit_pending(SimpleNamespace(pid=12345, returncode=None)))
+        self.assertEqual(observed, [(1, 12345, 0x25)])
+
     def assert_stopped(self, pids):
         end = time.monotonic() + 2
         while any(process_running(pid) for pid in pids) and time.monotonic() < end:
@@ -189,6 +211,31 @@ class ProcessTests(unittest.TestCase):
             self.assertEqual(result.returncode, 0)
             self.assertTrue((root / "child.pid").exists(), "child never started")
             self.assert_stopped([int((root / "child.pid").read_text())])
+
+    @unittest.skipIf(os.name == "nt", "POSIX PID ownership during group cleanup")
+    def test_completed_leader_stays_unreaped_until_group_cleanup(self):
+        launched = []
+        original_launch = runner.subprocess.Popen
+        original_signal = os.killpg
+        signals = []
+
+        def launch(*args, **kwargs):
+            process = original_launch(*args, **kwargs)
+            launched.append(process)
+            return process
+
+        def signal_owned_group(pid, signum):
+            self.assertIsNone(launched[-1].returncode, "leader was reaped before group cleanup")
+            self.assertTrue(runner._exit_pending(launched[-1]))
+            signals.append(signum)
+            return original_signal(pid, signum)
+
+        with mock.patch.object(runner.subprocess, "Popen", side_effect=launch):
+            with mock.patch.object(runner.os, "killpg", side_effect=signal_owned_group):
+                for _ in range(8):
+                    result = runner.run_process([sys.executable, "-c", "pass"])
+                    self.assertEqual(result.returncode, 0)
+        self.assertEqual(signals, [signal.SIGTERM, signal.SIGKILL] * 8)
 
     @unittest.skipIf(os.name == "nt", "POSIX separately owned CLI/tool sessions")
     def test_companion_cancellation_unwinds_cli_owned_tool_session(self):

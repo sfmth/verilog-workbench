@@ -1,5 +1,36 @@
 # Native toolchain CI observations
 
+## Third run: compiler and Windows lint fixes verified
+
+[Run 39151829476](https://github.com/sfmth/verilog-workbench/actions/runs/39151829476)
+tested commit `74b1e3ec2b55f6e9cc1cddb3b45f84192ac8de52` on 2026-10-18.
+The following results come from retained native job logs. Apple Silicon's
+external Yosys prerequisite failed before acquisition/probing, so it has no
+HDL workflow results in this run.
+
+| Host | Passed checks | Remaining failed or blocked checks |
+| --- | --- | --- |
+| [Linux x64](https://github.com/sfmth/verilog-workbench/actions/runs/39151829476/job/117746885189) | 14/14 | None in this smoke gate; physical programming remains untested. |
+| [Linux ARM64](https://github.com/sfmth/verilog-workbench/actions/runs/39151829476/job/117746885276) | 11/14 | Native VHDL, Cocotb/VHDL and VHDL synthesis blocked by missing GHDL. |
+| [macOS Intel](https://github.com/sfmth/verilog-workbench/actions/runs/39151829476/job/117746885197) | 10/14 | The same three GHDL gaps; schematics fails with `Operation not permitted` after Yosys reports completed SVG generation. The cause remains under investigation. |
+| [macOS Apple Silicon](https://github.com/sfmth/verilog-workbench/actions/runs/39151829476/job/117746885162) | Not run | Exact formula/bottle guards and Homebrew installation succeeded, then the installed-version text guard failed. Actual version output was not retained; no HDL probe ran. |
+| [Windows x64](https://github.com/sfmth/verilog-workbench/actions/runs/39151829476/job/117746885253) | 9/14 | Cocotb/Verilog, VHDL, Cocotb/VHDL, SVG and VHDL synthesis blocked by missing Cocotb configuration, GHDL and Graphviz. Native Verilator-engine lint now passes. |
+| [Windows ARM64](https://github.com/sfmth/verilog-workbench/actions/runs/39151829476/job/117746885241) | 9/14 | The same five package gaps; the nine passes use permitted OS x64 translation for the suite tools. |
+| [Arch x64 userspace](https://github.com/sfmth/verilog-workbench/actions/runs/39151829476/job/117746885023) | 14/14 | Provisioning native GCC resolved the three previous VHDL failures. This development-container check does not certify clean-machine installation. |
+
+The separate native companion bundle jobs passed on
+[Linux x64](https://github.com/sfmth/verilog-workbench/actions/runs/39151829476/job/117746885250),
+[Linux ARM64](https://github.com/sfmth/verilog-workbench/actions/runs/39151829476/job/117746885243),
+[macOS Intel](https://github.com/sfmth/verilog-workbench/actions/runs/39151829476/job/117746885183)
+and [macOS Apple Silicon](https://github.com/sfmth/verilog-workbench/actions/runs/39151829476/job/117746885299),
+including actual pinned native bundle creation and exercise. Both Windows
+native companion jobs passed the new unit checks but stopped at a legacy
+expected-path separator assertion before bundle creation. Its fixture fix
+requires a further native run. The
+[actual browser integration job](https://github.com/sfmth/verilog-workbench/actions/runs/39151829476/job/117746885191)
+also passed. These companion/browser outcomes do not fill the HDL package
+gaps above.
+
 ## Second run: retained diagnoses
 
 [Run 39150641107](https://github.com/sfmth/verilog-workbench/actions/runs/39150641107)
