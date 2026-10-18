@@ -79,6 +79,7 @@ class ProcessTests(unittest.TestCase):
         )
         with (
             mock.patch.object(runner.sys, "platform", "darwin"),
+            mock.patch.object(runner.signal, "SIGKILL", 9, create=True),
             mock.patch.object(runner.os, "killpg", side_effect=PermissionError(1, "denied"), create=True),
             mock.patch.object(runner.subprocess, "run", return_value=census) as inspect,
             mock.patch.object(runner, "_exit_pending", return_value=True),
@@ -117,7 +118,7 @@ class ProcessTests(unittest.TestCase):
                     mock.patch.object(runner.subprocess, "run", side_effect=[census]),
                 ):
                     with self.assertRaises(PermissionError) as raised:
-                        runner._signal_group(12345, signal.SIGKILL)
+                        runner._signal_group(12345, signal.SIGTERM)
                 self.assertIs(raised.exception, error)
 
     def test_other_hosts_preserve_group_permission_error_without_census(self):

@@ -101,8 +101,7 @@ def main():
     if args.output:
         args.output.parent.mkdir(parents=True, exist_ok=True)
         args.output.write_text(content, encoding='utf-8')
-    else:
-        print(content, end='')
+    print(content, end='')
 
 
 if __name__=='__main__':
