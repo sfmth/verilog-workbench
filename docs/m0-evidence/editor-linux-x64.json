@@ -1,0 +1,846 @@
+{
+  "recorded_at": "2026-10-18T16:03:07.777164+00:00",
+  "host": {
+    "system": "Linux",
+    "machine": "x86_64",
+    "python": "3.11.6"
+  },
+  "scope": "Real local stdio servers; small Unicode/space-path semantic fixtures. No browser integration or six-platform certification.",
+  "services": [
+    {
+      "language": "systemverilog",
+      "command": [
+        "/workspace/scratch/5224b9a4a425/m0-lsp-tools/slang-server/slang-server"
+      ],
+      "candidate_source": "https://github.com/hudson-trading/slang-server/releases/tag/v0.3.0",
+      "status": "passed",
+      "checks": {
+        "hover": {
+          "status": "passed",
+          "nonempty": true
+        },
+        "definition": {
+          "status": "passed",
+          "locations": [
+            {
+              "uri": "file:///tmp/vwb-editor-%CE%BC%20ha72nkht/systemverilog/helpers.sv",
+              "range": {
+                "start": {
+                  "line": 2,
+                  "character": 29
+                },
+                "end": {
+                  "line": 2,
+                  "character": 33
+                }
+              }
+            }
+          ]
+        },
+        "references": {
+          "status": "passed",
+          "route": "slang references + independent slang semantic definition; Verible agrees",
+          "locations": [
+            {
+              "uri": "file:///tmp/vwb-editor-%CE%BC%20ha72nkht/systemverilog/helpers.sv",
+              "range": {
+                "start": {
+                  "line": 2,
+                  "character": 29
+                },
+                "end": {
+                  "line": 2,
+                  "character": 33
+                }
+              }
+            },
+            {
+              "uri": "file:///tmp/vwb-editor-%CE%BC%20ha72nkht/systemverilog/top.sv",
+              "range": {
+                "start": {
+                  "line": 2,
+                  "character": 28
+                },
+                "end": {
+                  "line": 2,
+                  "character": 32
+                }
+              }
+            },
+            {
+              "uri": "file:///tmp/vwb-editor-%CE%BC%20ha72nkht/systemverilog/other.sv",
+              "range": {
+                "start": {
+                  "line": 7,
+                  "character": 28
+                },
+                "end": {
+                  "line": 7,
+                  "character": 32
+                }
+              }
+            }
+          ],
+          "expected_reference_count": 3
+        },
+        "rename": {
+          "status": "passed",
+          "route": "Verible only; slang rename is disabled",
+          "files": [
+            "file:///tmp/vwb-editor-%CE%BC%20ha72nkht/systemverilog/helpers.sv",
+            "file:///tmp/vwb-editor-%CE%BC%20ha72nkht/systemverilog/other.sv",
+            "file:///tmp/vwb-editor-%CE%BC%20ha72nkht/systemverilog/top.sv"
+          ],
+          "edit_count": 3,
+          "exact_expected_text": true,
+          "note": "In-memory preview only; stale bytes/versions and path escapes rejected."
+        },
+        "completion": {
+          "status": "passed",
+          "labels": [
+            "step"
+          ],
+          "expected_label": "step"
+        }
+      },
+      "executable": "/workspace/scratch/5224b9a4a425/m0-lsp-tools/slang-server/slang-server",
+      "executable_sha256": "737b65e5e1d9f1b17e748d9295fbcfcef9f45cd87ffb2cd0741b864715e65e14",
+      "server_info": {
+        "name": "slang-server",
+        "version": "0.3.0+\n"
+      },
+      "capabilities": {
+        "textDocumentSync": {
+          "openClose": true,
+          "change": 2,
+          "save": {
+            "includeText": true
+          }
+        },
+        "completionProvider": {
+          "triggerCharacters": [
+            "`",
+            "#",
+            ".",
+            "(",
+            ":",
+            "[",
+            "$",
+            "{"
+          ],
+          "resolveProvider": true,
+          "completionItem": {
+            "labelDetailsSupport": true
+          }
+        },
+        "hoverProvider": true,
+        "definitionProvider": true,
+        "referencesProvider": true,
+        "documentHighlightProvider": true,
+        "documentSymbolProvider": true,
+        "codeActionProvider": true,
+        "codeLensProvider": {
+          "resolveProvider": false
+        },
+        "documentLinkProvider": {
+          "resolveProvider": false,
+          "workDoneProgress": false
+        },
+        "workspaceSymbolProvider": true,
+        "renameProvider": true,
+        "executeCommandProvider": {
+          "commands": [
+            "slang.addDefine",
+            "slang.getActiveInstance",
+            "slang.activateInstance",
+            "slang.setActiveInstance",
+            "slang.getScopesByModule",
+            "slang.getInstancesOfModule",
+            "slang.getFilesContainingModule",
+            "slang.setTopLevel",
+            "slang.openModuleDefinition",
+            "slang.setBuildFile",
+            "slang.searchHierarchy",
+            "slang.getInstances",
+            "slang.getDriversWithLocation",
+            "slang.expandMacros",
+            "slang.openWaveform",
+            "slang.getModulesInFile",
+            "slang.addToWaveform",
+            "slang.getScope",
+            "slang.getLoadsWithLocation",
+            "slang.getScopes",
+            "slang.showHierLocation"
+          ]
+        },
+        "callHierarchyProvider": true,
+        "inlayHintProvider": {
+          "resolveProvider": false
+        }
+      },
+      "primary_checks": {
+        "hover": {
+          "status": "passed",
+          "nonempty": true
+        },
+        "definition": {
+          "status": "passed",
+          "locations": [
+            {
+              "uri": "file:///tmp/vwb-editor-%CE%BC%20ha72nkht/systemverilog/helpers.sv",
+              "range": {
+                "start": {
+                  "line": 2,
+                  "character": 29
+                },
+                "end": {
+                  "line": 2,
+                  "character": 33
+                }
+              }
+            }
+          ]
+        },
+        "references": {
+          "status": "failed",
+          "locations": [
+            {
+              "uri": "file:///tmp/vwb-editor-%CE%BC%20ha72nkht/systemverilog/top.sv",
+              "range": {
+                "start": {
+                  "line": 2,
+                  "character": 28
+                },
+                "end": {
+                  "line": 2,
+                  "character": 32
+                }
+              }
+            },
+            {
+              "uri": "file:///tmp/vwb-editor-%CE%BC%20ha72nkht/systemverilog/other.sv",
+              "range": {
+                "start": {
+                  "line": 7,
+                  "character": 28
+                },
+                "end": {
+                  "line": 7,
+                  "character": 32
+                }
+              }
+            }
+          ],
+          "expected_reference_count": 3
+        },
+        "rename": {
+          "status": "failed",
+          "files": [
+            "file:///tmp/vwb-editor-%CE%BC%20ha72nkht/systemverilog/other.sv",
+            "file:///tmp/vwb-editor-%CE%BC%20ha72nkht/systemverilog/top.sv"
+          ],
+          "edit_count": 2,
+          "exact_expected_text": false,
+          "note": "In-memory preview only; stale bytes/versions and path escapes rejected."
+        },
+        "completion": {
+          "status": "passed",
+          "labels": [
+            "step"
+          ],
+          "expected_label": "step"
+        }
+      },
+      "refactor_service": {
+        "command": [
+          "/workspace/scratch/5224b9a4a425/m0-lsp-tools/verible/verible-v0.0-4296-g0f262651/bin/verible-verilog-ls",
+          "--lsp_enable_hover"
+        ],
+        "server_info": {
+          "name": "Verible Verilog language server.",
+          "version": "v0.0-4296-g0f262651"
+        },
+        "capabilities": {
+          "codeActionProvider": true,
+          "definitionProvider": true,
+          "diagnosticProvider": {
+            "interFileDependencies": false,
+            "workspaceDiagnostics": false
+          },
+          "documentFormattingProvider": true,
+          "documentHighlightProvider": true,
+          "documentRangeFormattingProvider": true,
+          "documentSymbolProvider": true,
+          "hoverProvider": true,
+          "referencesProvider": true,
+          "renameProvider": true,
+          "textDocumentSync": {
+            "change": 2,
+            "openClose": true
+          }
+        },
+        "executable_sha256": "d401eaa313b52afd04b0bdf8c1f81c3988e4b79caf6a02039967a184ed8eaf4a"
+      },
+      "routing": {
+        "scope": "M0 probe only; production bridge is not implemented",
+        "same_definition": true,
+        "same_reference_uses": true,
+        "source_filelist_sha256": "4db1856792fbbec07530729073fa2bc72d3863435b17acb91a0f682a0fd54f3d"
+      },
+      "post_rename_validation": {
+        "status": "passed",
+        "command": [
+          "iverilog",
+          "-g2012",
+          "-t",
+          "null",
+          "-s",
+          "top",
+          "-s",
+          "other",
+          "helpers.sv",
+          "top.sv",
+          "other.sv"
+        ],
+        "returncode": 0,
+        "stdout": "",
+        "stderr": "",
+        "scope": "HDL post-edit compilation; Python syntax and helper behavior. Not full simulation/Cocotb execution."
+      },
+      "diagnostic_notification_count": 3,
+      "stderr_tail": [
+        "[#6        +.000] INFO: ---> textDocument/rename",
+        "",
+        "[#7 18:03:07.801] INFO: <--- textDocument/completion",
+        "[#7        +.000] INFO: Started textDocument/completion",
+        "INFO: Completion: kind=Invoked trigger='' query=ScopedAccess",
+        "INFO: Looking for scoped members in helpers",
+        "INFO: Returning 1 completions for ScopedAccess query in Expression context",
+        "[#7        +.000] INFO: ---> textDocument/completion"
+      ]
+    },
+    {
+      "language": "vhdl",
+      "command": [
+        "/workspace/scratch/5224b9a4a425/m0-lsp-tools/vhdl_ls/vhdl_ls-x86_64-unknown-linux-gnu/bin/vhdl_ls"
+      ],
+      "candidate_source": "https://github.com/VHDL-LS/rust_hdl/releases/tag/v0.88.0",
+      "status": "passed",
+      "checks": {
+        "hover": {
+          "status": "passed",
+          "nonempty": true
+        },
+        "definition": {
+          "status": "passed",
+          "locations": [
+            {
+              "uri": "file:///tmp/vwb-editor-%CE%BC%20pgr8dg_g/vhdl/helpers.vhd",
+              "range": {
+                "end": {
+                  "character": 15,
+                  "line": 6
+                },
+                "start": {
+                  "character": 11,
+                  "line": 6
+                }
+              }
+            }
+          ]
+        },
+        "references": {
+          "status": "passed",
+          "locations": [
+            {
+              "uri": "file:///tmp/vwb-editor-%CE%BC%20pgr8dg_g/vhdl/top.vhd",
+              "range": {
+                "end": {
+                  "character": 35,
+                  "line": 4
+                },
+                "start": {
+                  "character": 31,
+                  "line": 4
+                }
+              }
+            },
+            {
+              "uri": "file:///tmp/vwb-editor-%CE%BC%20pgr8dg_g/vhdl/helpers.vhd",
+              "range": {
+                "end": {
+                  "character": 15,
+                  "line": 2
+                },
+                "start": {
+                  "character": 11,
+                  "line": 2
+                }
+              }
+            },
+            {
+              "uri": "file:///tmp/vwb-editor-%CE%BC%20pgr8dg_g/vhdl/helpers.vhd",
+              "range": {
+                "end": {
+                  "character": 15,
+                  "line": 6
+                },
+                "start": {
+                  "character": 11,
+                  "line": 6
+                }
+              }
+            },
+            {
+              "uri": "file:///tmp/vwb-editor-%CE%BC%20pgr8dg_g/vhdl/other.vhd",
+              "range": {
+                "end": {
+                  "character": 35,
+                  "line": 14
+                },
+                "start": {
+                  "character": 31,
+                  "line": 14
+                }
+              }
+            }
+          ],
+          "expected_reference_count": 4
+        },
+        "rename": {
+          "status": "passed",
+          "files": [
+            "file:///tmp/vwb-editor-%CE%BC%20pgr8dg_g/vhdl/helpers.vhd",
+            "file:///tmp/vwb-editor-%CE%BC%20pgr8dg_g/vhdl/other.vhd",
+            "file:///tmp/vwb-editor-%CE%BC%20pgr8dg_g/vhdl/top.vhd"
+          ],
+          "edit_count": 4,
+          "exact_expected_text": true,
+          "note": "In-memory preview only; stale bytes/versions and path escapes rejected."
+        },
+        "completion": {
+          "status": "passed",
+          "labels": [
+            "result",
+            "work",
+            "std",
+            "'\u00f1'",
+            "'v'",
+            "\"mod\"",
+            "DC2",
+            "'\u00e5'",
+            "'Z'",
+            "FILE_OPEN_KIND",
+            "\"not\"",
+            "'\u00c9'",
+            "MINIMUM",
+            "'N'",
+            "'\u00bd'",
+            "'2'",
+            "C146",
+            "'&'",
+            "'\u00a1'",
+            "SUB",
+            "NOW",
+            "'y'",
+            "'\u00e8'",
+            "'m'",
+            "DELAY_LENGTH",
+            "DEL",
+            "'\u00dc'",
+            "'Q'",
+            "C154",
+            "\"and\""
+          ],
+          "expected_label": "step"
+        }
+      },
+      "executable": "/workspace/scratch/5224b9a4a425/m0-lsp-tools/vhdl_ls/vhdl_ls-x86_64-unknown-linux-gnu/bin/vhdl_ls",
+      "executable_sha256": "ac39d312a76728590c85da02ee654d0cd80da873c73376c6c8aaf7bac40043a6",
+      "server_info": {},
+      "capabilities": {
+        "completionProvider": {
+          "completionItem": {
+            "labelDetailsSupport": true
+          },
+          "resolveProvider": true,
+          "triggerCharacters": [
+            "'",
+            "."
+          ]
+        },
+        "declarationProvider": true,
+        "definitionProvider": true,
+        "documentHighlightProvider": true,
+        "documentSymbolProvider": true,
+        "hoverProvider": true,
+        "implementationProvider": true,
+        "referencesProvider": true,
+        "renameProvider": {
+          "prepareProvider": true
+        },
+        "semanticTokensProvider": {
+          "full": true,
+          "legend": {
+            "tokenModifiers": [
+              "readonly"
+            ],
+            "tokenTypes": [
+              "variable",
+              "parameter",
+              "property",
+              "enumMember",
+              "function",
+              "type",
+              "class",
+              "namespace",
+              "struct",
+              "enum",
+              "operator"
+            ]
+          },
+          "range": true
+        },
+        "textDocumentSync": 2,
+        "typeDefinitionProvider": true,
+        "workspace": {
+          "fileOperations": {
+            "didCreate": {
+              "filters": [
+                {
+                  "pattern": {
+                    "glob": "**/*.{vhd,vhdl}"
+                  },
+                  "scheme": null
+                }
+              ]
+            },
+            "didDelete": {
+              "filters": [
+                {
+                  "pattern": {
+                    "glob": "**/*.{vhd,vhdl}"
+                  },
+                  "scheme": null
+                }
+              ]
+            },
+            "didRename": {
+              "filters": [
+                {
+                  "pattern": {
+                    "glob": "**/*.{vhd,vhdl}"
+                  },
+                  "scheme": null
+                }
+              ]
+            }
+          }
+        },
+        "workspaceSymbolProvider": true
+      },
+      "post_rename_validation": {
+        "status": "passed",
+        "command": [
+          "ghdl",
+          "-a",
+          "--std=08",
+          "helpers.vhd",
+          "top.vhd",
+          "other.vhd"
+        ],
+        "returncode": 0,
+        "stdout": "",
+        "stderr": "",
+        "scope": "HDL post-edit compilation; Python syntax and helper behavior. Not full simulation/Cocotb execution."
+      },
+      "diagnostic_notification_count": 0,
+      "stderr_tail": []
+    },
+    {
+      "language": "python",
+      "command": [
+        "/workspace/scratch/5224b9a4a425/m0-lsp-tools/node_modules/.bin/basedpyright-langserver",
+        "--stdio"
+      ],
+      "candidate_source": "https://www.npmjs.com/package/basedpyright/v/1.40.2",
+      "status": "passed",
+      "checks": {
+        "hover": {
+          "status": "passed",
+          "nonempty": true
+        },
+        "definition": {
+          "status": "passed",
+          "locations": [
+            {
+              "uri": "file:///tmp/vwb-editor-%CE%BC%204gem1pl7/python/model.py",
+              "range": {
+                "start": {
+                  "line": 1,
+                  "character": 4
+                },
+                "end": {
+                  "line": 1,
+                  "character": 8
+                }
+              }
+            }
+          ]
+        },
+        "references": {
+          "status": "passed",
+          "locations": [
+            {
+              "uri": "file:///tmp/vwb-editor-%CE%BC%204gem1pl7/python/model.py",
+              "range": {
+                "start": {
+                  "line": 1,
+                  "character": 4
+                },
+                "end": {
+                  "line": 1,
+                  "character": 8
+                }
+              }
+            },
+            {
+              "uri": "file:///tmp/vwb-editor-%CE%BC%204gem1pl7/python/cocotb_case.py",
+              "range": {
+                "start": {
+                  "line": 1,
+                  "character": 18
+                },
+                "end": {
+                  "line": 1,
+                  "character": 22
+                }
+              }
+            },
+            {
+              "uri": "file:///tmp/vwb-editor-%CE%BC%204gem1pl7/python/cocotb_case.py",
+              "range": {
+                "start": {
+                  "line": 6,
+                  "character": 15
+                },
+                "end": {
+                  "line": 6,
+                  "character": 19
+                }
+              }
+            },
+            {
+              "uri": "file:///tmp/vwb-editor-%CE%BC%204gem1pl7/python/other.py",
+              "range": {
+                "start": {
+                  "line": 7,
+                  "character": 15
+                },
+                "end": {
+                  "line": 7,
+                  "character": 19
+                }
+              }
+            }
+          ],
+          "expected_reference_count": 4
+        },
+        "rename": {
+          "status": "passed",
+          "files": [
+            "file:///tmp/vwb-editor-%CE%BC%204gem1pl7/python/cocotb_case.py",
+            "file:///tmp/vwb-editor-%CE%BC%204gem1pl7/python/model.py",
+            "file:///tmp/vwb-editor-%CE%BC%204gem1pl7/python/other.py"
+          ],
+          "edit_count": 4,
+          "exact_expected_text": true,
+          "note": "In-memory preview only; stale bytes/versions and path escapes rejected."
+        },
+        "completion": {
+          "status": "passed",
+          "labels": [
+            "__name__",
+            "__loader__",
+            "__package__",
+            "__spec__",
+            "__path__",
+            "__file__",
+            "__cached__",
+            "__annotations__",
+            "__dict__",
+            "__builtins__",
+            "__doc__",
+            "tick"
+          ],
+          "expected_label": "tick"
+        }
+      },
+      "executable": "/workspace/scratch/5224b9a4a425/m0-lsp-tools/node_modules/.bin/basedpyright-langserver",
+      "executable_sha256": "f200762078eb9880faf421a5b30f9ef3055b1d85c6f10780d75db4da8d8499f1",
+      "server_info": {
+        "name": "basedpyright",
+        "version": "1.40.2"
+      },
+      "capabilities": {
+        "textDocumentSync": {
+          "willSave": true,
+          "change": 2,
+          "openClose": true
+        },
+        "notebookDocumentSync": {
+          "notebookSelector": [
+            {
+              "notebook": {
+                "scheme": "file",
+                "notebookType": "jupyter-notebook"
+              },
+              "cells": [
+                {
+                  "language": "python"
+                }
+              ]
+            }
+          ],
+          "save": true
+        },
+        "definitionProvider": {
+          "workDoneProgress": true
+        },
+        "declarationProvider": {
+          "workDoneProgress": true
+        },
+        "typeDefinitionProvider": {
+          "workDoneProgress": true
+        },
+        "referencesProvider": {
+          "workDoneProgress": true
+        },
+        "implementationProvider": {
+          "workDoneProgress": true
+        },
+        "documentSymbolProvider": {
+          "workDoneProgress": true
+        },
+        "workspaceSymbolProvider": {
+          "workDoneProgress": true
+        },
+        "hoverProvider": {
+          "workDoneProgress": true
+        },
+        "documentHighlightProvider": {
+          "workDoneProgress": true
+        },
+        "renameProvider": {
+          "prepareProvider": true,
+          "workDoneProgress": true
+        },
+        "completionProvider": {
+          "triggerCharacters": [
+            ".",
+            "[",
+            "\"",
+            "'"
+          ],
+          "resolveProvider": true,
+          "workDoneProgress": true,
+          "completionItem": {
+            "labelDetailsSupport": true
+          }
+        },
+        "signatureHelpProvider": {
+          "triggerCharacters": [
+            "(",
+            ",",
+            ")"
+          ],
+          "workDoneProgress": true
+        },
+        "codeActionProvider": {
+          "codeActionKinds": [
+            "quickfix",
+            "source.organizeImports"
+          ],
+          "workDoneProgress": true
+        },
+        "executeCommandProvider": {
+          "commands": [
+            "basedpyright.createtypestub",
+            "basedpyright.restartserver",
+            "basedpyright.writeBaseline"
+          ],
+          "workDoneProgress": true
+        },
+        "callHierarchyProvider": true,
+        "inlayHintProvider": true,
+        "semanticTokensProvider": {
+          "legend": {
+            "tokenTypes": [
+              "namespace",
+              "type",
+              "class",
+              "enum",
+              "typeParameter",
+              "parameter",
+              "variable",
+              "property",
+              "enumMember",
+              "function",
+              "method",
+              "keyword",
+              "decorator",
+              "selfParameter",
+              "clsParameter"
+            ],
+            "tokenModifiers": [
+              "declaration",
+              "definition",
+              "readonly",
+              "static",
+              "async",
+              "defaultLibrary",
+              "builtin",
+              "classMember",
+              "parameter"
+            ]
+          },
+          "full": true
+        },
+        "workspace": {
+          "fileOperations": {
+            "willRename": {
+              "filters": [
+                {
+                  "pattern": {
+                    "glob": "**/*"
+                  }
+                }
+              ]
+            }
+          },
+          "workspaceFolders": {
+            "supported": true,
+            "changeNotifications": true
+          }
+        },
+        "documentOnTypeFormattingProvider": {
+          "firstTriggerCharacter": "{"
+        }
+      },
+      "post_rename_validation": {
+        "status": "passed",
+        "command": [
+          "/workspace/scratch/5224b9a4a425/tool-cache/oss-cad-suite/bin/tabbypy3",
+          "-c",
+          "import compileall, model, other; assert compileall.compile_dir('.', quiet=1); assert model.advance_tick(1) == 2; assert other.result == 3; assert other.shadow(5) == 4"
+        ],
+        "returncode": 0,
+        "stdout": "",
+        "stderr": "",
+        "scope": "HDL post-edit compilation; Python syntax and helper behavior. Not full simulation/Cocotb execution."
+      },
+      "diagnostic_notification_count": 3,
+      "stderr_tail": []
+    }
+  ]
+}

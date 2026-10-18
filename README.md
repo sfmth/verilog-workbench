@@ -5,6 +5,11 @@ check them, records waveforms, creates circuit drawings, and builds supported
 FPGA projects. It is intended for people who know basic digital logic and are
 starting to write Verilog, SystemVerilog, or VHDL.
 
+The `web-port-plan` branch also contains the M0 website/companion foundation.
+See the [M0 status and remaining acceptance gates](docs/M0_STATUS.md),
+[native companion](companion/README.md), and [browser proof](docs/M0_BROWSER.md).
+The complete website workspace is still in development.
+
 ## First Five Minutes
 
 Local installation is recommended because it gives VWB direct access to your

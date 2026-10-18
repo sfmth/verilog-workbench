@@ -1,0 +1,40 @@
+{
+  "systemverilog": {
+    "files": ["helpers.sv", "top.sv", "other.sv"],
+    "query": ["top.sv", "initial result = helpers::step(1);", "step"],
+    "completion": ["top.sv", "initial result = helpers::step(1);", "step"],
+    "definition_file": "helpers.sv",
+    "new_name": "advance_step",
+    "rename_sites": [
+      ["helpers.sv", "function automatic integer step(input integer value);", "step"],
+      ["top.sv", "initial result = helpers::step(1);", "step"],
+      ["other.sv", "initial result = helpers::step(2);", "step"]
+    ]
+  },
+  "vhdl": {
+    "files": ["helpers.vhd", "top.vhd", "other.vhd"],
+    "query": ["top.vhd", "constant result : integer := step(1);", "step"],
+    "completion": ["top.vhd", "constant result : integer := step(1);", "step"],
+    "definition_file": "helpers.vhd",
+    "new_name": "advance_step",
+    "rename_sites": [
+      ["helpers.vhd", "function step(value : integer) return integer;", "step"],
+      ["helpers.vhd", "function step(value : integer) return integer is", "step"],
+      ["top.vhd", "constant result : integer := step(1);", "step"],
+      ["other.vhd", "constant result : integer := step(2);", "step"]
+    ]
+  },
+  "python": {
+    "files": ["model.py", "cocotb_case.py", "other.py"],
+    "query": ["cocotb_case.py", "expected = tick(1)", "tick"],
+    "completion": ["other.py", "result = model.tick(2)", "tick"],
+    "definition_file": "model.py",
+    "new_name": "advance_tick",
+    "rename_sites": [
+      ["model.py", "def tick(value: int) -> int:", "tick"],
+      ["cocotb_case.py", "from model import tick", "tick"],
+      ["cocotb_case.py", "expected = tick(1)", "tick"],
+      ["other.py", "result = model.tick(2)", "tick"]
+    ]
+  }
+}

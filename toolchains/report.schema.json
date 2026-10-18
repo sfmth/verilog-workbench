@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sfmth.github.io/verilog-workbench/toolchains/report.schema.json",
+  "title": "VWB M0 toolchain evidence",
+  "type": "object",
+  "required": ["schema_version", "generated_at", "mode", "platform", "runtime", "tools", "workflows"],
+  "properties": {
+    "schema_version": {"const": "vwb.toolchains/1"},
+    "generated_at": {"type": "string"},
+    "mode": {"enum": ["discovery", "execution"]},
+    "platform": {"type": "object", "required": ["target", "architecture", "system"]},
+    "runtime": {"type": "object", "required": ["python", "executable", "architecture", "binary"]},
+    "tools": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["state", "path", "version", "version_state", "alternatives"],
+        "properties": {
+          "state": {"enum": ["available", "missing"]},
+          "path": {"type": ["string", "null"]},
+          "version": {"type": ["string", "null"]},
+          "version_state": {"enum": ["not_run", "reported", "unavailable", "error"]}
+        }
+      }
+    },
+    "workflows": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["state", "required_tools", "missing_tools", "evidence"],
+        "properties": {
+          "state": {"enum": ["blocked", "not_run", "passed", "failed", "timed_out", "cancelled"]},
+          "required_tools": {"type": "array", "items": {"type": "string"}},
+          "missing_tools": {"type": "array", "items": {"type": "string"}},
+          "evidence": {"type": "string"},
+          "artifacts": {"type": "array", "items": {"type": "object", "required": ["path", "bytes", "sha256"]}}
+        }
+      }
+    },
+    "path_case": {"enum": ["ordinary", "spaces", "unicode-spaces"]},
+    "fixture_sha256": {"type": "object", "additionalProperties": {"type": "string", "pattern": "^[a-f0-9]{64}$"}},
+    "smoke_passed": {"type": "boolean"}
+  }
+}

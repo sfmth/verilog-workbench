@@ -1,0 +1,41 @@
+{
+  "schema": 1,
+  "observed_date": "2026-10-18",
+  "target": "linux-x86_64",
+  "runtime_version": "3.12.15",
+  "pinned_runtime_sha256": "5d546fc004fc2435fa142eb8f42ed8de5eb4725963dc22f7e6671014a80eb560",
+  "relocated_path_spaces": true,
+  "runtime_prefix_matches_bundle": true,
+  "system_python_on_path": false,
+  "python_environment_poisoned": true,
+  "imports": [
+    "ssl",
+    "sqlite3",
+    "zlib"
+  ],
+  "cli_version": "vwb.py 0.2.0",
+  "health": {
+    "status": "ok",
+    "protocol": 1,
+    "version": "0.1.0"
+  },
+  "pairing_succeeded": true,
+  "project_inventory": {
+    "files": [
+      {
+        "path": "src/top.v",
+        "size": 55
+      }
+    ],
+    "truncated": false
+  },
+  "bundled_vwb_list_job": {
+    "status": "passed",
+    "returncode": 0,
+    "top_module_discovered": true
+  },
+  "limitations": [
+    "Linux x86-64 execution only; other five target bundles await native CI",
+    "Native runtime/API proof; browser permissions and hardware programming are separate gates"
+  ]
+}

@@ -1,0 +1,51 @@
+{
+  "schema": 1,
+  "provider": "astral-sh/python-build-standalone",
+  "python_version": "3.12.15",
+  "release": "20261013",
+  "source": "https://github.com/astral-sh/python-build-standalone/releases/tag/20261013",
+  "targets": {
+    "linux-x86_64": {
+      "triple": "x86_64-unknown-linux-gnu",
+      "url": "https://github.com/astral-sh/python-build-standalone/releases/download/20261013/cpython-3.12.15%2B20261013-x86_64-unknown-linux-gnu-install_only.tar.gz",
+      "sha256": "5d546fc004fc2435fa142eb8f42ed8de5eb4725963dc22f7e6671014a80eb560",
+      "size": 66983838,
+      "python": "bin/python3"
+    },
+    "linux-arm64": {
+      "triple": "aarch64-unknown-linux-gnu",
+      "url": "https://github.com/astral-sh/python-build-standalone/releases/download/20261013/cpython-3.12.15%2B20261013-aarch64-unknown-linux-gnu-install_only.tar.gz",
+      "sha256": "34a43010cc05982d8b5debbad7d09f7b1200117ebf018f7acfd656895e408205",
+      "size": 52391962,
+      "python": "bin/python3"
+    },
+    "macos-x86_64": {
+      "triple": "x86_64-apple-darwin",
+      "url": "https://github.com/astral-sh/python-build-standalone/releases/download/20261013/cpython-3.12.15%2B20261013-x86_64-apple-darwin-install_only.tar.gz",
+      "sha256": "9686ddd8639b855905447ea4a16eb54a804a9ef12afbe7c9ecb1412d9c1fbc98",
+      "size": 24892063,
+      "python": "bin/python3"
+    },
+    "macos-arm64": {
+      "triple": "aarch64-apple-darwin",
+      "url": "https://github.com/astral-sh/python-build-standalone/releases/download/20261013/cpython-3.12.15%2B20261013-aarch64-apple-darwin-install_only.tar.gz",
+      "sha256": "ba32036ad8f4c434d97a1ee7feef8b7edc0fac16777639b97e39c74a108e4440",
+      "size": 25180390,
+      "python": "bin/python3"
+    },
+    "windows-x86_64": {
+      "triple": "x86_64-pc-windows-msvc",
+      "url": "https://github.com/astral-sh/python-build-standalone/releases/download/20261013/cpython-3.12.15%2B20261013-x86_64-pc-windows-msvc-install_only.tar.gz",
+      "sha256": "bbc902d4d187ac4914915bf538196a064b49109a33a104965b5164ced5b80a1e",
+      "size": 46390009,
+      "python": "python.exe"
+    },
+    "windows-arm64": {
+      "triple": "aarch64-pc-windows-msvc",
+      "url": "https://github.com/astral-sh/python-build-standalone/releases/download/20261013/cpython-3.12.15%2B20261013-aarch64-pc-windows-msvc-install_only.tar.gz",
+      "sha256": "5a2aa29c73e72b512279bfc3f795b51dc6ae09b8fb7cea801459f49896d3bac6",
+      "size": 43627804,
+      "python": "python.exe"
+    }
+  }
+}

@@ -1047,7 +1047,8 @@ class TestDiscoveryTests(unittest.TestCase):
 
             spec = workbench.specs_for(["\\odd.name"], "verilog", None, None)[0]
             content = spec.path.read_text(encoding="utf-8")
-            self.assertEqual(spec.top, f"test_{vwb.python_identifier_component('\\odd.name')}")
+            escaped_top = vwb.python_identifier_component("\\odd.name")
+            self.assertEqual(spec.top, f"test_{escaped_top}")
             self.assertIn("  \\odd.name  dut (", content)
             self.assertIn("logic \\clk.in ;", content)
 

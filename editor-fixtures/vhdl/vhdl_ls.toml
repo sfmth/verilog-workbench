@@ -1,0 +1,2 @@
+[libraries]
+work.files = ["helpers.vhd", "top.vhd", "other.vhd"]

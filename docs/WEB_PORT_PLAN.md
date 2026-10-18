@@ -1,8 +1,11 @@
 # VWB website port plan
 
-Status: initial product requirements confirmed, including CPU compatibility,
-advanced editing and launch boards. Toolchain and language-service feasibility
-remain engineering work. No implementation has started.
+Status: product requirements are confirmed and M0 implementation is in place.
+The native companion, protocol, runtime packaging, process adapter, toolchain
+and editor probes, connection proof UI, and six-target CI route now exist.
+Local Linux evidence is recorded; the full M0 exit gate remains open for the
+unverified platform/browser/install/hardware cells and documented blockers.
+See [M0 implementation and evidence status](M0_STATUS.md).
 
 Started: 2026-10-17 (America/Los_Angeles).
 Latest owner decisions: 2026-10-18 (America/Los_Angeles).
@@ -44,15 +47,19 @@ not satisfy the requested first usable release until all required workflows
 work on the agreed platform/board matrix. No required feature is deferred
 merely because browser-only execution is difficult.
 
-This commit adds planning documentation only. It does not implement the app,
-change Pages settings, publish a site, or replace the CLI. Existing source,
-tests, and command behavior remain the compatibility baseline for future work.
+This branch now contains the M0 engineering foundation and local feasibility
+evidence alongside this plan. It does not yet provide the complete editor
+website or certify the requested six-platform release. Existing CLI behavior
+remains the compatibility baseline; narrow process and formal-path fixes are
+covered by regression checks. Public Pages publication remains a separate gate.
 
-## What the repository contains today
+## Inspected CLI baseline
 
-The application is a 5,753-line Python CLI in [vwb.py](../vwb.py), version 0.2.0.
-No existing website, API server, or Pages deployment workflow was found on the
-inspected baseline. The remote branch inventory contained only `master`.
+At the start of planning, the application was a 5,753-line Python CLI in
+[vwb.py](../vwb.py), version 0.2.0. No existing website, API server, or Pages
+deployment workflow was found on that inspected baseline; the remote branch
+inventory contained only `master`. The table below describes that reusable
+baseline, not the new M0 components summarized in [M0_STATUS.md](M0_STATUS.md).
 
 | Existing component | Role | Implication for the website |
 | --- | --- | --- |
@@ -283,6 +290,9 @@ decisions when they arise.
 
 ### M0 — Prove native execution on the confirmed support matrix
 
+Current evidence: [M0_STATUS.md](M0_STATUS.md). Implementation and local Linux
+proofs exist; this milestone's full matrix exit gate is **not yet passed**.
+
 - Pin minimum OS versions and tool/runtime routes against the now-confirmed
   compatibility and board requirements.
   Preserve the confirmed native/no-Docker/no-WSL, local-folder, six-target scope.
@@ -388,13 +398,18 @@ tool/runtime routes, semantic editor services, real board USB access, and
 browser-to-loopback connectivity. Large waveforms, tool download
 size, storage limits and UI/CLI discovery drift also need measurement.
 
-**Next action:** begin the M0 protocol/capability definition and native
-runtime/editor-service feasibility work below. All required features, six launch targets, ordinary
-local projects and native installation without Docker/WSL remain release gates.
+**Next action:** close the M0 platform/browser/install/hardware evidence gaps,
+formal custom-build whitespace failure and supplemental GHDL routes described
+in [M0_STATUS.md](M0_STATUS.md), and integrate the proven adapters into the M1
+workspace. All required features, six launch targets, ordinary local projects
+and native installation without Docker/WSL remain release gates.
 
 ## Concrete M0 task breakdown
 
-These tasks are planned work; none is implemented or verified yet.
+These are the original M0 completion conditions. The
+[current outcome and gate table](M0_STATUS.md) distinguishes implemented local
+proofs from unrun, blocked and incomplete matrix cells; it does not mark the
+entire milestone complete.
 
 | ID | Task | Reviewable evidence / completion condition |
 | --- | --- | --- |

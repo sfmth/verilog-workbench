@@ -1,0 +1,213 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sfmth.github.io/verilog-workbench/protocol/companion-v1.schema.json",
+  "title": "VWB companion protocol 1 JSON payloads",
+  "description": "Reference schema for named request/response bodies. The stdlib HTTP server performs its own runtime checks; it does not load or automatically validate against this schema. HTTP headers, filesystem confinement, UTF-8 byte limits, revision consistency, and trust checks remain runtime requirements. Select the endpoint-specific $defs entry when validating a body.",
+  "anyOf": [
+    {"$ref": "#/$defs/readyEvent"},
+    {"$ref": "#/$defs/healthResponse"},
+    {"$ref": "#/$defs/pairRequest"},
+    {"$ref": "#/$defs/pairResponse"},
+    {"$ref": "#/$defs/capabilitiesResponse"},
+    {"$ref": "#/$defs/inventoryResponse"},
+    {"$ref": "#/$defs/fileReadResponse"},
+    {"$ref": "#/$defs/fileSaveRequest"},
+    {"$ref": "#/$defs/fileSaveResponse"},
+    {"$ref": "#/$defs/jobRequest"},
+    {"$ref": "#/$defs/jobResponse"},
+    {"$ref": "#/$defs/cancelRequest"},
+    {"$ref": "#/$defs/errorResponse"}
+  ],
+  "$defs": {
+    "protocol": {"type": "integer", "const": 1},
+    "revision": {"type": "string", "minLength": 64, "maxLength": 64, "pattern": "^[0-9a-f]{64}$"},
+    "path": {
+      "type": "string", "minLength": 1, "maxLength": 1024,
+      "description": "A project-relative POSIX path. Runtime checks reject absolute paths, traversal, Git metadata, links/reparse points, Windows device names, colon/backslash/control characters, trailing dots/spaces, and targets outside the launch grant. Root itself is accepted only for source/test directory settings."
+    },
+    "identifier": {"type": "string", "maxLength": 128, "pattern": "^[A-Za-z_][A-Za-z0-9_$]*(?![\\s\\S])"},
+    "modules": {"type": "array", "maxItems": 32, "items": {"$ref": "#/$defs/identifier"}},
+    "command": {"enum": ["list", "doctor", "test", "lint", "synth", "formal", "fpga"]},
+    "projectSummary": {
+      "type": "object", "additionalProperties": false,
+      "required": ["name", "src_dir", "test_dir", "build_dir"],
+      "properties": {
+        "name": {"type": "string"},
+        "src_dir": {"$ref": "#/$defs/path"},
+        "test_dir": {"$ref": "#/$defs/path"},
+        "build_dir": {"$ref": "#/$defs/path"}
+      }
+    },
+    "readyEvent": {
+      "type": "object", "additionalProperties": false,
+      "required": ["event", "url", "pairing_code", "expires_in"],
+      "properties": {
+        "event": {"const": "ready"},
+        "url": {"type": "string", "pattern": "^http://127\\.0\\.0\\.1:[0-9]+$"},
+        "pairing_code": {"type": "string", "minLength": 1},
+        "expires_in": {"const": 300}
+      },
+      "description": "Local CLI stdout only. Not an HTTP response; pairing_code must not be shared or persisted in frontend storage."
+    },
+    "healthResponse": {
+      "type": "object", "additionalProperties": false,
+      "required": ["status", "protocol", "version"],
+      "properties": {"status": {"const": "ok"}, "protocol": {"$ref": "#/$defs/protocol"}, "version": {"type": "string"}}
+    },
+    "pairRequest": {
+      "type": "object", "additionalProperties": false, "required": ["code"],
+      "properties": {"code": {"type": "string"}}
+    },
+    "pairResponse": {
+      "type": "object", "additionalProperties": false,
+      "required": ["token", "project", "protocol"],
+      "properties": {
+        "token": {"type": "string", "minLength": 1, "description": "Secret bearer credential valid for the current native process lifetime."},
+        "project": {"$ref": "#/$defs/projectSummary"},
+        "protocol": {"$ref": "#/$defs/protocol"}
+      }
+    },
+    "toolchainReport": {
+      "type": "object",
+      "required": ["schema_version", "generated_at", "mode", "platform", "required_targets", "runtime", "tools", "workflows"],
+      "properties": {
+        "schema_version": {"const": "vwb.toolchains/1"},
+        "generated_at": {"type": "string", "format": "date-time"},
+        "mode": {"const": "discovery"},
+        "platform": {"type": "object"},
+        "required_targets": {"type": "array", "items": {"type": "string"}},
+        "runtime": {"type": "object"},
+        "tools": {"type": "object"},
+        "workflows": {"type": "object"}
+      },
+      "description": "Native tool discovery metadata from companion.toolchains. Nested details may grow. available/version-reported is not a successful workflow probe or supported-platform claim."
+    },
+    "capabilitiesResponse": {
+      "type": "object", "additionalProperties": false,
+      "required": ["protocol", "project", "commands", "toolchains", "limits", "execution"],
+      "properties": {
+        "protocol": {"$ref": "#/$defs/protocol"},
+        "project": {"$ref": "#/$defs/projectSummary"},
+        "commands": {"type": "array", "uniqueItems": true, "minItems": 7, "maxItems": 7, "items": {"$ref": "#/$defs/command"}},
+        "toolchains": {"$ref": "#/$defs/toolchainReport"},
+        "limits": {
+          "type": "object", "additionalProperties": false,
+          "required": ["file_bytes", "request_bytes", "job_seconds"],
+          "properties": {"file_bytes": {"const": 2097152}, "request_bytes": {"const": 3145728}, "job_seconds": {"const": 300}}
+        },
+        "execution": {"const": "trusted-local-project"}
+      }
+    },
+    "inventoryResponse": {
+      "type": "object", "additionalProperties": false, "required": ["files", "truncated"],
+      "properties": {
+        "files": {
+          "type": "array", "maxItems": 10000,
+          "items": {
+            "type": "object", "additionalProperties": false, "required": ["path", "size"],
+            "properties": {"path": {"$ref": "#/$defs/path"}, "size": {"type": "integer", "minimum": 0}}
+          }
+        },
+        "truncated": {"type": "boolean", "description": "True when the inventory limit was reached; no complete-inventory claim is made."}
+      },
+      "description": "Shared shape for project files and generated artifacts. Artifact paths remain relative to the project and include the build-directory prefix."
+    },
+    "fileReadResponse": {
+      "type": "object", "additionalProperties": false,
+      "required": ["path", "content", "revision", "encoding"],
+      "properties": {
+        "path": {"$ref": "#/$defs/path"},
+        "content": {"type": "string", "description": "Decoded UTF-8 from at most 2 MiB of file bytes; newlines and BOM are not normalized by the API."},
+        "revision": {"$ref": "#/$defs/revision"},
+        "encoding": {"const": "utf-8"}
+      }
+    },
+    "fileSaveRequest": {
+      "type": "object", "additionalProperties": false, "required": ["path", "content", "revision"],
+      "properties": {
+        "path": {"$ref": "#/$defs/path"},
+        "content": {"type": "string", "description": "At most 2 MiB when UTF-8 encoded; JSON transport body remains at most 3 MiB."},
+        "revision": {"anyOf": [{"$ref": "#/$defs/revision"}, {"type": "null"}], "description": "Last read disk revision; null means create-if-absent, never force overwrite."}
+      }
+    },
+    "fileSaveResponse": {
+      "type": "object", "additionalProperties": false, "required": ["path", "revision", "size"],
+      "properties": {"path": {"$ref": "#/$defs/path"}, "revision": {"$ref": "#/$defs/revision"}, "size": {"type": "integer", "minimum": 0, "maximum": 2097152}}
+    },
+    "emptyOptions": {"type": "object", "additionalProperties": false},
+    "testOptions": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "modules": {"$ref": "#/$defs/modules"},
+        "test_language": {"enum": ["auto", "cocotb", "verilog", "vhdl"]},
+        "waves": {"type": "boolean"}, "wave_format": {"enum": ["vcd", "fst"]},
+        "seed": {"type": "integer", "minimum": 0, "maximum": 4294967295}
+      }
+    },
+    "lintOptions": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "modules": {"$ref": "#/$defs/modules"}, "all": {"type": "boolean"},
+        "linters": {"type": "array", "maxItems": 6, "items": {"enum": ["all", "iverilog", "verilator", "yosys", "verible", "ghdl"]}}
+      }
+    },
+    "synthOptions": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "module": {"$ref": "#/$defs/identifier"}, "format": {"enum": ["json", "svg", "png", "dot"]},
+        "full": {"type": "boolean"}, "flatten": {"type": "boolean"}, "schematic": {"type": "boolean"}
+      }
+    },
+    "formalOptions": {
+      "type": "object", "additionalProperties": false,
+      "properties": {"config": {"allOf": [{"$ref": "#/$defs/path"}, {"pattern": "\\.sby$"}], "description": "Must name an existing project file; native .sby content is trusted executable tool configuration."}}
+    },
+    "fpgaOptions": {
+      "type": "object", "additionalProperties": false, "required": ["board"],
+      "properties": {
+        "module": {"$ref": "#/$defs/identifier"}, "board": {"enum": ["tangnano9k", "icebreaker"]},
+        "stage": {"enum": ["synth", "pnr", "pack", "flash"]}, "program": {"type": "boolean"},
+        "constraints": {"allOf": [{"$ref": "#/$defs/path"}, {"pattern": "\\.(pcf|cst)$"}], "description": "Must name an existing project file."}
+      },
+      "allOf": [
+        {"if": {"required": ["stage"], "properties": {"stage": {"const": "flash"}}}, "then": {"required": ["program"], "properties": {"program": {"const": true}}}},
+        {"if": {"required": ["program"], "properties": {"program": {"const": true}}}, "then": {"required": ["stage"], "properties": {"stage": {"const": "flash"}}}}
+      ]
+    },
+    "jobRequest": {
+      "type": "object", "additionalProperties": false, "required": ["command"],
+      "properties": {
+        "command": {"$ref": "#/$defs/command"}, "options": {"type": "object"},
+        "timeout": {"type": "integer", "minimum": 1, "maximum": 300, "default": 300}
+      },
+      "allOf": [
+        {"if": {"properties": {"command": {"enum": ["list", "doctor"]}}}, "then": {"properties": {"options": {"$ref": "#/$defs/emptyOptions"}}}},
+        {"if": {"properties": {"command": {"const": "test"}}}, "then": {"properties": {"options": {"$ref": "#/$defs/testOptions"}}}},
+        {"if": {"properties": {"command": {"const": "lint"}}}, "then": {"properties": {"options": {"$ref": "#/$defs/lintOptions"}}}},
+        {"if": {"properties": {"command": {"const": "synth"}}}, "then": {"properties": {"options": {"$ref": "#/$defs/synthOptions"}}}},
+        {"if": {"properties": {"command": {"const": "formal"}}}, "then": {"properties": {"options": {"$ref": "#/$defs/formalOptions"}}}},
+        {"if": {"properties": {"command": {"const": "fpga"}}}, "then": {"required": ["options"], "properties": {"options": {"$ref": "#/$defs/fpgaOptions"}}}}
+      ]
+    },
+    "jobResponse": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "command", "status", "returncode", "stdout", "stderr", "source_revision", "source_revision_after", "stale"],
+      "properties": {
+        "id": {"type": "string", "minLength": 24, "maxLength": 24, "pattern": "^[0-9a-f]{24}$"},
+        "command": {"$ref": "#/$defs/command"},
+        "status": {"enum": ["running", "passed", "failed", "cancelled", "timed_out"]},
+        "returncode": {"type": ["integer", "null"]}, "stdout": {"type": "string"}, "stderr": {"type": "string"},
+        "source_revision": {"$ref": "#/$defs/revision"},
+        "source_revision_after": {"anyOf": [{"$ref": "#/$defs/revision"}, {"type": "null"}]},
+        "stale": {"type": "boolean", "description": "A changed or unreadable final source snapshot marks a finished native result stale; this does not freeze input while running."},
+        "stdout_truncated": {"type": "boolean"}, "stderr_truncated": {"type": "boolean"},
+        "source_snapshot_error": {"type": "string"}
+      }
+    },
+    "cancelRequest": {"type": "object", "additionalProperties": false},
+    "errorResponse": {
+      "type": "object", "additionalProperties": false, "required": ["error"],
+      "properties": {"error": {"type": "string"}}
+    }
+  }
+}

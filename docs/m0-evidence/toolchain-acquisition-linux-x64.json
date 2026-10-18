@@ -1,0 +1,32 @@
+{
+  "schema_version": "vwb.toolchain-acquisition/1",
+  "state": "acquired",
+  "target": "linux-x64",
+  "suitePath": "/workspace/scratch/5224b9a4a425/managed-toolchains/oss-cad-suite-2026-10-18-linux-x64/oss-cad-suite",
+  "archive": {
+    "release": "2026-10-18",
+    "archive": "oss-cad-suite-linux-x64-20261018.tgz",
+    "sha256": "639c8c0366d74dc56201729c9907bf2d8281db7f18bb025abe2e4f3f2ebaa24e",
+    "size_bytes": 748315612
+  },
+  "binaryArchitecture": "x64",
+  "compatibility": "none",
+  "workflowSupport": "not-tested",
+  "blockers": [
+    "Clean native installation and Arch/Manjaro are not verified",
+    "Physical board programming has not been performed",
+    "Pinned SBY still fails if the relative workdir itself contains whitespace (for example configured build directory \"build files\")"
+  ],
+  "environment": {
+    "PATH": "/workspace/scratch/5224b9a4a425/managed-toolchains/oss-cad-suite-2026-10-18-linux-x64/oss-cad-suite/bin:/workspace/scratch/5224b9a4a425/managed-toolchains/oss-cad-suite-2026-10-18-linux-x64/oss-cad-suite/py3bin:/root/.codex/tmp/arg0/codex-arg0XzGdDI:/opt/codex/codex-path:/opt/codex/runtimes/codex-primary-runtime/dependencies/bin/override:/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin:/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin:/opt/codex/runtimes/codex-primary-runtime/dependencies/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/codex/runtimes/codex-primary-runtime/dependencies/bin/fallback",
+    "VIRTUAL_ENV": "/workspace/scratch/5224b9a4a425/managed-toolchains/oss-cad-suite-2026-10-18-linux-x64/oss-cad-suite",
+    "VERILATOR_ROOT": "/workspace/scratch/5224b9a4a425/managed-toolchains/oss-cad-suite-2026-10-18-linux-x64/oss-cad-suite/share/verilator",
+    "GHDL_PREFIX": "/workspace/scratch/5224b9a4a425/managed-toolchains/oss-cad-suite-2026-10-18-linux-x64/oss-cad-suite/lib/ghdl"
+  },
+  "probe": {
+    "path": "/workspace/scratch/5224b9a4a425/verilog-workbench/docs/m0-evidence/toolchain-acquired-probe-linux-x64.json",
+    "returncode": 0,
+    "state": "passed",
+    "log_excerpt": ""
+  }
+}

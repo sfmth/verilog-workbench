@@ -1,0 +1,13 @@
+[options]
+mode prove
+depth 2
+
+[engines]
+smtbmc z3
+
+[script]
+read -formal bad.sv
+prep -top m0_formal
+
+[files]
+bad.sv

@@ -2,6 +2,9 @@ name: CI
 
 on:
   push:
+    # The web port has a dedicated native six-platform M0 workflow. Keep the
+    # complete distro/Docker matrix available on mainline, PRs and manually.
+    branches-ignore: [web-port-plan]
   pull_request:
   workflow_dispatch:
 

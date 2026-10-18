@@ -1,0 +1,316 @@
+"""Native tool execution with owned process trees and cancellable jobs.
+
+No shell is involved. POSIX jobs have their own process group. Windows jobs
+start suspended, enter a kill-on-close Job Object, then resume: a fast launcher
+cannot spawn unowned children between process creation and job assignment.
+"""
+
+from __future__ import annotations
+
+import os
+import signal
+import subprocess
+import threading
+import time
+from pathlib import Path
+from typing import Mapping, Sequence
+
+
+class _WindowsJob:
+    """Windows 10+ containment using documented Win32 calls, without pywin32."""
+
+    def __init__(self) -> None:
+        import ctypes
+        from ctypes import wintypes
+
+        self.ctypes = ctypes
+        self.api = ctypes.WinDLL("kernel32", use_last_error=True)
+        pointer = ctypes.c_void_p
+        dword = wintypes.DWORD
+        size = ctypes.c_size_t
+
+        class BasicLimits(ctypes.Structure):
+            _fields_ = [
+                ("PerProcessUserTimeLimit", ctypes.c_int64),
+                ("PerJobUserTimeLimit", ctypes.c_int64),
+                ("LimitFlags", dword),
+                ("MinimumWorkingSetSize", size),
+                ("MaximumWorkingSetSize", size),
+                ("ActiveProcessLimit", dword),
+                ("Affinity", size),
+                ("PriorityClass", dword),
+                ("SchedulingClass", dword),
+            ]
+
+        class IoCounters(ctypes.Structure):
+            _fields_ = [(name, ctypes.c_uint64) for name in (
+                "ReadOperationCount", "WriteOperationCount", "OtherOperationCount",
+                "ReadTransferCount", "WriteTransferCount", "OtherTransferCount",
+            )]
+
+        class ExtendedLimits(ctypes.Structure):
+            _fields_ = [
+                ("BasicLimitInformation", BasicLimits),
+                ("IoInfo", IoCounters),
+                ("ProcessMemoryLimit", size),
+                ("JobMemoryLimit", size),
+                ("PeakProcessMemoryUsed", size),
+                ("PeakJobMemoryUsed", size),
+            ]
+
+        class ThreadEntry(ctypes.Structure):
+            _fields_ = [
+                ("dwSize", dword), ("cntUsage", dword),
+                ("th32ThreadID", dword), ("th32OwnerProcessID", dword),
+                ("tpBasePri", wintypes.LONG), ("tpDeltaPri", wintypes.LONG),
+                ("dwFlags", dword),
+            ]
+
+        self.ThreadEntry = ThreadEntry
+        signatures = {
+            "CreateJobObjectW": ([pointer, wintypes.LPCWSTR], wintypes.HANDLE),
+            "SetInformationJobObject": ([wintypes.HANDLE, ctypes.c_int, pointer, dword], wintypes.BOOL),
+            "AssignProcessToJobObject": ([wintypes.HANDLE, wintypes.HANDLE], wintypes.BOOL),
+            "TerminateJobObject": ([wintypes.HANDLE, wintypes.UINT], wintypes.BOOL),
+            "OpenProcess": ([dword, wintypes.BOOL, dword], wintypes.HANDLE),
+            "CreateToolhelp32Snapshot": ([dword, dword], wintypes.HANDLE),
+            "Thread32First": ([wintypes.HANDLE, ctypes.POINTER(ThreadEntry)], wintypes.BOOL),
+            "Thread32Next": ([wintypes.HANDLE, ctypes.POINTER(ThreadEntry)], wintypes.BOOL),
+            "OpenThread": ([dword, wintypes.BOOL, dword], wintypes.HANDLE),
+            "ResumeThread": ([wintypes.HANDLE], dword),
+            "CloseHandle": ([wintypes.HANDLE], wintypes.BOOL),
+        }
+        for name, (arguments, result) in signatures.items():
+            function = getattr(self.api, name)
+            function.argtypes = arguments
+            function.restype = result
+
+        self.handle = self.api.CreateJobObjectW(None, None)
+        if not self.handle:
+            raise ctypes.WinError(ctypes.get_last_error())
+        limits = ExtendedLimits()
+        limits.BasicLimitInformation.LimitFlags = 0x2000  # KILL_ON_JOB_CLOSE
+        if not self.api.SetInformationJobObject(
+            self.handle, 9, ctypes.byref(limits), ctypes.sizeof(limits)
+        ):
+            error = ctypes.WinError(ctypes.get_last_error())
+            self.close()
+            raise error
+
+    def assign_and_resume(self, process: subprocess.Popen) -> None:
+        ctypes = self.ctypes
+        # Assignment needs SET_QUOTA | TERMINATE. Open our own handle rather
+        # than depending on CPython's private Popen handle representation.
+        handle = self.api.OpenProcess(0x0100 | 0x0001, False, process.pid)
+        if not handle:
+            raise ctypes.WinError(ctypes.get_last_error())
+        try:
+            if not self.api.AssignProcessToJobObject(self.handle, handle):
+                raise ctypes.WinError(ctypes.get_last_error())
+        finally:
+            self.api.CloseHandle(handle)
+
+        # Popen closes the initial thread handle. A suspended new process has
+        # one initial thread, which we reopen through the documented snapshot
+        # API before resuming it. No application code has run yet.
+        snapshot = self.api.CreateToolhelp32Snapshot(0x00000004, 0)
+        if snapshot == ctypes.c_void_p(-1).value:
+            raise ctypes.WinError(ctypes.get_last_error())
+        try:
+            entry = self.ThreadEntry()
+            entry.dwSize = ctypes.sizeof(entry)
+            present = self.api.Thread32First(snapshot, ctypes.byref(entry))
+            while present:
+                if entry.th32OwnerProcessID == process.pid:
+                    thread = self.api.OpenThread(0x0002, False, entry.th32ThreadID)
+                    if not thread:
+                        raise ctypes.WinError(ctypes.get_last_error())
+                    try:
+                        if self.api.ResumeThread(thread) == 0xFFFFFFFF:
+                            raise ctypes.WinError(ctypes.get_last_error())
+                    finally:
+                        self.api.CloseHandle(thread)
+                    return
+                entry.dwSize = ctypes.sizeof(entry)
+                present = self.api.Thread32Next(snapshot, ctypes.byref(entry))
+            raise OSError("could not find the suspended tool's initial thread")
+        finally:
+            self.api.CloseHandle(snapshot)
+
+    def terminate(self) -> None:
+        if self.handle and not self.api.TerminateJobObject(self.handle, 130):
+            raise self.ctypes.WinError(self.ctypes.get_last_error())
+
+    def close(self) -> None:
+        if self.handle:
+            self.api.CloseHandle(self.handle)
+            self.handle = None
+
+
+class _Output:
+    def __init__(self, stream, limit: int | None) -> None:
+        self.stream = stream
+        self.limit = limit
+        self.buffer = bytearray()
+        self.truncated = False
+        self.thread = threading.Thread(target=self._drain, daemon=True)
+        self.thread.start()
+
+    def _drain(self) -> None:
+        try:
+            while True:
+                chunk = self.stream.read(65536)
+                if not chunk:
+                    return
+                self.buffer.extend(chunk)
+                if self.limit is not None and len(self.buffer) > self.limit:
+                    del self.buffer[:len(self.buffer) - self.limit]
+                    self.truncated = True
+        finally:
+            self.stream.close()
+
+    def text(self) -> str:
+        # Match subprocess text-mode universal newlines on every host.
+        return self.buffer.decode("utf-8", errors="replace").replace("\r\n", "\n").replace("\r", "\n")
+
+
+def _terminate_tree(
+    process: subprocess.Popen, job: _WindowsJob | None, grace: float = 0.2
+) -> None:
+    if job is not None:
+        job.terminate()
+        process.wait()
+        return
+    try:
+        os.killpg(process.pid, signal.SIGTERM)
+    except ProcessLookupError:
+        pass
+    try:
+        process.wait(timeout=grace)
+    except subprocess.TimeoutExpired:
+        pass
+    # The leader can exit while a descendant ignores TERM and retains a pipe.
+    # Always kill the remaining group, even if waiting for the leader succeeded.
+    try:
+        os.killpg(process.pid, signal.SIGKILL)
+    except ProcessLookupError:
+        pass
+    process.wait()
+
+
+def run_process(
+    argv: Sequence[str | Path],
+    *,
+    cwd: str | Path | None = None,
+    env: Mapping[str, str] | None = None,
+    capture: bool = True,
+    timeout: float | None = None,
+    cancel_event: threading.Event | None = None,
+    max_output_bytes: int | None = None,
+    termination_grace: float = 1.0,
+) -> subprocess.CompletedProcess[str]:
+    """Run an argv without a shell; timeout=124 and cancellation=130.
+
+    ``cancel_event`` may be set from another thread. Timeout/cancellation kills
+    descendants as well as the launcher. KeyboardInterrupt also kills the tree,
+    then propagates to the caller. Native launch errors propagate as OSError.
+    Captured output is UTF-8 with replacement for malformed bytes. Optionally
+    retain only the last ``max_output_bytes`` bytes of each output stream while
+    draining, so a chatty browser job cannot consume unbounded capture memory.
+    ``termination_grace`` gives a cooperative wrapper time to clean its own
+    native-tool sessions before the parent group receives SIGKILL. Nested VWB
+    tool runs use a shorter grace period than the outer companion job.
+
+    The CompletedProcess also has boolean ``timed_out``, ``cancelled``,
+    ``stdout_truncated`` and ``stderr_truncated`` metadata, distinguishing a
+    cancellation from a tool that itself returns 124 or 130.
+    """
+    if isinstance(argv, (str, bytes)) or not argv:
+        raise ValueError("argv must be a nonempty sequence of arguments")
+    if timeout is not None and timeout < 0:
+        raise ValueError("timeout must be nonnegative")
+    if max_output_bytes is not None and max_output_bytes < 0:
+        raise ValueError("max_output_bytes must be nonnegative")
+    if termination_grace < 0:
+        raise ValueError("termination_grace must be nonnegative")
+    arguments = [str(item) for item in argv]
+    cancelled = bool(cancel_event is not None and cancel_event.is_set())
+    timed_out = False
+    outputs: list[_Output] = []
+    process = None
+    job = None
+    returncode = 130 if cancelled else 0
+
+    try:
+        if not cancelled:
+            options = {"start_new_session": True}
+            if os.name == "nt":
+                job = _WindowsJob()
+                # CREATE_SUSPENDED | CREATE_NEW_PROCESS_GROUP. No shell and no
+                # console control handlers or third-party process utilities.
+                options = {"creationflags": 0x00000004 | 0x00000200}
+            process = subprocess.Popen(
+                arguments, cwd=cwd, env=env,
+                stdout=subprocess.PIPE if capture else None,
+                stderr=subprocess.PIPE if capture else None,
+                **options,
+            )
+            try:
+                if job is not None:
+                    job.assign_and_resume(process)
+            except BaseException:
+                # A suspended process must never survive a containment failure.
+                process.kill()
+                process.wait()
+                if process.stdout is not None:
+                    process.stdout.close()
+                    process.stderr.close()
+                raise
+            try:
+                if capture:
+                    outputs.append(_Output(process.stdout, max_output_bytes))
+                    outputs.append(_Output(process.stderr, max_output_bytes))
+                deadline = None if timeout is None else time.monotonic() + timeout
+                while True:
+                    cancelled = bool(cancel_event is not None and cancel_event.is_set())
+                    timed_out = deadline is not None and time.monotonic() >= deadline
+                    if cancelled or timed_out:
+                        _terminate_tree(process, job, termination_grace)
+                        returncode = 130 if cancelled else 124
+                        break
+                    if process.poll() is not None and not any(
+                        output.thread.is_alive() for output in outputs
+                    ):
+                        returncode = process.returncode
+                        # A successful launcher can leave children whose
+                        # stdout/stderr were redirected elsewhere. Keep job
+                        # ownership consistent with Windows kill-on-close.
+                        _terminate_tree(process, job, termination_grace)
+                        break
+                    time.sleep(0.02)
+            except BaseException:
+                _terminate_tree(process, job, termination_grace)
+                raise
+            finally:
+                for output in outputs:
+                    output.thread.join()
+                # A capture thread may fail to start (including interruption)
+                # after Popen succeeds. Close any pipe without a drain owner.
+                if capture:
+                    for stream in (process.stdout, process.stderr):
+                        if stream is not None and not stream.closed:
+                            stream.close()
+    finally:
+        if job is not None:
+            job.close()
+
+    result = subprocess.CompletedProcess(
+        arguments, returncode,
+        outputs[0].text() if outputs else ("" if capture else None),
+        outputs[1].text() if outputs else ("" if capture else None),
+    )
+    result.timed_out = timed_out and not cancelled
+    result.cancelled = cancelled
+    result.stdout_truncated = bool(outputs and outputs[0].truncated)
+    result.stderr_truncated = bool(outputs and outputs[1].truncated)
+    return result

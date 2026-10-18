@@ -1,0 +1,4 @@
+{
+  "flags": "-f verible.filelist",
+  "index": [{"dirs": ["."]}]
+}

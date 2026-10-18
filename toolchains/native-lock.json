@@ -1,0 +1,176 @@
+{
+  "schema_version": "vwb.toolchain-lock/1",
+  "checked_at": "2026-10-18",
+  "suite": {
+    "repository": "https://github.com/YosysHQ/oss-cad-suite-build",
+    "release": "2026-10-18",
+    "release_url": "https://github.com/YosysHQ/oss-cad-suite-build/releases/tag/2026-10-18",
+    "assets": {
+      "darwin-arm64": {
+        "name": "oss-cad-suite-darwin-arm64-20261018.tgz",
+        "url": "https://github.com/YosysHQ/oss-cad-suite-build/releases/download/2026-10-18/oss-cad-suite-darwin-arm64-20261018.tgz",
+        "size_bytes": 526119809,
+        "sha256": "1a8540c2b74e3f36c1a4c3ae7d67ce36d1e5af710bda61425d72a6bd98cda859",
+        "integrity_source": "GitHub release asset digest (api.github.com)",
+        "download_verified": false
+      },
+      "darwin-x64": {
+        "name": "oss-cad-suite-darwin-x64-20261018.tgz",
+        "url": "https://github.com/YosysHQ/oss-cad-suite-build/releases/download/2026-10-18/oss-cad-suite-darwin-x64-20261018.tgz",
+        "size_bytes": 508576679,
+        "sha256": "f9c700750aa4ba0a86f44b1ecf866c0e9cbdbf23f389a84ce9d298ee3432989f",
+        "integrity_source": "GitHub release asset digest (api.github.com)",
+        "download_verified": false
+      },
+      "linux-arm64": {
+        "name": "oss-cad-suite-linux-arm64-20261018.tgz",
+        "url": "https://github.com/YosysHQ/oss-cad-suite-build/releases/download/2026-10-18/oss-cad-suite-linux-arm64-20261018.tgz",
+        "size_bytes": 686685342,
+        "sha256": "7711551b5bc9c602447b799e940660b7c1dd3d2456c6635420229e4fe53fd519",
+        "integrity_source": "GitHub release asset digest (api.github.com)",
+        "download_verified": false
+      },
+      "linux-x64": {
+        "name": "oss-cad-suite-linux-x64-20261018.tgz",
+        "url": "https://github.com/YosysHQ/oss-cad-suite-build/releases/download/2026-10-18/oss-cad-suite-linux-x64-20261018.tgz",
+        "size_bytes": 748315612,
+        "sha256": "639c8c0366d74dc56201729c9907bf2d8281db7f18bb025abe2e4f3f2ebaa24e",
+        "integrity_source": "GitHub release asset digest (api.github.com)",
+        "download_verified": true
+      },
+      "windows-x64": {
+        "name": "oss-cad-suite-windows-x64-20261018.tgz",
+        "url": "https://github.com/YosysHQ/oss-cad-suite-build/releases/download/2026-10-18/oss-cad-suite-windows-x64-20261018.tgz",
+        "size_bytes": 604040523,
+        "sha256": "c9e2461fdeeee8e186d46951ef64f88fed8c59668ba5f49b4db74ebb23d9da24",
+        "integrity_source": "GitHub release asset digest (api.github.com)",
+        "download_verified": false
+      }
+    },
+    "release_tag_object": {
+      "sha": "cc0058b9e9f0a0301c0e8eb72f51f2200b637fe0",
+      "type": "commit",
+      "url": "https://api.github.com/repos/YosysHQ/oss-cad-suite-build/git/commits/cc0058b9e9f0a0301c0e8eb72f51f2200b637fe0"
+    }
+  },
+  "supplemental_candidates": {
+    "ghdl-windows-x64": {
+      "repository": "https://github.com/ghdl/ghdl",
+      "release": "v6.0.0",
+      "name": "ghdl-mcode-6.0.0-mingw64.zip",
+      "url": "https://github.com/ghdl/ghdl/releases/download/v6.0.0/ghdl-mcode-6.0.0-mingw64.zip",
+      "size_bytes": 24053403,
+      "sha256": "c1562b2a4767e34d33159b536b5e36a8a38ebdb6e7672aa9969a4f4ac2cadffe",
+      "status": "candidate-not-downloaded-or-integrated",
+      "note": "Standalone native MinGW64 simulator candidate; must prove VPI runtime compatibility, VHDL synthesis route and DLL dependencies."
+    }
+  },
+  "targets": {
+    "linux-x64": {
+      "archive_target": "linux-x64",
+      "binary_architecture": "x64",
+      "translation": "none",
+      "minimum_os": "No cross-distribution floor verified; baseline exercised Ubuntu 24.04 container; Manjaro/Arch pending",
+      "bundled_ghdl": true,
+      "status": "native-smoke-passed-development-host",
+      "evidence": [
+        "docs/m0-evidence/toolchains-linux-x64.json",
+        "docs/m0-evidence/toolchains-linux-x64-spaces.json",
+        "docs/m0-evidence/toolchains-linux-x64-unicode-spaces.json",
+        "docs/m0-evidence/formal-custom-build-path.json"
+      ],
+      "blockers": [
+        "Clean native installation and Arch/Manjaro are not verified",
+        "Physical board programming has not been performed"
+      ]
+    },
+    "windows-x64": {
+      "archive_target": "windows-x64",
+      "binary_architecture": "x64",
+      "translation": "none",
+      "minimum_os": "Windows 10 (upstream suite floor); clean installation unverified",
+      "bundled_ghdl": false,
+      "status": "blocked",
+      "blockers": [
+        "Supplemental GHDL and matching Cocotb in-process libraries not integrated or verified",
+        "Native USB drivers and clean-machine installation unverified"
+      ]
+    },
+    "darwin-arm64": {
+      "archive_target": "darwin-arm64",
+      "binary_architecture": "arm64",
+      "translation": "none",
+      "minimum_os": "macOS 13 (upstream suite floor); clean installation unverified",
+      "bundled_ghdl": true,
+      "status": "not-tested",
+      "blockers": [
+        "No physical macOS host available; signing/quarantine and device access unverified"
+      ]
+    },
+    "darwin-x64": {
+      "archive_target": "darwin-x64",
+      "binary_architecture": "x64",
+      "translation": "none",
+      "minimum_os": "macOS 13 (upstream suite floor); clean installation unverified",
+      "bundled_ghdl": false,
+      "status": "blocked",
+      "blockers": [
+        "Upstream announces impending Intel Mac suite retirement",
+        "Supplemental GHDL/Python-compatible runtime route unpinned",
+        "No physical host or USB evidence"
+      ]
+    },
+    "linux-arm64": {
+      "archive_target": "linux-arm64",
+      "binary_architecture": "arm64",
+      "translation": "none",
+      "minimum_os": "No numeric kernel/glibc floor verified; ARM64 Linux required",
+      "bundled_ghdl": false,
+      "status": "blocked",
+      "blockers": [
+        "GHDL LLVM/GCC backend native build and all runtime dependencies unpinned; mcode is x86/x64 only",
+        "No OS-provided x64 translation assumed on Linux",
+        "No physical host or USB evidence"
+      ]
+    },
+    "windows-arm64": {
+      "archive_target": "windows-x64",
+      "binary_architecture": "x64",
+      "translation": "Windows 11 built-in x64 emulation; not ARM64-native",
+      "minimum_os": "Windows 11 on ARM (Windows 10 ARM does not emulate x64)",
+      "bundled_ghdl": false,
+      "status": "blocked",
+      "blockers": [
+        "Suite has no Windows ARM64 asset; native companion/Python runtime packaging remains unverified",
+        "Supplemental x64 GHDL plus x64 Cocotb/Python runtime set must be verified under OS translation",
+        "Drivers must be ARM64-native; translated user-space tools do not establish FPGA programming support",
+        "No physical host or USB evidence"
+      ]
+    }
+  },
+  "policy": {
+    "required_targets": [
+      "linux-x64",
+      "windows-x64",
+      "darwin-arm64",
+      "darwin-x64",
+      "linux-arm64",
+      "windows-arm64"
+    ],
+    "docker_required": false,
+    "wsl_required": false,
+    "missing_tools_are_pass": false,
+    "archive_presence_proves_workflow": false,
+    "automatic_installation_implemented": false,
+    "runtime_environment": "Activate suite environment; merely adding bin can select wrong Python/Cocotb libraries.",
+    "managed_suite_acquisition_implemented": true,
+    "native_clean_machine_installation_verified": false
+  },
+  "references": [
+    "https://github.com/YosysHQ/oss-cad-suite-build/blob/main/README.md",
+    "https://api.github.com/repos/YosysHQ/oss-cad-suite-build/releases/tags/2026-10-18",
+    "https://github.com/ghdl/ghdl/releases/tag/v6.0.0",
+    "https://ghdl.github.io/ghdl/development/building/index.html",
+    "https://learn.microsoft.com/en-us/windows/arm/apps-on-arm-x86-emulation"
+  ]
+}

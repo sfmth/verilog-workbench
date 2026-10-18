@@ -13,3 +13,11 @@
 # Python
 __pycache__/
 *.py[cod]
+
+# Native development packages and probe output
+dist/
+build/
+*.egg-info/
+.m0-evidence/
+.m0-tools/
+.m0-browser/

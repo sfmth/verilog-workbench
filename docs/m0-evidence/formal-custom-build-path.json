@@ -1,0 +1,93 @@
+{
+  "schema_version": "vwb.formal-path-regression/1",
+  "platform": {
+    "target": "linux-x64",
+    "system": "linux",
+    "architecture": "x64",
+    "architecture_detection": "platform.machine",
+    "release": "6.18.55",
+    "version": "#1 SMP Wed Oct 14 19:45:18 UTC 2026",
+    "distribution": {
+      "NAME": "Ubuntu",
+      "ID": "ubuntu",
+      "PRETTY_NAME": "Ubuntu 24.04.3 LTS",
+      "VERSION_ID": "24.04",
+      "VERSION": "24.04.3 LTS (Noble Numbat)",
+      "VERSION_CODENAME": "noble",
+      "ID_LIKE": "debian",
+      "HOME_URL": "https://www.ubuntu.com/",
+      "SUPPORT_URL": "https://help.ubuntu.com/",
+      "BUG_REPORT_URL": "https://bugs.launchpad.net/ubuntu/",
+      "PRIVACY_POLICY_URL": "https://www.ubuntu.com/legal/terms-and-policies/privacy-policy",
+      "UBUNTU_CODENAME": "noble",
+      "LOGO": "ubuntu-logo"
+    }
+  },
+  "path_case": "configured-build-basename-contains-spaces-and-unicode",
+  "state": "passed",
+  "workflows": {
+    "good": {
+      "state": "passed",
+      "command": [
+        "python3",
+        "/workspace/scratch/5224b9a4a425/verilog-workbench/vwb.py",
+        "--root",
+        "/tmp/vwb-custom-formal-dnentcoj/project paths \u00b5",
+        "--build-dir",
+        "build files \u00b5",
+        "--color",
+        "never",
+        "formal",
+        "formal/good.sby"
+      ],
+      "returncode": 0,
+      "sby_status": "PASS 0 0",
+      "traces": [],
+      "generated_metadata": {
+        "schema_version": 1,
+        "configuration": "/tmp/vwb-custom-formal-dnentcoj/project paths \u00b5/formal/good.sby",
+        "configuration_cwd": "/tmp/vwb-custom-formal-dnentcoj/project paths \u00b5/formal",
+        "execution_workdir": "/tmp/vwb-custom-formal-dnentcoj/project paths \u00b5/formal/.vwb-sby-av6_jwuh",
+        "output": "/tmp/vwb-custom-formal-dnentcoj/project paths \u00b5/build files \u00b5/formal/good",
+        "relocated_results": true,
+        "note": "Logs retain historical execution paths. Rerun VWB formal to rebuild; resume from the relocated directory is not guaranteed."
+      },
+      "log_excerpt": "build files \u00b5/formal/good\n\n",
+      "log_sha256": "d0293c4073579444fbcb35b4e10893c577d6f318c9a9f6eda1dfafdbcaf853b5"
+    },
+    "bad": {
+      "state": "passed",
+      "command": [
+        "python3",
+        "/workspace/scratch/5224b9a4a425/verilog-workbench/vwb.py",
+        "--root",
+        "/tmp/vwb-custom-formal-dnentcoj/project paths \u00b5",
+        "--build-dir",
+        "build files \u00b5",
+        "--color",
+        "never",
+        "formal",
+        "formal/bad.sby"
+      ],
+      "returncode": 2,
+      "sby_status": "FAIL 2 0",
+      "traces": [
+        "engine_0/trace_induct.vcd",
+        "engine_0/trace.vcd"
+      ],
+      "generated_metadata": {
+        "schema_version": 1,
+        "configuration": "/tmp/vwb-custom-formal-dnentcoj/project paths \u00b5/formal/bad.sby",
+        "configuration_cwd": "/tmp/vwb-custom-formal-dnentcoj/project paths \u00b5/formal",
+        "execution_workdir": "/tmp/vwb-custom-formal-dnentcoj/project paths \u00b5/formal/.vwb-sby-c1wq4dsi",
+        "output": "/tmp/vwb-custom-formal-dnentcoj/project paths \u00b5/build files \u00b5/formal/bad",
+        "relocated_results": true,
+        "note": "Logs retain historical execution paths. Rerun VWB formal to rebuild; resume from the relocated directory is not guaranteed."
+      },
+      "log_excerpt": "e: ##   0:00:00  Writing trace to constraints file: engine_0/trace.smtc\nSBY 18:18:25 [.vwb-sby-c1wq4dsi] engine_0.basecase: ##   0:00:00  Writing trace to Yosys witness file: engine_0/trace.yw\nSBY 18:18:25 [.vwb-sby-c1wq4dsi] engine_0.induction: ##   0:00:00  Trying induction in step 1..\nSBY 18:18:25 [.vwb-sby-c1wq4dsi] engine_0.induction: ##   0:00:00  Trying induction in step 0..\nSBY 18:18:25 [.vwb-sby-c1wq4dsi] engine_0.induction: ##   0:00:00  Temporal induction failed!\nSBY 18:18:25 [.vwb-sby-c1wq4dsi] engine_0.basecase: ##   0:00:00  Status: failed\nSBY 18:18:25 [.vwb-sby-c1wq4dsi] engine_0.induction: ##   0:00:00  Assert failed in m0_formal: bad.sv:4.13-4.33 (_witness_.check_bad_sv_4_assert_3)\nSBY 18:18:25 [.vwb-sby-c1wq4dsi] engine_0.induction: ##   0:00:00  Writing trace to VCD file: engine_0/trace_induct.vcd\nSBY 18:18:25 [.vwb-sby-c1wq4dsi] engine_0.induction: ##   0:00:00  Writing trace to Verilog testbench: engine_0/trace_induct_tb.v\nSBY 18:18:25 [.vwb-sby-c1wq4dsi] engine_0.induction: ##   0:00:00  Writing trace to constraints file: engine_0/trace_induct.smtc\nSBY 18:18:25 [.vwb-sby-c1wq4dsi] engine_0.induction: ##   0:00:00  Writing trace to Yosys witness file: engine_0/trace_induct.yw\nSBY 18:18:25 [.vwb-sby-c1wq4dsi] engine_0.induction: ##   0:00:00  Status: failed\nSBY 18:18:25 [.vwb-sby-c1wq4dsi] engine_0.basecase: finished (returncode=1)\nSBY 18:18:25 [.vwb-sby-c1wq4dsi] engine_0.basecase: Status returned by engine for basecase: FAIL\nSBY 18:18:25 [.vwb-sby-c1wq4dsi] engine_0.induction: terminating process\nSBY 18:18:25 [.vwb-sby-c1wq4dsi] summary: Elapsed clock time [H:MM:SS (secs)]: 0:00:00 (0)\nSBY 18:18:25 [.vwb-sby-c1wq4dsi] summary: Elapsed process time [H:MM:SS (secs)]: 0:00:00 (0)\nSBY 18:18:25 [.vwb-sby-c1wq4dsi] summary: engine_0 (smtbmc z3) returned FAIL for basecase\nSBY 18:18:25 [.vwb-sby-c1wq4dsi] summary: counterexample trace [basecase]: .vwb-sby-c1wq4dsi/engine_0/trace.vcd\nSBY 18:18:25 [.vwb-sby-c1wq4dsi] summary:   failed assertion m0_formal._witness_.check_bad_sv_4_assert_3 at bad.sv:4.13-4.33\nSBY 18:18:25 [.vwb-sby-c1wq4dsi] summary: counterexample trace [induction]: .vwb-sby-c1wq4dsi/engine_0/trace_induct.vcd\nSBY 18:18:25 [.vwb-sby-c1wq4dsi] summary:   failed assertion m0_formal._witness_.check_bad_sv_4_assert_3 at bad.sv:4.13-4.33\nSBY 18:18:25 [.vwb-sby-c1wq4dsi] DONE (FAIL, rc=2)\nRun again with --verbose for complete tool output.\nerror: formal verification failed: /tmp/vwb-custom-formal-dnentcoj/project paths \u00b5/formal/bad.sby\n",
+      "log_sha256": "dcd28bc2fb072e35386b164db103aa77640b88bf61f3c13130a9f17bd7b57b80"
+    }
+  },
+  "vwb_sha256": "3866be668a0c1995a2b42a9ca22e48ef3ac1ee5dbfbc1c6bfeb75c72fe830037",
+  "implementation": "SBY executes with a unique ASCII output basename under the real configuration directory; generated output publishes to configured build folder and sources remain in place."
+}

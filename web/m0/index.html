@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self' http://127.0.0.1:* http://localhost:* http://[::1]:* https://127.0.0.1:* https://localhost:*; object-src 'none'; base-uri 'none'; frame-ancestors 'none'">
+  <title>VWB · Companion connection proof</title>
+  <link rel="stylesheet" href="style.css">
+  <script type="module" src="app.js"></script>
+</head>
+<body>
+  <header><a class="brand" href="../../">VWB<span>Verilog Workbench</span></a><span class="badge">M0 · Development proof</span></header>
+  <main>
+    <section class="intro"><p class="eyebrow">LOCAL TOOLS. BROWSER WORKSPACE.</p><h1>Connect your companion.</h1><p>This page tests pairing, project access, revision-aware saves, and real VWB jobs. The complete editor, waveform viewer, and guide come in later milestones.</p></section>
+    <div class="grid">
+      <section class="panel"><h2>1. Pair this browser</h2><p>Start the companion with your project folder and this site's origin. Copy the address and one-time code from its local startup message.</p>
+        <form id="pair-form"><label for="endpoint">Local companion address</label><input id="endpoint" type="url" value="http://127.0.0.1:8765" required autocomplete="off" spellcheck="false"><label for="code">One-time pairing code</label><input id="code" type="password" required autocomplete="off" spellcheck="false"><div class="actions"><button id="pair" type="submit">Pair companion</button><button id="forget" type="button" class="secondary">Forget session</button></div></form>
+        <p id="connection-status" role="status" aria-live="polite">Not connected</p><p class="note">The session stays in this tab's memory. Project files and tool jobs stay on your computer.</p>
+        <details><summary>Connection and permission help</summary><p>The browser may ask for access to your local companion. Allow it only for the project session you started. If access is denied, restore the site permission and retry. This proof does not require browser security flags or uploading your project.</p><p>After a companion restart, enter its new code. Pairing codes expire and can only be used once.</p></details>
+      </section>
+      <section class="panel"><h2>2. Inspect your project</h2><p id="project-summary">Pair a companion to inspect the folder authorized at startup.</p><div class="actions"><button id="files" disabled>List files</button><button id="capabilities" disabled class="secondary">Check tools</button></div><pre id="inventory" aria-live="polite">No project loaded.</pre></section>
+      <section class="panel wide"><h2>3. Read and save a file</h2><p>Use a disposable project for this development proof. Saves write the ordinary local file and reject a changed disk revision.</p><form id="read-form" class="path-form"><label for="path">Project-relative file path</label><div class="actions"><input id="path" value="src/encoder.v" autocomplete="off" spellcheck="false"><button id="read" disabled>Read file</button></div></form><label for="content">File contents</label><textarea id="content" rows="13" spellcheck="false" disabled></textarea><div class="actions"><button id="save" disabled>Save to local file</button><span id="file-status" role="status" aria-live="polite">No file loaded.</span></div></section>
+      <section class="panel wide"><h2>4. Run a real inventory job</h2><p>This bounded proof runs <code>vwb list --json</code> through the companion. Other tool workflows are exercised by the M0 probe scripts.</p><div class="actions"><button id="run" disabled>Run inventory</button><button id="cancel" disabled class="secondary">Cancel job</button></div><pre id="job-output" aria-live="polite">No job submitted.</pre></section>
+    </div>
+  </main><footer>Protocol v1 · Native companion · GitHub Pages frontend</footer>
+</body>
+</html>

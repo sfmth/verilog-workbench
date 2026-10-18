@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "verilog-workbench"
+version = "0.2.0"
+description = "Verilog Workbench CLI and native browser companion"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "GPL-2.0-only"}
+dependencies = []
+
+[project.scripts]
+vwb = "vwb:_cli_main"
+vwb-companion = "companion.__main__:main"
+
+[tool.setuptools]
+py-modules = ["vwb"]
+packages = ["companion"]

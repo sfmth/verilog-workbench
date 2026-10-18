@@ -1,0 +1,18 @@
+{
+  "schema": "vwb.native-smoke/1",
+  "target": "linux-x86_64",
+  "passed": true,
+  "runtime": "bundled interpreter under isolated -I startup",
+  "checks": [
+    "empty-cwd",
+    "poisoned-Python-environment",
+    "version",
+    "native-startup",
+    "pairing",
+    "local-folder-inventory",
+    "revision-checked-save",
+    "real-vwb-job"
+  ],
+  "toolchains_included": false,
+  "hardware_tested": false
+}

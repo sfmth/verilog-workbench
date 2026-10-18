@@ -1,0 +1,3 @@
+# Build-only iCE40 UP5K SG48 pins from validate_fpga_pack_fixture.
+set_io clock 35
+set_io led 11

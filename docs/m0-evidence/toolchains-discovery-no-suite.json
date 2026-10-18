@@ -1,0 +1,391 @@
+{
+  "schema_version": "vwb.toolchains/1",
+  "generated_at": "2026-10-18T16:00:13.697479+00:00",
+  "mode": "discovery",
+  "platform": {
+    "target": "linux-x64",
+    "system": "linux",
+    "architecture": "x64",
+    "architecture_detection": "platform.machine",
+    "release": "6.18.55",
+    "version": "#1 SMP Wed Oct 14 19:45:18 UTC 2026",
+    "distribution": {
+      "NAME": "Ubuntu",
+      "ID": "ubuntu",
+      "PRETTY_NAME": "Ubuntu 24.04.3 LTS",
+      "VERSION_ID": "24.04",
+      "VERSION": "24.04.3 LTS (Noble Numbat)",
+      "VERSION_CODENAME": "noble",
+      "ID_LIKE": "debian",
+      "HOME_URL": "https://www.ubuntu.com/",
+      "SUPPORT_URL": "https://help.ubuntu.com/",
+      "BUG_REPORT_URL": "https://bugs.launchpad.net/ubuntu/",
+      "PRIVACY_POLICY_URL": "https://www.ubuntu.com/legal/terms-and-policies/privacy-policy",
+      "UBUNTU_CODENAME": "noble",
+      "LOGO": "ubuntu-logo"
+    }
+  },
+  "required_targets": [
+    "linux-x64",
+    "windows-x64",
+    "darwin-arm64",
+    "darwin-x64",
+    "linux-arm64",
+    "windows-arm64"
+  ],
+  "runtime": {
+    "python": "3.12.14 (main, Aug 25 2026, 14:00:49) [Clang 22.1.3 ]",
+    "executable": "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+    "architecture": "x64",
+    "binary": {
+      "format": "elf",
+      "architectures": [
+        "x64"
+      ]
+    }
+  },
+  "tools": {
+    "iverilog": {
+      "state": "missing",
+      "path": null,
+      "version": null,
+      "version_state": "not_run",
+      "alternatives": [
+        "iverilog"
+      ]
+    },
+    "vvp": {
+      "state": "missing",
+      "path": null,
+      "version": null,
+      "version_state": "not_run",
+      "alternatives": [
+        "vvp"
+      ]
+    },
+    "verilator": {
+      "state": "missing",
+      "path": null,
+      "version": null,
+      "version_state": "not_run",
+      "alternatives": [
+        "verilator"
+      ]
+    },
+    "ghdl": {
+      "state": "missing",
+      "path": null,
+      "version": null,
+      "version_state": "not_run",
+      "alternatives": [
+        "ghdl"
+      ]
+    },
+    "cocotb-config": {
+      "state": "missing",
+      "path": null,
+      "version": null,
+      "version_state": "not_run",
+      "alternatives": [
+        "cocotb-config"
+      ]
+    },
+    "sv2v": {
+      "state": "missing",
+      "path": null,
+      "version": null,
+      "version_state": "not_run",
+      "alternatives": [
+        "sv2v"
+      ]
+    },
+    "yosys": {
+      "state": "missing",
+      "path": null,
+      "version": null,
+      "version_state": "not_run",
+      "alternatives": [
+        "yosys"
+      ]
+    },
+    "dot": {
+      "state": "missing",
+      "path": null,
+      "version": null,
+      "version_state": "not_run",
+      "alternatives": [
+        "dot"
+      ]
+    },
+    "netlistsvg": {
+      "state": "missing",
+      "path": null,
+      "version": null,
+      "version_state": "not_run",
+      "alternatives": [
+        "netlistsvg"
+      ]
+    },
+    "sby": {
+      "state": "missing",
+      "path": null,
+      "version": null,
+      "version_state": "not_run",
+      "alternatives": [
+        "sby"
+      ]
+    },
+    "z3": {
+      "state": "missing",
+      "path": null,
+      "version": null,
+      "version_state": "not_run",
+      "alternatives": [
+        "z3"
+      ]
+    },
+    "nextpnr-gowin": {
+      "state": "missing",
+      "path": null,
+      "version": null,
+      "version_state": "not_run",
+      "alternatives": [
+        "nextpnr-gowin",
+        "nextpnr-himbaechel-gowin",
+        "nextpnr-himbaechel"
+      ]
+    },
+    "gowin_pack": {
+      "state": "missing",
+      "path": null,
+      "version": null,
+      "version_state": "not_run",
+      "alternatives": [
+        "gowin_pack"
+      ]
+    },
+    "nextpnr-ice40": {
+      "state": "missing",
+      "path": null,
+      "version": null,
+      "version_state": "not_run",
+      "alternatives": [
+        "nextpnr-ice40"
+      ]
+    },
+    "icepack": {
+      "state": "missing",
+      "path": null,
+      "version": null,
+      "version_state": "not_run",
+      "alternatives": [
+        "icepack"
+      ]
+    },
+    "openFPGALoader": {
+      "state": "missing",
+      "path": null,
+      "version": null,
+      "version_state": "not_run",
+      "alternatives": [
+        "openFPGALoader"
+      ]
+    }
+  },
+  "workflows": {
+    "verilog_simulation": {
+      "state": "blocked",
+      "required_tools": [
+        "iverilog",
+        "vvp"
+      ],
+      "missing_tools": [
+        "iverilog",
+        "vvp"
+      ],
+      "evidence": "discovery-only"
+    },
+    "systemverilog_simulation": {
+      "state": "blocked",
+      "required_tools": [
+        "iverilog",
+        "vvp"
+      ],
+      "missing_tools": [
+        "iverilog",
+        "vvp"
+      ],
+      "evidence": "discovery-only"
+    },
+    "waveforms": {
+      "state": "blocked",
+      "required_tools": [
+        "iverilog",
+        "vvp"
+      ],
+      "missing_tools": [
+        "iverilog",
+        "vvp"
+      ],
+      "evidence": "discovery-only"
+    },
+    "cocotb_verilog": {
+      "state": "blocked",
+      "required_tools": [
+        "iverilog",
+        "vvp",
+        "cocotb-config"
+      ],
+      "missing_tools": [
+        "iverilog",
+        "vvp",
+        "cocotb-config"
+      ],
+      "evidence": "discovery-only"
+    },
+    "vhdl_simulation": {
+      "state": "blocked",
+      "required_tools": [
+        "ghdl"
+      ],
+      "missing_tools": [
+        "ghdl"
+      ],
+      "evidence": "discovery-only"
+    },
+    "cocotb_vhdl": {
+      "state": "blocked",
+      "required_tools": [
+        "ghdl",
+        "cocotb-config"
+      ],
+      "missing_tools": [
+        "ghdl",
+        "cocotb-config"
+      ],
+      "evidence": "discovery-only"
+    },
+    "lint": {
+      "state": "blocked",
+      "required_tools": [
+        "verilator"
+      ],
+      "missing_tools": [
+        "verilator"
+      ],
+      "evidence": "discovery-only"
+    },
+    "synthesis": {
+      "state": "blocked",
+      "required_tools": [
+        "yosys"
+      ],
+      "missing_tools": [
+        "yosys"
+      ],
+      "evidence": "discovery-only"
+    },
+    "schematics": {
+      "state": "blocked",
+      "required_tools": [
+        "yosys",
+        "dot"
+      ],
+      "missing_tools": [
+        "yosys",
+        "dot"
+      ],
+      "evidence": "discovery-only"
+    },
+    "vhdl_synthesis": {
+      "state": "blocked",
+      "required_tools": [
+        "ghdl",
+        "yosys"
+      ],
+      "missing_tools": [
+        "ghdl",
+        "yosys"
+      ],
+      "evidence": "discovery-only"
+    },
+    "formal_proof": {
+      "state": "blocked",
+      "required_tools": [
+        "sby",
+        "yosys",
+        "z3"
+      ],
+      "missing_tools": [
+        "sby",
+        "yosys",
+        "z3"
+      ],
+      "evidence": "discovery-only"
+    },
+    "formal_counterexample": {
+      "state": "blocked",
+      "required_tools": [
+        "sby",
+        "yosys",
+        "z3"
+      ],
+      "missing_tools": [
+        "sby",
+        "yosys",
+        "z3"
+      ],
+      "evidence": "discovery-only"
+    },
+    "fpga_tangnano9k_build": {
+      "state": "blocked",
+      "required_tools": [
+        "yosys",
+        "nextpnr-gowin",
+        "gowin_pack"
+      ],
+      "missing_tools": [
+        "yosys",
+        "nextpnr-gowin",
+        "gowin_pack"
+      ],
+      "evidence": "discovery-only"
+    },
+    "fpga_icebreaker_build": {
+      "state": "blocked",
+      "required_tools": [
+        "yosys",
+        "nextpnr-ice40",
+        "icepack"
+      ],
+      "missing_tools": [
+        "yosys",
+        "nextpnr-ice40",
+        "icepack"
+      ],
+      "evidence": "discovery-only"
+    },
+    "fpga_tangnano9k_programming": {
+      "state": "blocked",
+      "required_tools": [
+        "openFPGALoader"
+      ],
+      "missing_tools": [
+        "openFPGALoader"
+      ],
+      "evidence": "discovery-only",
+      "note": "Physical board, cable, native driver/permissions and explicit programming test required."
+    },
+    "fpga_icebreaker_programming": {
+      "state": "blocked",
+      "required_tools": [
+        "openFPGALoader"
+      ],
+      "missing_tools": [
+        "openFPGALoader"
+      ],
+      "evidence": "discovery-only",
+      "note": "Physical board, cable, native driver/permissions and explicit programming test required."
+    }
+  }
+}

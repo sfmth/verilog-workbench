@@ -678,9 +678,10 @@ class SynthesisTests(ProjectMixin, unittest.TestCase):
                         encoding="utf-8"
                     )
                 elif "-c" in items:
-                    script = Path(items[items.index("-c") + 1]).read_text(
-                        encoding="utf-8"
-                    )
+                    script_path = Path(items[items.index("-c") + 1])
+                    if not script_path.is_absolute() and cwd is not None:
+                        script_path = cwd / script_path
+                    script = script_path.read_text(encoding="utf-8")
                 for write_match in vwb.re.finditer(
                     r"write_json\s+(?:\"([^\"]+)\"|([^\s;]+))", script
                 ):
@@ -1043,7 +1044,7 @@ class SynthesisTests(ProjectMixin, unittest.TestCase):
             )
             netlist = json.loads(full_json.read_text(encoding="utf-8"))
             self.assertIn("$not$1", netlist["modules"]["dut"]["cells"])
-            self.assertRegex(render_script, r'read_json\s+"?dut\.json"?')
+            self.assertRegex(render_script, r'read_rtlil\s+"?dut\.il"?')
             self.assertRegex(render_script, r'show\s+-format\s+dot\b')
             self.assertEqual(sum(command[0] == "yosys" for command in commands), 2)
             self.assertEqual(sum(command[0] == "sfdp" for command in commands), 1)
@@ -1276,11 +1277,11 @@ class SynthesisTests(ProjectMixin, unittest.TestCase):
 
             self.assertEqual(artifact, output_dir / "dut.dot")
             self.assertEqual(len(yosys_calls), 2)
-            self.assertEqual(yosys_calls[0][1], root)
+            self.assertEqual(yosys_calls[0][1], output_dir)
             self.assertEqual(
                 yosys_calls[1], (["yosys", "-s", str(render_script)], output_dir)
             )
-            self.assertRegex(render_text, r'read_json\s+"?dut\.json"?')
+            self.assertRegex(render_text, r'read_rtlil\s+"?dut\.il"?')
             self.assertIn("-prefix dut", render_text)
             self.assertNotIn(str(output_dir), render_text)
 

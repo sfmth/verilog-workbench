@@ -1,0 +1,5 @@
+// Tang Nano 9K: existing examples/src/io.cst assignments.
+IO_LOC "clock" 52;
+IO_PORT "clock" IO_TYPE=LVCMOS33 PULL_MODE=UP;
+IO_LOC "led" 10;
+IO_PORT "led" IO_TYPE=LVCMOS33 DRIVE=8;

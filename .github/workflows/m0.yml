@@ -1,0 +1,154 @@
+name: M0 native companion
+
+on:
+  push:
+    branches: [web-port-plan]
+  pull_request:
+    paths:
+      - 'companion/**'
+      - 'packaging/**'
+      - 'protocol/**'
+      - 'scripts/**'
+      - 'tests/**'
+      - 'web/**'
+      - 'vwb.py'
+      - 'pyproject.toml'
+      - '.github/workflows/m0.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: m0-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  native:
+    name: Native ${{ matrix.target }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {target: linux-x86_64, runner: ubuntu-24.04}
+          - {target: linux-arm64, runner: ubuntu-24.04-arm}
+          - {target: windows-x86_64, runner: windows-2025}
+          - {target: windows-arm64, runner: windows-11-arm}
+          - {target: macos-arm64, runner: macos-15}
+          - {target: macos-x86_64, runner: macos-15-intel}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Companion, process, protocol, packaging and LSP unit checks
+        run: python -m unittest discover -s tests -v
+      - name: Existing VWB regression checks
+        run: python -m unittest discover -s examples/test -p "test_vwb*.py" -v
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Browser client protocol checks
+        run: node --test tests/test_web_client.mjs
+      - name: Build pinned self-contained native bundle
+        run: python scripts/build_native_bundle.py --target ${{ matrix.target }} --output-dir dist --download-runtime --archive
+      - name: Exercise native bundle with local project
+        run: python scripts/smoke_native_bundle.py dist/vwb-companion-${{ matrix.target }} --output .m0-evidence/native-${{ matrix.target }}.json
+      - name: Record available tool capabilities without claiming workflow passes
+        run: python scripts/probe_toolchain.py --output .m0-evidence/discovery-${{ matrix.target }}.json
+      - name: Upload evidence and native runtime packages
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: m0-${{ matrix.target }}
+          path: |
+            .m0-evidence/*.json
+            dist/*.zip
+            dist/*.tar.gz
+          if-no-files-found: warn
+          retention-days: 14
+
+  toolchains:
+    name: Toolchain feasibility ${{ matrix.target }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {target: linux-x64, runner: ubuntu-24.04}
+          - {target: linux-arm64, runner: ubuntu-24.04-arm}
+          - {target: windows-x64, runner: windows-2025}
+          - {target: windows-arm64, runner: windows-11-arm}
+          - {target: darwin-arm64, runner: macos-15}
+          - {target: darwin-x64, runner: macos-15-intel}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Acquire exact native package and run real HDL workflows
+        run: python scripts/acquire_toolchain.py --target ${{ matrix.target }} --directory .m0-tools --output .m0-evidence/acquisition-${{ matrix.target }}.json --probe-output .m0-evidence/workflows-${{ matrix.target }}.json --probe-work-dir .m0-evidence/toolchain-logs
+      - name: Retain passes, missing workflows, failures and native logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: m0-toolchains-${{ matrix.target }}
+          path: |
+            .m0-evidence/**/*.json
+            .m0-evidence/**/*.log
+            .m0-evidence/**/status
+          if-no-files-found: warn
+          retention-days: 14
+
+  arch-feasibility:
+    name: Arch Linux userspace toolchain feasibility
+    runs-on: ubuntu-24.04
+    container: archlinux:latest
+    timeout-minutes: 30
+    steps:
+      - name: Prepare development test host
+        run: pacman -Syu --noconfirm python git ca-certificates tar gzip
+      - uses: actions/checkout@v4
+      - name: Acquire exact suite and execute real HDL workflows on Arch
+        run: python scripts/acquire_toolchain.py --target linux-x64 --directory .m0-tools --output .m0-evidence/acquisition-arch-x64.json --probe-output .m0-evidence/workflows-arch-x64.json --probe-work-dir .m0-evidence/toolchain-logs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: m0-toolchains-arch-userspace
+          path: |
+            .m0-evidence/**/*.json
+            .m0-evidence/**/*.log
+            .m0-evidence/**/status
+          if-no-files-found: warn
+          retention-days: 14
+
+  web-source:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install pinned browser test harness
+        run: npm install --prefix .m0-browser --no-audit --no-fund playwright@1.62.1
+      - name: Install browser
+        run: .m0-browser/node_modules/.bin/playwright install --with-deps chromium
+      - name: Exercise the actual browser and native companion
+        run: node scripts/probe_browser.mjs --playwright-module ../.m0-browser/node_modules/playwright --output browser-evidence.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: m0-browser-evidence
+          path: browser-evidence.json
+          retention-days: 14
+      - uses: actions/upload-artifact@v4
+        with:
+          name: m0-pages-source
+          path: web/
+          retention-days: 14

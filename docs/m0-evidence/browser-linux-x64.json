@@ -1,0 +1,27 @@
+{
+  "schema": "vwb.browser-probe/1",
+  "recorded_at": "2026-10-18T16:12:51.111Z",
+  "local_ui": {
+    "passed": true,
+    "checks": [
+      "real-pairing",
+      "cross-origin-CORS",
+      "local-file-read",
+      "revision-save",
+      "external-conflict409",
+      "native-inventory-job",
+      "forget-session"
+    ],
+    "script_errors": []
+  },
+  "public_origin_transport": {
+    "state": "blocked",
+    "origin": "https://sfmth.github.io",
+    "error": "page.goto: net::ERR_EMPTY_RESPONSE at https://sfmth.github.io/verilog-workbench/m0/\nCall log:\n\u001b[2m  - navigating to \"https://sfmth.github.io/verilog-workbench/m0/\", waiting until \"domcontentloaded\"\u001b[22m\n"
+  },
+  "actual_pages_deployment": {
+    "state": "not_verified"
+  },
+  "hardware_tested": false,
+  "browser": "153.0.8010.0"
+}

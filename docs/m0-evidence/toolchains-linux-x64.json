@@ -1,0 +1,1630 @@
+{
+  "schema_version": "vwb.toolchains/1",
+  "generated_at": "2026-10-18T16:21:27.656483+00:00",
+  "mode": "execution",
+  "platform": {
+    "target": "linux-x64",
+    "system": "linux",
+    "architecture": "x64",
+    "architecture_detection": "platform.machine",
+    "release": "6.18.55",
+    "version": "#1 SMP Wed Oct 14 19:45:18 UTC 2026",
+    "distribution": {
+      "NAME": "Ubuntu",
+      "ID": "ubuntu",
+      "PRETTY_NAME": "Ubuntu 24.04.3 LTS",
+      "VERSION_ID": "24.04",
+      "VERSION": "24.04.3 LTS (Noble Numbat)",
+      "VERSION_CODENAME": "noble",
+      "ID_LIKE": "debian",
+      "HOME_URL": "https://www.ubuntu.com/",
+      "SUPPORT_URL": "https://help.ubuntu.com/",
+      "BUG_REPORT_URL": "https://bugs.launchpad.net/ubuntu/",
+      "PRIVACY_POLICY_URL": "https://www.ubuntu.com/legal/terms-and-policies/privacy-policy",
+      "UBUNTU_CODENAME": "noble",
+      "LOGO": "ubuntu-logo"
+    }
+  },
+  "required_targets": [
+    "linux-x64",
+    "windows-x64",
+    "darwin-arm64",
+    "darwin-x64",
+    "linux-arm64",
+    "windows-arm64"
+  ],
+  "runtime": {
+    "python": "3.11.6 (tags/v3.11.6:8b6ee5ba3bd, Aug  7 2026, 03:34:25) [GCC 15.2.0]",
+    "executable": "/workspace/scratch/5224b9a4a425/managed-toolchains/oss-cad-suite-2026-10-18-linux-x64/oss-cad-suite/bin/tabbypy3",
+    "architecture": "x64",
+    "binary": {
+      "format": "script",
+      "architectures": [],
+      "interpreter": "/usr/bin/env bash"
+    }
+  },
+  "tools": {
+    "iverilog": {
+      "state": "available",
+      "path": "/workspace/scratch/5224b9a4a425/managed-toolchains/oss-cad-suite-2026-10-18-linux-x64/oss-cad-suite/bin/iverilog",
+      "version": "Icarus Verilog version 14.0 (devel) (s20260301-596-gad0260be5-dirty)\n\nCopyright (c) 2000-2026 Stephen Williams (steve@icarus.com)\n\n  This program is free software; you can redistribute it and/or modify\n  it under the terms of the GNU General Public License as published by",
+      "version_state": "reported",
+      "alternatives": [
+        "iverilog"
+      ],
+      "binary": {
+        "format": "script",
+        "architectures": [],
+        "interpreter": "/usr/bin/env bash"
+      },
+      "payload": {
+        "path": "/workspace/scratch/5224b9a4a425/managed-toolchains/oss-cad-suite-2026-10-18-linux-x64/oss-cad-suite/libexec/iverilog",
+        "binary": {
+          "format": "elf",
+          "architectures": [
+            "x64"
+          ]
+        },
+        "resolution": "literal-oss-suite-wrapper-target"
+      },
+      "compatibility": {
+        "mechanism": "native",
+        "verified": false,
+        "note": "Header matches host; real workflow probe still required."
+      },
+      "version_returncode": 0
+    },
+    "vvp": {
+      "state": "available",
+      "path": "/workspace/scratch/5224b9a4a425/managed-toolchains/oss-cad-suite-2026-10-18-linux-x64/oss-cad-suite/bin/vvp",
+      "version": "Icarus Verilog runtime version 14.0 (devel) (s20260301-596-gad0260be5-dirty)\n\nCopyright (c) 2001-2026 Stephen Williams (steve@icarus.com)\n\n  This program is free software; you can redistribute it and/or modify\n  it under the terms of the GNU General Public License as published by",
+      "version_state": "reported",
+      "alternatives": [
+        "vvp"
+      ],
+      "binary": {
+        "format": "script",
+        "architectures": [],
+        "interpreter": "/usr/bin/env bash"
+      },
+      "payload": {
+        "path": "/workspace/scratch/5224b9a4a425/managed-toolchains/oss-cad-suite-2026-10-18-linux-x64/oss-cad-suite/libexec/vvp",
+        "binary": {
+          "format": "elf",
+          "architectures": [
+            "x64"
+          ]
+        },
+        "resolution": "literal-oss-suite-wrapper-target"
+      },
+      "compatibility": {
+        "mechanism": "native",
+        "verified": false,
+        "note": "Header matches host; real workflow probe still required."
+      },
+      "version_returncode": 0
+    },
+    "verilator": {
+      "state": "available",
+      "path": "/workspace/scratch/5224b9a4a425/managed-toolchains/oss-cad-suite-2026-10-18-linux-x64/oss-cad-suite/bin/verilator",
+      "version": "Verilator 5.053 devel rev v5.052-472-g1cfb3b89a (mod)",
+      "version_state": "reported",
+      "alternatives": [
+        "verilator"
+      ],
+      "binary": {
+        "format": "script",
+        "architectures": [],
+        "interpreter": "/usr/bin/env perl"
+      },
+      "compatibility": {
+        "mechanism": "unknown",
+        "verified": false,
+        "note": "Launcher or binary architecture needs runtime-set validation."
+      },
+      "version_returncode": 0
+    },
+    "ghdl": {
+      "state": "available",
+      "path": "/workspace/scratch/5224b9a4a425/managed-toolchains/oss-cad-suite-2026-10-18-linux-x64/oss-cad-suite/bin/ghdl",
+      "version": "GHDL 7.0.0-dev (6.0.0.r541.ge76fc566c.dirty) [Dunoon edition]\n Compiled with GNAT Version: 14.3.0\n llvm 21.1.8 code generator\nWritten by Tristan Gingold.\n\nCopyright (C) 2003 - 2026 Tristan Gingold.",
+      "version_state": "reported",
+      "alternatives": [
+        "ghdl"
+      ],
+      "binary": {
+        "format": "script",
+        "architectures": [],
+        "interpreter": "/usr/bin/env bash"
+      },
+      "payload": {
+        "path": "/workspace/scratch/5224b9a4a425/managed-toolchains/oss-cad-suite-2026-10-18-linux-x64/oss-cad-suite/libexec/ghdl",
+        "binary": {
+          "format": "elf",
+          "architectures": [
+            "x64"
+          ]
+        },
+        "resolution": "literal-oss-suite-wrapper-target"
+      },
+      "compatibility": {
+        "mechanism": "native",
+        "verified": false,
+        "note": "Header matches host; real workflow probe still required."
+      },
+      "version_returncode": 0
+    },
+    "cocotb-config": {
+      "state": "available",
+      "path": "/workspace/scratch/5224b9a4a425/managed-toolchains/oss-cad-suite-2026-10-18-linux-x64/oss-cad-suite/bin/cocotb-config",
+      "version": "2.1.0.dev0+41564633",
+      "version_state": "reported",
+      "alternatives": [
+        "cocotb-config"
+      ],
+      "binary": {
+        "format": "script",
+        "architectures": [],
+        "interpreter": "/usr/bin/env bash"
+      },
+      "payload": {
+        "path": "/workspace/scratch/5224b9a4a425/managed-toolchains/oss-cad-suite-2026-10-18-linux-x64/oss-cad-suite/libexec/cocotb-config",
+        "binary": {
+          "format": "script",
+          "architectures": [],
+          "interpreter": "/work/_builds/linux-x64/cocotb/python3-native/yosyshq/bin/python3.11"
+        },
+        "resolution": "literal-oss-suite-wrapper-target"
+      },
+      "compatibility": {
+        "mechanism": "unknown",
+        "verified": false,
+        "note": "Launcher or binary architecture needs runtime-set validation."
+      },
+      "version_returncode": 0
+    },
+    "sv2v": {
+      "state": "missing",
+      "path": null,
+      "version": null,
+      "version_state": "not_run",
+      "alternatives": [
+        "sv2v"
+      ]
+    },
+    "yosys": {
+      "state": "available",
+      "path": "/workspace/scratch/5224b9a4a425/managed-toolchains/oss-cad-suite-2026-10-18-linux-x64/oss-cad-suite/bin/yosys",
+      "version": "Yosys 0.70+157 (git sha1 af9f71e51, Release, Clang /usr/bin/clang++ 21.1.8)",
+      "version_state": "reported",
+      "alternatives": [
+        "yosys"
+      ],
+      "binary": {
+        "format": "script",
+        "architectures": [],
+        "interpreter": "/usr/bin/env bash"
+      },
+      "payload": {
+        "path": "/workspace/scratch/5224b9a4a425/managed-toolchains/oss-cad-suite-2026-10-18-linux-x64/oss-cad-suite/libexec/yosys",
+        "binary": {
+          "format": "elf",
+          "architectures": [
+            "x64"
+          ]
+        },
+        "resolution": "literal-oss-suite-wrapper-target"
+      },
+      "compatibility": {
+        "mechanism": "native",
+        "verified": false,
+        "note": "Header matches host; real workflow probe still required."
+      },
+      "version_returncode": 0
+    },
+    "dot": {
+      "state": "available",
+      "path": "/workspace/scratch/5224b9a4a425/managed-toolchains/oss-cad-suite-2026-10-18-linux-x64/oss-cad-suite/bin/dot",
+      "version": "dot - graphviz version 2.43.20190912.0211 (20190912.0211)",
+      "version_state": "reported",
+      "alternatives": [
+        "dot"
+      ],
+      "binary": {
+        "format": "script",
+        "architectures": [],
+        "interpreter": "/usr/bin/env bash"
+      },
+      "payload": {
+        "path": "/workspace/scratch/5224b9a4a425/managed-toolchains/oss-cad-suite-2026-10-18-linux-x64/oss-cad-suite/libexec/dot",
+        "binary": {
+          "format": "elf",
+          "architectures": [
+            "x64"
+          ]
+        },
+        "resolution": "literal-oss-suite-wrapper-target"
+      },
+      "compatibility": {
+        "mechanism": "native",
+        "verified": false,
+        "note": "Header matches host; real workflow probe still required."
+      },
+      "version_returncode": 0
+    },
+    "netlistsvg": {
+      "state": "missing",
+      "path": null,
+      "version": null,
+      "version_state": "not_run",
+      "alternatives": [
+        "netlistsvg"
+      ]
+    },
+    "sby": {
+      "state": "available",
+      "path": "/workspace/scratch/5224b9a4a425/managed-toolchains/oss-cad-suite-2026-10-18-linux-x64/oss-cad-suite/bin/sby",
+      "version": "SBY v0.70-9-g79fc9ed",
+      "version_state": "reported",
+      "alternatives": [
+        "sby"
+      ],
+      "binary": {
+        "format": "script",
+        "architectures": [],
+        "interpreter": "/usr/bin/env bash"
+      },
+      "payload": {
+        "path": "/workspace/scratch/5224b9a4a425/managed-toolchains/oss-cad-suite-2026-10-18-linux-x64/oss-cad-suite/libexec/sby",
+        "binary": {
+          "format": "script",
+          "architectures": [],
+          "interpreter": "/usr/bin/env python3"
+        },
+        "resolution": "literal-oss-suite-wrapper-target"
+      },
+      "compatibility": {
+        "mechanism": "unknown",
+        "verified": false,
+        "note": "Launcher or binary architecture needs runtime-set validation."
+      },
+      "version_returncode": 0
+    },
+    "z3": {
+      "state": "available",
+      "path": "/workspace/scratch/5224b9a4a425/managed-toolchains/oss-cad-suite-2026-10-18-linux-x64/oss-cad-suite/bin/z3",
+      "version": "Z3 version 4.15.5 - 64 bit",
+      "version_state": "reported",
+      "alternatives": [
+        "z3"
+      ],
+      "binary": {
+        "format": "script",
+        "architectures": [],
+        "interpreter": "/usr/bin/env bash"
+      },
+      "payload": {
+        "path": "/workspace/scratch/5224b9a4a425/managed-toolchains/oss-cad-suite-2026-10-18-linux-x64/oss-cad-suite/libexec/z3",
+        "binary": {
+          "format": "elf",
+          "architectures": [
+            "x64"
+          ]
+        },
+        "resolution": "literal-oss-suite-wrapper-target"
+      },
+      "compatibility": {
+        "mechanism": "native",
+        "verified": false,
+        "note": "Header matches host; real workflow probe still required."
+      },
+      "version_returncode": 0
+    },
+    "nextpnr-gowin": {
+      "state": "available",
+      "path": "/workspace/scratch/5224b9a4a425/managed-toolchains/oss-cad-suite-2026-10-18-linux-x64/oss-cad-suite/bin/nextpnr-himbaechel",
+      "version": "\"nextpnr-himbaechel\" -- Next Generation Place and Route (Version nextpnr-0.11.1-65-ge677d5c3)",
+      "version_state": "reported",
+      "alternatives": [
+        "nextpnr-gowin",
+        "nextpnr-himbaechel-gowin",
+        "nextpnr-himbaechel"
+      ],
+      "binary": {
+        "format": "script",
+        "architectures": [],
+        "interpreter": "/usr/bin/env bash"
+      },
+      "payload": {
+        "path": "/workspace/scratch/5224b9a4a425/managed-toolchains/oss-cad-suite-2026-10-18-linux-x64/oss-cad-suite/libexec/nextpnr-himbaechel",
+        "binary": {
+          "format": "elf",
+          "architectures": [
+            "x64"
+          ]
+        },
+        "resolution": "literal-oss-suite-wrapper-target"
+      },
+      "compatibility": {
+        "mechanism": "native",
+        "verified": false,
+        "note": "Header matches host; real workflow probe still required."
+      },
+      "version_returncode": 0
+    },
+    "gowin_pack": {
+      "state": "available",
+      "path": "/workspace/scratch/5224b9a4a425/managed-toolchains/oss-cad-suite-2026-10-18-linux-x64/oss-cad-suite/bin/gowin_pack",
+      "version": "/workspace/scratch/5224b9a4a425/managed-toolchains/oss-cad-suite-2026-10-18-linux-x64/oss-cad-suite/lib/python3.11/site-packages/apycula/bitmatrix.py:60: UserWarning: Numpy is not available, performance will be degraded.\n  warnings.warn(\"Numpy is not available, performance will be degraded.\")\n/workspace/scratch/5224b9a4a425/managed-toolchains/oss-cad-suite-2026-10-18-linux-x64/oss-cad-suite/lib/python3.11/site-packages/apycula/chipdb.py:261: UserWarning: Msgspec is not available, performance will be degraded.\n  warnings.warn(\"Msgspec is not available, performance will be degraded.\")\nusage: gowin_pack [-h] [-d DEVICE] [-o OUTPUT] [-c] [-s CST] [--jtag_as_gpio]\n                  [--sspi_as_gpio] [--mspi_as_gpio] [--ready_as_gpio]",
+      "version_state": "unavailable",
+      "alternatives": [
+        "gowin_pack"
+      ],
+      "binary": {
+        "format": "script",
+        "architectures": [],
+        "interpreter": "/usr/bin/env bash"
+      },
+      "payload": {
+        "path": "/workspace/scratch/5224b9a4a425/managed-toolchains/oss-cad-suite-2026-10-18-linux-x64/oss-cad-suite/libexec/gowin_pack",
+        "binary": {
+          "format": "script",
+          "architectures": [],
+          "interpreter": "/work/_builds/linux-x64/apicula/python3-native/yosyshq/bin/python3.11"
+        },
+        "resolution": "literal-oss-suite-wrapper-target"
+      },
+      "compatibility": {
+        "mechanism": "unknown",
+        "verified": false,
+        "note": "Launcher or binary architecture needs runtime-set validation."
+      },
+      "version_returncode": 2
+    },
+    "nextpnr-ice40": {
+      "state": "available",
+      "path": "/workspace/scratch/5224b9a4a425/managed-toolchains/oss-cad-suite-2026-10-18-linux-x64/oss-cad-suite/bin/nextpnr-ice40",
+      "version": "\"nextpnr-ice40\" -- Next Generation Place and Route (Version nextpnr-0.11.1-65-ge677d5c3)",
+      "version_state": "reported",
+      "alternatives": [
+        "nextpnr-ice40"
+      ],
+      "binary": {
+        "format": "script",
+        "architectures": [],
+        "interpreter": "/usr/bin/env bash"
+      },
+      "payload": {
+        "path": "/workspace/scratch/5224b9a4a425/managed-toolchains/oss-cad-suite-2026-10-18-linux-x64/oss-cad-suite/libexec/nextpnr-ice40",
+        "binary": {
+          "format": "elf",
+          "architectures": [
+            "x64"
+          ]
+        },
+        "resolution": "literal-oss-suite-wrapper-target"
+      },
+      "compatibility": {
+        "mechanism": "native",
+        "verified": false,
+        "note": "Header matches host; real workflow probe still required."
+      },
+      "version_returncode": 0
+    },
+    "icepack": {
+      "state": "available",
+      "path": "/workspace/scratch/5224b9a4a425/managed-toolchains/oss-cad-suite-2026-10-18-linux-x64/oss-cad-suite/bin/icepack",
+      "version": "Usage: /workspace/scratch/5224b9a4a425/managed-toolchains/oss-cad-suite-2026-10-18-linux-x64/oss-cad-suite/libexec/icepack [options] [input-file [output-file]]\n\n    -u\n        unpack mode (implied when called as 'iceunpack')\n\n    -v",
+      "version_state": "unavailable",
+      "alternatives": [
+        "icepack"
+      ],
+      "binary": {
+        "format": "script",
+        "architectures": [],
+        "interpreter": "/usr/bin/env bash"
+      },
+      "payload": {
+        "path": "/workspace/scratch/5224b9a4a425/managed-toolchains/oss-cad-suite-2026-10-18-linux-x64/oss-cad-suite/libexec/icepack",
+        "binary": {
+          "format": "elf",
+          "architectures": [
+            "x64"
+          ]
+        },
+        "resolution": "literal-oss-suite-wrapper-target"
+      },
+      "compatibility": {
+        "mechanism": "native",
+        "verified": false,
+        "note": "Header matches host; real workflow probe still required."
+      },
+      "version_returncode": 1
+    },
+    "openFPGALoader": {
+      "state": "available",
+      "path": "/workspace/scratch/5224b9a4a425/managed-toolchains/oss-cad-suite-2026-10-18-linux-x64/oss-cad-suite/bin/openFPGALoader",
+      "version": "openFPGALoader v1.1.1",
+      "version_state": "reported",
+      "alternatives": [
+        "openFPGALoader"
+      ],
+      "binary": {
+        "format": "script",
+        "architectures": [],
+        "interpreter": "/usr/bin/env bash"
+      },
+      "payload": {
+        "path": "/workspace/scratch/5224b9a4a425/managed-toolchains/oss-cad-suite-2026-10-18-linux-x64/oss-cad-suite/libexec/openFPGALoader",
+        "binary": {
+          "format": "elf",
+          "architectures": [
+            "x64"
+          ]
+        },
+        "resolution": "literal-oss-suite-wrapper-target"
+      },
+      "compatibility": {
+        "mechanism": "native",
+        "verified": false,
+        "note": "Header matches host; real workflow probe still required."
+      },
+      "version_returncode": 0
+    }
+  },
+  "workflows": {
+    "verilog_simulation": {
+      "state": "passed",
+      "required_tools": [
+        "iverilog",
+        "vvp"
+      ],
+      "missing_tools": [],
+      "evidence": "real-cli-fixture",
+      "command": [
+        "/workspace/scratch/5224b9a4a425/managed-toolchains/oss-cad-suite-2026-10-18-linux-x64/oss-cad-suite/bin/tabbypy3",
+        "/workspace/scratch/5224b9a4a425/verilog-workbench/vwb.py",
+        "--root",
+        "/tmp/vwb-m0-hk1_33xx/verilog_simulation",
+        "--src-dir",
+        "src",
+        "--test-dir",
+        "test",
+        "--build-dir",
+        "build",
+        "--color",
+        "never",
+        "--verbose",
+        "test",
+        "m0_gate",
+        "--test",
+        "test/test_m0_gate.v",
+        "--test-language",
+        "verilog",
+        "--test-top",
+        "tb_m0_gate"
+      ],
+      "project": "/tmp/vwb-m0-hk1_33xx/verilog_simulation",
+      "returncode": 0,
+      "note": "Actual HDL assertions completed.",
+      "log": "/tmp/vwb-m0-hk1_33xx/verilog_simulation.log",
+      "log_sha256": "26db48e11e73749e1c6b2660329346932d06070c3f1e7436c9dab471500a08a6",
+      "log_excerpt": null,
+      "artifacts": [
+        {
+          "path": "build/.vwb-root",
+          "bytes": 72,
+          "sha256": "be613ded069cb8d3b10898976846ffb6533224788b40f9f10d5a10f979e5f477"
+        },
+        {
+          "path": "build/sim/m0_gate/verilog-test_m0_gate/cmds.f",
+          "bytes": 19,
+          "sha256": "46969f38f339d3fde8758e37f30c904f5d53cd1861f1136925c1fb53e8763e94"
+        },
+        {
+          "path": "build/sim/m0_gate/verilog-test_m0_gate/sim.vvp",
+          "bytes": 3019,
+          "sha256": "6f0eb895f44558e04627487f14eff9b80bc945bb67ab0fed8e5e5b70d191e986"
+        }
+      ],
+      "duration_seconds": 0.204
+    },
+    "systemverilog_simulation": {
+      "state": "passed",
+      "required_tools": [
+        "iverilog",
+        "vvp"
+      ],
+      "missing_tools": [],
+      "evidence": "real-cli-fixture",
+      "command": [
+        "/workspace/scratch/5224b9a4a425/managed-toolchains/oss-cad-suite-2026-10-18-linux-x64/oss-cad-suite/bin/tabbypy3",
+        "/workspace/scratch/5224b9a4a425/verilog-workbench/vwb.py",
+        "--root",
+        "/tmp/vwb-m0-hk1_33xx/systemverilog_simulation",
+        "--src-dir",
+        "src",
+        "--test-dir",
+        "test",
+        "--build-dir",
+        "build",
+        "--color",
+        "never",
+        "--verbose",
+        "test",
+        "m0_sv",
+        "--test",
+        "test/test_m0_sv.sv",
+        "--test-language",
+        "verilog",
+        "--test-top",
+        "tb_m0_sv"
+      ],
+      "project": "/tmp/vwb-m0-hk1_33xx/systemverilog_simulation",
+      "returncode": 0,
+      "note": "Actual HDL assertions completed.",
+      "log": "/tmp/vwb-m0-hk1_33xx/systemverilog_simulation.log",
+      "log_sha256": "a8dc0b3b0e5e161b29d86339eded5e1ab086a17e2d83c5c1f8c9bb5a59687b0f",
+      "log_excerpt": null,
+      "artifacts": [
+        {
+          "path": "build/.vwb-root",
+          "bytes": 72,
+          "sha256": "be613ded069cb8d3b10898976846ffb6533224788b40f9f10d5a10f979e5f477"
+        },
+        {
+          "path": "build/sim/m0_sv/verilog-test_m0_sv/cmds.f",
+          "bytes": 19,
+          "sha256": "46969f38f339d3fde8758e37f30c904f5d53cd1861f1136925c1fb53e8763e94"
+        },
+        {
+          "path": "build/sim/m0_sv/verilog-test_m0_sv/sim.vvp",
+          "bytes": 3049,
+          "sha256": "608e7a13828131c647ba7889517c97be4514799d9c898344e7bcafc2e5e2d736"
+        }
+      ],
+      "duration_seconds": 0.206
+    },
+    "waveforms": {
+      "state": "passed",
+      "required_tools": [
+        "iverilog",
+        "vvp"
+      ],
+      "missing_tools": [],
+      "evidence": "real-cli-fixture",
+      "command": [
+        "/workspace/scratch/5224b9a4a425/managed-toolchains/oss-cad-suite-2026-10-18-linux-x64/oss-cad-suite/bin/tabbypy3",
+        "/workspace/scratch/5224b9a4a425/verilog-workbench/vwb.py",
+        "--root",
+        "/tmp/vwb-m0-hk1_33xx/waveforms",
+        "--src-dir",
+        "src",
+        "--test-dir",
+        "test",
+        "--build-dir",
+        "build",
+        "--color",
+        "never",
+        "--verbose",
+        "test",
+        "m0_gate",
+        "--test",
+        "test/test_m0_gate.v",
+        "--test-language",
+        "verilog",
+        "--test-top",
+        "tb_m0_gate",
+        "--waves",
+        "--wave-format",
+        "vcd"
+      ],
+      "project": "/tmp/vwb-m0-hk1_33xx/waveforms",
+      "returncode": 0,
+      "note": "Expected VCD declarations and time changes.",
+      "log": "/tmp/vwb-m0-hk1_33xx/waveforms.log",
+      "log_sha256": "a4e7867cdd257a574914d29e3aea800584c9178e28b34d1804079251f3267bf0",
+      "log_excerpt": null,
+      "artifacts": [
+        {
+          "path": "build/.vwb-root",
+          "bytes": 72,
+          "sha256": "be613ded069cb8d3b10898976846ffb6533224788b40f9f10d5a10f979e5f477"
+        },
+        {
+          "path": "build/sim/m0_gate/verilog-test_m0_gate/cmds.f",
+          "bytes": 19,
+          "sha256": "46969f38f339d3fde8758e37f30c904f5d53cd1861f1136925c1fb53e8763e94"
+        },
+        {
+          "path": "build/sim/m0_gate/verilog-test_m0_gate/m0_gate.vcd",
+          "bytes": 499,
+          "sha256": "2cb929a567387e07fbfd93d1af0e847df43619d0dcc0c1cedff78f26ea46132f"
+        },
+        {
+          "path": "build/sim/m0_gate/verilog-test_m0_gate/preprocessed.sv",
+          "bytes": 369,
+          "sha256": "2b8f1f31a4e8c93e796cb9859228fb09c09738da7696b476ba1fa4de60155dd3"
+        },
+        {
+          "path": "build/sim/m0_gate/verilog-test_m0_gate/sim.vvp",
+          "bytes": 3368,
+          "sha256": "6259e24180d97d9c1d13a0f2a59a5cc20ae78d24c4c915f585aa68bf09b1f7b6"
+        },
+        {
+          "path": "build/sim/m0_gate/verilog-test_m0_gate/vwb_dump.v",
+          "bytes": 128,
+          "sha256": "93f30808b2dd8ccbdf906304c648606e0487227e369fa9adb919cd37fcbca09b"
+        }
+      ],
+      "duration_seconds": 0.183
+    },
+    "cocotb_verilog": {
+      "state": "passed",
+      "required_tools": [
+        "iverilog",
+        "vvp",
+        "cocotb-config"
+      ],
+      "missing_tools": [],
+      "evidence": "real-cli-fixture",
+      "command": [
+        "/workspace/scratch/5224b9a4a425/managed-toolchains/oss-cad-suite-2026-10-18-linux-x64/oss-cad-suite/bin/tabbypy3",
+        "/workspace/scratch/5224b9a4a425/verilog-workbench/vwb.py",
+        "--root",
+        "/tmp/vwb-m0-hk1_33xx/cocotb_verilog",
+        "--src-dir",
+        "src",
+        "--test-dir",
+        "test",
+        "--build-dir",
+        "build",
+        "--color",
+        "never",
+        "--verbose",
+        "test",
+        "m0_gate",
+        "--test",
+        "test/test_m0_cocotb.py",
+        "--test-language",
+        "cocotb",
+        "--waves",
+        "--wave-format",
+        "vcd"
+      ],
+      "project": "/tmp/vwb-m0-hk1_33xx/cocotb_verilog",
+      "returncode": 0,
+      "note": "Cocotb truth-table assertions reported passing test cases.",
+      "log": "/tmp/vwb-m0-hk1_33xx/cocotb_verilog.log",
+      "log_sha256": "70d480d41abb499c0911687f830682e8e868863e743b48fe52dba259a15f0eda",
+      "log_excerpt": null,
+      "artifacts": [
+        {
+          "path": "build/.vwb-root",
+          "bytes": 72,
+          "sha256": "be613ded069cb8d3b10898976846ffb6533224788b40f9f10d5a10f979e5f477"
+        },
+        {
+          "path": "build/sim/m0_gate/cocotb-test_m0_cocotb/cmds.f",
+          "bytes": 19,
+          "sha256": "46969f38f339d3fde8758e37f30c904f5d53cd1861f1136925c1fb53e8763e94"
+        },
+        {
+          "path": "build/sim/m0_gate/cocotb-test_m0_cocotb/m0_gate.vcd",
+          "bytes": 337,
+          "sha256": "a4c87ef5f0980764c76b62d0d62218272c7bad860f7a2247c03b99420603e9a6"
+        },
+        {
+          "path": "build/sim/m0_gate/cocotb-test_m0_cocotb/preprocessed.sv",
+          "bytes": 89,
+          "sha256": "ad3ef15d3236ddd1938216b9342606fffc34ce1fd466c9363f9a383a8d1c9239"
+        },
+        {
+          "path": "build/sim/m0_gate/cocotb-test_m0_cocotb/results.xml",
+          "bytes": 377,
+          "sha256": "78bdb3acfcdcf516fffc6a5d3d9ec7c34c85e2ae8119e2e540ce042cb48ec4d0"
+        },
+        {
+          "path": "build/sim/m0_gate/cocotb-test_m0_cocotb/sim.vvp",
+          "bytes": 2273,
+          "sha256": "b7cc380d26bc02ea957323c4151bf1f6410d428cae0754d6a4cdffff7105398c"
+        },
+        {
+          "path": "build/sim/m0_gate/cocotb-test_m0_cocotb/vwb_dump.v",
+          "bytes": 125,
+          "sha256": "63b0dd1699a4b6b9134f0809bbbe3b768fa567b7e6ed122a84a74f839741803b"
+        }
+      ],
+      "duration_seconds": 0.894
+    },
+    "vhdl_simulation": {
+      "state": "passed",
+      "required_tools": [
+        "ghdl"
+      ],
+      "missing_tools": [],
+      "evidence": "real-cli-fixture",
+      "command": [
+        "/workspace/scratch/5224b9a4a425/managed-toolchains/oss-cad-suite-2026-10-18-linux-x64/oss-cad-suite/bin/tabbypy3",
+        "/workspace/scratch/5224b9a4a425/verilog-workbench/vwb.py",
+        "--root",
+        "/tmp/vwb-m0-hk1_33xx/vhdl_simulation",
+        "--src-dir",
+        "src",
+        "--test-dir",
+        "test",
+        "--build-dir",
+        "build",
+        "--color",
+        "never",
+        "--verbose",
+        "test",
+        "m0_vhdl",
+        "--test",
+        "test/test_m0_vhdl.vhd",
+        "--test-language",
+        "vhdl",
+        "--test-top",
+        "tb_m0_vhdl",
+        "--waves",
+        "--wave-format",
+        "vcd"
+      ],
+      "project": "/tmp/vwb-m0-hk1_33xx/vhdl_simulation",
+      "returncode": 0,
+      "note": "Expected VCD declarations and time changes.",
+      "log": "/tmp/vwb-m0-hk1_33xx/vhdl_simulation.log",
+      "log_sha256": "7714b7cf51458fd1fc425edb97b7041dc05e323c2bf79ae1e1d570064a742916",
+      "log_excerpt": null,
+      "artifacts": [
+        {
+          "path": "build/.vwb-root",
+          "bytes": 72,
+          "sha256": "be613ded069cb8d3b10898976846ffb6533224788b40f9f10d5a10f979e5f477"
+        },
+        {
+          "path": "build/sim/m0_vhdl/vhdl-test_m0_vhdl/e~tb_m0_vhdl.o",
+          "bytes": 6728,
+          "sha256": "765e3b4fe781ab1fa01f8430ab579839fcf1ad111abfbd685b6d34161c752fb3"
+        },
+        {
+          "path": "build/sim/m0_vhdl/vhdl-test_m0_vhdl/ghdl-work/m0_vhdl.o",
+          "bytes": 7120,
+          "sha256": "14ef0779c2966dd8c2c04953579f8d7404fed7f3226b438d81e00270a6de96bb"
+        },
+        {
+          "path": "build/sim/m0_vhdl/vhdl-test_m0_vhdl/ghdl-work/test_m0_vhdl.o",
+          "bytes": 12704,
+          "sha256": "c08d3adbc57cc17b5cc7b37e1d5889777cf3705e5e0f4f4de6321d857d0699d1"
+        },
+        {
+          "path": "build/sim/m0_vhdl/vhdl-test_m0_vhdl/ghdl-work/work-obj08.cf",
+          "bytes": 449,
+          "sha256": "aa79d84b3f899706c1cc3bfb4ba4e2599221367bd7177564d398264d40fee736"
+        },
+        {
+          "path": "build/sim/m0_vhdl/vhdl-test_m0_vhdl/m0_vhdl.vcd",
+          "bytes": 612,
+          "sha256": "3900e1b96daea68f4beaf90c73ee41876b61cba54fe1507e55019d46c0de4374"
+        },
+        {
+          "path": "build/sim/m0_vhdl/vhdl-test_m0_vhdl/tb_m0_vhdl",
+          "bytes": 2659904,
+          "sha256": "33cef93cd033f3e4de2dc82957ac010dfe836491e04891a87020787b4a0f4565"
+        }
+      ],
+      "duration_seconds": 0.454
+    },
+    "cocotb_vhdl": {
+      "state": "passed",
+      "required_tools": [
+        "ghdl",
+        "cocotb-config"
+      ],
+      "missing_tools": [],
+      "evidence": "real-cli-fixture",
+      "command": [
+        "/workspace/scratch/5224b9a4a425/managed-toolchains/oss-cad-suite-2026-10-18-linux-x64/oss-cad-suite/bin/tabbypy3",
+        "/workspace/scratch/5224b9a4a425/verilog-workbench/vwb.py",
+        "--root",
+        "/tmp/vwb-m0-hk1_33xx/cocotb_vhdl",
+        "--src-dir",
+        "src",
+        "--test-dir",
+        "test",
+        "--build-dir",
+        "build",
+        "--color",
+        "never",
+        "--verbose",
+        "test",
+        "m0_vhdl",
+        "--test",
+        "test/test_m0_cocotb.py",
+        "--test-language",
+        "cocotb",
+        "--waves",
+        "--wave-format",
+        "vcd"
+      ],
+      "project": "/tmp/vwb-m0-hk1_33xx/cocotb_vhdl",
+      "returncode": 0,
+      "note": "Cocotb truth-table assertions reported passing test cases.",
+      "log": "/tmp/vwb-m0-hk1_33xx/cocotb_vhdl.log",
+      "log_sha256": "4825f42e4ab8992894e8171e76dd45b9b130885c9b82fa9a92276bf7e00d5bdb",
+      "log_excerpt": null,
+      "artifacts": [
+        {
+          "path": "build/.vwb-root",
+          "bytes": 72,
+          "sha256": "be613ded069cb8d3b10898976846ffb6533224788b40f9f10d5a10f979e5f477"
+        },
+        {
+          "path": "build/sim/m0_vhdl/cocotb-test_m0_cocotb/e~m0_vhdl.o",
+          "bytes": 6168,
+          "sha256": "2fe1c0b1de42001200d8cfdcdf71553c7f572b171f845559a05ce167255d095a"
+        },
+        {
+          "path": "build/sim/m0_vhdl/cocotb-test_m0_cocotb/ghdl-work/m0_vhdl.o",
+          "bytes": 7104,
+          "sha256": "2b306a56bcf4104dbb60300d0d9cfee75615c930929e12752c9d15575d49b07a"
+        },
+        {
+          "path": "build/sim/m0_vhdl/cocotb-test_m0_cocotb/ghdl-work/work-obj08.cf",
+          "bytes": 216,
+          "sha256": "8e551d317d256975dbb5042bf89700c66676c9e89083fc0a65c8960b797e57a8"
+        },
+        {
+          "path": "build/sim/m0_vhdl/cocotb-test_m0_cocotb/m0_vhdl",
+          "bytes": 2289000,
+          "sha256": "1d31c2e3871234fe579478240c2e9ba14fbbf3a8272672719a2831eb41c55c79"
+        },
+        {
+          "path": "build/sim/m0_vhdl/cocotb-test_m0_cocotb/m0_vhdl.vcd",
+          "bytes": 403,
+          "sha256": "2d9299cf574bd300d0064083d034cdbb76aabba73f0d5f616e88140ec83a4124"
+        },
+        {
+          "path": "build/sim/m0_vhdl/cocotb-test_m0_cocotb/results.xml",
+          "bytes": 371,
+          "sha256": "b494cfe9a7b095f028a75f40c7bb2fa299aff7a8a87eea890245c6de09f0fa81"
+        }
+      ],
+      "duration_seconds": 1.0
+    },
+    "lint": {
+      "state": "passed",
+      "required_tools": [
+        "verilator"
+      ],
+      "missing_tools": [],
+      "evidence": "real-cli-fixture",
+      "command": [
+        "/workspace/scratch/5224b9a4a425/managed-toolchains/oss-cad-suite-2026-10-18-linux-x64/oss-cad-suite/bin/tabbypy3",
+        "/workspace/scratch/5224b9a4a425/verilog-workbench/vwb.py",
+        "--root",
+        "/tmp/vwb-m0-hk1_33xx/lint",
+        "--src-dir",
+        "src",
+        "--test-dir",
+        "test",
+        "--build-dir",
+        "build",
+        "--color",
+        "never",
+        "--verbose",
+        "lint",
+        "m0_gate",
+        "--linter",
+        "verilator"
+      ],
+      "project": "/tmp/vwb-m0-hk1_33xx/lint",
+      "returncode": 0,
+      "note": "Actual tool command completed.",
+      "log": "/tmp/vwb-m0-hk1_33xx/lint.log",
+      "log_sha256": "b2a9282af32f0de42e7681d9082bdda44e6d2a02e746cb35194056a9de4bb619",
+      "log_excerpt": null,
+      "artifacts": [
+        {
+          "path": "build/.vwb-root",
+          "bytes": 72,
+          "sha256": "be613ded069cb8d3b10898976846ffb6533224788b40f9f10d5a10f979e5f477"
+        }
+      ],
+      "duration_seconds": 0.223
+    },
+    "synthesis": {
+      "state": "passed",
+      "required_tools": [
+        "yosys"
+      ],
+      "missing_tools": [],
+      "evidence": "real-cli-fixture",
+      "command": [
+        "/workspace/scratch/5224b9a4a425/managed-toolchains/oss-cad-suite-2026-10-18-linux-x64/oss-cad-suite/bin/tabbypy3",
+        "/workspace/scratch/5224b9a4a425/verilog-workbench/vwb.py",
+        "--root",
+        "/tmp/vwb-m0-hk1_33xx/synthesis",
+        "--src-dir",
+        "src",
+        "--test-dir",
+        "test",
+        "--build-dir",
+        "build",
+        "--color",
+        "never",
+        "--verbose",
+        "synth",
+        "m0_gate",
+        "--format",
+        "json",
+        "--no-schematic",
+        "--no-view"
+      ],
+      "project": "/tmp/vwb-m0-hk1_33xx/synthesis",
+      "returncode": 0,
+      "note": "Yosys netlist contains modules.",
+      "log": "/tmp/vwb-m0-hk1_33xx/synthesis.log",
+      "log_sha256": "54d82199b0045c071ea4a60edcde925c1fbf0c0c5b4b1f492cab5f298e2313c9",
+      "log_excerpt": null,
+      "artifacts": [
+        {
+          "path": "build/.vwb-root",
+          "bytes": 72,
+          "sha256": "be613ded069cb8d3b10898976846ffb6533224788b40f9f10d5a10f979e5f477"
+        },
+        {
+          "path": "build/synth/m0_gate/m0_gate.json",
+          "bytes": 2000,
+          "sha256": "9d9fbb46c77892111aad76784507f1d1fa61ac586988c674f0df53edc6dff1e3"
+        },
+        {
+          "path": "build/synth/m0_gate/synth.tcl",
+          "bytes": 343,
+          "sha256": "f42d36ba3378bca3ac4559d015168f3e58f7d66e084d7912eaffe557967c0b8c"
+        }
+      ],
+      "duration_seconds": 0.167
+    },
+    "schematics": {
+      "state": "passed",
+      "required_tools": [
+        "yosys",
+        "dot"
+      ],
+      "missing_tools": [],
+      "evidence": "real-cli-fixture",
+      "command": [
+        "/workspace/scratch/5224b9a4a425/managed-toolchains/oss-cad-suite-2026-10-18-linux-x64/oss-cad-suite/bin/tabbypy3",
+        "/workspace/scratch/5224b9a4a425/verilog-workbench/vwb.py",
+        "--root",
+        "/tmp/vwb-m0-hk1_33xx/schematics",
+        "--src-dir",
+        "src",
+        "--test-dir",
+        "test",
+        "--build-dir",
+        "build",
+        "--color",
+        "never",
+        "--verbose",
+        "synth",
+        "m0_gate",
+        "--format",
+        "svg",
+        "--no-schematic",
+        "--no-view"
+      ],
+      "project": "/tmp/vwb-m0-hk1_33xx/schematics",
+      "returncode": 0,
+      "note": "SVG parsed successfully.",
+      "log": "/tmp/vwb-m0-hk1_33xx/schematics.log",
+      "log_sha256": "847efc969a45350957bf173fb0fb1d08b90e5223d1524743658d6eaa555a3d9c",
+      "log_excerpt": null,
+      "artifacts": [
+        {
+          "path": "build/.vwb-root",
+          "bytes": 72,
+          "sha256": "be613ded069cb8d3b10898976846ffb6533224788b40f9f10d5a10f979e5f477"
+        },
+        {
+          "path": "build/synth/m0_gate/m0_gate.dot",
+          "bytes": 564,
+          "sha256": "53e1dde146651842b385590d7217bfcdefc218c494fe4fa3b6d3efbcbc298834"
+        },
+        {
+          "path": "build/synth/m0_gate/m0_gate.il",
+          "bytes": 970,
+          "sha256": "16abc477266701bb5ecdc275f5f1725774cc1c3b3e91d79d7f52d723d03f96e5"
+        },
+        {
+          "path": "build/synth/m0_gate/m0_gate.json",
+          "bytes": 2006,
+          "sha256": "829b7095aa1c54a9cf0093fea8909aecd5819d94210a606fcb5e9ef1eb6cc1a7"
+        },
+        {
+          "path": "build/synth/m0_gate/m0_gate.svg",
+          "bytes": 3263,
+          "sha256": "df5418c2f372ad722c847621547bff276b8a38a141d83115eb33f32d11bb3822"
+        },
+        {
+          "path": "build/synth/m0_gate/render.ys",
+          "bytes": 103,
+          "sha256": "65487f766a7ed723fbcebc7cfa06128273532c2c9b4726cdd40a87d76ca1b60b"
+        },
+        {
+          "path": "build/synth/m0_gate/synth.tcl",
+          "bytes": 429,
+          "sha256": "5af9d0c5e9bd003ab895d140b0f844ca2263bb579211d6a66a5f789c5f33ede5"
+        }
+      ],
+      "duration_seconds": 0.207
+    },
+    "vhdl_synthesis": {
+      "state": "passed",
+      "required_tools": [
+        "ghdl",
+        "yosys"
+      ],
+      "missing_tools": [],
+      "evidence": "real-cli-fixture",
+      "command": [
+        "/workspace/scratch/5224b9a4a425/managed-toolchains/oss-cad-suite-2026-10-18-linux-x64/oss-cad-suite/bin/tabbypy3",
+        "/workspace/scratch/5224b9a4a425/verilog-workbench/vwb.py",
+        "--root",
+        "/tmp/vwb-m0-hk1_33xx/vhdl_synthesis",
+        "--src-dir",
+        "src",
+        "--test-dir",
+        "test",
+        "--build-dir",
+        "build",
+        "--color",
+        "never",
+        "--verbose",
+        "synth",
+        "m0_vhdl",
+        "--format",
+        "json",
+        "--no-schematic",
+        "--no-view"
+      ],
+      "project": "/tmp/vwb-m0-hk1_33xx/vhdl_synthesis",
+      "returncode": 0,
+      "note": "Yosys netlist contains modules.",
+      "log": "/tmp/vwb-m0-hk1_33xx/vhdl_synthesis.log",
+      "log_sha256": "6fc4dc2c2cef259f1d26c332e3b5c07423909eb12aede3de1012a47f2ed51187",
+      "log_excerpt": null,
+      "artifacts": [
+        {
+          "path": "build/.vwb-root",
+          "bytes": 72,
+          "sha256": "be613ded069cb8d3b10898976846ffb6533224788b40f9f10d5a10f979e5f477"
+        },
+        {
+          "path": "build/synth/m0_vhdl/e~m0_vhdl.o",
+          "bytes": 6152,
+          "sha256": "b63378db20c1ab63a9a96cdbd54791962d209869857ed08ca00748f192dca8c2"
+        },
+        {
+          "path": "build/synth/m0_vhdl/ghdl-work/m0_vhdl.o",
+          "bytes": 7096,
+          "sha256": "dd59d98fe32d01f539711f4fb4144691c2f0ba3c07b8034f1636daf8f2db45a1"
+        },
+        {
+          "path": "build/synth/m0_vhdl/ghdl-work/work-obj08.cf",
+          "bytes": 219,
+          "sha256": "09b6a5d2413dcef8276be051fa6efa79b7453d9fbe0a100ed91eba69926f1055"
+        },
+        {
+          "path": "build/synth/m0_vhdl/m0_vhdl",
+          "bytes": 2288984,
+          "sha256": "f255a4720a885264ea7b1354125076a77113b0d8804ec58acb0f56464554abef"
+        },
+        {
+          "path": "build/synth/m0_vhdl/m0_vhdl.json",
+          "bytes": 2338,
+          "sha256": "b3139a9086440a1bdcf2015093c0fd57c685b381fa2e22675f904e1502356e4e"
+        },
+        {
+          "path": "build/synth/m0_vhdl/m0_vhdl.v",
+          "bytes": 199,
+          "sha256": "144d19d3a4deb2c9614adef6610563d44620fd7001c1310093861254132da2a3"
+        },
+        {
+          "path": "build/synth/m0_vhdl/synth.tcl",
+          "bytes": 384,
+          "sha256": "5d98a230968acdc71251337054aed4aa30d1fd413454dd71c5c7428b0e030b81"
+        }
+      ],
+      "duration_seconds": 0.386
+    },
+    "formal_proof": {
+      "state": "passed",
+      "required_tools": [
+        "sby",
+        "yosys",
+        "z3"
+      ],
+      "missing_tools": [],
+      "evidence": "real-cli-fixture",
+      "command": [
+        "/workspace/scratch/5224b9a4a425/managed-toolchains/oss-cad-suite-2026-10-18-linux-x64/oss-cad-suite/bin/tabbypy3",
+        "/workspace/scratch/5224b9a4a425/verilog-workbench/vwb.py",
+        "--root",
+        "/tmp/vwb-m0-hk1_33xx/formal_proof",
+        "--src-dir",
+        "src",
+        "--test-dir",
+        "test",
+        "--build-dir",
+        "build",
+        "--color",
+        "never",
+        "--verbose",
+        "formal",
+        "formal/good.sby"
+      ],
+      "project": "/tmp/vwb-m0-hk1_33xx/formal_proof",
+      "returncode": 0,
+      "note": "Expected SBY PASS status file.",
+      "log": "/tmp/vwb-m0-hk1_33xx/formal_proof.log",
+      "log_sha256": "4673b2a2c0d93edb69a9c7a194a66fe22b237029f910b631de75da48a75b25e4",
+      "log_excerpt": null,
+      "artifacts": [
+        {
+          "path": "build/.vwb-root",
+          "bytes": 72,
+          "sha256": "be613ded069cb8d3b10898976846ffb6533224788b40f9f10d5a10f979e5f477"
+        },
+        {
+          "path": "build/formal/good/PASS",
+          "bytes": 266,
+          "sha256": "aae5c1a329433f0f2ebf0182ae9630af73d97fd6516cb3d76457cc52f456f617"
+        },
+        {
+          "path": "build/formal/good/config.sby",
+          "bytes": 118,
+          "sha256": "fc19c2609e5f1b45a03ef7d9a282cd92262ecc2a33a473047fca2c64d8045461"
+        },
+        {
+          "path": "build/formal/good/engine_0/logfile_basecase.txt",
+          "bytes": 240,
+          "sha256": "b310f598b4a491bfd884190038e89cd43a242577d9d7d898ffeea7a562c7c2ce"
+        },
+        {
+          "path": "build/formal/good/engine_0/logfile_induction.txt",
+          "bytes": 142,
+          "sha256": "f2777dbe7187356a7dcd08270c5d1a77e7333abb662f7b52fe6778abf8809185"
+        },
+        {
+          "path": "build/formal/good/good.xml",
+          "bytes": 4218,
+          "sha256": "18b23ea3aac8cf05560842c449a7cdcbbc5e96569641f2ebd5f559df1447d6ae"
+        },
+        {
+          "path": "build/formal/good/logfile.txt",
+          "bytes": 3468,
+          "sha256": "65eedb321aeb3fabaa2e69bddc46f070caa12ff81da36d02b91c1d57b35b6dad"
+        },
+        {
+          "path": "build/formal/good/model/design.il",
+          "bytes": 927,
+          "sha256": "288531483264f460a9420a00f72d06d9375f9041bef73fc48765a55f8c0346f9"
+        },
+        {
+          "path": "build/formal/good/model/design.json",
+          "bytes": 2112,
+          "sha256": "439eb7402d661f3dabbc04de0bcbf7eaa7ff544c69aa23b58fe928d2f1fdbb12"
+        },
+        {
+          "path": "build/formal/good/model/design.log",
+          "bytes": 8107,
+          "sha256": "170844765edca1b61633145b3e1e4008cd17bef527e79f6fb109df8e35d67dbb"
+        },
+        {
+          "path": "build/formal/good/model/design.ys",
+          "bytes": 195,
+          "sha256": "0a4b345cde4a6a7367e3cd368df097dbe74660308376f9659cb3f0dc3264d7a2"
+        },
+        {
+          "path": "build/formal/good/model/design_prep.il",
+          "bytes": 655,
+          "sha256": "45bb841f9938ea423b9d727a87f3a3687cfece77fec5a2ae34ae72f14f532e7f"
+        },
+        {
+          "path": "build/formal/good/model/design_prep.log",
+          "bytes": 2380,
+          "sha256": "67f730ff1cf24839741b487483f2842c943474514e593b62a2c8e3d341296bae"
+        },
+        {
+          "path": "build/formal/good/model/design_prep.ys",
+          "bytes": 360,
+          "sha256": "32a46e4ec231a0a743f797229047da906ba59bc10afdbf0b1f8a5d3b1964c9bf"
+        },
+        {
+          "path": "build/formal/good/model/design_smt2.log",
+          "bytes": 1731,
+          "sha256": "552e8138698f98ddbfa9ec4f52044a4d708a54d12b459e6777d9738241dfebae"
+        },
+        {
+          "path": "build/formal/good/model/design_smt2.smt2",
+          "bytes": 1432,
+          "sha256": "fb8dce932a94cdf863ec0ac5e6de6dbe8ad42eaf52b715b2ea4085916ad62b1a"
+        },
+        {
+          "path": "build/formal/good/model/design_smt2.ys",
+          "bytes": 171,
+          "sha256": "5ead236a3f2a5869f81c1f95055d03ffff818bdbdda6f018366008c9071d74f2"
+        },
+        {
+          "path": "build/formal/good/src/good.sv",
+          "bytes": 108,
+          "sha256": "6ccf9855c885a2991db3e2b53bf4b947d9861aa5e6368f8c34a4808ed612af9a"
+        },
+        {
+          "path": "build/formal/good/status",
+          "bytes": 9,
+          "sha256": "4d489b9bfaac73d73a64a4023bf4d947ca1d4216d9f72864c97bfb6a2bc07d56"
+        },
+        {
+          "path": "build/formal/good/status.sqlite",
+          "bytes": 24576,
+          "sha256": "ed5c4a219a59c9a1e9b932634c94370d2153fb4d25fc6f22589b39f41c218330"
+        }
+      ],
+      "duration_seconds": 0.387
+    },
+    "formal_counterexample": {
+      "state": "passed",
+      "required_tools": [
+        "sby",
+        "yosys",
+        "z3"
+      ],
+      "missing_tools": [],
+      "evidence": "real-cli-fixture",
+      "command": [
+        "/workspace/scratch/5224b9a4a425/managed-toolchains/oss-cad-suite-2026-10-18-linux-x64/oss-cad-suite/bin/tabbypy3",
+        "/workspace/scratch/5224b9a4a425/verilog-workbench/vwb.py",
+        "--root",
+        "/tmp/vwb-m0-hk1_33xx/formal_counterexample",
+        "--src-dir",
+        "src",
+        "--test-dir",
+        "test",
+        "--build-dir",
+        "build",
+        "--color",
+        "never",
+        "--verbose",
+        "formal",
+        "formal/bad.sby"
+      ],
+      "project": "/tmp/vwb-m0-hk1_33xx/formal_counterexample",
+      "returncode": 2,
+      "note": "Expected SBY FAIL and nonempty counterexample VCD.",
+      "log": "/tmp/vwb-m0-hk1_33xx/formal_counterexample.log",
+      "log_sha256": "0966d83617d643938df7e90460bbda4d19a3f06470685f6d6f2b432ef80522fa",
+      "log_excerpt": null,
+      "artifacts": [
+        {
+          "path": "build/.vwb-root",
+          "bytes": 72,
+          "sha256": "be613ded069cb8d3b10898976846ffb6533224788b40f9f10d5a10f979e5f477"
+        },
+        {
+          "path": "build/formal/bad/FAIL",
+          "bytes": 536,
+          "sha256": "c0d61b4f035d3379d16182ae168598e37a08ff8d2fb75f3e93fb4ba11e4dec5a"
+        },
+        {
+          "path": "build/formal/bad/bad.xml",
+          "bytes": 5925,
+          "sha256": "753d5a59b49c5d6dc55ec18feafa9e5a1983f3cf169558845882d0aaa4b6c6d0"
+        },
+        {
+          "path": "build/formal/bad/config.sby",
+          "bytes": 116,
+          "sha256": "22efd573b67bda3f3ca48e219cf8cd037e27cc671b13141d31553ee2662dee34"
+        },
+        {
+          "path": "build/formal/bad/engine_0/logfile_basecase.txt",
+          "bytes": 536,
+          "sha256": "346e420149f4adbdffbe8a921de030854e49e9ce31dc9aa2a985b5b97b6811c6"
+        },
+        {
+          "path": "build/formal/bad/engine_0/logfile_induction.txt",
+          "bytes": 615,
+          "sha256": "45d5753959c7d9df08d6383ac99caa712e87266508fd76b8a93b527481812450"
+        },
+        {
+          "path": "build/formal/bad/engine_0/trace.smtc",
+          "bytes": 57,
+          "sha256": "dcfddab9b0e6dbe24e15edbd91886d5a811db4ed681269df3ab083a7ce87fa64"
+        },
+        {
+          "path": "build/formal/bad/engine_0/trace.vcd",
+          "bytes": 358,
+          "sha256": "6d6b7342bef1ad9c34e6f944e2921f8e579d77eb2f4d32801f77117afa0647de"
+        },
+        {
+          "path": "build/formal/bad/engine_0/trace.yw",
+          "bytes": 271,
+          "sha256": "668c088bcfbfb99dded17062f7cc7c23dab8e3e3a9ea09620fe1f461bae012cd"
+        },
+        {
+          "path": "build/formal/bad/engine_0/trace_induct.smtc",
+          "bytes": 160,
+          "sha256": "26eb56a6138816410542ad3832cd2bf24bae656a533ebaaf9da45dc5d647bd5f"
+        },
+        {
+          "path": "build/formal/bad/engine_0/trace_induct.vcd",
+          "bytes": 488,
+          "sha256": "3e870290281cd947545df2bfea55a913aef3d7898584b0a2134bca6c74b50a79"
+        },
+        {
+          "path": "build/formal/bad/engine_0/trace_induct.yw",
+          "bytes": 311,
+          "sha256": "e09a0375e13bbebbf02d30b2a15aa00be7daea91b844dc3e4b4623e93cf098ca"
+        },
+        {
+          "path": "build/formal/bad/engine_0/trace_induct_tb.v",
+          "bytes": 931,
+          "sha256": "5ff72f3ba67e92764e9a6254fa186d703f179d16c57bfefc0e6c9b02cc935e32"
+        },
+        {
+          "path": "build/formal/bad/engine_0/trace_tb.v",
+          "bytes": 751,
+          "sha256": "da958a2f8867911f309b4e1999902685a7598983d09faa8e5287d57f45fc064c"
+        },
+        {
+          "path": "build/formal/bad/logfile.txt",
+          "bytes": 4963,
+          "sha256": "d20376cd9a1d89b34f458d6750eff359fbdb17a735753684096c6ec9035fac4e"
+        },
+        {
+          "path": "build/formal/bad/model/design.il",
+          "bytes": 2210,
+          "sha256": "e976f6e7770705117c677362b4e5d296b6bbf0975e5b6e8b684a26245ff07435"
+        },
+        {
+          "path": "build/formal/bad/model/design.json",
+          "bytes": 5448,
+          "sha256": "d3dc840c9d7b3638c69ab55deaea3181ea41f57eb234da161d75d17ccb92070c"
+        },
+        {
+          "path": "build/formal/bad/model/design.log",
+          "bytes": 6115,
+          "sha256": "467950659c4a7bf1cbc2da443b437ea099b480ce24e4ecb64e3b68d29fe806ba"
+        },
+        {
+          "path": "build/formal/bad/model/design.ys",
+          "bytes": 193,
+          "sha256": "20c3c15e5ab44447dd21d16a2b981339793027bbaa730306ef5150d6f7d02b91"
+        },
+        {
+          "path": "build/formal/bad/model/design_prep.il",
+          "bytes": 1938,
+          "sha256": "c563757d1e41f14134d9dc96035bd46f8fbc7906e3cffa8e97fea0127275b647"
+        },
+        {
+          "path": "build/formal/bad/model/design_prep.log",
+          "bytes": 2380,
+          "sha256": "cdbe369ce1e13a60fbe0a6d839fa0af79c4e1c0f3bd8eef64f8ab5a40a8159b2"
+        },
+        {
+          "path": "build/formal/bad/model/design_prep.ys",
+          "bytes": 359,
+          "sha256": "69a3e80301f667ac62825189fdf369110d56667482f34c3712adf87789e9b9c9"
+        },
+        {
+          "path": "build/formal/bad/model/design_smt2.log",
+          "bytes": 1781,
+          "sha256": "a8c8328a3348f2c4ed17bf1cee7f7c0773638a1c779229c38606e00d988c66c1"
+        },
+        {
+          "path": "build/formal/bad/model/design_smt2.smt2",
+          "bytes": 2010,
+          "sha256": "b47aa30bb0dd582345ce714baa4756acc2dd97eb2f3a3bc339cd85feb98b50a4"
+        },
+        {
+          "path": "build/formal/bad/model/design_smt2.ys",
+          "bytes": 170,
+          "sha256": "e097baf2e5dfcd1d799eca2cb44a8a12937c5483d27ea0f7d4ea9a991d34dc2f"
+        },
+        {
+          "path": "build/formal/bad/src/bad.sv",
+          "bytes": 181,
+          "sha256": "eb307c86c6ae93064f44115f33a586b629e429a52e403fd35cc3faec14907b67"
+        },
+        {
+          "path": "build/formal/bad/status",
+          "bytes": 9,
+          "sha256": "54c2862151d1efdbec1fb49edb5766e6e0c15c24e532866ac1305bd25dabc02c"
+        },
+        {
+          "path": "build/formal/bad/status.sqlite",
+          "bytes": 24576,
+          "sha256": "4a9ced7983d69a8f839e189876427b7ac2f52157fb19caeb9d39e71d4ba2bfcf"
+        }
+      ],
+      "duration_seconds": 0.385
+    },
+    "fpga_tangnano9k_build": {
+      "state": "passed",
+      "required_tools": [
+        "yosys",
+        "nextpnr-gowin",
+        "gowin_pack"
+      ],
+      "missing_tools": [],
+      "evidence": "real-cli-fixture",
+      "command": [
+        "/workspace/scratch/5224b9a4a425/managed-toolchains/oss-cad-suite-2026-10-18-linux-x64/oss-cad-suite/bin/tabbypy3",
+        "/workspace/scratch/5224b9a4a425/verilog-workbench/vwb.py",
+        "--root",
+        "/tmp/vwb-m0-hk1_33xx/fpga_tangnano9k_build",
+        "--src-dir",
+        "src",
+        "--test-dir",
+        "test",
+        "--build-dir",
+        "build",
+        "--color",
+        "never",
+        "--verbose",
+        "fpga",
+        "m0_fpga",
+        "--board",
+        "tangnano9k",
+        "--stage",
+        "pack"
+      ],
+      "project": "/tmp/vwb-m0-hk1_33xx/fpga_tangnano9k_build",
+      "returncode": 0,
+      "note": "Expected nonempty packed bitstream; no USB programming performed.",
+      "log": "/tmp/vwb-m0-hk1_33xx/fpga_tangnano9k_build.log",
+      "log_sha256": "e3fc6902f444cb761497a3fa89cee7195b7a73f1d6908aaed2e021473edbab33",
+      "log_excerpt": null,
+      "artifacts": [
+        {
+          "path": "build/.vwb-root",
+          "bytes": 72,
+          "sha256": "be613ded069cb8d3b10898976846ffb6533224788b40f9f10d5a10f979e5f477"
+        },
+        {
+          "path": "build/fpga/gowin/m0_fpga/fpga.tcl",
+          "bytes": 370,
+          "sha256": "64ea1175d087638fc6adc46ea91081b20e6db4e1faeb466aab3f508799003a5c"
+        },
+        {
+          "path": "build/fpga/gowin/m0_fpga/m0_fpga-pnr.json",
+          "bytes": 8389,
+          "sha256": "07efaae2dca85725235de1b04a0d4570257d7792b3da9af5b66b4736b2ae8541"
+        },
+        {
+          "path": "build/fpga/gowin/m0_fpga/m0_fpga.fs",
+          "bytes": 2069320,
+          "sha256": "461808fd9776dff169a90700123cb91dddb05555a1641ea18bfcc8611fc48c37"
+        },
+        {
+          "path": "build/fpga/gowin/m0_fpga/m0_fpga.json",
+          "bytes": 1076463,
+          "sha256": "b13106efad0bd4fd27e0970d1e145935cebeb46bcf3a755ac1cd7a6a499ab85f"
+        }
+      ],
+      "duration_seconds": 3.644
+    },
+    "fpga_icebreaker_build": {
+      "state": "passed",
+      "required_tools": [
+        "yosys",
+        "nextpnr-ice40",
+        "icepack"
+      ],
+      "missing_tools": [],
+      "evidence": "real-cli-fixture",
+      "command": [
+        "/workspace/scratch/5224b9a4a425/managed-toolchains/oss-cad-suite-2026-10-18-linux-x64/oss-cad-suite/bin/tabbypy3",
+        "/workspace/scratch/5224b9a4a425/verilog-workbench/vwb.py",
+        "--root",
+        "/tmp/vwb-m0-hk1_33xx/fpga_icebreaker_build",
+        "--src-dir",
+        "src",
+        "--test-dir",
+        "test",
+        "--build-dir",
+        "build",
+        "--color",
+        "never",
+        "--verbose",
+        "fpga",
+        "m0_fpga",
+        "--board",
+        "icebreaker",
+        "--stage",
+        "pack"
+      ],
+      "project": "/tmp/vwb-m0-hk1_33xx/fpga_icebreaker_build",
+      "returncode": 0,
+      "note": "Expected nonempty packed bitstream; no USB programming performed.",
+      "log": "/tmp/vwb-m0-hk1_33xx/fpga_icebreaker_build.log",
+      "log_sha256": "a48c6e62aace15fc41876ae19d83ded250377dd5d38353255d7107970ab03824",
+      "log_excerpt": null,
+      "artifacts": [
+        {
+          "path": "build/.vwb-root",
+          "bytes": 72,
+          "sha256": "be613ded069cb8d3b10898976846ffb6533224788b40f9f10d5a10f979e5f477"
+        },
+        {
+          "path": "build/fpga/ice40/m0_fpga/fpga.tcl",
+          "bytes": 370,
+          "sha256": "37862f90b1919c308949b85845053c2bfd63e1d014b90f52c7f87e4b4718cdde"
+        },
+        {
+          "path": "build/fpga/ice40/m0_fpga/m0_fpga.asc",
+          "bytes": 704747,
+          "sha256": "f2bd8c1a7056c488524adb4cfc93af02ff938aef6cd75d76e1737f2ad8339e7d"
+        },
+        {
+          "path": "build/fpga/ice40/m0_fpga/m0_fpga.bin",
+          "bytes": 104090,
+          "sha256": "fe65f21ee6137e7fe9970181dba55dc55786dcdf7375687082c03aef078e31cd"
+        },
+        {
+          "path": "build/fpga/ice40/m0_fpga/m0_fpga.json",
+          "bytes": 444689,
+          "sha256": "8b09cba5ae36adfb7b21f750eb02153d48291ce8a5192eee145a8f15eabeb7d6"
+        }
+      ],
+      "duration_seconds": 0.888
+    },
+    "fpga_tangnano9k_programming": {
+      "state": "not_run",
+      "required_tools": [
+        "openFPGALoader"
+      ],
+      "missing_tools": [],
+      "evidence": "not-selected",
+      "note": "Physical board, cable, native driver/permissions and explicit programming test required."
+    },
+    "fpga_icebreaker_programming": {
+      "state": "not_run",
+      "required_tools": [
+        "openFPGALoader"
+      ],
+      "missing_tools": [],
+      "evidence": "not-selected",
+      "note": "Physical board, cable, native driver/permissions and explicit programming test required."
+    }
+  },
+  "execution_scope": "Real CLI smoke fixtures; physical programming and clean-machine installation are not exercised.",
+  "evidence_directory": "/tmp/vwb-m0-hk1_33xx",
+  "path_case": "ordinary",
+  "fixture_sha256": {
+    "formal/bad.sby": "22efd573b67bda3f3ca48e219cf8cd037e27cc671b13141d31553ee2662dee34",
+    "formal/bad.sv": "eb307c86c6ae93064f44115f33a586b629e429a52e403fd35cc3faec14907b67",
+    "formal/good.sby": "fc19c2609e5f1b45a03ef7d9a282cd92262ecc2a33a473047fca2c64d8045461",
+    "formal/good.sv": "6ccf9855c885a2991db3e2b53bf4b947d9861aa5e6368f8c34a4808ed612af9a",
+    "src/io.cst": "3226e050934c81563db1242fb2d1bf95066fb9d44cffa0c061866d59111e4878",
+    "src/io.pcf": "97ae9b2c677d62cdfea5486a366535505dce5f2180961330abce1ac4707e124d",
+    "src/m0_fpga.v": "3dee0e1e7fc940e8f05185431c5d4a4d9b9254b3f1043f87eb139f3d66cccc5d",
+    "src/m0_gate.v": "ad3ef15d3236ddd1938216b9342606fffc34ce1fd466c9363f9a383a8d1c9239",
+    "src/m0_sv.sv": "8ea99a4c742652e65c0948980770ebfe0d82b600b5fa9b4818624148e8a4a937",
+    "src/m0_vhdl.vhd": "c4d34c7683974d7092950955567040812f9b5bf17f40b48896a2e17e04b9fe62",
+    "test/__init__.py": "f7436bf802698546bfd6f6d9fc6c5b01540a553b015edecb2e6c010469470627",
+    "test/test_m0_cocotb.py": "9497c26c826c1080ede032d51241023732bbefa3467ace087f609183dcf78fcf",
+    "test/test_m0_gate.v": "841ef9457f6851014fd64589d55f4cb8fd2af520696bc679bdafda1587824ede",
+    "test/test_m0_sv.sv": "11a9d7c487d9dcafcd1c90d9ac0b3631702dcd403a2ad1f7fbd20c0e0807a0e6",
+    "test/test_m0_vhdl.vhd": "439bc82fbf99b6e951a48a4b143131ea1a86be01dfb2e48d69fef14f1e5b2fae"
+  },
+  "source_sha256": {
+    "vwb.py": "6f9a98887c3759cbffb82f3f642dc86cd1a8717dec852943e096a0bde58b12cc",
+    "companion/process.py": "8e80f4713632d1e77dab2e1a4ed3ce6536e93bf65063e9007ed38791539fdcd2",
+    "companion/toolchains.py": "f134ad8d5902006a2c9b66853c4cececba7ae9f88ac438eda33d1b35bb7eae88",
+    "scripts/probe_toolchain.py": "dcaeefe8e0f4a7125754eab3670d4388bfc195d58e72aecb93b35da747729b75"
+  },
+  "smoke_passed": true
+}

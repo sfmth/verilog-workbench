@@ -16,10 +16,13 @@ import shutil
 import signal
 import subprocess
 import sys
+import tempfile
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Iterable, Sequence, TextIO
+
+from companion.process import run_process
 
 
 VERSION = "0.2.0"
@@ -2298,67 +2301,22 @@ class Workbench:
         quiet_capture = not self.verbose and not capture
         pipe_output = capture or quiet_capture
         try:
-            process = subprocess.Popen(
-                argv,
-                cwd=str(cwd) if cwd else None,
-                env=env,
-                text=True,
-                stdout=subprocess.PIPE if pipe_output else None,
-                stderr=subprocess.PIPE if pipe_output else None,
-                start_new_session=True,
+            result = run_process(
+                argv, cwd=cwd, env=env, capture=pipe_output, timeout=timeout,
+                # A parent companion job allows a longer grace period so the
+                # CLI can clean this separately owned native-tool session.
+                termination_grace=0.2,
             )
-            try:
-                stdout, stderr = process.communicate(timeout=timeout)
-            except subprocess.TimeoutExpired:
-                try:
-                    os.killpg(process.pid, signal.SIGTERM)
-                except ProcessLookupError:
-                    pass
-                try:
-                    process.wait(timeout=2)
-                except subprocess.TimeoutExpired:
-                    try:
-                        os.killpg(process.pid, signal.SIGKILL)
-                    except ProcessLookupError:
-                        pass
-                else:
-                    # A child can keep captured pipes open after the group
-                    # leader exits, so kill any remaining group members before
-                    # draining output.
-                    try:
-                        os.killpg(process.pid, signal.SIGKILL)
-                    except ProcessLookupError:
-                        pass
-                stdout, stderr = process.communicate()
+            if result.timed_out:
+                # Preserve the CLI's historical empty captured fields on a
+                # timeout, including verbose runs whose output was inherited.
+                result.stdout = result.stdout or ""
+                result.stderr = result.stderr or ""
                 print(
                     f"error: command timed out after {timeout:g}s: {argv[0]}",
                     file=sys.stderr,
                 )
-                return subprocess.CompletedProcess(
-                    argv, 124, stdout or "", stderr or ""
-                )
-            except KeyboardInterrupt:
-                try:
-                    os.killpg(process.pid, signal.SIGTERM)
-                except ProcessLookupError:
-                    pass
-                try:
-                    process.wait(timeout=2)
-                except subprocess.TimeoutExpired:
-                    try:
-                        os.killpg(process.pid, signal.SIGKILL)
-                    except ProcessLookupError:
-                        pass
-                    process.wait()
-                else:
-                    try:
-                        os.killpg(process.pid, signal.SIGKILL)
-                    except ProcessLookupError:
-                        pass
-                raise
-            result = subprocess.CompletedProcess(
-                argv, process.returncode, stdout, stderr
-            )
+                return result
             if quiet_capture and result.returncode != 0:
                 output = "\n".join(
                     part.rstrip()
@@ -2407,7 +2365,31 @@ class Workbench:
             result = self.run([config, option], capture=True)
             value = result.stdout.strip() if result.returncode == 0 else ""
             if value:
+                if variable == "LIBPYTHON_LOC" and not Path(value).is_absolute():
+                    # Some relocatable tool suites return only a library name.
+                    # GHDL's loader needs its real path rather than relying on
+                    # the caller's system library search path.
+                    python_bin = self._cocotb_runtime.get("PYGPI_PYTHON_BIN", "")
+                    prefixes = [Path(config).resolve().parent.parent]
+                    if python_bin:
+                        prefixes.append(Path(python_bin).resolve().parent.parent)
+                    candidates = [prefix / directory / value for prefix in prefixes
+                                  for directory in ("lib", "lib64", "DLLs", "bin", "")]
+                    value = next((str(path.resolve()) for path in candidates if path.is_file()), value)
                 self._cocotb_runtime[variable] = value
+        # Modern GPI no longer starts Python merely by loading the simulator
+        # interface. Query the installed distribution rather than guessing its
+        # startup library, while retaining older cocotb-config compatibility.
+        if "GPI_USERS" not in os.environ:
+            result = self.run([config, "--pygpi-entry-point"], capture=True)
+            entry = result.stdout.strip() if result.returncode == 0 else ""
+            if entry:
+                libraries = []
+                libpython = self._cocotb_runtime.get("LIBPYTHON_LOC")
+                if libpython:
+                    libraries.append(libpython)
+                libraries.append(entry)
+                self._cocotb_runtime["GPI_USERS"] = ";".join(libraries)
 
     def cocotb_library(self) -> tuple[str, str]:
         if self._cocotb_library is None:
@@ -2519,7 +2501,9 @@ class Workbench:
         return sorted(specs, key=lambda item: (item.dut, item.kind, str(item.path)))
 
     def _write_dump_module(self, path: Path, top: str, wave_path: Path) -> None:
-        escaped_path = str(wave_path).replace("\\", "\\\\").replace('"', '\\"')
+        # vvp runs in this directory. An ASCII artifact basename also avoids
+        # Icarus treating UTF-8 directory bytes as nonprintable dumpfile data.
+        escaped_path = wave_path.name.replace("\\", "\\\\").replace('"', '\\"')
         path.write_text(
             "`timescale 1ns/1ps\n"
             "module vwb_dump;\n"
@@ -2528,7 +2512,7 @@ class Workbench:
             f"    $dumpvars(0, {hdl_reference(top)});\n"
             "  end\n"
             "endmodule\n",
-            encoding="ascii",
+            encoding="utf-8",
         )
 
     def _instrument_array_sources(
@@ -3131,7 +3115,7 @@ class Workbench:
             return False, None
         if self.run(
             ["ghdl", "-m", "--std=08", f"--workdir={work_library}", top],
-            cwd=self.root,
+            cwd=work_dir,
         ).returncode != 0:
             return False, None
 
@@ -3142,10 +3126,13 @@ class Workbench:
         environment = os.environ.copy()
         results_file: Path | None = None
         if spec.kind == "cocotb":
+            # Loading the simulator interface initializes the matching Python
+            # runtime settings; do this before taking the environment snapshot.
+            vpi_library = self.ghdl_vpi_library()
             environment, results_file = self._cocotb_environment(
                 spec, work_dir, args, "vhdl"
             )
-            command.append(f"--vpi={self.ghdl_vpi_library()}")
+            command.append(f"--vpi={vpi_library}")
         if args.waves:
             wave_path = work_dir / f"{artifact_component(spec.dut)}.{args.wave_format}"
             command.append(f"--{args.wave_format}={wave_path}")
@@ -3473,7 +3460,7 @@ class Workbench:
                     "ghdl", "-m", "--std=08", f"--workdir={work_library}",
                     *ghdl_args, module,
                 ],
-                cwd=self.root,
+                cwd=output_dir,
             ).returncode == 0
 
         if tool == "verible" and definition.language == "vhdl":
@@ -3548,9 +3535,9 @@ class Workbench:
             ]
             commands.extend(yosys_args)
             if not self.dry_run:
-                script.write_text("\n".join(commands) + "\n", encoding="utf-8")
+                self._write_yosys_tcl_script(script, commands, cwd=self.root)
             result = self.run(
-                ["yosys", "-c", script], cwd=self.root, capture=True
+                ["yosys", "-c", script.name], cwd=script.parent, capture=True
             )
             output = "\n".join(
                 part.rstrip() for part in (result.stdout, result.stderr) if part
@@ -3674,6 +3661,22 @@ class Workbench:
     def _yosys_tcl_command(cls, arguments: Sequence[str | Path]) -> str:
         return "yosys " + " ".join(cls._tcl_quote(item) for item in arguments)
 
+    def _write_yosys_tcl_script(
+        self, path: Path, commands: Sequence[str], *, cwd: Path
+    ) -> None:
+        # Yosys' noninteractive Tcl interpreter can start in ISO-8859-1 even
+        # under a UTF-8 locale. Start from an ASCII basename and ASCII script,
+        # then select UTF-8 and restore the real project working directory.
+        text = "encoding system utf-8\ncd " + self._tcl_quote(cwd) + "\n"
+        text += "\n".join(commands) + "\n"
+        text = "".join(
+            character if ord(character) < 128 else
+            f"\\u{ord(character):04x}" if ord(character) <= 0xffff else
+            f"\\U{ord(character):08x}"
+            for character in text
+        )
+        path.write_text(text, encoding="ascii")
+
     def _vhdl_to_verilog(
         self, module: str, output_dir: Path
     ) -> Path:
@@ -3691,7 +3694,7 @@ class Workbench:
             raise VWBError(f"GHDL analysis failed for {module}")
         if self.run(
             ["ghdl", "-m", "--std=08", f"--workdir={work_library}", module],
-            cwd=self.root,
+            cwd=output_dir,
         ).returncode != 0:
             raise VWBError(f"GHDL elaboration failed for {module}")
         result = self.run(
@@ -3789,8 +3792,8 @@ class Workbench:
 
         commands = gate_commands(netlist, simlib, coarse=False)
         if not self.dry_run:
-            script.write_text("\n".join(commands) + "\n", encoding="utf-8")
-        mapped_result = self.run(["yosys", "-c", script], cwd=self.root)
+            self._write_yosys_tcl_script(script, commands, cwd=self.root)
+        mapped_result = self.run(["yosys", "-c", script.name], cwd=script.parent)
         if self.dry_run:
             return netlist
         mapped_valid = (
@@ -3824,14 +3827,14 @@ class Workbench:
             coarse_netlist = output_dir / f".{artifact_component(module)}_coarse.tmp.v"
             coarse_simlib = output_dir / ".yosys_simlib.coarse.tmp.v"
             coarse_script = output_dir / "gate-coarse.ys"
-            coarse_script.write_text(
-                "\n".join(
-                    gate_commands(coarse_netlist, coarse_simlib, coarse=True)
-                )
-                + "\n",
-                encoding="utf-8",
+            self._write_yosys_tcl_script(
+                coarse_script,
+                gate_commands(coarse_netlist, coarse_simlib, coarse=True),
+                cwd=self.root,
             )
-            result = self.run(["yosys", "-c", coarse_script], cwd=self.root)
+            result = self.run(
+                ["yosys", "-c", coarse_script.name], cwd=coarse_script.parent
+            )
             coarse_valid = (
                 result.returncode == 0
                 and coarse_netlist.is_file()
@@ -3979,6 +3982,7 @@ class Workbench:
         if not self.dry_run:
             output_dir.mkdir(parents=True, exist_ok=True)
         json_path = output_dir / f"{output_name}.json"
+        rtlil_path = output_dir / f"{output_name}.il"
         script_path = output_dir / "synth.tcl"
         sources = self.yosys_sources(
             module, output_dir, args.define, args.include
@@ -4008,10 +4012,17 @@ class Workbench:
                 ]
             )
         commands.append(self._yosys_tcl_command(["write_json", json_path]))
+        if args.format != "json":
+            # Keep the exact internal design for rendering. Some upstream
+            # Yosys JSON writers mishandle UTF-8 source-location attributes;
+            # RTLIL round-trips them without corrupting the visual workflow.
+            commands.append(self._yosys_tcl_command(["write_rtlil", rtlil_path]))
 
         if not self.dry_run:
-            script_path.write_text("\n".join(commands) + "\n", encoding="utf-8")
-        result = self.run(["yosys", "-c", script_path], cwd=self.root)
+            self._write_yosys_tcl_script(script_path, commands, cwd=self.root)
+        result = self.run(
+            ["yosys", "-c", script_path.name], cwd=script_path.parent
+        )
         if result.returncode != 0:
             raise VWBError(f"Yosys synthesis failed for {module}")
 
@@ -4098,7 +4109,7 @@ class Workbench:
                 show_options.append("-long")
             show_options.append(yosys_top)
             render_commands = [
-                self._yosys_command(["read_json", render_json_path.name]),
+                self._yosys_command(["read_rtlil", rtlil_path.name]),
                 self._yosys_command(show_options),
             ]
             if not self.dry_run:
@@ -4230,6 +4241,64 @@ class Workbench:
                 raise VWBError(f"viewer failed for {artifact}")
         return artifact
 
+    def _publish_formal_workdir(
+        self, workdir: Path, output: Path, config: Path
+    ) -> None:
+        """Publish completed or interrupted SBY results without moving inputs."""
+        if not workdir.exists():
+            return
+        if not workdir.is_dir() or workdir.is_symlink():
+            raise VWBError(f"unsafe formal work directory; results retained at {workdir}")
+        if not any(workdir.iterdir()):
+            workdir.rmdir()
+            return
+        try:
+            (workdir / "vwb-formal-run.json").write_text(
+                json.dumps({
+                    "schema_version": 1, "configuration": str(config),
+                    "configuration_cwd": str(config.parent),
+                    "execution_workdir": str(workdir), "output": str(output),
+                    "relocated_results": True,
+                    "note": "Logs retain historical execution paths. Rerun VWB formal to rebuild; resume from the relocated directory is not guaranteed.",
+                }, indent=2) + "\n", encoding="utf-8",
+            )
+            incoming = Path(tempfile.mkdtemp(prefix=".vwb-formal-result-", dir=output.parent))
+            incoming.rmdir()
+        except OSError as exc:
+            raise VWBError(f"could not prepare formal publication: {exc}; results retained at {workdir}") from exc
+        backup: Path | None = None
+        try:
+            # shutil.move also handles a configured build directory on another
+            # filesystem. Publish from output.parent only after that copy ends.
+            shutil.move(str(workdir), str(incoming))
+            if output.exists() or output.is_symlink():
+                if not output.is_dir() or output.is_symlink():
+                    raise OSError(f"refusing to replace non-directory formal output: {output}")
+                backup = Path(tempfile.mkdtemp(prefix=".vwb-formal-previous-", dir=output.parent))
+                backup.rmdir()
+                os.replace(output, backup)
+            try:
+                os.replace(incoming, output)
+            except BaseException:
+                if backup is not None:
+                    os.replace(backup, output)
+                    backup = None
+                raise
+        except BaseException as exc:
+            recovery = ", ".join(
+                str(path) for path in (workdir, incoming, backup)
+                if path is not None and path.exists()
+            )
+            print(f"formal results retained for recovery at {recovery}", file=sys.stderr)
+            if isinstance(exc, OSError):
+                raise VWBError(f"could not publish formal results to {output}: {exc}; results retained at {recovery}") from exc
+            raise
+        if backup is not None:
+            try:
+                shutil.rmtree(backup)
+            except OSError:
+                print(f"warning: previous formal results remain at {backup}", file=sys.stderr)
+
     def run_formal(self, config_value: str | None, view: bool) -> Path:
         self.require_tool("sby")
         if config_value:
@@ -4253,10 +4322,31 @@ class Workbench:
         self.prepare_build_dir()
         if not self.dry_run:
             output.parent.mkdir(parents=True, exist_ok=True)
-        result = self.run(
-            ["sby", "-f", "-d", output, config],
-            cwd=config.parent,
-        )
+        # SBY uses its workdir argument inside unquoted shell commands. Keep
+        # source resolution at the real config directory, but avoid repeating
+        # a space/Unicode-containing project prefix in those internal commands.
+        # Different Windows drives cannot be expressed by a relative path.
+        try:
+            sby_output = Path(os.path.relpath(output, config.parent))
+        except ValueError:
+            sby_output = output
+        staging: Path | None = None
+        if not re.fullmatch(r"[A-Za-z0-9_./-]+", sby_output.as_posix()):
+            # Only the generated output changes location. The actual config
+            # and its relative [files] inputs are still read in config.parent.
+            if self.dry_run:
+                sby_output = Path(".vwb-sby-preview")
+            else:
+                staging = Path(tempfile.mkdtemp(prefix=".vwb-sby-", dir=config.parent))
+                sby_output = Path(staging.name)
+        try:
+            result = self.run(
+                ["sby", "-f", "-d", sby_output.as_posix(), config.name],
+                cwd=config.parent,
+            )
+        finally:
+            if staging is not None:
+                self._publish_formal_workdir(staging, output, config)
         if result.returncode != 0:
             raise VWBError(f"formal verification failed: {config}")
         if view:
@@ -4308,22 +4398,16 @@ class Workbench:
             ]
         )
         if not self.dry_run:
-            script.write_text(
-                "\n".join(
-                    [
-                        self._yosys_read_sources_command(
-                            sources, defines, args.include
-                        ),
-                        self._yosys_tcl_command(
-                            ["hierarchy", "-check", "-top", yosys_top]
-                        ),
-                        synth_command,
-                    ]
-                )
-                + "\n",
-                encoding="utf-8",
+            self._write_yosys_tcl_script(
+                script,
+                [
+                    self._yosys_read_sources_command(sources, defines, args.include),
+                    self._yosys_tcl_command(["hierarchy", "-check", "-top", yosys_top]),
+                    synth_command,
+                ],
+                cwd=output,
             )
-        if self.run(["yosys", "-c", script], cwd=output).returncode != 0:
+        if self.run(["yosys", "-c", script.name], cwd=output).returncode != 0:
             raise VWBError(f"FPGA synthesis failed for {module}")
         artifact: Path = design_json
         if requested_index == 0:
@@ -4343,7 +4427,17 @@ class Workbench:
             ]
             if "himbaechel" in pnr_variant:
                 if pnr_variant == "nextpnr-himbaechel":
-                    command.extend(["--uarch", "gowin"])
+                    # Older generic builds need --uarch; recent builds infer
+                    # the architecture from --device and reject that option.
+                    needs_uarch = True
+                    if not self.dry_run:
+                        help_result = self.run([pnr_tool, "--help"], capture=True, timeout=10)
+                        help_text = (help_result.stdout or "") + (help_result.stderr or "")
+                        if help_result.returncode != 0 or "--device" not in help_text:
+                            raise VWBError("cannot inspect nextpnr-himbaechel options")
+                        needs_uarch = bool(re.search(r"(?<![\w-])--uarch(?:\s|=|,)", help_text))
+                    if needs_uarch:
+                        command.extend(["--uarch", "gowin"])
                 command.extend(
                     [
                         "--vopt",
@@ -5749,5 +5843,18 @@ def main(argv: Sequence[str] | None = None) -> int:
         return 0
 
 
+def _cli_main() -> int:
+    def terminate_as_interrupt(_signum: int, _frame: object) -> None:
+        # Companion cancellation sends TERM to this CLI's process group.
+        # Unwind Workbench.run so it cleans native tools in their own sessions.
+        raise KeyboardInterrupt
+
+    previous = signal.signal(signal.SIGTERM, terminate_as_interrupt)
+    try:
+        return main()
+    finally:
+        signal.signal(signal.SIGTERM, previous)
+
+
 if __name__ == "__main__":
-    raise SystemExit(main())
+    raise SystemExit(_cli_main())
