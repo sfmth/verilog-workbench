@@ -113,7 +113,9 @@ class PreviewTests(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
-        self.root = Path(self.temp.name)
+        # Windows TemporaryDirectory may use an 8.3 parent alias (RUNNER~1).
+        # Preview/snapshot APIs intentionally return canonical long-path URIs.
+        self.root = Path(self.temp.name).resolve(strict=True)
         self.path = self.root / "μ space.py"
         self.path.write_bytes("🦉 = 1\r\nvalue = 2\r\n".encode())
         self.uri = self.path.as_uri()
@@ -146,6 +148,27 @@ class PreviewTests(unittest.TestCase):
         edit = {"documentChanges": [{"textDocument": {"uri": self.uri, "version": 2}, "edits": edits}]}
         with self.assertRaisesRegex(LspError, "version conflict"):
             preview_workspace_edit(self.root, edit, self.snapshots, {self.uri: 1})
+
+    def test_uri_alias_uses_canonical_version_and_snapshot_keys(self):
+        directory, filename = self.uri.rsplit("/", 1)
+        alias = f"{directory}/./{filename}"
+        edits = self.edit()["changes"][self.uri]
+        edit = {"documentChanges": [{"textDocument": {"uri": alias, "version": 2}, "edits": edits}]}
+        result = preview_workspace_edit(self.root, edit, self.snapshots, {self.uri: 2})
+        self.assertEqual(set(result), {self.uri})
+        with self.assertRaisesRegex(LspError, "version conflict"):
+            preview_workspace_edit(self.root, edit, self.snapshots, {self.uri: 1})
+        self.path.write_text("external edit")
+        with self.assertRaisesRegex(LspError, "conflict"):
+            preview_workspace_edit(self.root, edit, self.snapshots, {self.uri: 2})
+
+    def test_two_uri_aliases_cannot_bypass_duplicate_document_check(self):
+        directory, filename = self.uri.rsplit("/", 1)
+        alias = f"{directory}/./{filename}"
+        edits = self.edit()["changes"][self.uri]
+        with self.assertRaisesRegex(LspError, "Duplicate document"):
+            preview_workspace_edit(self.root,
+                {"changes": {self.uri: edits, alias: edits}}, self.snapshots)
 
     def test_overlapping_or_external_edits_rejected(self):
         edit = self.edit()

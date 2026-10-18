@@ -1,4 +1,6 @@
 import importlib.util
+import contextlib
+import io
 import json
 from pathlib import Path
 import struct
@@ -139,6 +141,20 @@ class ToolchainTests(unittest.TestCase):
         arm = lock["targets"]["windows-arm64"]
         self.assertEqual(arm["binary_architecture"], "x64")
         self.assertEqual(arm["status"], "blocked")
+
+    def test_blocked_workflow_summary_survives_json_file_output(self):
+        with mock.patch("companion.toolchains.shutil.which", return_value=None):
+            report = capability_report(probe_versions=False)
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            output, stderr, stdout = root / "probe.json", io.StringIO(), io.StringIO()
+            arguments = ["probe_toolchain.py", "--execute", "--only", "vhdl_simulation", "--work-dir", str(root / "logs"), "--output", str(output)]
+            with mock.patch("sys.argv", arguments), mock.patch.object(probe, "capability_report", return_value=report), contextlib.redirect_stderr(stderr), contextlib.redirect_stdout(stdout):
+                result = probe.main()
+            self.assertEqual(result, 1)
+            self.assertEqual(json.loads(output.read_text())["workflows"]["vhdl_simulation"]["state"], "blocked")
+            self.assertIn("vhdl_simulation: blocked; missing tools: ghdl", stderr.getvalue())
+            self.assertEqual(stdout.getvalue(), "")
 
 
 if __name__ == "__main__":

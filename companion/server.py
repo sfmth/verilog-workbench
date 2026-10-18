@@ -7,6 +7,7 @@ import json
 import re
 import secrets
 import sys
+from socketserver import TCPServer
 import threading
 import time
 from urllib.parse import parse_qs, urlsplit
@@ -253,6 +254,13 @@ class CompanionState:
 class CompanionHTTPServer(ThreadingHTTPServer):
     daemon_threads = True
     block_on_close = False
+    def server_bind(self):
+        # HTTPServer's implementation reverse-resolves the bind address using
+        # getfqdn. A numeric loopback service needs no DNS, and cold resolver
+        # delays must not hold native startup hostage (notably on macOS).
+        TCPServer.server_bind(self)
+        self.server_name, self.server_port = self.server_address[:2]
+
     def server_close(self):
         self.state.close()
         super().server_close()

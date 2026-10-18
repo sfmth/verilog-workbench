@@ -43,6 +43,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - name: Install CLI completion dependency in the selected Python
+        run: python -m pip install "argcomplete>=3,<5"
       - name: Companion, process, protocol, packaging and LSP unit checks
         run: python -m unittest discover -s tests -v
       - name: Existing VWB regression checks
@@ -63,6 +65,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: m0-${{ matrix.target }}
+          include-hidden-files: true
           path: |
             .m0-evidence/*.json
             dist/*.zip
@@ -96,6 +99,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: m0-toolchains-${{ matrix.target }}
+          include-hidden-files: true
           path: |
             .m0-evidence/**/*.json
             .m0-evidence/**/*.log
@@ -118,6 +122,7 @@ jobs:
         if: always()
         with:
           name: m0-toolchains-arch-userspace
+          include-hidden-files: true
           path: |
             .m0-evidence/**/*.json
             .m0-evidence/**/*.log

@@ -175,6 +175,20 @@ def main() -> int:
         args.output.write_text(content, encoding="utf-8")
     else:
         print(content, end="")
+    if args.execute:
+        selected = args.only or SMOKE_WORKFLOWS
+        passed = sum(report["workflows"][name]["state"] == "passed" for name in selected)
+        print(f"Native workflows {report['platform']['target']}: {passed}/{len(selected)} passed", file=sys.stderr)
+        for name in selected:
+            workflow = report["workflows"][name]
+            if workflow["state"] == "passed":
+                continue
+            detail = workflow.get("error") or workflow.get("note", "")
+            if workflow["missing_tools"]:
+                detail = "missing tools: " + ", ".join(workflow["missing_tools"])
+            print(f"  {name}: {workflow['state']}; {detail}", file=sys.stderr)
+            if workflow.get("log_excerpt"):
+                print(workflow["log_excerpt"][-1800:], file=sys.stderr)
     return int(args.execute and not report["smoke_passed"])
 
 

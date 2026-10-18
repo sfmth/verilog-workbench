@@ -1,5 +1,6 @@
 import hashlib
 import errno
+import contextlib
 import importlib.util
 import io
 import json
@@ -8,6 +9,7 @@ from pathlib import Path
 import tarfile
 import tempfile
 import unittest
+from unittest import mock
 
 REPO = Path(__file__).resolve().parents[1]
 spec = importlib.util.spec_from_file_location("acquire_toolchain", REPO / "scripts/acquire_toolchain.py")
@@ -133,6 +135,18 @@ class AcquisitionTests(unittest.TestCase):
         environment = acquire.native_environment(self.root, "windows-arm64", {"PATH": ""})
         self.assertEqual(environment["PYTHON_EXECUTABLE"], str(self.root / "lib/python3.exe"))
         self.assertEqual(environment["OPENFPGALOADER_SOJ_DIR"], str(self.root / "share/openFPGALoader"))
+
+    def test_json_output_does_not_suppress_actionable_acquisition_errors(self):
+        archive, output = self.root / "invalid.tgz", self.root / "report.json"
+        archive.write_bytes(b"wrong-size")
+        stderr, stdout = io.StringIO(), io.StringIO()
+        arguments = ["acquire_toolchain.py", "--target", "linux-x64", "--directory", str(self.root / "install"), "--archive", str(archive), "--output", str(output)]
+        with mock.patch("sys.argv", arguments), contextlib.redirect_stderr(stderr), contextlib.redirect_stdout(stdout):
+            result = acquire.main()
+        self.assertEqual(result, 1)
+        self.assertEqual(json.loads(output.read_text())["state"], "failed")
+        self.assertIn("size differs", stderr.getvalue())
+        self.assertEqual(stdout.getvalue(), "")
 
 
 if __name__ == "__main__":

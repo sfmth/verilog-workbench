@@ -11,16 +11,22 @@ cases: 42 executions** across ordinary paths, spaces, and Unicode/spaces. Native
 runtime packaging and semantic editor probes also have local evidence. Those
 results do not turn other platform or hardware cells into passes.
 
+The [first observed CI run](M0_CI_TOOLCHAINS.md) passed the Linux x86-64 real
+toolchain gate and the Chromium browser job. All six native core jobs ran checks
+but failed before their runtime package build steps. The other five toolchain
+jobs and Arch userspace job failed; their workflow details were lost to the
+hidden-artifact upload issue. Follow-up fixes are awaiting another CI run.
+
 | Plan task | Outcome at this checkpoint | Evidence and remaining gate |
 | --- | --- | --- |
 | M0-01 — Protocol and capabilities | Implemented proof | [Protocol](M0_PROTOCOL.md), [reference schema](../protocol/companion-v1.schema.json), [companion](../companion/README.md), and [tool discovery](M0_TOOLCHAINS.md). Project files, authenticated jobs/status, revisions/staleness, and artifacts are exposed. Production diagnostics/editor transport contracts remain integration work. |
 | M0-02 — Runtime/tool acquisition | Partial | [Pinned native runtimes and bundle proof](M0_PACKAGING.md); [managed HDL acquisition and architecture routes](M0_TOOLCHAINS.md). A newly checksum-verified/extracted Linux suite passes all 14 real workflow checks. Other targets, complete managed tools, minimum OS verification, and GHDL gaps remain open. |
-| M0-03 — Portable processes | Implemented; local execution verified | [Runner](../companion/process.py) and [process tests](../tests/test_process.py) cover tree cancellation, timeout and bounded output. Windows containment is implemented; matching native execution remains pending CI. |
+| M0-03 — Portable processes | Implemented; native CI checks started | [Runner](../companion/process.py) and [process tests](../tests/test_process.py) cover tree cancellation, timeout and bounded output. Six native core jobs executed unit checks; complete jobs failed before packaging and need the follow-up CI fixes verified. |
 | M0-04 — Local-folder I/O | Local proof | [HTTP tests](../tests/test_companion.py) verify launch-authorized folders, inventory/read, atomic revision saves, mode/CRLF preservation, external/concurrent conflicts and path boundaries. Native folder UI, watches, full file lifecycle/recovery, and all-OS checks remain open. |
-| M0-05 — Pages connection | Local browser proof; HTTPS gate open | [Browser evidence and reproduction](M0_BROWSER.md) verifies pairing, CORS, file read/save, conflict protection and a native job in Chromium. The actual public Pages navigation was blocked. Publication needs repository administration; actual HTTPS origin, supported browser/OS matrix, denied permission and reconnect remain gates. |
-| M0-06 — Full toolchain probe | Linux x86-64 local proof | [Ordinary](m0-evidence/toolchains-linux-x64.json), [spaces](m0-evidence/toolchains-linux-x64-spaces.json), and [Unicode/spaces](m0-evidence/toolchains-linux-x64-unicode-spaces.json) each pass 14 non-programming checks. A [custom formal build directory containing whitespace/Unicode](m0-evidence/formal-custom-build-path.json) also passes proof and genuine counterexample checks without moving input sources. Five other targets are unrun. |
+| M0-05 — Pages connection | Local and CI Chromium proof; HTTPS gate open | [Browser evidence and reproduction](M0_BROWSER.md) verifies pairing, CORS, file read/save, conflict protection and a native job in Chromium; the CI browser job also passed. [Pages configuration](https://github.com/sfmth/verilog-workbench/actions/runs/39150223828) failed with site Not Found. Publication enablement and actual HTTPS origin, supported browser/OS matrix, denied permission and reconnect remain gates. |
+| M0-06 — Full toolchain probe | Linux x86-64 local and CI proof | [Ordinary](m0-evidence/toolchains-linux-x64.json), [spaces](m0-evidence/toolchains-linux-x64-spaces.json), and [Unicode/spaces](m0-evidence/toolchains-linux-x64-unicode-spaces.json) each pass 14 non-programming checks. A [custom formal build directory containing whitespace/Unicode](m0-evidence/formal-custom-build-path.json) also passes proof and genuine counterexample checks without moving input sources. The [first CI toolchain gate](M0_CI_TOOLCHAINS.md) passed Linux x86-64; the other five targets failed with individual workflow diagnoses unavailable pending the upload/logging fix and rerun. |
 | M0-07 — Host FPGA programming | Not run | Tang Nano 9K and iCEBreaker packing passed locally. Physical boards/cables were unavailable; programming, native drivers/permissions and observed device behavior are unverified. |
-| M0-08 — Clean native installation | Partial | The [official Linux runtime bundle proof](../packaging/m0-linux-evidence.json) runs relocated with no system Python on PATH and poisoned Python environment variables. [Six-target CI](../.github/workflows/m0.yml) is configured but has not run at this checkpoint. Full tool installation, repair/uninstall, signing, and clean target-machine evidence remain open. |
+| M0-08 — Clean native installation | Partial | The [official Linux runtime bundle proof](../packaging/m0-linux-evidence.json) runs relocated with no system Python on PATH and poisoned Python environment variables. The first [six-target CI](../.github/workflows/m0.yml) executed checks but failed before native runtime package builds. Full tool installation, repair/uninstall, signing, and clean target-machine evidence remain open. |
 | M0-09 — Semantic editor workflows | Local feasibility proof | [Editor evidence](M0_EDITOR.md) establishes configured cross-file completion/hover/definition/references and exact rename previews for SV, VHDL and Python fixtures with post-edit checks. The production browser/LSP bridge is M1 integration work; safe commit/rollback, collisions, dirty buffers, undo/recovery and all-OS coverage remain required release gates. |
 
 ## Scope of observed passes
@@ -48,12 +54,12 @@ not constitute a production editor or general-purpose refactoring engine.
 
 | Required target | Current evidence | Required remaining proof |
 | --- | --- | --- |
-| Linux x86-64, including Manjaro/Arch | Linux development-host runtime/API, process, toolchain and editor proofs | Clean native setup, Manjaro/Arch run, actual Pages/browser matrix, both boards and complete UI workflows |
-| Windows x86-64 | Pinned runtime/tool candidates and CI configuration | Native execution; integrated standalone GHDL/Python/VPI route; browser, install and board evidence |
-| macOS Apple Silicon | Pinned native runtime/suite candidates, including bundled GHDL | Native execution; quarantine/signing, browser, clean setup and board evidence |
-| macOS Intel | Pinned current runtime/suite candidates | Native execution; sustainable suite distribution, missing bundled GHDL route, browser, install and boards |
-| Linux ARM64 | Pinned native runtime/suite candidates | Native execution; reproducible supplemental GHDL route, browser, install and boards; no assumed x64 translation |
-| Windows ARM64 | Pinned native CPython and candidate OS x64 tool translation | Native execution; compatible full tool/runtime set and GHDL route, ARM64 drivers, browser, install and boards |
+| Linux x86-64, including Manjaro/Arch | Development-host proofs and passing CI HDL gate; Arch userspace job failed without retained diagnosis | Clean native setup, diagnosed Arch/Manjaro pass, actual Pages/browser matrix, both boards and complete UI workflows |
+| Windows x86-64 | Native CI checks ran; core and toolchain jobs failed before complete evidence | Full workflow verification; integrated standalone GHDL/Python/VPI route; browser, install and boards |
+| macOS Apple Silicon | Native CI checks ran; core and toolchain jobs failed before complete evidence | Full workflow verification; quarantine/signing, browser, clean setup and boards |
+| macOS Intel | Native CI checks ran; core and toolchain jobs failed before complete evidence | Full workflow verification; sustainable suite distribution, missing bundled GHDL route, browser, install and boards |
+| Linux ARM64 | Native CI checks ran; core and toolchain jobs failed before complete evidence | Full workflow verification; reproducible supplemental GHDL route, browser, install and boards; no assumed x64 translation |
+| Windows ARM64 | Native ARM64 CI checks ran; core and candidate translated-toolchain jobs failed | Full tool/runtime workflow verification and GHDL route, ARM64 drivers, browser, install and boards |
 
 OSS CAD Suite currently supplies GHDL and its Yosys plugin only on Linux x86-64
 and macOS ARM64. A separately pinned Windows x64 GHDL archive is a candidate,
@@ -77,10 +83,12 @@ services or attach FPGA hardware.
 An additional Arch Linux container checks the rolling distribution's userspace
 against the pinned native tools. This is a developer feasibility check;
 end users do not need Docker, and it does not certify a clean Manjaro/Arch host.
-Configured CI and asset availability are distinct from observed passing jobs.
+The [first CI observation](M0_CI_TOOLCHAINS.md) distinguishes observed job
+outcomes from missing retained diagnoses. Follow-up logging/upload and core-test
+fixes need another run; configuration and asset availability are not passes.
 
-Public GitHub Pages publication and real deployed-origin/browser acceptance
-remain pending repository administration and execution evidence. A local
+Public GitHub Pages configuration failed with site Not Found, so publication
+enablement and real deployed-origin/browser acceptance remain open. A local
 browser demo alone cannot satisfy that gate. No unavailable host, missing tool,
 unrun CI job or unattached board is labeled passed in this report.
 

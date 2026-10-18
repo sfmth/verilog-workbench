@@ -256,6 +256,13 @@ def main() -> int:
         args.output.write_text(text, encoding="utf-8")
     else:
         print(text, end="")
+    print(f"Toolchain acquisition {args.target}: {report['state']}", file=sys.stderr)
+    if report.get("error"):
+        print(report["error"], file=sys.stderr)
+    if "probe" in report:
+        print(f"Native workflow probe: {report['probe']['state']} (exit {report['probe']['returncode']})", file=sys.stderr)
+        if report["probe"].get("log_excerpt"):
+            print(report["probe"]["log_excerpt"][-16000:], file=sys.stderr)
     return status
 
 

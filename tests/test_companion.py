@@ -1,10 +1,11 @@
 """Exercise actual HTTP handling, grants and the native job adapter."""
 import concurrent.futures
+from collections import deque
 import http.client
 import json
 import os
 from pathlib import Path
-import select
+import queue
 import signal
 import stat
 import subprocess
@@ -73,6 +74,15 @@ class CompanionTests(unittest.TestCase):
         status, data, _ = self.request("GET", "/v1/health", origin=None)
         self.assertEqual(status, 200)
         self.assertEqual(set(data), {"status", "protocol", "version"})
+
+    def test_numeric_loopback_startup_never_reverse_resolves_dns(self):
+        with patch("socket.getfqdn", side_effect=AssertionError("loopback startup must not query DNS")):
+            server = create_server(self.root, ORIGIN)
+        try:
+            self.assertEqual(server.server_name, "127.0.0.1")
+            self.assertGreater(server.server_port, 0)
+        finally:
+            server.server_close()
 
     def test_exact_origin_host_and_bearer_required(self):
         self.pair()
@@ -350,6 +360,20 @@ class CompanionTests(unittest.TestCase):
         )
         host = subprocess.Popen([sys.executable, "-c", bootstrap], cwd=Path(__file__).resolve().parents[1],
                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        ready_lines = queue.Queue(maxsize=1)
+        stderr_chunks = deque(maxlen=16)
+        def read_ready():
+            ready_lines.put(host.stdout.readline(4097))
+        def read_stderr():
+            while True:
+                chunk = os.read(host.stderr.fileno(), 1024)
+                if not chunk:
+                    break
+                stderr_chunks.append(chunk.decode("utf-8", errors="replace"))
+        ready_thread = threading.Thread(target=read_ready, daemon=True)
+        stderr_thread = threading.Thread(target=read_stderr, daemon=True)
+        ready_thread.start()
+        stderr_thread.start()
         pids = []
         proc_pids = {}
         def running(pid):
@@ -373,8 +397,12 @@ class CompanionTests(unittest.TestCase):
             connection.close()
             return response.status, data
         try:
-            self.assertTrue(select.select([host.stdout], [], [], 10)[0], "companion did not become ready")
-            ready = json.loads(host.stdout.readline())
+            try:
+                line = ready_lines.get(timeout=10)
+            except queue.Empty:
+                self.fail(f"companion did not become ready; exit={host.poll()}, stderr={''.join(stderr_chunks)[-8192:]!r}")
+            self.assertTrue(line, f"companion closed stdout before ready; exit={host.poll()}, stderr={''.join(stderr_chunks)[-8192:]!r}")
+            ready = json.loads(line)
             port = int(ready["url"].rsplit(":", 1)[1])
             status, paired = native_request("POST", "/v1/pair", {"code": ready["pairing_code"]})
             self.assertEqual(status, 200)
@@ -394,7 +422,8 @@ class CompanionTests(unittest.TestCase):
             self.assertTrue(all(running(pid) for pid in pids))
             host.send_signal(signal.SIGTERM)
             host.wait(timeout=10)
-            self.assertEqual(host.returncode, 0, host.stderr.read())
+            stderr_thread.join(timeout=2)
+            self.assertEqual(host.returncode, 0, "".join(stderr_chunks))
             deadline = time.monotonic() + 3
             while any(running(pid) for pid in pids) and time.monotonic() < deadline:
                 time.sleep(0.02)
@@ -409,6 +438,8 @@ class CompanionTests(unittest.TestCase):
                         os.kill(pid, signal.SIGKILL)
                     except ProcessLookupError:
                         pass
+            ready_thread.join(timeout=2)
+            stderr_thread.join(timeout=2)
             host.stdout.close()
             host.stderr.close()
 
