@@ -1,10 +1,11 @@
 # VWB website port plan
 
-Status: launch platforms, native installation, local-folder storage and feature
-scope confirmed. Toolchain feasibility and remaining editor/board details are
-open. No implementation has started.
+Status: initial product requirements confirmed, including CPU compatibility,
+advanced editing and launch boards. Toolchain and language-service feasibility
+remain engineering work. No implementation has started.
 
 Started: 2026-10-17 (America/Los_Angeles).
+Latest owner decisions: 2026-10-18 (America/Los_Angeles).
 
 Planning branch: `web-port-plan`.
 Inspected baseline: `master` at `3e384347b93c69266b055c65eda8a6cd308d4536`.
@@ -13,10 +14,11 @@ Inspected baseline: `master` at `3e384347b93c69266b055c65eda8a6cd308d4536`.
 
 Port Verilog Workbench into an editor workspace hosted on GitHub Pages, with
 an optional beginner guide. The owner accepts a local companion, provided it
-is very cross-platform. Continue asking focused product questions while
-developing this plan separately from the existing CLI.
+is very cross-platform. Develop this plan separately from the existing CLI.
+The initial product questions are resolved; ask further questions only when a
+specific unresolved choice materially affects implementation.
 
-Owner decisions recorded on 2026-10-17 (America/Los_Angeles):
+Owner decisions recorded on 2026-10-17 and 2026-10-18 (America/Los_Angeles):
 
 - **Hosting:** GitHub Pages, connected to a native local companion.
 - **Installation:** native application; no Docker or WSL required on any launch
@@ -30,6 +32,12 @@ Owner decisions recorded on 2026-10-17 (America/Los_Angeles):
   waveforms; Cocotb/Python tests; lint and synthesis schematics; FPGA builds
   and programming; VHDL; and formal verification are all required.
 - **Interface:** editor workspace with an optional beginner guide.
+- **ARM tool compatibility:** OS-provided x86-64 compatibility is acceptable
+  for individual tools. Record and verify the route; do not label translated
+  tool binaries ARM64-native. Docker and WSL remain outside the required setup.
+- **Editor capabilities:** syntax highlighting, diagnostics, completion, hover,
+  go-to-definition, references, and project-wide rename/refactoring at launch.
+- **Launch boards:** the existing Tang Nano 9K and iCEBreaker profiles.
 
 Internal development checkpoints may implement smaller slices, but they do
 not satisfy the requested first usable release until all required workflows
@@ -94,7 +102,7 @@ boundary extensible without implementing extra backends prematurely.
 
 | Required workflow | Browser experience | Companion/release proof |
 | --- | --- | --- |
-| Verilog/SystemVerilog editor | Multi-file workspace, includes/defines, top/test selection, useful errors | Discovery, dependency closure, native HDL tests and selected language subset agree with VWB. |
+| Verilog/SystemVerilog editor | Multi-file workspace, highlighting, diagnostics, completion/hover, definition/references, project-wide rename/refactoring, includes/defines and top/test selection | Discovery and semantic edits use the real project configuration; navigation and safe cross-file edits pass language-specific fixtures. |
 | Simulation and waveforms | Run/stop, logs, signal tree, buses/radix, zoom/cursor, saved layouts | Real pass/fail, waveform correctness, cancellation, and limits. Evaluate VCD first; decide FST and GTKWave layout migration explicitly. |
 | Cocotb/Python tests | Edit tests, choose test functions/seed, inspect assertions and results | Packaged Python and simulator libraries work together; real Cocotb tests run, including VHDL where currently supported. |
 | VHDL | Editor, entity/architecture/test discovery, simulation and source-linked diagnostics | Preserve VWB's VHDL-2008 subset, source ordering, native tests and Cocotb. Validate VHDL synthesis separately. |
@@ -102,8 +110,8 @@ boundary extensible without implementing extra backends prematurely.
 | Formal verification | Select/edit configuration, progress, proof status, counterexample waves | Real SBY/solver success, counterexample, failure, timeout and cancellation. Initial scope follows existing VWB rather than every assertion language. |
 | FPGA builds and programming | Board/constraints selection, build stages, output download, explicit program action | Build and physically program the supported boards through the local host, with board/cable/driver checks. |
 
-Start FPGA coverage with the existing fixed Tang Nano 9K and iCEBreaker profiles.
-This preserves current VWB scope; other boards remain a separate product choice.
+The owner confirmed the existing fixed Tang Nano 9K and iCEBreaker profiles
+as launch board scope. Additional boards are later scope, not launch blockers.
 FPGA build success is not evidence that USB programming works. Both are release
 requirements and need separate results.
 
@@ -124,23 +132,26 @@ availability, tool availability and verified full support are distinct states.
 | Windows x86-64 | Prove native Python/Cocotb integration, VHDL, tool processes and USB programming without WSL. |
 | macOS Apple Silicon | Validate runtime loading, signing/quarantine handling, tools and hardware access. |
 | macOS Intel | Identify a sustainable native tool distribution; upstream suite retirement is a release blocker to solve. |
-| Linux ARM64 | Add a verified native GHDL/VHDL route where the suite is incomplete; validate the rest of the toolchain. |
-| Windows ARM64 | Establish compatible native companion/runtime/tool packages and physical USB support; no WSL/Docker substitution. |
+| Linux ARM64 | Prove a compatible GHDL/VHDL route and all other tools. Use native builds when no suitable OS-provided compatibility route exists. |
+| Windows ARM64 | Establish native companion/runtime and compatible tool packages, allowing verified OS-provided x86-64 compatibility for individual tools; validate hardware access without WSL/Docker. |
 
 Primary-source packaging check: OSS CAD Suite lists Python, Cocotb, Icarus,
 Verilator, Yosys, SBY/solvers, nextpnr and FPGA programming tools, but currently
 limits bundled GHDL and its synthesis plugin to Linux x86-64 and macOS ARM64.
 Its documented targets do not include Windows ARM64, and it warns Intel Mac
 distribution will stop. Therefore it is a candidate package source, not the
-complete six-platform solution. Independent native builds/packages are required
-where gaps exist. These findings are documentary; no runtime support is proved.
+complete six-platform solution. Independent builds/packages or owner-approved
+OS-provided compatibility routes must close gaps. These findings are documentary;
+no runtime support is proved.
 
 Plan per-user installers/downloads with managed, pinned native tools. A launch
 target cannot be marked supported by requiring Docker, WSL or a remote service.
-CPU compatibility/emulation layers are a separate unresolved definition of
-support: do not silently claim an ARM64-native toolchain by running x86-64 tools.
-Ask whether OS-provided compatibility layers are acceptable; record the actual
-binary architecture and route for each tool.
+The owner permits OS-provided x86-64 compatibility for individual tools on ARM.
+Record each tool's binary architecture, compatibility mechanism, prerequisites
+and tested workflows. Do not claim translated binaries are ARM64-native or assume
+every ARM platform supplies the same compatibility mechanism. Verify Python,
+simulator libraries and other in-process components as a compatible runtime set;
+validate host/device-driver access separately from translated user-space tools.
 
 Keep FPGA programming on the host. Drivers or device-permission setup may be
 needed; diagnose those explicitly without requiring an elevated companion
@@ -179,6 +190,30 @@ Proposed layout for owner review:
 
 Support keyboard use and clear focus/state indicators. Visual theme, resizing,
 phone/tablet expectations and preferred example sites remain to be discussed.
+
+### Required code intelligence and safe refactoring
+
+Provide completion, hover, go-to-definition, find references, and project-wide
+rename/refactoring in addition to highlighting and diagnostics. Evaluate language
+services separately for Verilog/SystemVerilog, VHDL and Python/Cocotb; host them
+through the companion so they use the actual opened local project.
+
+Use configured source roots, include paths, defines, packages and dependencies
+when resolving symbols. An editor widget alone does not satisfy code-intelligence
+requirements. Missing language-service support is an engineering gap to resolve,
+not a reason to silently substitute text search or global string replacement.
+
+For rename/refactoring, preview affected files, resolve the intended symbol,
+detect name collisions and stale/external edits, and apply multi-file changes
+without leaving a partial project. Respect open dirty buffers and provide undo
+or recovery. Verify references with shadowed names, packages, ports, includes,
+Unicode paths and case-sensitive/case-insensitive filesystems.
+
+Enumerate supported semantic refactoring operations per language before claiming
+general refactoring support. Test every advertised operation on representative
+multi-file projects, including post-edit compilation and relevant behavior tests.
+Treat ambiguous macro-generated symbols explicitly. The required reference and
+project-wide symbol-rename workflows remain launch gates.
 
 ## Browser-to-companion connection gate
 
@@ -226,37 +261,38 @@ upload to a hosted service.
 - Normal work requires no cloud account or upload. ZIP export may remain a
   convenience; it is not the default way to open or save a project.
 
-## Remaining focused product questions
+## Product decisions and implementation defaults
 
-The installation, storage model and six launch targets are settled. Do not ask
-the owner to choose them again.
+The CPU-compatibility, editor-depth and board questions are answered. Preserve
+OS-provided x86-64 tool compatibility on ARM, full requested editor capabilities,
+and Tang Nano 9K/iCEBreaker launch scope alongside all prior requirements. Do not
+repeat those questions or require them to be reapproved.
 
-1. **CPU compatibility:** For ARM targets, are OS-provided x86-64 compatibility
-   layers acceptable for individual tools, or must every tool be ARM64-native?
-   Either route still needs full workflow and real-hardware verification.
-2. **Editing depth:** Syntax highlighting/compiler diagnostics only, or also
-   completion, hover, go-to-definition, references and project-wide rename?
-   Full code intelligence requires evaluating HDL and Python language services.
-3. **FPGA scope:** Are the existing Tang Nano 9K and iCEBreaker sufficient for
-   launch, or are additional boards/cables required? Capture exact models.
-
-Provisional UI defaults for review: resizable editor/results panes, dark/light
+Provisional implementation defaults: resizable editor/results panes, dark/light
 themes, explicit Save/Ctrl+S with unsaved-buffer recovery, and a skippable guide.
-Save-before-run behavior, offline expectations, project scale and visual
-references can be refined without reopening the fixed architecture. Accounts,
-collaboration, cloud storage and hosted execution remain uncommitted scope.
+Use save-before-run as the initial proposal so results correspond to saved local
+sources; expose unsaved state clearly and preserve external-edit conflict checks.
+Minimum OS versions and tool/editor service selection should be established from
+M0 evidence. Further broad product interviews are not needed to prepare M0.
+
+Accounts, collaboration, cloud storage and hosted execution remain uncommitted
+scope. New board families or new refactoring operations require explicit scope
+decisions when they arise.
 
 ## Implementation sequence and acceptance gates
 
 ### M0 — Prove native execution on the confirmed support matrix
 
-- Record minimum OS versions and the remaining CPU-compatibility/board details.
+- Pin minimum OS versions and tool/runtime routes against the now-confirmed
+  compatibility and board requirements.
   Preserve the confirmed native/no-Docker/no-WSL, local-folder, six-target scope.
 - Build the smallest pairing/connectivity proof from the actual Pages origin
   to a native companion, including a denied-permission and reconnect case.
 - Pin a candidate runtime/tool set and run small Verilog/SV, native HDL,
   Cocotb, VHDL, synthesis, formal and FPGA-build checks on each launch target.
-- Identify supplemental tool packages where the suite is incomplete.
+- Identify supplemental tool packages or verified OS-provided CPU-compatibility
+  routes where the suite is incomplete. Audit editor language-service support
+  and prove cross-file references/rename on each required source language.
 - Prove host programming of each supported board/cable combination; record
   hardware-tested cells separately from CI builds.
 - Compare representative results with the native CLI and document limits.
@@ -271,12 +307,15 @@ route does not satisfy the native installation requirement.
 - Build the workspace, optional guide skeleton, examples, project inventory,
   local Open Folder flow, native file operations, save/recovery and conflict UI.
 - Stabilize project inventory from `list --json` and job/result schemas.
+- Integrate completion, hover, definition/references and project-wide semantic
+  edits through companion-hosted language services, with edit previews/conflicts.
 - Connect real compile/test execution, source-linked errors and a browser
   waveform; implement stop, limits, failure recovery and stale-result checks.
 - Keep large waveform parsing/rendering from blocking editing and stop controls.
 
-**Exit gate:** open, edit, run, inspect, break/fix, save and reopen a multi-file
-project. This internal prototype is not the complete first usable release.
+**Exit gate:** open a multi-file local project; complete and navigate symbols;
+find references; preview/apply/undo a project-wide rename; run, inspect, break/fix,
+save and reopen it. This prototype is not the complete first usable release.
 
 ### M2 — Complete language and analysis workflows
 
@@ -288,7 +327,8 @@ project. This internal prototype is not the complete first usable release.
 - Validate larger bundled designs, arrays, buses and cancelled/failed runs.
 
 **Exit gate:** required language and analysis workflows match native VWB's
-supported behavior across the agreed platform matrix.
+supported behavior across the agreed platform matrix. Code-intelligence and
+refactoring fixtures pass for the supported HDL and Python project constructs.
 
 ### M3 — Complete FPGA and packaging integration
 
@@ -343,13 +383,13 @@ not a mocked CI pass. Use focused web checks for ordinary UI-only changes.
 ## Open risks and next action
 
 Main blockers to resolve are per-platform VHDL/tool packaging, Windows process
-and runtime behavior, sustainable Intel Mac support, native Windows ARM64,
-real board USB
-access, and browser-to-loopback connectivity. Large waveforms, tool download
+and runtime behavior, sustainable Intel Mac support, compatible Windows ARM64
+tool/runtime routes, semantic editor services, real board USB access, and
+browser-to-loopback connectivity. Large waveforms, tool download
 size, storage limits and UI/CLI discovery drift also need measurement.
 
-**Next action:** execute the M0 task breakdown below after the remaining product
-definitions are recorded. All required features, six launch targets, ordinary
+**Next action:** begin the M0 protocol/capability definition and native
+runtime/editor-service feasibility work below. All required features, six launch targets, ordinary
 local projects and native installation without Docker/WSL remain release gates.
 
 ## Concrete M0 task breakdown
@@ -358,14 +398,15 @@ These tasks are planned work; none is implemented or verified yet.
 
 | ID | Task | Reviewable evidence / completion condition |
 | --- | --- | --- |
-| M0-01 | Define protocol and capability manifests | Versioned project/job/diagnostic/artifact contracts; per-tool version/architecture and six-platform capability matrix. |
-| M0-02 | Establish native runtime/tool acquisition | Reproducible packages or builds for Python, simulators, VHDL/conversion, checkers, synthesis/rendering, formal and board tools; pin source, version and integrity for each required target. |
+| M0-01 | Define protocol and capability manifests | Versioned project/job/diagnostic/artifact/editor contracts; per-tool version/architecture/compatibility route and six-platform capability matrix. |
+| M0-02 | Establish native runtime/tool acquisition | Reproducible packages/builds or verified OS-provided CPU compatibility for individual tools; cover Python, simulators, VHDL/conversion, checkers, synthesis/rendering, formal, board tools and editor services; pin sources, versions and integrity per target. |
 | M0-03 | Introduce portable process execution | POSIX and Windows process-tree handling; real timeout/cancel leaves no child tools running; test environment/library paths, Unicode and spaces. |
 | M0-04 | Prove native local-folder I/O | Open an existing VWB project in place, inventory/read/save files, detect external edits and conflicts, preserve configuration, recover on restart and confine paths. |
 | M0-05 | Prove Pages-to-companion connection | Actual HTTPS Pages origin connects in supported browsers with pairing; permission denied, version mismatch, reconnect and unauthorized requests behave correctly. |
 | M0-06 | Run the full native toolchain probe | Verilog/SV and VHDL tests, Cocotb assertions, waveforms, lint, synthesis artifacts, formal success/counterexample, FPGA build outputs; record per-target results. |
 | M0-07 | Verify host FPGA programming | Actual Tang Nano 9K and iCEBreaker/cable tests on required platform rows; record driver/permission steps and device behavior separately from build tests. |
-| M0-08 | Verify clean native installation | Install/launch/repair/uninstall on all six targets without Docker, WSL or assumed system Python; publish accurate tested OS/tool/board matrix. |
+| M0-08 | Verify clean native installation | Install/launch/repair/uninstall on all six targets without Docker, WSL or assumed system Python; disclose OS-provided tool translation when used; publish accurate tested OS/tool/board matrix. |
+| M0-09 | Prove semantic editor workflows | HDL and Python language-service capability inventory; configured multi-file completion/hover/definition/references and project-wide rename; preview, conflicts, undo/recovery, and post-edit correctness fixtures. |
 
 Keep build-only, simulated, hardware-tested, blocked and not-yet-run results
 distinct. Missing physical test hosts/boards remain explicit evidence gaps;
@@ -379,7 +420,6 @@ never turn an unexecuted matrix cell into a pass.
 - [Emscripten API limitations](https://emscripten.org/docs/porting/guidelines/api_limitations.html)
 - [Emscripten filesystem overview](https://emscripten.org/docs/porting/files/file_systems_overview.html)
 - [Cocotb simulator integration / GPI](https://docs.cocotb.org/en/stable/library_reference_c.html)
-
 - [OSS CAD Suite platforms and included tools](https://github.com/YosysHQ/oss-cad-suite-build/blob/main/README.md)
 - [openFPGALoader installation and device permissions](https://trabucayre.github.io/openFPGALoader/guide/install.html)
 - [Chrome local network access](https://developer.chrome.com/blog/local-network-access)
