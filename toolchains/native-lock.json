@@ -12,7 +12,8 @@
         "size_bytes": 526119809,
         "sha256": "1a8540c2b74e3f36c1a4c3ae7d67ce36d1e5af710bda61425d72a6bd98cda859",
         "integrity_source": "GitHub release asset digest (api.github.com)",
-        "download_verified": false
+        "download_verified": true,
+        "download_verification_evidence": "https://github.com/sfmth/verilog-workbench/actions/runs/39153200306/job/117750929273"
       },
       "darwin-x64": {
         "name": "oss-cad-suite-darwin-x64-20261018.tgz",
@@ -20,7 +21,8 @@
         "size_bytes": 508576679,
         "sha256": "f9c700750aa4ba0a86f44b1ecf866c0e9cbdbf23f389a84ce9d298ee3432989f",
         "integrity_source": "GitHub release asset digest (api.github.com)",
-        "download_verified": false
+        "download_verified": true,
+        "download_verification_evidence": "https://github.com/sfmth/verilog-workbench/actions/runs/39153200306/job/117750929249"
       },
       "linux-arm64": {
         "name": "oss-cad-suite-linux-arm64-20261018.tgz",
@@ -28,7 +30,8 @@
         "size_bytes": 686685342,
         "sha256": "7711551b5bc9c602447b799e940660b7c1dd3d2456c6635420229e4fe53fd519",
         "integrity_source": "GitHub release asset digest (api.github.com)",
-        "download_verified": false
+        "download_verified": true,
+        "download_verification_evidence": "https://github.com/sfmth/verilog-workbench/actions/runs/39153200306/job/117750929247"
       },
       "linux-x64": {
         "name": "oss-cad-suite-linux-x64-20261018.tgz",
@@ -36,7 +39,8 @@
         "size_bytes": 748315612,
         "sha256": "639c8c0366d74dc56201729c9907bf2d8281db7f18bb025abe2e4f3f2ebaa24e",
         "integrity_source": "GitHub release asset digest (api.github.com)",
-        "download_verified": true
+        "download_verified": true,
+        "download_verification_evidence": "https://github.com/sfmth/verilog-workbench/actions/runs/39153200306/job/117750929232"
       },
       "windows-x64": {
         "name": "oss-cad-suite-windows-x64-20261018.tgz",
@@ -44,7 +48,8 @@
         "size_bytes": 604040523,
         "sha256": "c9e2461fdeeee8e186d46951ef64f88fed8c59668ba5f49b4db74ebb23d9da24",
         "integrity_source": "GitHub release asset digest (api.github.com)",
-        "download_verified": false
+        "download_verified": true,
+        "download_verification_evidence": "https://github.com/sfmth/verilog-workbench/actions/runs/39153200306/job/117750929326"
       }
     },
     "release_tag_object": {
@@ -74,12 +79,15 @@
       "upstream_source_sha256": "c6bd8b83aad633f6786fc861fe8f5dbc74c37bfae77f7bd0220e6f00f15f1d55",
       "bottle_tag": "arm64_sequoia",
       "bottle_sha256": "970a7fecc485fed91cc4e73d6cf5e14216612a5e2ff69e3bad493e6ba55b732e",
-      "status": "external-prerequisite-candidate-awaiting-native-ci",
+      "status": "native-ci-tcl-and-14-workflows-passed-external-prerequisite",
       "requirements": [
         "native macOS ARM64 Homebrew",
         "Tcl-enabled Yosys proven by real -c execution"
       ],
-      "note": "CI checks formula version and bottle digest, installs via Homebrew, and overlays only suite/bin/yosys through an explicit external symlink, retaining the original launcher and both executable hashes in a nonportable installation receipt. Homebrew and transitive libraries remain external prerequisites; this is not a fully pinned managed runtime or a verified supported release."
+      "note": "CI checks formula version and bottle digest, installs via Homebrew, and overlays only suite/bin/yosys through an explicit external symlink, retaining the original launcher and both executable hashes in a nonportable installation receipt. Homebrew and transitive libraries remain external prerequisites; this is not a fully pinned managed runtime or a verified supported release.",
+      "observed_version": "Yosys 0.70+post",
+      "observed_git_sha": "0c11ea098be065e585a90a06e7b7da49936cf231",
+      "ci_evidence": "https://github.com/sfmth/verilog-workbench/actions/runs/39153200306/job/117750929273"
     }
   },
   "targets": {
@@ -87,19 +95,41 @@
       "archive_target": "linux-x64",
       "binary_architecture": "x64",
       "translation": "none",
-      "minimum_os": "No cross-distribution floor verified; baseline exercised Ubuntu 24.04 container; Manjaro/Arch pending",
+      "minimum_os": "No cross-distribution minimum floor verified; native Ubuntu CI and Arch x64 userspace smoke gates passed; Manjaro unverified",
       "bundled_ghdl": true,
-      "status": "native-smoke-passed-development-host",
+      "status": "native-ci-smoke-passed",
       "evidence": [
         "docs/m0-evidence/toolchains-linux-x64.json",
         "docs/m0-evidence/toolchains-linux-x64-spaces.json",
         "docs/m0-evidence/toolchains-linux-x64-unicode-spaces.json",
-        "docs/m0-evidence/formal-custom-build-path.json"
+        "docs/m0-evidence/formal-custom-build-path.json",
+        "https://github.com/sfmth/verilog-workbench/actions/runs/39153200306/job/117750929232"
       ],
       "blockers": [
-        "Clean native installation and Arch/Manjaro are not verified",
+        "Clean native installation and Manjaro remain unverified; Arch evidence is a development-container smoke gate",
         "Physical board programming has not been performed"
-      ]
+      ],
+      "ci_evidence": {
+        "run_url": "https://github.com/sfmth/verilog-workbench/actions/runs/39153200306",
+        "job_url": "https://github.com/sfmth/verilog-workbench/actions/runs/39153200306/job/117750929232",
+        "source_commit": "d136b894138213d1aa6483bf1d9b16750f591cd0",
+        "selected_checks": 14,
+        "passed": 14,
+        "failed": 0,
+        "blocked": 0,
+        "physical_programming": "not-run",
+        "clean_machine_installation": "not-verified"
+      },
+      "arch_userspace_evidence": {
+        "job_url": "https://github.com/sfmth/verilog-workbench/actions/runs/39153200306/job/117750929185",
+        "selected_checks": 14,
+        "passed": 14,
+        "external_prerequisites": [
+          "GCC native C compiler/linker"
+        ],
+        "clean_machine_installation": "not-verified"
+      },
+      "ci_status": "native-ci-smoke-passed"
     },
     "windows-x64": {
       "archive_target": "windows-x64",
@@ -109,20 +139,62 @@
       "bundled_ghdl": false,
       "status": "blocked",
       "blockers": [
-        "Supplemental GHDL and matching Cocotb in-process libraries not integrated or verified",
+        "Missing Cocotb, GHDL and Graphviz block five selected workflows; supplemental matching runtime packages not integrated",
         "Native USB drivers and clean-machine installation unverified"
-      ]
+      ],
+      "ci_evidence": {
+        "run_url": "https://github.com/sfmth/verilog-workbench/actions/runs/39153200306",
+        "job_url": "https://github.com/sfmth/verilog-workbench/actions/runs/39153200306/job/117750929326",
+        "source_commit": "d136b894138213d1aa6483bf1d9b16750f591cd0",
+        "selected_checks": 14,
+        "passed": 9,
+        "failed": 0,
+        "blocked": 5,
+        "physical_programming": "not-run",
+        "clean_machine_installation": "not-verified"
+      },
+      "evidence": [
+        "https://github.com/sfmth/verilog-workbench/actions/runs/39153200306/job/117750929326"
+      ],
+      "ci_status": "native-ci-partial-package-gaps",
+      "native_companion_evidence": {
+        "run_url": "https://github.com/sfmth/verilog-workbench/actions/runs/39153500063",
+        "job_url": "https://github.com/sfmth/verilog-workbench/actions/runs/39153500063/job/117751810321",
+        "source_commit": "831ae23f8f10ebc89c09ed3b3a4cae9a0bbebe2e",
+        "runtime_architecture": "x64",
+        "bundled_runtime_smoke": "passed",
+        "hdl_tools_included": false,
+        "clean_machine_installation": "not-verified"
+      }
     },
     "darwin-arm64": {
       "archive_target": "darwin-arm64",
       "binary_architecture": "arm64",
       "translation": "none",
-      "minimum_os": "macOS 13 (upstream suite floor); clean installation unverified",
+      "minimum_os": "macOS 13 upstream suite floor; tested macOS 15 CI with external arm64_sequoia Yosys bottle; complete minimum floor unverified",
       "bundled_ghdl": true,
-      "status": "not-tested",
+      "status": "native-ci-smoke-passed",
       "blockers": [
-        "No physical macOS host available; signing/quarantine and device access unverified"
-      ]
+        "Full smoke pass requires explicit external Homebrew Tcl-enabled Yosys overlay; transitive dependencies are not fully pinned and installation is nonportable",
+        "Signing/quarantine behavior on clean installations and physical USB programming unverified"
+      ],
+      "ci_evidence": {
+        "run_url": "https://github.com/sfmth/verilog-workbench/actions/runs/39153200306",
+        "job_url": "https://github.com/sfmth/verilog-workbench/actions/runs/39153200306/job/117750929273",
+        "source_commit": "d136b894138213d1aa6483bf1d9b16750f591cd0",
+        "selected_checks": 14,
+        "passed": 14,
+        "failed": 0,
+        "blocked": 0,
+        "physical_programming": "not-run",
+        "clean_machine_installation": "not-verified"
+      },
+      "evidence": [
+        "https://github.com/sfmth/verilog-workbench/actions/runs/39153200306/job/117750929273",
+        "docs/m0-evidence/toolchains-ci5-darwin-arm64.json",
+        "docs/m0-evidence/toolchain-acquisition-ci5-darwin-arm64.json"
+      ],
+      "ci_status": "native-ci-smoke-passed"
     },
     "darwin-x64": {
       "archive_target": "darwin-x64",
@@ -132,10 +204,25 @@
       "bundled_ghdl": false,
       "status": "blocked",
       "blockers": [
+        "Missing GHDL blocks VHDL simulation, Cocotb/VHDL and VHDL synthesis; supplemental runtime route unpinned",
         "Upstream announces impending Intel Mac suite retirement",
-        "Supplemental GHDL/Python-compatible runtime route unpinned",
-        "No physical host or USB evidence"
-      ]
+        "Signing/quarantine behavior on clean installations and physical USB programming unverified"
+      ],
+      "ci_evidence": {
+        "run_url": "https://github.com/sfmth/verilog-workbench/actions/runs/39153200306",
+        "job_url": "https://github.com/sfmth/verilog-workbench/actions/runs/39153200306/job/117750929249",
+        "source_commit": "d136b894138213d1aa6483bf1d9b16750f591cd0",
+        "selected_checks": 14,
+        "passed": 11,
+        "failed": 0,
+        "blocked": 3,
+        "physical_programming": "not-run",
+        "clean_machine_installation": "not-verified"
+      },
+      "evidence": [
+        "https://github.com/sfmth/verilog-workbench/actions/runs/39153200306/job/117750929249"
+      ],
+      "ci_status": "native-ci-partial-package-gaps"
     },
     "linux-arm64": {
       "archive_target": "linux-arm64",
@@ -145,10 +232,25 @@
       "bundled_ghdl": false,
       "status": "blocked",
       "blockers": [
-        "GHDL LLVM/GCC backend native build and all runtime dependencies unpinned; mcode is x86/x64 only",
+        "Missing native GHDL blocks VHDL simulation, Cocotb/VHDL and VHDL synthesis; supplemental runtime route unpinned",
         "No OS-provided x64 translation assumed on Linux",
-        "No physical host or USB evidence"
-      ]
+        "Physical board access and clean-machine installation unverified"
+      ],
+      "ci_evidence": {
+        "run_url": "https://github.com/sfmth/verilog-workbench/actions/runs/39153200306",
+        "job_url": "https://github.com/sfmth/verilog-workbench/actions/runs/39153200306/job/117750929247",
+        "source_commit": "d136b894138213d1aa6483bf1d9b16750f591cd0",
+        "selected_checks": 14,
+        "passed": 11,
+        "failed": 0,
+        "blocked": 3,
+        "physical_programming": "not-run",
+        "clean_machine_installation": "not-verified"
+      },
+      "evidence": [
+        "https://github.com/sfmth/verilog-workbench/actions/runs/39153200306/job/117750929247"
+      ],
+      "ci_status": "native-ci-partial-package-gaps"
     },
     "windows-arm64": {
       "archive_target": "windows-x64",
@@ -158,11 +260,35 @@
       "bundled_ghdl": false,
       "status": "blocked",
       "blockers": [
-        "Suite has no Windows ARM64 asset; native companion/Python runtime packaging remains unverified",
-        "Supplemental x64 GHDL plus x64 Cocotb/Python runtime set must be verified under OS translation",
+        "Missing Cocotb, GHDL and Graphviz block five selected workflows under the permitted OS x64 translation route",
+        "Supplemental x64 GHDL plus matching Cocotb/Python runtime set must be verified under OS translation",
         "Drivers must be ARM64-native; translated user-space tools do not establish FPGA programming support",
-        "No physical host or USB evidence"
-      ]
+        "Physical board access and clean-machine installation unverified"
+      ],
+      "ci_evidence": {
+        "run_url": "https://github.com/sfmth/verilog-workbench/actions/runs/39153200306",
+        "job_url": "https://github.com/sfmth/verilog-workbench/actions/runs/39153200306/job/117750929150",
+        "source_commit": "d136b894138213d1aa6483bf1d9b16750f591cd0",
+        "selected_checks": 14,
+        "passed": 9,
+        "failed": 0,
+        "blocked": 5,
+        "physical_programming": "not-run",
+        "clean_machine_installation": "not-verified"
+      },
+      "evidence": [
+        "https://github.com/sfmth/verilog-workbench/actions/runs/39153200306/job/117750929150"
+      ],
+      "ci_status": "native-ci-partial-package-gaps",
+      "native_companion_evidence": {
+        "run_url": "https://github.com/sfmth/verilog-workbench/actions/runs/39153500063",
+        "job_url": "https://github.com/sfmth/verilog-workbench/actions/runs/39153500063/job/117751810292",
+        "source_commit": "831ae23f8f10ebc89c09ed3b3a4cae9a0bbebe2e",
+        "runtime_architecture": "arm64",
+        "bundled_runtime_smoke": "passed",
+        "hdl_tools_included": false,
+        "clean_machine_installation": "not-verified"
+      }
     }
   },
   "policy": {

@@ -1,5 +1,74 @@
 # Native toolchain CI observations
 
+## Sixth run: all native companion bundles pass; HDL package gaps remain
+
+[Run 39153500063](https://github.com/sfmth/verilog-workbench/actions/runs/39153500063)
+tested commit `831ae23f8f10ebc89c09ed3b3a4cae9a0bbebe2e` on 2026-10-18.
+All six native companion jobs and actual browser integration passed. Every
+toolchain job completed and repeated the CI5 results below. The overall gate
+remains **failed** because four required targets still lack HDL packages.
+
+| Toolchain host | Actual checks passed | Remaining package gaps |
+| --- | --- | --- |
+| [Linux x64](https://github.com/sfmth/verilog-workbench/actions/runs/39153500063/job/117751810181) | 14/14 | None in this smoke gate. |
+| [Linux ARM64](https://github.com/sfmth/verilog-workbench/actions/runs/39153500063/job/117751810195) | 11/14 | Three VHDL workflows blocked by GHDL. |
+| [macOS Intel](https://github.com/sfmth/verilog-workbench/actions/runs/39153500063/job/117751810229) | 11/14 | Three VHDL workflows blocked by GHDL. |
+| [macOS Apple Silicon](https://github.com/sfmth/verilog-workbench/actions/runs/39153500063/job/117751810276) | 14/14 | Requires the explicit external native Tcl-enabled Homebrew Yosys overlay. |
+| [Windows x64](https://github.com/sfmth/verilog-workbench/actions/runs/39153500063/job/117751810265) | 9/14 | Five workflows blocked by Cocotb, GHDL and Graphviz. |
+| [Windows ARM64](https://github.com/sfmth/verilog-workbench/actions/runs/39153500063/job/117751810211) | 9/14 | The same five package gaps; suite tools use OS x64 translation. |
+| [Arch x64 userspace](https://github.com/sfmth/verilog-workbench/actions/runs/39153500063/job/117751810311) | 14/14 | GCC provisioned; development-container evidence. |
+
+The corrected Windows unit fixtures now permit both
+[Windows x64](https://github.com/sfmth/verilog-workbench/actions/runs/39153500063/job/117751810321)
+and [Windows ARM64](https://github.com/sfmth/verilog-workbench/actions/runs/39153500063/job/117751810292)
+native companion bundles to build and pass their actual local-project smoke
+checks. Native runtime success does not fill the separate HDL package gaps.
+CI5's retained Apple Silicon reports remain the durable detailed evidence for
+the unchanged production code. Clean-machine installation and physical FPGA
+programming are still unverified.
+
+## Fifth run: macOS process fixes verified
+
+[Run 39153200306](https://github.com/sfmth/verilog-workbench/actions/runs/39153200306)
+tested commit `d136b894138213d1aa6483bf1d9b16750f591cd0` on 2026-10-18.
+All seven toolchain jobs finished and retained diagnostics. The macOS EPERM
+regression is resolved in these actual runs.
+
+| Host | Passed checks | Actual failed or blocked checks |
+| --- | --- | --- |
+| [Linux x64](https://github.com/sfmth/verilog-workbench/actions/runs/39153200306/job/117750929232) | 14/14 | None in this smoke gate. |
+| [Linux ARM64](https://github.com/sfmth/verilog-workbench/actions/runs/39153200306/job/117750929247) | 11/14 | Three workflows blocked by missing GHDL: native VHDL, Cocotb/VHDL and VHDL synthesis. |
+| [macOS Intel](https://github.com/sfmth/verilog-workbench/actions/runs/39153200306/job/117750929249) | 11/14 | The same three GHDL package gaps; no selected workflow fails after execution. |
+| [macOS Apple Silicon](https://github.com/sfmth/verilog-workbench/actions/runs/39153200306/job/117750929273) | 14/14 | None with the explicit external native Tcl-enabled Homebrew Yosys overlay. |
+| [Windows x64](https://github.com/sfmth/verilog-workbench/actions/runs/39153200306/job/117750929326) | 9/14 | Five workflows blocked: Cocotb/Verilog needs `cocotb-config`; native VHDL and VHDL synthesis need GHDL; Cocotb/VHDL needs both; SVG needs Graphviz `dot`. |
+| [Windows ARM64](https://github.com/sfmth/verilog-workbench/actions/runs/39153200306/job/117750929150) | 9/14 | The same five package gaps; suite tools execute through permitted OS x64 translation. |
+| [Arch x64 userspace](https://github.com/sfmth/verilog-workbench/actions/runs/39153200306/job/117750929185) | 14/14 | None with native GCC provisioned; this development-container check does not certify clean installation. |
+
+The durable Apple Silicon [workflow report](m0-evidence/toolchains-ci5-darwin-arm64.json)
+records real executed HDL/Cocotb tests, waveforms, lint, Verilog/VHDL synthesis,
+SVG, formal proof and counterexample, and both FPGA pack flows. Its
+[acquisition receipt](m0-evidence/toolchain-acquisition-ci5-darwin-arm64.json)
+records exact suite integrity, the original Yosys launcher backup and the native
+ARM64 external executable/hash. Both reports were extracted from
+[artifact 12146081249](https://github.com/sfmth/verilog-workbench/actions/runs/39153200306/artifacts/12146081249),
+whose ZIP digest is
+`99de96a8c9bfd94a2757133db9b760337161f396414d90112579501c92865f30`.
+The Homebrew version remains `Yosys 0.70+post`; this external prerequisite and
+its transitive libraries are not a fully pinned portable managed distribution.
+Physical FPGA programming and clean-machine installation remain unverified.
+
+Native companion bundles were created and exercised successfully on
+[Linux x64](https://github.com/sfmth/verilog-workbench/actions/runs/39153200306/job/117750929098),
+[Linux ARM64](https://github.com/sfmth/verilog-workbench/actions/runs/39153200306/job/117750929277),
+[macOS Intel](https://github.com/sfmth/verilog-workbench/actions/runs/39153200306/job/117750929343)
+and [macOS Apple Silicon](https://github.com/sfmth/verilog-workbench/actions/runs/39153200306/job/117750929235).
+Both Windows native companion jobs stopped at new Darwin-specific unit
+fixtures using the unavailable Windows `signal.SIGKILL` constant; they did not
+reach bundle smoke. A fixture correction awaits CI6, so the Windows companion
+bundle smoke gate remains pending. The
+[actual browser integration job](https://github.com/sfmth/verilog-workbench/actions/runs/39153200306/job/117750928981)
+also passed.
+
 ## Fourth run: native Yosys candidate and process regression evidence
 
 [Run 39152617957](https://github.com/sfmth/verilog-workbench/actions/runs/39152617957)
@@ -153,7 +222,7 @@ The second native run showed that the Apple Silicon suite's Yosys rejects
 include paths and macro values containing spaces or Unicode; switching their
 text to the native Yosys command parser would change argument handling.
 
-The next CI candidate therefore retains those scripts and provisions the
+The tested CI candidate therefore retains those scripts and provisions the
 native Homebrew Yosys 0.70 bottle on Apple Silicon. Its official
 [formula](https://github.com/Homebrew/homebrew-core/blob/master/Formula/y/yosys.rb)
 depends on Tcl/Tk. The version, observed formula digest, upstream source digest,
@@ -167,7 +236,8 @@ probe interpreter. The original launcher is backed up and both executable
 hashes are receipted. The external symlink survives suite wrapper PATH resets
 and marks this installation nonportable.
 
-This is an **external Homebrew prerequisite candidate**, pending native CI
-evidence. Homebrew and its transitive libraries are not a fully pinned managed
-runtime, and this route does not establish clean-machine support or physical
-FPGA programming. The other platform jobs retain their existing tool selection.
+This is an **external Homebrew prerequisite candidate** with successful native
+Tcl and 14/14 workflow evidence in CI5 and CI6 above. Homebrew and its transitive
+libraries are not a fully pinned managed runtime, and this route does not
+establish clean-machine support or physical FPGA programming. The other
+platform jobs retain their existing tool selection.

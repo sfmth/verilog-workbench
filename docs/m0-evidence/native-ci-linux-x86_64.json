@@ -1,0 +1,30 @@
+{
+  "schema": "vwb.native-ci-evidence/1",
+  "provenance": {
+    "repository": "sfmth/verilog-workbench",
+    "workflow_run_id": 39153500063,
+    "workflow_job_id": 117751810242,
+    "commit": "831ae23f8f10ebc89c09ed3b3a4cae9a0bbebe2e",
+    "job_url": "https://github.com/sfmth/verilog-workbench/actions/runs/39153500063/job/117751810242",
+    "source": "GitHub Actions job log; exact sanitized JSON printed by scripts/smoke_native_bundle.py",
+    "smoke_step_conclusion": "success"
+  },
+  "report": {
+    "schema": "vwb.native-smoke/1",
+    "target": "linux-x86_64",
+    "passed": true,
+    "runtime": "bundled interpreter under isolated -I startup",
+    "checks": [
+      "empty-cwd",
+      "poisoned-Python-environment",
+      "version",
+      "native-startup",
+      "pairing",
+      "local-folder-inventory",
+      "revision-checked-save",
+      "real-vwb-job"
+    ],
+    "toolchains_included": false,
+    "hardware_tested": false
+  }
+}

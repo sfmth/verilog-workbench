@@ -1,0 +1,75 @@
+{
+  "schema_version": "vwb.toolchain-acquisition/1",
+  "state": "acquired",
+  "target": "darwin-arm64",
+  "suitePath": "/Users/runner/work/verilog-workbench/verilog-workbench/.m0-tools/oss-cad-suite-2026-10-18-darwin-arm64/oss-cad-suite",
+  "archive": {
+    "release": "2026-10-18",
+    "archive": "oss-cad-suite-darwin-arm64-20261018.tgz",
+    "sha256": "1a8540c2b74e3f36c1a4c3ae7d67ce36d1e5af710bda61425d72a6bd98cda859",
+    "size_bytes": 526119809,
+    "external_tool_overlays": [
+      {
+        "tool": "yosys",
+        "original_launcher": "bin/yosys",
+        "original_sha256": "8a6175ee88d6412c3d792c47d0750b8707a8e12cc2222c1322546d47cd85edb9",
+        "original_symlink": null,
+        "original_backup": ".vwb-overlays/originals/yosys",
+        "external_executable": "/opt/homebrew/Cellar/yosys/0.70/bin/yosys",
+        "external_sha256": "9ed8ea21a37acb95305366fd1c9131e64fc3a5096147cb4beba1d3fade32a1a4",
+        "external_binary": {
+          "format": "mach-o",
+          "architectures": [
+            "arm64"
+          ]
+        },
+        "externally_managed": true,
+        "relocatable": false,
+        "reason": "Explicit native Tcl-enabled Yosys candidate; suite wrappers prepend suite/bin to PATH."
+      }
+    ],
+    "relocatable": false
+  },
+  "binaryArchitecture": "arm64",
+  "compatibility": "none",
+  "workflowSupport": "not-tested",
+  "external_tool_bins": [],
+  "external_tool_overlays": [
+    {
+      "tool": "yosys",
+      "original_launcher": "bin/yosys",
+      "original_sha256": "8a6175ee88d6412c3d792c47d0750b8707a8e12cc2222c1322546d47cd85edb9",
+      "original_symlink": null,
+      "original_backup": ".vwb-overlays/originals/yosys",
+      "external_executable": "/opt/homebrew/Cellar/yosys/0.70/bin/yosys",
+      "external_sha256": "9ed8ea21a37acb95305366fd1c9131e64fc3a5096147cb4beba1d3fade32a1a4",
+      "external_binary": {
+        "format": "mach-o",
+        "architectures": [
+          "arm64"
+        ]
+      },
+      "externally_managed": true,
+      "relocatable": false,
+      "reason": "Explicit native Tcl-enabled Yosys candidate; suite wrappers prepend suite/bin to PATH."
+    }
+  ],
+  "relocatable": false,
+  "blockers": [
+    "No physical macOS host available; signing/quarantine and device access unverified"
+  ],
+  "environment": {
+    "PATH": "/Users/runner/work/verilog-workbench/verilog-workbench/.m0-tools/oss-cad-suite-2026-10-18-darwin-arm64/oss-cad-suite/bin:/Users/runner/work/verilog-workbench/verilog-workbench/.m0-tools/oss-cad-suite-2026-10-18-darwin-arm64/oss-cad-suite/py3bin:/Users/runner/hostedtoolcache/Python/3.12.10/arm64/bin:/Users/runner/hostedtoolcache/Python/3.12.10/arm64:/opt/homebrew/lib/ruby/gems/3.3.0/bin:/opt/homebrew/opt/ruby@3.3/bin:/Users/runner/.local/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/Users/runner/.cargo/bin:/usr/local/opt/curl/bin:/usr/local/bin:/usr/local/sbin:/Users/runner/bin:/Users/runner/.yarn/bin:/Users/runner/Library/Android/sdk/tools:/Users/runner/Library/Android/sdk/platform-tools:/Library/Frameworks/Python.framework/Versions/Current/bin:/Library/Frameworks/Mono.framework/Versions/Current/Commands:/usr/bin:/bin:/usr/sbin:/sbin:/Users/runner/.dotnet/tools",
+    "VIRTUAL_ENV": "/Users/runner/work/verilog-workbench/verilog-workbench/.m0-tools/oss-cad-suite-2026-10-18-darwin-arm64/oss-cad-suite",
+    "VERILATOR_ROOT": "/Users/runner/work/verilog-workbench/verilog-workbench/.m0-tools/oss-cad-suite-2026-10-18-darwin-arm64/oss-cad-suite/share/verilator",
+    "GHDL_PREFIX": "/Users/runner/work/verilog-workbench/verilog-workbench/.m0-tools/oss-cad-suite-2026-10-18-darwin-arm64/oss-cad-suite/lib/ghdl"
+  },
+  "probe": {
+    "path": "/Users/runner/work/verilog-workbench/verilog-workbench/.m0-evidence/workflows-darwin-arm64.json",
+    "python": "/Users/runner/work/verilog-workbench/verilog-workbench/.m0-tools/oss-cad-suite-2026-10-18-darwin-arm64/oss-cad-suite/py3bin/python3",
+    "returncode": 0,
+    "state": "passed",
+    "log_excerpt": "Native workflows darwin-arm64: 14/14 passed\n",
+    "work_directory_parent": "/Users/runner/work/verilog-workbench/verilog-workbench/.m0-evidence/toolchain-logs"
+  }
+}

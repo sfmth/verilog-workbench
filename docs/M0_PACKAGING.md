@@ -16,14 +16,14 @@ API asset metadata. No moving `latest` URL is used at build time. See the
 provider's [running documentation](https://gregoryszorc.com/docs/python-build-standalone/main/running.html)
 for distribution and OS compatibility details.
 
-| Bundle target | Native runtime triple | Launcher | Hosted execution evidence through CI4 |
+| Bundle target | Native runtime triple | Launcher | CI6 bundled-runtime smoke and durable report |
 | --- | --- | --- | --- |
-| `linux-x86_64` | `x86_64-unknown-linux-gnu` | `vwb-companion` | [CI4 passed full bundled-runtime smoke](https://github.com/sfmth/verilog-workbench/actions/runs/39152617957/job/117749179322) |
-| `linux-arm64` | `aarch64-unknown-linux-gnu` | `vwb-companion` | [CI4 passed full bundled-runtime smoke](https://github.com/sfmth/verilog-workbench/actions/runs/39152617957/job/117749179366) |
-| `windows-x86_64` | `x86_64-pc-windows-msvc` | `vwb-companion.cmd` | [CI4 built and reached the file-save check](https://github.com/sfmth/verilog-workbench/actions/runs/39152617957/job/117749179255); smoke fixture failed before the actual VWB job |
-| `windows-arm64` | `aarch64-pc-windows-msvc` | `vwb-companion.cmd` | [CI4 built and reached the file-save check](https://github.com/sfmth/verilog-workbench/actions/runs/39152617957/job/117749179328); smoke fixture failed before the actual VWB job |
-| `macos-arm64` | `aarch64-apple-darwin` | `vwb-companion` | [CI3 passed full bundled-runtime smoke](https://github.com/sfmth/verilog-workbench/actions/runs/39151829476/job/117746885299); [CI4 stopped during process unit checks](https://github.com/sfmth/verilog-workbench/actions/runs/39152617957/job/117749179263) |
-| `macos-x86_64` | `x86_64-apple-darwin` | `vwb-companion` | [CI3 passed full bundled-runtime smoke](https://github.com/sfmth/verilog-workbench/actions/runs/39151829476/job/117746885183); [CI4 stopped during process unit checks](https://github.com/sfmth/verilog-workbench/actions/runs/39152617957/job/117749179396) |
+| `linux-x86_64` | `x86_64-unknown-linux-gnu` | `vwb-companion` | [Passed](https://github.com/sfmth/verilog-workbench/actions/runs/39153500063/job/117751810242) · [JSON](m0-evidence/native-ci-linux-x86_64.json) |
+| `linux-arm64` | `aarch64-unknown-linux-gnu` | `vwb-companion` | [Passed](https://github.com/sfmth/verilog-workbench/actions/runs/39153500063/job/117751810215) · [JSON](m0-evidence/native-ci-linux-arm64.json) |
+| `windows-x86_64` | `x86_64-pc-windows-msvc` | `vwb-companion.cmd` | [Passed](https://github.com/sfmth/verilog-workbench/actions/runs/39153500063/job/117751810321) · [JSON](m0-evidence/native-ci-windows-x86_64.json) |
+| `windows-arm64` | `aarch64-pc-windows-msvc` | `vwb-companion.cmd` | [Passed](https://github.com/sfmth/verilog-workbench/actions/runs/39153500063/job/117751810292) · [JSON](m0-evidence/native-ci-windows-arm64.json) |
+| `macos-arm64` | `aarch64-apple-darwin` | `vwb-companion` | [Passed](https://github.com/sfmth/verilog-workbench/actions/runs/39153500063/job/117751810200) · [JSON](m0-evidence/native-ci-macos-arm64.json) |
+| `macos-x86_64` | `x86_64-apple-darwin` | `vwb-companion` | [Passed](https://github.com/sfmth/verilog-workbench/actions/runs/39153500063/job/117751810154) · [JSON](m0-evidence/native-ci-macos-x86_64.json) |
 
 These are native CPython distributions for all six targets. Individual HDL tools
 may use owner-approved OS x86-64 compatibility; tool binaries are **not** part
@@ -127,20 +127,17 @@ and API path; the hosted smoke does not launch a desktop installer or establish
 interactive `.cmd`/shell launcher behavior. Cross-target archive construction
 alone is not execution evidence.
 
-In [CI4](https://github.com/sfmth/verilog-workbench/actions/runs/39152617957),
-both Linux targets passed that complete smoke. Both Windows targets passed
-unit/regression checks, built their pinned native runtime archives, and
-successfully started, paired, and reached the save assertion. The save API
-preserved CRLF bytes; the fixture compared them through `Path.read_text`, which
-normalizes line endings. The fixture now checks exact bytes and uses explicit
-CRLF input on every OS, but the corrected Windows smoke still needs native CI
-confirmation. Both Macs had passed the complete smoke in CI3; CI4 stopped in
-the process tests before rebuilding or exercising the bundle. That regression
-also needs confirmation after its fix. A prior passing bundle is not recorded
-as a passing current job.
+In [CI6](https://github.com/sfmth/verilog-workbench/actions/runs/39153500063),
+commit `831ae23f8f10ebc89c09ed3b3a4cae9a0bbebe2e`, all six native targets
+passed unit/regression checks, archive construction, and the complete
+bundled-runtime smoke. Every target exercised exact CRLF-preserving saves and
+the real VWB subprocess. The six JSON reports linked above preserve the actual
+sanitized smoke output together with the source run, job, and commit, so this
+evidence remains available after CI artifacts expire. The Windows companion
+uses its native ARM64 CPython on the ARM64 runner; any x64 translation used by
+separate HDL tools is a different part of the toolchain evidence.
 
-Outstanding release work includes confirming the corrected smoke and process
-tests on all six targets, minimum supported OS testing, macOS
+Outstanding release work includes minimum supported OS testing, macOS
 signing/notarization and Windows signing, desktop installation and update UX,
 toolchain provisioning, and physical Tang Nano 9K / iCEBreaker driver and
 programming checks. None of those gates is declared passed by this packaging

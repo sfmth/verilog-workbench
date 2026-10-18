@@ -133,9 +133,11 @@ targets. The VHDL-LS release inventory checked has macOS ARM64, Linux x64 and
 Windows x64 binaries, but no Linux ARM64, Intel Mac or Windows ARM64-specific
 asset. Source builds and the permitted Windows ARM x64 compatibility route need
 native tests. Verible likewise needs per-target packaging/compatibility checks.
-None of these documentary asset routes proves OS support. All five other
-required OS/CPU environments remain **not tested**, including their process
-lifecycle and full editor refactoring behavior.
+None of these documentary asset routes proves OS support. Actual upstream
+language-server lifecycle and semantic editor/refactoring probes remain
+**not tested** on the other five required OS/CPU environments. The separate
+native CI transport/lifecycle unit checks use a fake server; their passes do
+not replace this semantic evidence.
 
 Primary feature/configuration references checked on 2026-10-18:
 

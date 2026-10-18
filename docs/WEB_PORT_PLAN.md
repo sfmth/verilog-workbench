@@ -400,11 +400,11 @@ tool/runtime routes, semantic editor services, real board USB access, and
 browser-to-loopback connectivity. Large waveforms, tool download
 size, storage limits and UI/CLI discovery drift also need measurement.
 
-**Next action:** close the M0 platform/browser/install/hardware evidence gaps,
-formal custom-build whitespace failure and supplemental GHDL routes described
-in [M0_STATUS.md](M0_STATUS.md), and integrate the proven adapters into the M1
-workspace. All required features, six launch targets, ordinary local projects
-and native installation without Docker/WSL remain release gates.
+**Next action:** close the M0 platform/browser/install/hardware evidence gaps
+and supplemental tool routes described in [M0_STATUS.md](M0_STATUS.md), then
+integrate the proven adapters into the M1 workspace. The formal custom-build
+whitespace proof now passes. All required features, six launch targets, ordinary
+local projects and native installation without Docker/WSL remain release gates.
 
 ## Concrete M0 task breakdown
 

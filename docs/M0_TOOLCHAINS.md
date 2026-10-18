@@ -50,9 +50,12 @@ out; discovery exits 0 without pretending workflows passed. The schema is
 [`native-lock.json`](../toolchains/native-lock.json) pins OSS CAD Suite
 **2026-10-18**, all five published target archives, their exact sizes and SHA-256
 digests, plus an independent Windows x64 GHDL 6.0.0 candidate. The digest source
-is the upstream GitHub release asset API. The Linux x64 archive was downloaded,
-checksum verified and extracted in the development environment. Other asset
-records establish available bytes and a candidate route, not tested installs.
+is the upstream GitHub release asset API. All five archive assets have now been
+downloaded, checksum verified and extracted on matching native CI hosts; Windows
+ARM64 uses the same x64 archive through OS translation. The
+[native CI observations](M0_CI_TOOLCHAINS.md) record actual workflow outcomes.
+Verified acquisition alone does not establish complete tool support or a clean
+end-user installation.
 
 For manual acquisition, select the `targets[TARGET].archive_target` asset from
 the lock, download exactly its `url`, verify its exact `sha256` and `size_bytes`,
@@ -107,11 +110,11 @@ a result from running VWB on that system.
 
 | Launch target | Pinned tool route | Candidate floor | Unresolved release proof |
 | --- | --- | --- | --- |
-| Linux x64, including Arch/Manjaro | OSS suite Linux x64, native binaries | Numeric kernel/glibc floor not yet established; development run uses Ubuntu 24.04 | Arch/Manjaro, clean-machine installer and physical-board tests |
+| Linux x64, including Arch/Manjaro | OSS suite Linux x64, native binaries | Numeric kernel/glibc floor not yet established; development run uses Ubuntu 24.04 | Linux and Arch userspace smoke pass; clean native Manjaro/Arch installation and physical-board tests remain |
 | Windows x64 | OSS suite Windows x64 plus separately pinned standalone GHDL candidate | Windows 10, from suite documentation | GHDL/VPI/Python DLL compatibility, VHDL synthesis, clean setup and native USB drivers |
-| macOS Apple Silicon | OSS suite Darwin ARM64, including GHDL | macOS 13, from suite documentation | Native host run, quarantine/signing, clean setup and USB access |
+| macOS Apple Silicon | OSS suite Darwin ARM64, including GHDL; guarded external Tcl-enabled Yosys candidate | macOS 13, from suite documentation | Full workflow evidence, reproducible integrated package, quarantine/signing, clean setup and USB access |
 | macOS Intel | Pinned current Darwin x64 suite; separate VHDL route still required | macOS 13, from suite documentation | Upstream plans to stop Intel packages; sustainable tool distribution and GHDL remain blockers |
-| Linux ARM64 | OSS suite Linux ARM64 plus a native GHDL LLVM/GCC build | ARM64 Linux; numeric kernel/glibc floor not established | Pinned GHDL build/dependencies, native host run, clean setup and USB access |
+| Linux ARM64 | OSS suite Linux ARM64 plus a native GHDL LLVM/GCC build | ARM64 Linux; numeric kernel/glibc floor not established | Eleven native HDL checks pass; pinned supplemental GHDL/dependencies, clean setup and USB access remain |
 | Windows ARM64 | Native companion/runtime required; individual x64 tool candidates use Windows' own translation | Windows 11 on ARM for x64 translation | Full runtime set not integrated; no ARM64 suite asset; ARM64 drivers and physical programming proof required |
 
 OSS CAD Suite currently bundles GHDL and the Yosys GHDL plugin only on Linux x64
