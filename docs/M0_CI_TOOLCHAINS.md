@@ -1,5 +1,44 @@
 # Native toolchain CI observations
 
+## Fourth run: native Yosys candidate and process regression evidence
+
+[Run 39152617957](https://github.com/sfmth/verilog-workbench/actions/runs/39152617957)
+tested commit `28aa9dc852c52a9ba559be538bf25ce2a8353e8a` on 2026-10-18.
+This is a historical failed gate. Follow-up macOS process cleanup and Windows
+bundle smoke fixes require CI5; their results are not assumed here.
+
+| Host | Passed checks | Actual failed or blocked checks |
+| --- | --- | --- |
+| [Linux x64](https://github.com/sfmth/verilog-workbench/actions/runs/39152617957/job/117749179373) | 14/14 | None in this smoke gate. |
+| [Linux ARM64](https://github.com/sfmth/verilog-workbench/actions/runs/39152617957/job/117749179253) | 11/14 | Three blocked workflows: native VHDL, Cocotb/VHDL and VHDL synthesis require missing GHDL. |
+| [macOS Intel](https://github.com/sfmth/verilog-workbench/actions/runs/39152617957/job/117749179306) | 0/14 | Eleven workflow attempts fail with process `Operation not permitted`; the three VHDL workflows remain blocked by missing GHDL. |
+| [macOS Apple Silicon](https://github.com/sfmth/verilog-workbench/actions/runs/39152617957/job/117749179181) | 0/14 | All fourteen attempts fail with process `Operation not permitted`; no workflow is blocked by a missing discovered tool. |
+| [Windows x64](https://github.com/sfmth/verilog-workbench/actions/runs/39152617957/job/117749179420) | 9/14 | Five blocked workflows: Cocotb/Verilog needs `cocotb-config`; VHDL and VHDL synthesis need GHDL; Cocotb/VHDL needs both; SVG needs Graphviz `dot`. |
+| [Windows ARM64](https://github.com/sfmth/verilog-workbench/actions/runs/39152617957/job/117749179312) | 9/14 | The same five missing-package workflows; successful suite tool execution uses the permitted OS x64 translation route. |
+| [Arch x64 userspace](https://github.com/sfmth/verilog-workbench/actions/runs/39152617957/job/117749179053) | 14/14 | None with GCC provisioned; this remains a development-container check. |
+
+The Apple Silicon prerequisite now passes the exact formula/bottle digest and
+installed-version guards, then executes a real Tcl script successfully. Its
+recorded version is `Yosys 0.70+post`, git
+`0c11ea098be065e585a90a06e7b7da49936cf231`. The acquisition receipt records
+the external native ARM64 Mach-O executable, its hash and the original suite
+launcher backup. This proves the separate native Tcl prerequisite and overlay
+selection; the failed process gate prevents a claim that HDL workflows pass.
+The full retained reports contain the per-workflow EPERM failures even though
+the outer acquisition log stops at the same exception. Existing generated
+netlists/status files are not counted as passes after an execution error.
+
+Native companion jobs passed and exercised bundles on
+[Linux x64](https://github.com/sfmth/verilog-workbench/actions/runs/39152617957/job/117749179322)
+and [Linux ARM64](https://github.com/sfmth/verilog-workbench/actions/runs/39152617957/job/117749179366).
+Both macOS companion jobs stopped in the process/unit gate with EPERM, before
+bundle creation. Both Windows jobs passed unit, legacy CLI and browser-client
+checks and built native bundles, then failed the bundle smoke assertion
+comparing saved file text at `scripts/smoke_native_bundle.py:65`. They are not
+counted as successfully exercised bundles. The
+[actual browser integration job](https://github.com/sfmth/verilog-workbench/actions/runs/39152617957/job/117749179298)
+passed. Physical FPGA programming remains untested on every host.
+
 ## Third run: compiler and Windows lint fixes verified
 
 [Run 39151829476](https://github.com/sfmth/verilog-workbench/actions/runs/39151829476)

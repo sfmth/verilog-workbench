@@ -225,6 +225,54 @@ def _exit_pending(process: subprocess.Popen) -> bool:
     raise OSError("non-reaping child-status observation is unavailable on this host")
 
 
+def _darwin_group_has_no_live_members(pgid: int) -> bool:
+    """Confirm Darwin's EPERM came from a group containing only zombies.
+
+    XNU can return EPERM when a group exists but has no signalable members.
+    See killpg1's SZOMB exclusion and nfound handling in Apple's source:
+    https://github.com/apple-oss-distributions/xnu/blob/main/bsd/kern/kern_sig.c
+    Keep the leader unreaped to reserve its PID, and independently inspect the
+    group before accepting that outcome. An unavailable or malformed census
+    must preserve the original signal error.
+    """
+    try:
+        census = subprocess.run(
+            ["/bin/ps", "-axo", "pid=,pgid=,stat="],
+            capture_output=True, text=True, encoding="ascii", errors="strict",
+            timeout=2, env=dict(os.environ, LC_ALL="C"),
+        )
+        if census.returncode:
+            return False
+        rows = census.stdout.splitlines()
+        if not rows:
+            return False
+        retained_leader = False
+        for row in rows:
+            fields = row.split()
+            if len(fields) != 3:
+                return False
+            pid, group = int(fields[0]), int(fields[1])
+            if pid < 0 or group < 0:
+                return False
+            if group == pgid and not fields[2].startswith("Z"):
+                return False
+            if pid == pgid and group == pgid and fields[2].startswith("Z"):
+                retained_leader = True
+        return retained_leader
+    except (OSError, subprocess.SubprocessError, UnicodeError, ValueError):
+        return False
+
+
+def _signal_group(pgid: int, signum: int) -> None:
+    try:
+        os.killpg(pgid, signum)
+    except ProcessLookupError:
+        pass
+    except PermissionError:
+        if sys.platform != "darwin" or not _darwin_group_has_no_live_members(pgid):
+            raise
+
+
 def _terminate_tree(
     process: subprocess.Popen, job: _WindowsJob | None, grace: float = 0.2
 ) -> None:
@@ -232,20 +280,18 @@ def _terminate_tree(
         job.terminate()
         process.wait()
         return
-    try:
-        os.killpg(process.pid, signal.SIGTERM)
-    except ProcessLookupError:
-        pass
+    # A previous cleanup has reaped the leader and released its PID. Repeated
+    # cleanup must not signal a process group that could now belong to others.
+    if process.returncode is not None:
+        return
+    _signal_group(process.pid, signal.SIGTERM)
     deadline = time.monotonic() + grace
     while not _exit_pending(process) and time.monotonic() < deadline:
         time.sleep(0.01)
     # The leader can exit while a descendant ignores TERM and retains a pipe.
     # Always kill the remaining group, even if the leader's exit was observed.
     # Reap only after the final signal, keeping its PID reserved throughout.
-    try:
-        os.killpg(process.pid, signal.SIGKILL)
-    except ProcessLookupError:
-        pass
+    _signal_group(process.pid, signal.SIGKILL)
     process.wait()
 
 

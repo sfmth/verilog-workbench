@@ -1,15 +1,18 @@
 """Transport/safety unit checks use a fake server, never editor-feasibility evidence."""
 from io import BytesIO
 import json
+import os
 from pathlib import Path
 import sys
 import tempfile
 import time
 import unittest
+from unittest import mock
 
 from companion.lsp import (LspClient, LspError, LspResponseError, _offset,
     encode_message, preview_workspace_edit, read_message, snapshot_files,
     semantic_references_with_definition)
+from companion.process import _terminate_tree
 
 REPO = Path(__file__).resolve().parents[1]
 FAKE = r'''
@@ -60,6 +63,32 @@ class FramingTests(unittest.TestCase):
 
 
 class LifecycleTests(unittest.TestCase):
+    def test_graceful_exit_retains_leader_until_owned_tree_cleanup(self):
+        cleanup_states = []
+        def cleanup(process, job):
+            cleanup_states.append(process.returncode)
+            return _terminate_tree(process, job)
+        with tempfile.TemporaryDirectory() as folder:
+            with mock.patch("companion.lsp._terminate_tree", side_effect=cleanup):
+                with LspClient([sys.executable, "-u", "-c", FAKE, str(REPO)], folder,
+                               timeout=2) as client:
+                    client.initialize()
+            self.assertEqual(len(cleanup_states), 1)
+            if os.name != "nt":
+                self.assertEqual(cleanup_states, [None], "POSIX leader was reaped before group cleanup")
+            self.assertEqual(client.process.returncode, 0)
+
+    def test_write_timeout_cleans_owned_tree_only_once(self):
+        with tempfile.TemporaryDirectory() as folder:
+            with mock.patch("companion.lsp._terminate_tree", wraps=_terminate_tree) as cleanup:
+                with LspClient([sys.executable, "-c", "import time; time.sleep(20)"],
+                               folder, timeout=.2) as client:
+                    with self.assertRaisesRegex(TimeoutError, "writing"):
+                        client.request("large", {"text": "x" * 1048576})
+                client.close()
+                self.assertEqual(cleanup.call_count, 1)
+                self.assertTrue(client._tree_cleaned)
+
     def test_initialize_request_server_configuration_and_shutdown(self):
         with tempfile.TemporaryDirectory() as folder:
             with LspClient([sys.executable, "-u", "-c", FAKE, str(REPO)], folder,

@@ -17,7 +17,7 @@ import time
 from urllib.parse import urlsplit
 from urllib.request import url2pathname
 
-from .process import _WindowsJob, _terminate_tree
+from .process import _WindowsJob, _exit_pending, _terminate_tree
 
 
 class LspError(RuntimeError):
@@ -95,6 +95,7 @@ class LspClient:
         self._next_id = 0
         self._writes = queue.Queue(maxsize=16)
         self._write_failed = False
+        self._tree_cleaned = False
         self.initialized = False
         self.closed = False
         self._job = _WindowsJob() if os.name == "nt" else None
@@ -175,7 +176,7 @@ class LspClient:
             self._write_failed = True
             # Closing a Python buffered pipe can itself block behind write().
             # Kill its owned reader first, so the writer unblocks before close.
-            _terminate_tree(self.process, self._job)
+            self._cleanup_tree()
             raise TimeoutError("Timed out writing to language server") from None
         if errors:
             self._write_failed = True
@@ -261,21 +262,31 @@ class LspClient:
             "uri": path.as_uri(), "languageId": language_id, "version": version,
             "text": path.read_text(encoding="utf-8")}})
 
+    def _cleanup_tree(self):
+        if not self._tree_cleaned:
+            _terminate_tree(self.process, self._job)
+            self._tree_cleaned = True
+
     def close(self):
         if self.closed:
             return
         try:
-            if self.initialized and self.process.poll() is None:
+            if self.initialized and not self._tree_cleaned and not _exit_pending(self.process):
                 self.request("shutdown", timeout=min(self.timeout, 2.0))
                 self.notify("exit")
-                self.process.wait(timeout=2)
+                # Observe a cooperative exit without reaping its POSIX leader:
+                # its retained PID anchors process-group ownership until the
+                # final descendant cleanup, even after stdout reaches EOF.
+                deadline = time.monotonic() + 2
+                while not _exit_pending(self.process) and time.monotonic() < deadline:
+                    time.sleep(0.01)
         except (LspError, TimeoutError, subprocess.TimeoutExpired):
             pass
         finally:
             self.closed = True
             # A leader can exit while its descendants retain stdout. Reap the
             # owned tree on graceful exit too, using native platform adapters.
-            _terminate_tree(self.process, self._job)
+            self._cleanup_tree()
             if self._job:
                 self._job.close()
             self._writes.put_nowait(None)

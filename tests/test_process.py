@@ -70,6 +70,66 @@ class ProcessTests(unittest.TestCase):
             self.assertTrue(runner._exit_pending(SimpleNamespace(pid=12345, returncode=None)))
         self.assertEqual(observed, [(1, 12345, 0x25)])
 
+    def test_darwin_zombie_only_group_permission_error_still_reaps_leader(self):
+        from types import SimpleNamespace
+
+        process = SimpleNamespace(pid=12345, returncode=None, wait=mock.Mock())
+        census = subprocess.CompletedProcess(
+            [], 0, "0 0 S\n12345 12345 Z\n12346 12345 Z+\n22222 22222 R\n", ""
+        )
+        with (
+            mock.patch.object(runner.sys, "platform", "darwin"),
+            mock.patch.object(runner.os, "killpg", side_effect=PermissionError(1, "denied"), create=True),
+            mock.patch.object(runner.subprocess, "run", return_value=census) as inspect,
+            mock.patch.object(runner, "_exit_pending", return_value=True),
+        ):
+            runner._terminate_tree(process, None)
+        process.wait.assert_called_once_with()
+        self.assertEqual(inspect.call_count, 2)
+        self.assertEqual(inspect.call_args.args[0], ["/bin/ps", "-axo", "pid=,pgid=,stat="])
+
+    def test_repeated_cleanup_does_not_signal_a_reaped_process_group(self):
+        from types import SimpleNamespace
+
+        process = SimpleNamespace(pid=12345, returncode=0, wait=mock.Mock())
+        with mock.patch.object(runner.os, "killpg", create=True) as send_signal:
+            runner._terminate_tree(process, None)
+        send_signal.assert_not_called()
+        process.wait.assert_not_called()
+
+    def test_darwin_live_group_or_failed_census_preserves_permission_error(self):
+        failed_censuses = [
+            subprocess.CompletedProcess([], 0, "12345 12345 Z\n12346 12345 S\n", ""),
+            subprocess.CompletedProcess([], 1, "", "ps failed"),
+            subprocess.CompletedProcess([], 0, "", ""),
+            subprocess.CompletedProcess([], 0, "12346 12345 Z\n22222 22222 R\n", ""),
+            subprocess.CompletedProcess([], 0, "12345 12345 Z\nmalformed\n", ""),
+            subprocess.CompletedProcess([], 0, "not-a-pid 12345 Z\n", ""),
+            OSError("ps unavailable"),
+            subprocess.TimeoutExpired("/bin/ps", 2),
+        ]
+        for census in failed_censuses:
+            with self.subTest(census=census):
+                error = PermissionError(1, "original signal denied")
+                with (
+                    mock.patch.object(runner.sys, "platform", "darwin"),
+                    mock.patch.object(runner.os, "killpg", side_effect=error, create=True),
+                    mock.patch.object(runner.subprocess, "run", side_effect=[census]),
+                ):
+                    with self.assertRaises(PermissionError) as raised:
+                        runner._signal_group(12345, signal.SIGKILL)
+                self.assertIs(raised.exception, error)
+
+    def test_other_hosts_preserve_group_permission_error_without_census(self):
+        with (
+            mock.patch.object(runner.sys, "platform", "linux"),
+            mock.patch.object(runner.os, "killpg", side_effect=PermissionError(1, "denied"), create=True),
+            mock.patch.object(runner.subprocess, "run") as inspect,
+        ):
+            with self.assertRaises(PermissionError):
+                runner._signal_group(12345, signal.SIGTERM)
+        inspect.assert_not_called()
+
     def assert_stopped(self, pids):
         end = time.monotonic() + 2
         while any(process_running(pid) for pid in pids) and time.monotonic() < end:
@@ -221,7 +281,8 @@ class ProcessTests(unittest.TestCase):
 
         def launch(*args, **kwargs):
             process = original_launch(*args, **kwargs)
-            launched.append(process)
+            if process.args[0] != "/bin/ps":
+                launched.append(process)
             return process
 
         def signal_owned_group(pid, signum):
@@ -311,7 +372,8 @@ class ProcessTests(unittest.TestCase):
 
         def launch(*args, **kwargs):
             process = original_launch(*args, **kwargs)
-            launched.append(process)
+            if process.args[0] != "/bin/ps":
+                launched.append(process)
             return process
 
         with mock.patch.object(runner.subprocess, "Popen", side_effect=launch):
@@ -341,7 +403,8 @@ class ProcessTests(unittest.TestCase):
 
         def launch(*args, **kwargs):
             process = original_launch(*args, **kwargs)
-            launched.append(process)
+            if process.args[0] != "/bin/ps":
+                launched.append(process)
             return process
 
         with mock.patch.object(runner.subprocess, "Popen", side_effect=launch):

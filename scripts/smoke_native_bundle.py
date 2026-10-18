@@ -25,7 +25,9 @@ def smoke(bundle):
         project = Path(temporary) / 'project with spaces µ'
         (project / 'src').mkdir(parents=True)
         (project / 'test').mkdir()
-        (project / 'src/top.v').write_text('module top; endmodule\n', encoding='utf-8')
+        # Use explicit CRLF on every host so the proof checks byte-preserving
+        # saves rather than the platform's text-mode newline translation.
+        (project / 'src/top.v').write_bytes(b'module top; endmodule\r\n')
         (project / 'test/__init__.py').write_text('', encoding='utf-8')
         empty = Path(temporary) / 'empty-cwd'
         empty.mkdir()
@@ -62,7 +64,7 @@ def smoke(bundle):
             before = request('/v1/project/file?path=src%2Ftop.v')
             changed = before['content'] + '// saved through native proof\n'
             request('/v1/project/file', {'path':'src/top.v','content':changed,'revision':before['revision']}, method='PUT')
-            assert (project / 'src/top.v').read_text(encoding='utf-8') == changed
+            assert (project / 'src/top.v').read_bytes() == changed.encode('utf-8')
             job = request('/v1/jobs', {'command':'list', 'options':{}, 'timeout':30})
             deadline = time.monotonic() + 35
             while time.monotonic() < deadline:
