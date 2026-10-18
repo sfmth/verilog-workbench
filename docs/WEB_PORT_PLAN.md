@@ -1,6 +1,7 @@
 # VWB website port plan
 
-Status: initial draft; product and execution choices await owner input.
+Status: owner requirements recorded; platform packaging and project storage
+choices remain open. No implementation has started.
 
 Started: 2026-10-17 (America/Los_Angeles).
 
@@ -9,10 +10,23 @@ Inspected baseline: `master` at `3e384347b93c69266b055c65eda8a6cd308d4536`.
 
 ## Goal and confirmed scope
 
-Port Verilog Workbench into a usable website, using this branch to develop the
-plan separately from the existing CLI. GitHub Pages is a candidate frontend
-host following the branch-publishing discussion. The owner explicitly wants
-questions about the website before its behavior and design are settled.
+Port Verilog Workbench into an editor workspace hosted on GitHub Pages, with
+an optional beginner guide. The owner accepts a local companion, provided it
+is very cross-platform. Continue asking focused product questions while
+developing this plan separately from the existing CLI.
+
+Owner decisions recorded on 2026-10-17 (America/Los_Angeles):
+
+- **Hosting:** GitHub Pages. A very cross-platform local companion is acceptable.
+- **First usable release:** Verilog/SystemVerilog editing, simulation and
+  waveforms; Cocotb/Python tests; lint and synthesis schematics; FPGA builds
+  and programming; VHDL; and formal verification are all required.
+- **Interface:** editor workspace with an optional beginner guide.
+
+Internal development checkpoints may implement smaller slices, but they do
+not satisfy the requested first usable release until all required workflows
+work on the agreed platform/board matrix. No required feature is deferred
+merely because browser-only execution is difficult.
 
 This commit adds planning documentation only. It does not implement the app,
 change Pages settings, publish a site, or replace the CLI. Existing source,
@@ -33,7 +47,7 @@ inspected baseline. The remote branch inventory contained only `master`.
 | `_compile_simulation`, `_run_vhdl_test` | Native simulation, including Cocotb integration | Browser parity needs toolchain experiments, not just a Python interpreter. |
 | `open_waveform`, `SavedWave`, wave archive methods | GTKWave launch, layouts, tags, metadata | Add an integrated browser viewer and explicitly map saved-wave behavior. |
 | `lint_with_tool`, `synthesize` | Native checks, Yosys, schematic generation | Separate computation from browser display of diagnostics and artifacts. |
-| `run_formal`, `run_fpga` | SBY/solvers, board builds, packing, programming | Later capability-dependent workflows; hardware access needs its own design. |
+| `run_formal`, `run_fpga` | SBY/solvers, board builds, packing, programming | Required release workflows; verify native tools and physical hardware access per platform. |
 | [Dockerfile](../Dockerfile) | Full interactive Linux toolchain and desktop support | Useful tool inventory; do not expose this image unchanged as a public execution service. |
 | [CI workflow](../.github/workflows/ci.yml) | Distro validation and Docker checks on pushes/PRs | Keep existing coverage; plan focused web checks to avoid rebuilding every tool for each UI edit. |
 
@@ -44,168 +58,251 @@ Existing regression sources include
 The repository declares `GPL-2.0-only`; retain its license and notices, and record
 the versions, sources, and license information of any distributed web engines.
 
-## The central architecture decision
+## Architecture direction after owner input
 
-GitHub Pages hosts static assets. It cannot run the existing Python application
-and native tool processes on GitHub's web server. It can serve JavaScript and
-WebAssembly that execute on the visitor's device. Therefore a Pages-hosted UI is
-possible, while the execution model remains an explicit decision.
+Use GitHub Pages for the browser workspace and plan a cross-platform local
+companion for the complete native toolchain. This is the practical architecture
+proposed from the owner's acceptance of a companion; it is not a promise that
+GitHub Pages itself executes native tools.
 
-| Execution model | What the visitor needs | Main benefit | Main tradeoff / proof required |
-| --- | --- | --- | --- |
-| Browser only | A supported browser; engines download with the app | No local install or hosted compute service | Prove language, simulator, synthesis, memory, download-size, and testbench support. Full Cocotb/VHDL parity is unproven. |
-| Browser plus local runner | VWB/toolchain or a companion container on their computer | Reuse native VWB capabilities and reach local hardware | Installation remains necessary; verify secure pairing and HTTPS-to-local connectivity in target browsers. |
-| Browser plus hosted runner | Access to a separately operated compute service | Native tools without visitor installation | Needs hosting, operating budget, queueing, and isolation for user-supplied code. Pages alone does not provide it. |
+| Layer | Responsibility |
+| --- | --- |
+| GitHub Pages app | Editor, file/test/hierarchy views, run controls, diagnostics, waveform viewer, schematics, optional beginner guide. |
+| Local companion | Access an explicitly opened project, run VWB tools, return structured results/artifacts, and program attached FPGA hardware. |
+| Versioned tool packages | Supply or locate compatible Python, simulators, synthesis/checking tools, solvers, board tools, and programmer drivers per OS/architecture. |
+| Optional browser engines | Future convenience for validated no-install workflows; not a prerequisite for reaching full companion-backed capability. |
 
-A hybrid may offer browser execution for a tested subset and an optional runner
-for additional features. Do not commit to that extra scope before asking the
-owner. Do not silently replace Cocotb with HDL tests or omit VHDL if either is a
-first-release requirement.
+Without a companion, the website should still open examples, allow editing and
+portable import/export, and inspect available waveforms/schematics. The UI must
+say when a requested action needs the companion. With a configured companion,
+all owner-selected release workflows must work on the agreed support matrix.
 
-## Proposed feature map — priorities are not yet approved
+A hosted execution service is not currently planned. Do not introduce server
+costs, accounts, or cloud uploads as implicit prerequisites. Keep the execution
+boundary extensible without implementing extra backends prematurely.
 
-| Workflow | Browser-facing work | Execution dependency / open question |
+## Required first-release workflows
+
+| Required workflow | Browser experience | Companion/release proof |
 | --- | --- | --- |
-| Project creation and examples | File tree, editor, bundled examples, top/test selection | Define project format and import/export behavior. |
-| Discovery and hierarchy | Modules/entities, dependencies, matched tests, source navigation | Preserve VWB discovery semantics through a port or native adapter. |
-| Simulation | Run/stop controls, compiler messages, pass/fail, logs | Prove selected simulator and supported HDL/test styles. |
-| Starter tests | Preview and edit generated tests before running | Preserve clocks/resets/arrays; label starters as smoke tests, not functional validation. |
-| Waveforms | Signal tree, buses/radix, zoom, cursor, ordering | Start evaluation with VCD; FST decoding and GTKWave layout compatibility need separate decisions. |
-| Lint | Source-linked warnings/errors and per-tool results | Expose only engines actually available in the chosen mode. |
-| Synthesis | Schematic pan/zoom, netlist/artifact download | Native or proven browser Yosys path plus a supported renderer. |
-| Gate-level tests | RTL versus synthesized results | Preserve test reuse and language restrictions. |
-| Saved results | Wave tags, run history, project export | Choose browser-local persistence versus accounts/cloud storage. |
-| Formal | Configuration, job status, results/counterexample traces | SBY/solver availability; likely runner-first unless browser support is proved. |
-| FPGA | Board/constraints selection and build downloads | Preserve fixed Tang Nano 9K and iCEBreaker profiles; separate build from physical programming. |
+| Verilog/SystemVerilog editor | Multi-file workspace, includes/defines, top/test selection, useful errors | Discovery, dependency closure, native HDL tests and selected language subset agree with VWB. |
+| Simulation and waveforms | Run/stop, logs, signal tree, buses/radix, zoom/cursor, saved layouts | Real pass/fail, waveform correctness, cancellation, and limits. Evaluate VCD first; decide FST and GTKWave layout migration explicitly. |
+| Cocotb/Python tests | Edit tests, choose test functions/seed, inspect assertions and results | Packaged Python and simulator libraries work together; real Cocotb tests run, including VHDL where currently supported. |
+| VHDL | Editor, entity/architecture/test discovery, simulation and source-linked diagnostics | Preserve VWB's VHDL-2008 subset, source ordering, native tests and Cocotb. Validate VHDL synthesis separately. |
+| Lint and synthesis schematics | Per-tool diagnostics, schematic pan/zoom, artifact downloads | Suitable checkers run; Yosys/conversion/rendering paths work across declared platforms. Preserve raw-output fallback. |
+| Formal verification | Select/edit configuration, progress, proof status, counterexample waves | Real SBY/solver success, counterexample, failure, timeout and cancellation. Initial scope follows existing VWB rather than every assertion language. |
+| FPGA builds and programming | Board/constraints selection, build stages, output download, explicit program action | Build and physically program the supported boards through the local host, with board/cable/driver checks. |
 
-## User decisions to collect
+Start FPGA coverage with the existing fixed Tang Nano 9K and iCEBreaker profiles.
+This preserves current VWB scope; other boards remain a separate product choice.
+FPGA build success is not evidence that USB programming works. Both are release
+requirements and need separate results.
 
-The first conversation should resolve these three questions:
+Starter tests, gate-level tests, project discovery and saved-wave behavior should
+follow the existing CLI wherever exposed. Starter tests must remain clearly
+identified as smoke tests rather than proof of functional correctness. Preserve
+the current restriction against mixing VHDL and Verilog within one hierarchy.
 
-1. **Installation and execution:** Must the site run without installing anything,
-   can users run a local companion, or is separately hosted compute acceptable?
-   If hosted compute is chosen, follow up about budget and who can submit jobs.
-2. **First-release priorities:** Which are essential: editing, simulation and
-   waves, Cocotb, VHDL, lint/synthesis, formal, or FPGA workflows? Ask for must-have
-   versus later features rather than treating every CLI option as an MVP requirement.
-3. **Interaction style:** Prefer a workspace with editor/results panes, a guided
-   select-edit-run flow, or a workspace with an optional beginner guide?
+## What "very cross-platform" means in this plan
 
-Follow up after those answers with the relevant details: intended audience,
-desktop versus phone/tablet use, visual style and example sites, multi-file
-projects, offline use, project size, saving/sharing, and GitHub integration.
-Accounts, collaboration, billing, and public project sharing are uncommitted
-scope. Record answers in this document before treating them as requirements.
+Proposed launch OS families are Windows, Linux (including Manjaro/Arch), and
+macOS. Minimum versions and CPU architectures await owner input. Package support,
+tool availability and verified end-to-end support are three different things.
+
+| Candidate target | Evidence / gap to resolve before claiming support |
+| --- | --- |
+| Linux x86-64 | OSS CAD Suite candidate; validate Ubuntu and Manjaro/Arch rather than relying on Ubuntu-only package commands. |
+| Windows x86-64 | Native suite candidate; prove Python/Cocotb integration and a VHDL route. Decide whether WSL may be a fallback. |
+| macOS Apple Silicon | Native suite candidate; validate signing/quarantine handling, runtime loading, and hardware access. |
+| macOS Intel | Suite currently lists it but warns distribution will stop soon; identify a sustainable packaging route if required. |
+| Linux ARM64 | Suite exists, but bundled GHDL is not listed for this target; needs a separate validated VHDL route. |
+| Windows ARM64 | Not listed by the inspected suite documentation; requires its own toolchain strategy if requested. |
+
+Primary-source packaging check: OSS CAD Suite lists Python, Cocotb, Icarus,
+Verilator, Yosys, SBY/solvers, nextpnr and FPGA programming tools, but currently
+limits bundled GHDL and its synthesis plugin to Linux x86-64 and macOS ARM64.
+Therefore downloading one suite archive is not proof of complete VWB support.
+Investigate independent GHDL packages/builds for gaps and test simulation and
+synthesis separately. These are documentary findings, not completed runtime tests.
+
+Prefer a normal per-user companion download/installer with managed, versioned
+tools. Whether Docker/WSL is allowed as a fallback is an owner decision.
+Containers may be useful execution adapters, but must not silently become the
+only route to a supposedly native cross-platform app. Keep hardware programming
+on the host or prove a documented device bridge; do not assume container USB access.
+
+### Companion engineering work
+
+- Reuse Python/VWB first instead of rewriting HDL orchestration in another language.
+  Evaluate packaging the Python runtime so a system Python install is not assumed.
+- Replace POSIX-specific process-group handling in `Workbench.run` with tested
+  platform adapters. Audit `os.killpg`, signals, executable names, path handling,
+  environment activation, native library loading, encodings and child cleanup.
+- Test paths with spaces, Unicode names, nested includes and long Windows paths.
+  Keep structured argument arrays rather than building shell command strings.
+- Discover compatible user-installed tools as an advanced option; default managed
+  packages should use pinned versions, integrity checks and rollbackable updates.
+- Report capabilities by workflow/tool/version, including actionable repair steps.
+  A missing required engine is an installation failure to fix, not a waived feature.
+- Diagnose Linux device permissions and per-board Windows/macOS USB/driver needs.
+  Do not require the entire companion to run as administrator/root.
+
+## Editor workspace and beginner guide
+
+The confirmed interaction is an editor workspace; the optional guide should use
+the same projects and controls rather than maintain a second application.
+
+Proposed layout for owner review:
+
+- Left: project files and tabs for hierarchy, tests and examples.
+- Center: HDL/Python editor, with waveform or schematic tabs/split views.
+- Bottom: diagnostics, test results, tool logs, formal status and FPGA build output.
+- Visible project top/test selection and connection status; context-sensitive
+  Run, Lint, Synthesize, Formal, Build and Program actions.
+- Optional guide: open an example, identify the top/test, run it, inspect a signal,
+  fix an error, then explore synthesis. It can be skipped and reopened.
+
+Support keyboard use and clear focus/state indicators. Visual theme, resizing,
+phone/tablet expectations and preferred example sites remain to be discussed.
+
+## Browser-to-companion connection gate
+
+Prove the actual HTTPS Pages app can connect in current Firefox and Chromium,
+then Safari if macOS is a launch target. Browser permissions, local-network
+restrictions, mixed-content rules and cross-origin requests must be exercised;
+a successful localhost-only development demo is insufficient.
+
+Use intentional pairing, a session credential, narrow origin/host checks, and
+loopback-only listening by default. Authorize an explicitly selected project,
+validate path boundaries, and avoid an unauthenticated arbitrary-command API.
+GitHub Pages project paths share the owner origin: origin checks alone cannot
+distinguish sibling repositories, so pairing must also authenticate the session.
+
+Start transport evaluation with authenticated HTTP requests and job polling or
+fetch streaming; add WebSocket streaming only after browser support is proved.
+Handle companion absent, permission denied, wrong version, expired pairing,
+restart, disconnect during a job, and reconnect. Do not require browser security
+flags or a public relay. A locally served copy of the same UI may be an offline
+fallback, but must not silently replace the requested Pages workflow.
+
+## Questions still to resolve
+
+1. **Installation:** Must full functionality be native without Docker/WSL, is
+   native preferred with those fallbacks, or are containers/WSL acceptable as
+   the standard installation route?
+2. **Project storage:** Open/edit ordinary local folders through the companion,
+   keep browser-managed projects with import/export, or provide both? Define
+   the authoritative copy, save behavior and conflict handling accordingly.
+3. **Launch targets:** Which OS/CPU combinations need verified full support?
+   Confirm Windows, Linux, Apple Silicon/Intel Macs and any ARM Linux/Windows needs.
+
+After these answers, ask only unresolved questions that affect implementation:
+additional FPGA boards/cables, intended audience, project scale, offline use,
+phone/tablet use, visual references and GitHub integration. Accounts, cloud
+storage, collaboration and hosted execution remain uncommitted scope.
 
 ## Implementation sequence and acceptance gates
 
-### M0 — Settle scope and prove execution
+### M0 — Prove the companion path and lock the support matrix
 
-- Record the answers above and a first-release feature list.
-- Evaluate browser simulator and synthesis candidates using reproducible builds
-  or maintained distributions; record provenance and exact versions.
-- Test includes/defines, multi-file dependencies, a clocked SV design, errors,
-  stop/timeout behavior, and waveform output. If required, separately prove
-  Cocotb/Python simulator integration and VHDL.
-- Run small examples such as `encoder` and `sv_beginner_counter`, then a larger
-  dependency-rich design. Compare results against the native CLI.
-- Measure cold download, startup, peak memory, execution time, and waveform size.
-  Test under the actual Pages origin and project subpath, not just localhost.
-- Check worker/runtime/header needs before selecting an engine. Do not depend
-  on multithreading or browser isolation headers without validating the host.
+- Record remaining installation, storage and OS/architecture decisions.
+- Build the smallest pairing/connectivity proof from the actual Pages origin
+  to a native companion, including a denied-permission and reconnect case.
+- Pin a candidate runtime/tool set and run small Verilog/SV, native HDL,
+  Cocotb, VHDL, synthesis, formal and FPGA-build checks on each launch target.
+- Identify supplemental tool packages where the suite is incomplete.
+- Prove host programming of each supported board/cable combination; record
+  hardware-tested cells separately from CI builds.
+- Compare representative results with the native CLI and document limits.
 
-**Exit gate:** a short evidence-backed execution decision and an explicit
-supported/unsupported matrix. An unsuccessful spike changes the scope or
-execution proposal; it does not justify a button that produces pretend results.
+**Exit gate:** reproducible install/connect evidence and a matrix of OS/CPU,
+simulation, Cocotb, VHDL, lint/synthesis, formal, FPGA build and actual programming.
+Unresolved required cells stay blockers. Agree on any fallback with the owner.
 
-### M1 — Deliver one usable end-to-end workflow
+### M1 — Internal editor/run/waveform prototype
 
-- Build a static UI with an example project, file editing, project import/export,
-  top/test selection, and visible engine capabilities.
-- Connect one real execution adapter: compile and run the edited project,
-  report errors with file/line locations, and show a browser waveform.
-- Implement run cancellation, a finite execution limit, recovery after failure,
-  and clear unsaved-change handling.
-- Use a worker for heavy browser execution/parsing; keep editing and stop
-  controls responsive. For native execution, expose structured job operations.
+- Build the workspace, optional guide skeleton, examples, project model and
+  the selected save/import/export route.
+- Stabilize project inventory from `list --json` and job/result schemas.
+- Connect real compile/test execution, source-linked errors and a browser
+  waveform; implement stop, limits, failure recovery and stale-result checks.
+- Keep large waveform parsing/rendering from blocking editing and stop controls.
 
-**Exit gate:** a visitor can open an example, change HDL, run a real test,
-inspect signals, introduce/fix a compiler error, and export their project.
+**Exit gate:** open, edit, run, inspect, break/fix, save and reopen a multi-file
+project. This internal prototype is not the complete first usable release.
 
-### M2 — Preserve the workflows selected for release
+### M2 — Complete language and analysis workflows
 
-- Add hierarchy/test discovery, required starter-test generation, and the
-  selected lint/synthesis capabilities.
-- Add run history and tagged waves with an explicit browser-state format.
-  Evaluate existing GTKWave layout import rather than claiming compatibility.
-- Add Cocotb, VHDL, gate-level testing, and additional engines in priority order
-  only after each passes its execution gate.
-- Validate a larger bundled design and meaningful array/bus waveforms.
+- Integrate Cocotb/Python and VHDL end to end, including native testbenches,
+  source ordering, defines/includes, and the existing supported conversions.
+- Add hierarchy/test discovery, starter generation, lint, synthesis schematics,
+  raw artifacts, gate-level checks and saved/tagged results.
+- Add formal proof/counterexample workflows and trace viewing.
+- Validate larger bundled designs, arrays, buses and cancelled/failed runs.
 
-**Exit gate:** selected workflows agree with native VWB on pass/fail and
-important artifacts. Discovery preserves include/define handling, packages,
-interfaces, dependency closure, and VHDL ordering. Unsupported features explain
-the limitation and any available execution mode.
+**Exit gate:** required language and analysis workflows match native VWB's
+supported behavior across the agreed platform matrix.
 
-### M3 — Publish the selected release and expand
+### M3 — Complete FPGA and packaging integration
 
-- Add a dedicated Pages build/deploy workflow triggered by the chosen web branch.
-  For a built frontend, use Actions to deploy its output artifact; do not serve
-  raw TypeScript or assume an arbitrary source folder is a branch-publishing option.
-- Configure the `/verilog-workbench/` base path, asset/worker/WASM URLs, and
-  reload-safe navigation. Keep deployment concurrency controlled.
-- Validate Chromium and Firefox, keyboard use, and the mobile/tablet level
-  selected by the owner. Verify storage/export and large-waveform behavior.
-- Add formal/FPGA build flows when requested and supported. Treat USB programming
-  as a later explicit capability, with local-runner/browser support evaluated.
-- Document supported languages/tools, limits, project portability, and recovery.
+- Integrate board/constraints editing, synth/PNR/pack stages, artifact download
+  and actual host programming for the supported boards.
+- Present board identity, selected image and programming progress clearly.
+  Programming is an explicit user action.
+- Finish per-platform installers/tool acquisition, repair/uninstall, version
+  negotiation, logs and documentation. Validate clean-machine installation.
 
-**Exit gate:** the actual deployed Pages URL passes the end-to-end workflow,
-asset reloads, error handling, and export/reimport checks.
+**Exit gate:** every launch platform has a reproducible full toolchain route;
+supported board/cable combinations have recorded build and programming evidence.
 
-## Boundaries that keep the port maintainable
+### M4 — Publish the first complete usable release
 
-Use a common project model, capability report, job status, diagnostics, and
-artifact manifest across execution modes. Include source revision and tool
-versions in results so stale waveforms cannot masquerade as a fresh run.
-Model job states explicitly: queued, running, passed, failed, cancelled, timed out.
+- Add a Pages Actions workflow scoped to the web branch and built output.
+  Configure `/verilog-workbench/`, assets/workers/WASM URLs and reload-safe routing.
+- Verify real deployment, supported browsers, pairing, keyboard navigation,
+  saving/export/reimport, toolchain installation and guide behavior.
+- Run the full required workflow checklist; verify failures, cancellation,
+  offline/disconnect behavior and recovery.
+- Publish a precise OS/CPU/board support matrix and tested tool versions.
 
-Derive inventory from `list --json`; stabilize its schema without scraping
-colored terminal output. Introduce structured results around selected workflows
-before refactoring unrelated CLI code. Keep native CLI commands and tests working.
+**Exit gate:** all owner-selected features work with the companion on the agreed
+launch matrix. An incomplete feature set may be shown as a development preview,
+but must not be labeled the requested first usable release.
 
-A tentative layout is `web/` for frontend/workers, `docs/` for decisions, and
-a runner package only if that execution mode is selected. Framework, editor
-library, waveform library, and Python-in-browser approach remain unselected.
-Prefer maintained components after checking bundle size, capability, and license.
+## Maintainability and verification
 
-For browser persistence, evaluate IndexedDB plus portable project export. Make
-uploads explicit if any remote execution or storage is added. Hosted execution
-must isolate arbitrary Cocotb Python and formal/tool jobs, constrain resources
-and network access, and confine project/artifact paths. A local runner must
-require intentional pairing and restrict accepted origins.
+Use a common project model, capability report, job state, diagnostic format and
+artifact manifest. Include source revision and tool versions so old outputs
+cannot appear to be results of newly edited code. Model queued, running,
+passed, failed, cancelled and timed-out states explicitly.
 
-## Verification strategy
+Refactor narrow execution/result boundaries only as required. Preserve CLI
+behavior and regressions. Tentative layout: `web/`, `companion/`, shared
+contracts/fixtures, and `docs/`. Framework/editor/viewer/installer libraries
+remain unselected pending a small compatibility and size check.
 
-This planning commit needs documentation review, valid relative links, and
-`git diff --check`; it changes no executable behavior.
+For project storage, implement the owner's chosen model with explicit save
+status, atomic local writes where applicable and portable exports. Browser file
+access must have a cross-browser route through the companion/import-export,
+rather than require a single browser's folder-picker API.
 
-Implementation checks should cover project-model/discovery compatibility,
-real simulator pass/fail and waveform correctness, cancellation/timeouts,
-stale results, export/reimport, and Pages subpath loading. Use existing CLI
-regressions when native behavior changes. Run the existing representative native
-validation at integration milestones; use focused web checks for ordinary UI edits.
+For documentation changes, review links and run `git diff --check`.
+Implementation checks cover real tool pass/fail, discovery compatibility,
+waveform/schematic correctness, cancellation, export/reopen and Pages paths.
+Run OS-specific integration checks for companion changes and representative
+native validation at milestones. USB programming needs physical-device evidence,
+not a mocked CI pass. Use focused web checks for ordinary UI-only changes.
 
 ## Open risks and next action
 
-The highest uncertainty is execution parity, especially Cocotb/Python, VHDL,
-formal, and FPGA toolchains. Other risks are large waveform memory, slow engine
-downloads, browser storage limits, local-runner connectivity, and drift between
-native and web discovery. Measure these in the selected mode.
+Main blockers to resolve are per-platform VHDL/tool packaging, Windows process
+and runtime behavior, sustainable Intel Mac support if required, real board USB
+access, and browser-to-loopback connectivity. Large waveforms, tool download
+size, storage limits and UI/CLI discovery drift also need measurement.
 
-**Next action:** collect the owner's three initial answers, update scope and
-architecture here, and then begin M0's smallest relevant feasibility experiment.
-No estimates or full-parity promises should precede that evidence.
+**Next action:** collect the three installation/storage/platform answers, then
+turn M0 into small testable tasks. All six requested feature groups and the
+editor-plus-optional-guide interaction remain fixed requirements.
 
 ## Primary technical references
 
@@ -215,5 +312,11 @@ No estimates or full-parity promises should precede that evidence.
 - [Emscripten API limitations](https://emscripten.org/docs/porting/guidelines/api_limitations.html)
 - [Emscripten filesystem overview](https://emscripten.org/docs/porting/files/file_systems_overview.html)
 - [Cocotb simulator integration / GPI](https://docs.cocotb.org/en/stable/library_reference_c.html)
+
+- [OSS CAD Suite platforms and included tools](https://github.com/YosysHQ/oss-cad-suite-build/blob/main/README.md)
+- [openFPGALoader installation and device permissions](https://trabucayre.github.io/openFPGALoader/guide/install.html)
+- [Chrome local network access](https://developer.chrome.com/blog/local-network-access)
+- [MDN local network access](https://developer.mozilla.org/en-US/docs/Web/Security/Defenses/Local_network_access)
+- [MDN filesystem API](https://developer.mozilla.org/en-US/docs/Web/API/File_System_API)
 
 References checked during initial planning on 2026-10-17 (America/Los_Angeles).
