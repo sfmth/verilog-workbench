@@ -1,7 +1,8 @@
 # VWB website port plan
 
-Status: owner requirements recorded; platform packaging and project storage
-choices remain open. No implementation has started.
+Status: launch platforms, native installation, local-folder storage and feature
+scope confirmed. Toolchain feasibility and remaining editor/board details are
+open. No implementation has started.
 
 Started: 2026-10-17 (America/Los_Angeles).
 
@@ -17,7 +18,14 @@ developing this plan separately from the existing CLI.
 
 Owner decisions recorded on 2026-10-17 (America/Los_Angeles):
 
-- **Hosting:** GitHub Pages. A very cross-platform local companion is acceptable.
+- **Hosting:** GitHub Pages, connected to a native local companion.
+- **Installation:** native application; no Docker or WSL required on any launch
+  target. Existing Docker assets may still be used for developer CI.
+- **Projects:** ordinary local folders opened through the companion are the
+  source of truth; no browser-managed project store is required.
+- **Launch targets:** Linux x86-64 (including Manjaro/Arch), Windows x86-64,
+  macOS Apple Silicon, macOS Intel, Linux ARM64, and Windows ARM64. All six
+  require full first-release workflow support.
 - **First usable release:** Verilog/SystemVerilog editing, simulation and
   waveforms; Cocotb/Python tests; lint and synthesis schematics; FPGA builds
   and programming; VHDL; and formal verification are all required.
@@ -40,11 +48,11 @@ inspected baseline. The remote branch inventory contained only `master`.
 
 | Existing component | Role | Implication for the website |
 | --- | --- | --- |
-| `SourceCatalog` | HDL declarations, packages, dependencies, and source closure | Reuse its behavior and regression cases; adapt host-file access if running in-browser. |
+| `SourceCatalog` | HDL declarations, packages, dependencies, and source closure | Reuse through the native companion against the opened folder; preserve regression behavior. |
 | `Workbench` | Project settings, tests, tools, generated files, and results | Introduce narrow adapters as needed; avoid a full rewrite before a working slice. |
 | `command_list` / `list --json` | Modules, languages, files, dependencies, problems, tests, interfaces, and primitives | Starting point for the project-inventory data contract. |
 | `Workbench.run` | Native subprocess execution, output capture, process-group termination | Needs a separate browser or runner implementation. It is not a sandbox. |
-| `_compile_simulation`, `_run_vhdl_test` | Native simulation, including Cocotb integration | Browser parity needs toolchain experiments, not just a Python interpreter. |
+| `_compile_simulation`, `_run_vhdl_test` | Native simulation, including Cocotb integration | Package and validate native simulators, Python, and simulator libraries for all six launch targets. |
 | `open_waveform`, `SavedWave`, wave archive methods | GTKWave launch, layouts, tags, metadata | Add an integrated browser viewer and explicitly map saved-wave behavior. |
 | `lint_with_tool`, `synthesize` | Native checks, Yosys, schematic generation | Separate computation from browser display of diagnostics and artifacts. |
 | `run_formal`, `run_fpga` | SBY/solvers, board builds, packing, programming | Required release workflows; verify native tools and physical hardware access per platform. |
@@ -60,10 +68,10 @@ the versions, sources, and license information of any distributed web engines.
 
 ## Architecture direction after owner input
 
-Use GitHub Pages for the browser workspace and plan a cross-platform local
-companion for the complete native toolchain. This is the practical architecture
-proposed from the owner's acceptance of a companion; it is not a promise that
-GitHub Pages itself executes native tools.
+Use GitHub Pages for the browser workspace and a native local companion for the
+complete toolchain and local projects. The companion must run on all six launch
+targets without Docker or WSL. GitHub Pages serves the interface; actual tool
+execution and hardware access take place on the user's machine.
 
 | Layer | Responsibility |
 | --- | --- |
@@ -72,10 +80,11 @@ GitHub Pages itself executes native tools.
 | Versioned tool packages | Supply or locate compatible Python, simulators, synthesis/checking tools, solvers, board tools, and programmer drivers per OS/architecture. |
 | Optional browser engines | Future convenience for validated no-install workflows; not a prerequisite for reaching full companion-backed capability. |
 
-Without a companion, the website should still open examples, allow editing and
-portable import/export, and inspect available waveforms/schematics. The UI must
-say when a requested action needs the companion. With a configured companion,
-all owner-selected release workflows must work on the agreed support matrix.
+The normal project workflow is Open Folder through the companion, edit/save
+ordinary files, then run tools against that local project. The website may also
+offer example previews and artifact import without a companion; this is a
+convenience rather than a second project-storage architecture. Full release
+functionality uses the companion and must work on all six launch targets.
 
 A hosted execution service is not currently planned. Do not introduce server
 costs, accounts, or cloud uploads as implicit prerequisites. Keep the execution
@@ -103,33 +112,39 @@ follow the existing CLI wherever exposed. Starter tests must remain clearly
 identified as smoke tests rather than proof of functional correctness. Preserve
 the current restriction against mixing VHDL and Verilog within one hierarchy.
 
-## What "very cross-platform" means in this plan
+## Required native platform matrix
 
-Proposed launch OS families are Windows, Linux (including Manjaro/Arch), and
-macOS. Minimum versions and CPU architectures await owner input. Package support,
-tool availability and verified end-to-end support are three different things.
+All six OS/CPU combinations below are mandatory launch targets. Minimum OS
+versions remain to be pinned against tested runtime/tool packages. Archive
+availability, tool availability and verified full support are distinct states.
 
-| Candidate target | Evidence / gap to resolve before claiming support |
+| Required target | Native packaging gap / acceptance work |
 | --- | --- |
-| Linux x86-64 | OSS CAD Suite candidate; validate Ubuntu and Manjaro/Arch rather than relying on Ubuntu-only package commands. |
-| Windows x86-64 | Native suite candidate; prove Python/Cocotb integration and a VHDL route. Decide whether WSL may be a fallback. |
-| macOS Apple Silicon | Native suite candidate; validate signing/quarantine handling, runtime loading, and hardware access. |
-| macOS Intel | Suite currently lists it but warns distribution will stop soon; identify a sustainable packaging route if required. |
-| Linux ARM64 | Suite exists, but bundled GHDL is not listed for this target; needs a separate validated VHDL route. |
-| Windows ARM64 | Not listed by the inspected suite documentation; requires its own toolchain strategy if requested. |
+| Linux x86-64 | Validate Ubuntu and Manjaro/Arch; do not depend on Ubuntu-only package commands. |
+| Windows x86-64 | Prove native Python/Cocotb integration, VHDL, tool processes and USB programming without WSL. |
+| macOS Apple Silicon | Validate runtime loading, signing/quarantine handling, tools and hardware access. |
+| macOS Intel | Identify a sustainable native tool distribution; upstream suite retirement is a release blocker to solve. |
+| Linux ARM64 | Add a verified native GHDL/VHDL route where the suite is incomplete; validate the rest of the toolchain. |
+| Windows ARM64 | Establish compatible native companion/runtime/tool packages and physical USB support; no WSL/Docker substitution. |
 
 Primary-source packaging check: OSS CAD Suite lists Python, Cocotb, Icarus,
 Verilator, Yosys, SBY/solvers, nextpnr and FPGA programming tools, but currently
 limits bundled GHDL and its synthesis plugin to Linux x86-64 and macOS ARM64.
-Therefore downloading one suite archive is not proof of complete VWB support.
-Investigate independent GHDL packages/builds for gaps and test simulation and
-synthesis separately. These are documentary findings, not completed runtime tests.
+Its documented targets do not include Windows ARM64, and it warns Intel Mac
+distribution will stop. Therefore it is a candidate package source, not the
+complete six-platform solution. Independent native builds/packages are required
+where gaps exist. These findings are documentary; no runtime support is proved.
 
-Prefer a normal per-user companion download/installer with managed, versioned
-tools. Whether Docker/WSL is allowed as a fallback is an owner decision.
-Containers may be useful execution adapters, but must not silently become the
-only route to a supposedly native cross-platform app. Keep hardware programming
-on the host or prove a documented device bridge; do not assume container USB access.
+Plan per-user installers/downloads with managed, pinned native tools. A launch
+target cannot be marked supported by requiring Docker, WSL or a remote service.
+CPU compatibility/emulation layers are a separate unresolved definition of
+support: do not silently claim an ARM64-native toolchain by running x86-64 tools.
+Ask whether OS-provided compatibility layers are acceptable; record the actual
+binary architecture and route for each tool.
+
+Keep FPGA programming on the host. Drivers or device-permission setup may be
+needed; diagnose those explicitly without requiring an elevated companion
+process for normal work.
 
 ### Companion engineering work
 
@@ -167,8 +182,8 @@ phone/tablet expectations and preferred example sites remain to be discussed.
 
 ## Browser-to-companion connection gate
 
-Prove the actual HTTPS Pages app can connect in current Firefox and Chromium,
-then Safari if macOS is a launch target. Browser permissions, local-network
+Prove the actual HTTPS Pages app can connect in current Firefox, Chromium and
+Safari on the applicable launch platforms. Browser permissions, local-network
 restrictions, mixed-content rules and cross-origin requests must be exercised;
 a successful localhost-only development demo is insufficient.
 
@@ -185,27 +200,58 @@ restart, disconnect during a job, and reconnect. Do not require browser security
 flags or a public relay. A locally served copy of the same UI may be an offline
 fallback, but must not silently replace the requested Pages workflow.
 
-## Questions still to resolve
+## Local-folder project model
 
-1. **Installation:** Must full functionality be native without Docker/WSL, is
-   native preferred with those fallbacks, or are containers/WSL acceptable as
-   the standard installation route?
-2. **Project storage:** Open/edit ordinary local folders through the companion,
-   keep browser-managed projects with import/export, or provide both? Define
-   the authoritative copy, save behavior and conflict handling accordingly.
-3. **Launch targets:** Which OS/CPU combinations need verified full support?
-   Confirm Windows, Linux, Apple Silicon/Intel Macs and any ARM Linux/Windows needs.
+The opened ordinary local folder is authoritative. Preserve its HDL/Python,
+constraints, `.vwb.json`, tests and version-control layout. Existing projects
+must open in place; do not require conversion to an app-private workspace or
+upload to a hosted service.
 
-After these answers, ask only unresolved questions that affect implementation:
-additional FPGA boards/cables, intended audience, project scale, offline use,
-phone/tablet use, visual references and GitHub integration. Accounts, cloud
-storage, collaboration and hosted execution remain uncommitted scope.
+- The companion opens/authorizes the folder using native UI or an explicit
+  local launch action. The browser receives a scoped project handle and
+  relative paths, rather than unrestricted host filesystem access.
+- Reuse configured source/test/build paths. Explicitly grant any legitimate
+  out-of-root include/configured directory; prevent unintended traversal and
+  symlink escapes. Keep generated artifacts under the configured VWB build
+  directory with its existing cleanup/ownership rules.
+- Define read, change/watch, save, rename and delete operations, with revision
+  tokens and visible unsaved state. Preserve case behavior, file permissions,
+  Unicode paths, line endings and long Windows paths.
+- Save writes must not silently overwrite changes from another editor or Git
+  operation. Validate atomic-write behavior on each OS; show a conflict when
+  the disk revision differs from the revision being edited.
+- Tie each run to a saved project/source snapshot and label stale results after
+  edits. Define whether Run first saves modified files; recover unsaved buffers
+  after disconnect/restart without making recovery storage the project authority.
+- Normal work requires no cloud account or upload. ZIP export may remain a
+  convenience; it is not the default way to open or save a project.
+
+## Remaining focused product questions
+
+The installation, storage model and six launch targets are settled. Do not ask
+the owner to choose them again.
+
+1. **CPU compatibility:** For ARM targets, are OS-provided x86-64 compatibility
+   layers acceptable for individual tools, or must every tool be ARM64-native?
+   Either route still needs full workflow and real-hardware verification.
+2. **Editing depth:** Syntax highlighting/compiler diagnostics only, or also
+   completion, hover, go-to-definition, references and project-wide rename?
+   Full code intelligence requires evaluating HDL and Python language services.
+3. **FPGA scope:** Are the existing Tang Nano 9K and iCEBreaker sufficient for
+   launch, or are additional boards/cables required? Capture exact models.
+
+Provisional UI defaults for review: resizable editor/results panes, dark/light
+themes, explicit Save/Ctrl+S with unsaved-buffer recovery, and a skippable guide.
+Save-before-run behavior, offline expectations, project scale and visual
+references can be refined without reopening the fixed architecture. Accounts,
+collaboration, cloud storage and hosted execution remain uncommitted scope.
 
 ## Implementation sequence and acceptance gates
 
-### M0 — Prove the companion path and lock the support matrix
+### M0 — Prove native execution on the confirmed support matrix
 
-- Record remaining installation, storage and OS/architecture decisions.
+- Record minimum OS versions and the remaining CPU-compatibility/board details.
+  Preserve the confirmed native/no-Docker/no-WSL, local-folder, six-target scope.
 - Build the smallest pairing/connectivity proof from the actual Pages origin
   to a native companion, including a denied-permission and reconnect case.
 - Pin a candidate runtime/tool set and run small Verilog/SV, native HDL,
@@ -217,12 +263,13 @@ storage, collaboration and hosted execution remain uncommitted scope.
 
 **Exit gate:** reproducible install/connect evidence and a matrix of OS/CPU,
 simulation, Cocotb, VHDL, lint/synthesis, formal, FPGA build and actual programming.
-Unresolved required cells stay blockers. Agree on any fallback with the owner.
+Unresolved required cells stay blockers; a container, WSL or remote-service
+route does not satisfy the native installation requirement.
 
 ### M1 — Internal editor/run/waveform prototype
 
-- Build the workspace, optional guide skeleton, examples, project model and
-  the selected save/import/export route.
+- Build the workspace, optional guide skeleton, examples, project inventory,
+  local Open Folder flow, native file operations, save/recovery and conflict UI.
 - Stabilize project inventory from `list --json` and job/result schemas.
 - Connect real compile/test execution, source-linked errors and a browser
   waveform; implement stop, limits, failure recovery and stale-result checks.
@@ -281,10 +328,10 @@ behavior and regressions. Tentative layout: `web/`, `companion/`, shared
 contracts/fixtures, and `docs/`. Framework/editor/viewer/installer libraries
 remain unselected pending a small compatibility and size check.
 
-For project storage, implement the owner's chosen model with explicit save
-status, atomic local writes where applicable and portable exports. Browser file
-access must have a cross-browser route through the companion/import-export,
-rather than require a single browser's folder-picker API.
+Use the companion's native folder/file operations across browsers; do not depend
+on a browser-specific directory-picker API. Verify saved-file revisions, external
+changes, reconnect recovery and source/result consistency. Browser recovery
+buffers and portable exports must not replace ordinary local project files.
 
 For documentation changes, review links and run `git diff --check`.
 Implementation checks cover real tool pass/fail, discovery compatibility,
@@ -296,13 +343,33 @@ not a mocked CI pass. Use focused web checks for ordinary UI-only changes.
 ## Open risks and next action
 
 Main blockers to resolve are per-platform VHDL/tool packaging, Windows process
-and runtime behavior, sustainable Intel Mac support if required, real board USB
+and runtime behavior, sustainable Intel Mac support, native Windows ARM64,
+real board USB
 access, and browser-to-loopback connectivity. Large waveforms, tool download
 size, storage limits and UI/CLI discovery drift also need measurement.
 
-**Next action:** collect the three installation/storage/platform answers, then
-turn M0 into small testable tasks. All six requested feature groups and the
-editor-plus-optional-guide interaction remain fixed requirements.
+**Next action:** execute the M0 task breakdown below after the remaining product
+definitions are recorded. All required features, six launch targets, ordinary
+local projects and native installation without Docker/WSL remain release gates.
+
+## Concrete M0 task breakdown
+
+These tasks are planned work; none is implemented or verified yet.
+
+| ID | Task | Reviewable evidence / completion condition |
+| --- | --- | --- |
+| M0-01 | Define protocol and capability manifests | Versioned project/job/diagnostic/artifact contracts; per-tool version/architecture and six-platform capability matrix. |
+| M0-02 | Establish native runtime/tool acquisition | Reproducible packages or builds for Python, simulators, VHDL/conversion, checkers, synthesis/rendering, formal and board tools; pin source, version and integrity for each required target. |
+| M0-03 | Introduce portable process execution | POSIX and Windows process-tree handling; real timeout/cancel leaves no child tools running; test environment/library paths, Unicode and spaces. |
+| M0-04 | Prove native local-folder I/O | Open an existing VWB project in place, inventory/read/save files, detect external edits and conflicts, preserve configuration, recover on restart and confine paths. |
+| M0-05 | Prove Pages-to-companion connection | Actual HTTPS Pages origin connects in supported browsers with pairing; permission denied, version mismatch, reconnect and unauthorized requests behave correctly. |
+| M0-06 | Run the full native toolchain probe | Verilog/SV and VHDL tests, Cocotb assertions, waveforms, lint, synthesis artifacts, formal success/counterexample, FPGA build outputs; record per-target results. |
+| M0-07 | Verify host FPGA programming | Actual Tang Nano 9K and iCEBreaker/cable tests on required platform rows; record driver/permission steps and device behavior separately from build tests. |
+| M0-08 | Verify clean native installation | Install/launch/repair/uninstall on all six targets without Docker, WSL or assumed system Python; publish accurate tested OS/tool/board matrix. |
+
+Keep build-only, simulated, hardware-tested, blocked and not-yet-run results
+distinct. Missing physical test hosts/boards remain explicit evidence gaps;
+never turn an unexecuted matrix cell into a pass.
 
 ## Primary technical references
 
