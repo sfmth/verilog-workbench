@@ -1,0 +1,87 @@
+{
+  "schema": "vwb.pages-browser-probe/1",
+  "recorded_at": "2026-10-20T03:51:41.825Z",
+  "state": "passed",
+  "public_url": "https://sfmth.github.io/verilog-workbench/workspace/",
+  "public_origin": "https://sfmth.github.io",
+  "pages_prefix": "/verilog-workbench/",
+  "checks": [
+    "fresh-context-observed-loopback-health-without-test-permission-grant",
+    "actual-HTTPS-Pages-app-brand-preview-manifest-and-fragment-route",
+    "real-public-app-UI-pairing-Unicode-project-multifile-CRLF-and-keyboard-save",
+    "real-disk-revision-conflict-preserves-external-edit-and-explicit-reload",
+    "public-fragment-reload-forgets-session-and-new-one-time-UI-pairing-restores-file",
+    "real-native-discovery-job-and-output-through-public-app",
+    "exact-companion-viewer-fixture-download-and-public-VCD-worker-render",
+    "deployed-document-styles-modules-and-worker-bytes-match-public-build-manifest",
+    "no-browser-script-errors-or-stored-credentials"
+  ],
+  "actual_pages_deployment": "public-HTTPS-workspace-and-development-preview-manifest-loaded",
+  "native_job": "passed-real-vwb-list-through-public-app-and-loopback-companion",
+  "waveform": "passed-exact-viewer-fixture-artifact-download-public-worker-render-and-cursor",
+  "hardware_tested": false,
+  "native_simulation": "not_run",
+  "permission_grant": "explicit-simulated-Chromium-context-grantPermissions-local-network-access",
+  "no_grant_result": {
+    "state": "blocked_or_unavailable",
+    "error": "TimeoutError",
+    "setup": "fresh-context-clearPermissions-no-pairing-attempt",
+    "note": "Observed result only. Clearing permissions does not guarantee a deny decision in every Chromium version or headless configuration."
+  },
+  "note": "Actual public HTTPS app, real temporary Unicode project and native inventory. Chromium test APIs simulate an explicit local-network permission grant. This does not test manual permission prompts, other browsers, native simulation or FPGA programming.",
+  "browser": "141.0.7390.37",
+  "browser_security_flags": [
+    "--no-sandbox"
+  ],
+  "deployed_manifest": {
+    "schema": "vwb.web-build/1",
+    "status": "development-preview",
+    "base_path": "/verilog-workbench/",
+    "entry_points": [
+      "/verilog-workbench/",
+      "/verilog-workbench/workspace/",
+      "/verilog-workbench/m0/"
+    ],
+    "file_count": 20
+  },
+  "asset_capture": [
+    {
+      "method": "original-browser-network-entity-bytes-paused-before-unchanged-CDP-continueResponse",
+      "source_sha256": "4ce3366c5a2efa23f5197a5df5479be9eb5bf06441bd6ad1eaa0d829df1232eb",
+      "browser_http_cache": "harness-does-not-change-cache-settings",
+      "protocol_scope": "https://sfmth.github.io/verilog-workbench/*",
+      "protocol_stage": "Response",
+      "original_network_responses": true,
+      "request_refetches": 0,
+      "response_overrides": 0,
+      "delivered_responses": 22,
+      "delivered_entity_bytes": 278087,
+      "pending_responses": 0
+    }
+  ],
+  "verified_deployed_assets": {
+    "m0/client.mjs": "b00b1560eb55a8da374c59c0903b9281727d44132e3227f7da3063944167f9f4",
+    "workspace/app.mjs": "767f81afbc874f28e6d45ce0a1c14d309776ff11a2616c7a6255b6871ef56e3d",
+    "workspace/files.mjs": "35aab4320e716da536bcc2f4228af47c54c8ae4eee324b7c8c57e8e30028e438",
+    "workspace/hdl.mjs": "eeff4b3dec001beeb7fdd7f39e279be431df4ebf36eb66eb0d2894783d6b4a95",
+    "workspace/index.html": "f008d96b0035ffd0e2974d6215f399b5d5ac56bf7b189e4adc0bfe224f122d90",
+    "workspace/intelligence.mjs": "737a179def2088dba8e4d45f7c1ef02f971484d890ad9f9f95c851296ca6d556",
+    "workspace/model.mjs": "56fcd7aee518afdb4cbd44d87604dbfac0fee07af2e8f8f62aca99ad606cad88",
+    "workspace/schematic.mjs": "8c08a1e676f68ae3706e2f64064d6a5498f8701e4556b40f56d4dbbc2a3d5101",
+    "workspace/search.mjs": "a5cf5b25d679a70a6a911dcabd694b0e9247abf265b8f617d4c03fba0ce14e24",
+    "workspace/style.css": "6a96f62de55dde894b894d09fe65096b83471e09e1018275e08d3021d87658c6",
+    "workspace/syntax-view.mjs": "2762ad1daf4bdadcd03a0e10856f6e276da35f767253fc06b8b095f221af97ed",
+    "workspace/syntax-worker.mjs": "a2a32b3e911873858c6808ed8ad8af8150f4a66d53f74c1cb16f013eea066136",
+    "workspace/syntax.mjs": "7ff937c236481cfa97aa8867cfd14aa25cf40bedf351a4103b1d0471704faf95",
+    "workspace/vcd-worker.mjs": "ae1cf96d1cdff4435311cb13df4be3d6670854faece90b518489115a24043a20",
+    "workspace/vcd.mjs": "ba8509f15d38d0e1824e41101c0d9bb30c00b4a2aade00f57575f27d8f66f7f7",
+    "workspace/waveform.mjs": "cfd91d2a7f5ae378f8253b7ade5ca047dd90e721af77be9285e22941ece907fd"
+  },
+  "script_errors": [],
+  "asset_errors": [],
+  "workers": [
+    "https://sfmth.github.io/verilog-workbench/workspace/syntax-worker.mjs",
+    "https://sfmth.github.io/verilog-workbench/workspace/syntax-worker.mjs",
+    "https://sfmth.github.io/verilog-workbench/workspace/vcd-worker.mjs"
+  ]
+}

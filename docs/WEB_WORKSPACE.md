@@ -155,8 +155,9 @@ and current Firefox/Safari/platform coverage remain open.
 
 The six native runtime/unit/bundle CI rows
 [pass for this code change](https://github.com/sfmth/verilog-workbench/actions/runs/39345754925). Broader
-native toolchain CI continues to expose the documented GHDL/Cocotb/Graphviz
-package gaps on four target rows; publishing the preview does not waive them.
+native toolchain CI at that checkpoint exposed GHDL/Cocotb/Graphviz package
+gaps on four target rows. The newer HDL evidence below closes those fixture
+workflow gaps.
 
 The [semantic editor extension](EDITOR_WORKSPACE.md#evidence-and-remaining-work)
 was deployed and verified by
@@ -175,14 +176,15 @@ The final [Pages run 39351677436](https://github.com/sfmth/verilog-workbench/act
 also passes build, deploy and public HTTPS verification on `a524338`. Retained
 [native](workspace-evidence/editor-native-ci.json) and
 [Pages](workspace-evidence/editor-final-pages-ci.json) summaries separate these
-passes from the wider toolchain matrix's four existing package-gap failures.
+passes from the wider toolchain matrix's four package-gap failures at that head.
 
 The [file/folder lifecycle increment](FILES_WORKSPACE.md#http-and-acceptance)
 is now deployed from `0a41418`. Its built-output and actual HTTPS Chromium probes
 pass 15 groups, including keyboard creation, clean-tab remapping, revision and
 destination conflicts, private persistent trash, build-clean/restart survival,
 restore, delayed entry reads and failure after a committed create. All six native
-unit/CLI/bundle/smoke jobs pass; the four existing toolchain package gaps remain.
+unit/CLI/bundle/smoke jobs passed at that head; four toolchain package gaps
+remained at that checkpoint.
 
 ## Remaining release gates
 
@@ -190,6 +192,20 @@ The [native HDL workflow extension](HDL_WORKSPACE.md) prioritizes execution:
 explicit bench/Cocotb selection, defines/includes/plusargs, gate checks, saved
 waves, dependency navigation and synthesis viewing. Complete HDL browser
 acceptance now joins the existing regression probes in both Pages jobs.
+All six native runtime/package jobs and all six 14-workflow toolchain suites
+pass in [run 39366706022](https://github.com/sfmth/verilog-workbench/actions/runs/39366706022),
+including the previously blocked platform tool routes. Arch userspace also
+passes all 14 workflows. The [representative HDL run](HDL_REPRESENTATIVE_ACCEPTANCE.md)
+adds 73 real commands across 10 larger example modules; its legacy assertion
+limits are recorded explicitly.
+
+[Final Pages run 39366706107](https://github.com/sfmth/verilog-workbench/actions/runs/39366706107)
+passes build, deploy and public HTTPS verification at `9acd8bb`. Both origins
+pass all 26 real HDL workflows, the existing workspace/source/lifecycle/semantic
+suites, and strict original-network asset checks. The build additionally passes
+nine Cocotb shutdown checks, including three real simulator controls. The
+[retained summary](workspace-evidence/hdl-pages-ci.json) distinguishes this final
+success from the earlier worker-target evidence-collection failures.
 
 The [source-editing increment](SOURCE_WORKSPACE.md) adds bounded lexical colors
 for all three source languages, synchronized line numbers and literal Unicode
@@ -199,13 +215,15 @@ required by Pages CI. [Run 39357760699](https://github.com/sfmth/verilog-workben
 passes build, deploy and actual HTTPS acceptance on `8bbb67e`: all 15 source
 groups and the existing semantic/lifecycle/workspace probes pass. All six native
 runtime jobs pass in [run 39357760768](https://github.com/sfmth/verilog-workbench/actions/runs/39357760768);
-the wider toolchain workflow retains its four documented package-gap failures.
+the wider toolchain workflow at that earlier head retained four documented
+package-gap failures.
 
 M1 still requires broader semantic/rename, project lifecycle and recovery
-fixtures, broader syntax coverage and complete folder-selection/watch behavior. M2 needs full
-language/analysis workflows and large-design acceptance.
+fixtures, broader syntax coverage and complete folder-selection/watch behavior.
+M2 needs broader language/analysis and scale coverage beyond the retained
+native and browser fixtures.
 M3 needs complete native tool acquisition/install/repair/uninstall and recorded
-board programming. M4 requires the remaining real HTTPS browser/permission
-checks and the complete six-platform/board matrix. The [M0 evidence gaps](M0_STATUS.md)
+board programming. M4 requires the remaining supported browser/permission,
+clean-installation and physical-board matrix. The [M0 evidence gaps](M0_STATUS.md)
 also remain open. A published development preview is now verified; physical USB
 programming and complete first-release support remain unverified.

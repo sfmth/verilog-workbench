@@ -1,0 +1,103 @@
+{
+  "schema": "vwb.browser-asset-capture-control/1",
+  "recorded_at": "2026-10-20T03:52:36.264563+00:00",
+  "state": "passed",
+  "scope": "Independent real Chromium cross-origin custom-header fetch against an actual endpoint returning OPTIONS403, plus original gzip worker-module bytes captured before immediate worker termination. Playwright routing was rejected because it bypassed the denied native preflight. The final helper uses only direct static-origin CDP response-stage pause/getResponseBody/continueResponse with no overrides or refetch.",
+  "controls": [
+    {
+      "state": "passed",
+      "kind": "independent-CORS-negative-control",
+      "playwright_version": "1.56.1",
+      "browser": "141.0.7390.37",
+      "scope": "Real local cross-origin browser fetch with required custom-header CORS preflight; endpoint explicitly returns 403 to OPTIONS. No companion or production files changed.",
+      "outcomes": [
+        {
+          "mode": "unrouted",
+          "result": {
+            "state": "rejected",
+            "error": "Failed to fetch"
+          },
+          "native_methods": [
+            "OPTIONS"
+          ],
+          "static_entities_captured": []
+        },
+        {
+          "mode": "scoped-static-glob-route",
+          "result": {
+            "state": "resolved",
+            "status": 200,
+            "body": "actual upstream native endpoint"
+          },
+          "native_methods": [
+            "GET"
+          ],
+          "static_entities_captured": []
+        },
+        {
+          "mode": "scoped-static-CDP-response-capture",
+          "result": {
+            "state": "rejected",
+            "error": "Failed to fetch"
+          },
+          "native_methods": [
+            "OPTIONS"
+          ],
+          "static_entities_captured": [
+            {
+              "status": 200,
+              "sha256": "3ce4f4234c90b51c040c39550337bd96b16813344cfd2ed825052a393b5906fc"
+            },
+            {
+              "status": 200,
+              "sha256": "3ce4f4234c90b51c040c39550337bd96b16813344cfd2ed825052a393b5906fc"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "state": "passed",
+      "kind": "actual-shared-helper-independent-method-control",
+      "helper_source_sha256": "4ce3366c5a2efa23f5197a5df5479be9eb5bf06441bd6ad1eaa0d829df1232eb",
+      "playwright_version": "1.56.1",
+      "browser": "141.0.7390.37",
+      "capture": {
+        "method": "original-browser-network-entity-bytes-paused-before-unchanged-CDP-continueResponse",
+        "source_sha256": "4ce3366c5a2efa23f5197a5df5479be9eb5bf06441bd6ad1eaa0d829df1232eb",
+        "browser_http_cache": "harness-does-not-change-cache-settings",
+        "protocol_scope": "http://[ephemeral-static-server]/site/*",
+        "protocol_stage": "Response",
+        "original_network_responses": true,
+        "request_refetches": 0,
+        "response_overrides": 0,
+        "delivered_responses": 3,
+        "delivered_entity_bytes": 241,
+        "pending_responses": 0
+      },
+      "checks": {
+        "native_denied_preflight_preserved": true,
+        "worker_executed_42": true,
+        "worker_terminated_immediately": true,
+        "original_gzip_worker_module_hash_matches": true,
+        "all_three_actual_hashes_match": true,
+        "no_capture_errors": true,
+        "no_pending_readers_after_close": true
+      },
+      "native_methods": [
+        "OPTIONS"
+      ],
+      "assets": {
+        "index.html": "d7cd47517095bb1c0138b7b698925a8c2a85cbfc79e6a4a8db170508eedf68ec",
+        "worker.mjs": "a89f62749d09389f4dc65c157e88cd4431d863c6fc65d8ebf014d8cde5ad4e4e",
+        "leaf.mjs": "a2098bd92b10bf8b816d24b7556b1ce8c49a879d130489065ef1051c17e042f6"
+      },
+      "errors": []
+    }
+  ],
+  "raw_receipt_sha256": {
+    "vwb-cors-route-review.json": "bb124b1929adb61010fec43137a609a697e99e9db2eeaf1b622b56b26fdeed34",
+    "vwb-final-helper-review.json": "1780910d30fb8e1842a6f5dda7dfdb5e4610ba77530cd9af288e15935fe2e7d9"
+  },
+  "sanitization": "Ephemeral loopback static-server port replaced by an explicit placeholder; raw receipt hashes retained."
+}

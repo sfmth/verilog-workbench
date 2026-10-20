@@ -26,11 +26,17 @@ for HDL/Python, synchronized line numbers and literal current-file search while
 preserving native textarea input and undo. Broader syntax/semantic fixtures and
 the remaining release matrix continue to be required.
 
-Current priority: [native HDL workflow completion](HDL_WORKSPACE.md), including
-real browser-driven simulation/Cocotb/VHDL, lint, synthesis, formal and both FPGA
-pack flows, with selected tests, compile settings, gate checks and saved waves.
-The missing platform tool packages now have explicit acquisition candidates;
-only actual native CI runs establish their workflow support.
+The [native HDL workflow extension](HDL_WORKSPACE.md) implements browser-driven
+simulation/Cocotb/VHDL, lint, synthesis, formal and both FPGA pack flows, with
+selected tests, compile settings, gate checks and saved waves. All six native
+runtime/package jobs and all six 14-workflow toolchain suites now pass in
+[run 39366706022](https://github.com/sfmth/verilog-workbench/actions/runs/39366706022),
+along with Arch userspace acceptance. Larger example acceptance covers 10 modules
+and 73 commands. Clean installation, manual browser permissions and physical
+board programming remain separate release evidence.
+The [final Pages run](https://github.com/sfmth/verilog-workbench/actions/runs/39366706107)
+also passes all 26 HDL workflows against built output and the deployed HTTPS
+workspace, alongside the existing browser regressions.
 
 Started: 2026-10-17 (America/Los_Angeles).
 Latest owner decisions: 2026-10-18 (America/Los_Angeles).
@@ -160,15 +166,17 @@ the current restriction against mixing VHDL and Verilog within one hierarchy.
 All six OS/CPU combinations below are mandatory launch targets. Minimum OS
 versions remain to be pinned against tested runtime/tool packages. Archive
 availability, tool availability and verified full support are distinct states.
+The six native smoke suites now pass; the table retains the remaining packaging
+and release acceptance work.
 
 | Required target | Native packaging gap / acceptance work |
 | --- | --- |
 | Linux x86-64 | Validate Ubuntu and Manjaro/Arch; do not depend on Ubuntu-only package commands. |
-| Windows x86-64 | Prove native Python/Cocotb integration, VHDL, tool processes and USB programming without WSL. |
-| macOS Apple Silicon | Validate runtime loading, signing/quarantine handling, tools and hardware access. |
+| Windows x86-64 | Validate clean installation, repair, minimum OS and native USB programming without WSL. |
+| macOS Apple Silicon | Validate clean runtime/tool distribution, signing/quarantine handling and hardware access. |
 | macOS Intel | Identify a sustainable native tool distribution; upstream suite retirement is a release blocker to solve. |
-| Linux ARM64 | Prove a compatible GHDL/VHDL route and all other tools. Use native builds when no suitable OS-provided compatibility route exists. |
-| Windows ARM64 | Establish native companion/runtime and compatible tool packages, allowing verified OS-provided x86-64 compatibility for individual tools; validate hardware access without WSL/Docker. |
+| Linux ARM64 | Integrate the declared native GHDL prerequisites into clean installation; verify minimum OS and hardware. No Linux x64 translation is assumed. |
+| Windows ARM64 | Integrate the proven native companion and OS-translated x64 tool route into clean installation; validate ARM64 drivers and hardware access without WSL/Docker. |
 
 Primary-source packaging check: OSS CAD Suite lists Python, Cocotb, Icarus,
 Verilator, Yosys, SBY/solvers, nextpnr and FPGA programming tools, but currently
@@ -422,17 +430,19 @@ not a mocked CI pass. Use focused web checks for ordinary UI-only changes.
 
 ## Open risks and next action
 
-Main blockers to resolve are per-platform VHDL/tool packaging, Windows process
-and runtime behavior, sustainable Intel Mac support, compatible Windows ARM64
-tool/runtime routes, semantic editor services, real board USB access, and
-browser-to-loopback connectivity. Large waveforms, tool download
-size, storage limits and UI/CLI discovery drift also need measurement.
+Native workflow probes now pass the VHDL/Cocotb/Graphviz routes on all six
+targets, including Intel Mac and Windows ARM64. Remaining release work includes
+clean installation and repair/uninstall, sustainable tool distribution,
+broader semantic/large-design coverage, manual browser/permission behavior and
+real board USB access. Large waveforms, tool download size, storage limits and
+UI/CLI discovery drift also need measurement.
 
-**Next action:** close the M0 platform/browser/install/hardware evidence gaps
-and supplemental tool routes described in [M0_STATUS.md](M0_STATUS.md), then
-integrate the proven adapters into the M1 workspace. The formal custom-build
-whitespace proof now passes. All required features, six launch targets, ordinary
-local projects and native installation without Docker/WSL remain release gates.
+**Next action:** close the remaining browser/install/hardware evidence gaps
+and tool distribution work described in [M0_STATUS.md](M0_STATUS.md), and extend
+the integrated workspace's project and scale acceptance. The formal custom-build
+whitespace proof and all six native toolchain suites now pass. All required
+features, six launch targets, ordinary local projects and native installation
+without Docker/WSL remain release gates.
 
 ## Concrete M0 task breakdown
 

@@ -1,0 +1,39 @@
+{
+  "schema": "vwb.representative-python-dependencies/1",
+  "purpose": "Example-test prerequisites and native PNG validation only; separate from CLI installation and the pinned managed HDL suite.",
+  "state": "exact-size-and-sha256-verified-extracted-and-used",
+  "runtime": {
+    "implementation": "CPython",
+    "version": "3.11.6",
+    "architecture": "x64",
+    "host": "Linux"
+  },
+  "installation_scope": "Fresh temporary extraction directories supplied through explicit PYTHONPATH. Global packages, managed-suite packages and repository sources unchanged.",
+  "packages": [
+    {
+      "name": "bitstring-4.3.1-py3-none-any.whl",
+      "url": "https://files.pythonhosted.org/packages/75/2d/174566b533755ddf8efb32a5503af61c756a983de379f8ad3aed6a982d38/bitstring-4.3.1-py3-none-any.whl",
+      "size_bytes": 71930,
+      "sha256": "69d1587f0ac18dc7d93fc7e80d5f447161a33e57027e726dc18a0a8bacf1711a"
+    },
+    {
+      "name": "bitarray-3.4.3-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl",
+      "url": "https://files.pythonhosted.org/packages/78/c1/fe8c84a3d3bde1eda2a222f7060278257d9a21318a27ba99fda5cfb6b801/bitarray-3.4.3-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl",
+      "size_bytes": 316038,
+      "sha256": "3df507b700c5bd4f2d02056b9db1867e0a5c202fa22eb0d12a6dcca6098b1c0a"
+    },
+    {
+      "name": "numpy-2.2.6-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl",
+      "url": "https://files.pythonhosted.org/packages/b3/dd/2238b898e51bd6d389b7389ffb20d7f4c10066d80351187ec8e303a5a475/numpy-2.2.6-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl",
+      "size_bytes": 16821570,
+      "sha256": "ba10f8411898fc418a521833e014a77d3ca01c15b0c6cdcce6a0d2897e6dbbdf"
+    },
+    {
+      "name": "pillow-11.3.0-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl",
+      "url": "https://files.pythonhosted.org/packages/f2/2f/d7675ecae6c43e9f12aa8d58b6012683b20b6edfbdac7abcb4e6af7a3784/pillow-11.3.0-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl",
+      "size_bytes": 6640273,
+      "sha256": "106064daa23a745510dabce1d84f29137a37224831d88eb4ce94bb187b1d7e5f"
+    }
+  ],
+  "final_evidence": "docs/workspace-evidence/hdl-representative-final-linux-x64.json"
+}

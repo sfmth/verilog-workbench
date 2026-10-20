@@ -1,0 +1,39 @@
+{
+  "schema": "vwb.portable-archive-validation/1",
+  "state": "passed",
+  "recorded_at": "2026-10-20T03:26:06.791901+00:00",
+  "source_sha256": {
+    "scripts/acquire_toolchain.py": "24d6ffb5e811531c6967c38cc95d9d28d0fac130caed028f5ef1d20985bd53f5",
+    "tests/test_acquire_toolchain.py": "72bd3dc2ac188e9135f360d85689d33424fef7a1591dd60f5357920a8e4ee11f"
+  },
+  "archive": {
+    "name": "oss-cad-suite-linux-x64-20261018.tgz",
+    "sha256": "639c8c0366d74dc56201729c9907bf2d8281db7f18bb025abe2e4f3f2ebaa24e",
+    "members": 24578,
+    "symlinks": 86,
+    "virtual_POSIX_chains": "all_passed"
+  },
+  "tests": {
+    "focused_acquisition": {
+      "total": 25,
+      "state": "passed"
+    },
+    "full_native": {
+      "total": 266,
+      "skipped": 8,
+      "state": "passed",
+      "log_sha256": "41759f2bf4ff2d2499f565f26d5b8bf5d8354f77de4cd5288e57b24b99950db1"
+    }
+  },
+  "checks": [
+    "portable-link-expansion-before-dotdot",
+    "escape-rejection-independent-of-Path.resolve",
+    "internal-chain-accepted",
+    "cycle-rejected",
+    "original-real-extraction-test-retained",
+    "locked-Linux-archive-all-link-headers-accepted"
+  ],
+  "limitations": [
+    "Header validation does not execute tools or establish foreign-platform passes; final native CI does that."
+  ]
+}

@@ -1,0 +1,174 @@
+{
+  "source_sha256": {
+    "scripts/browser_assets.mjs": "4ce3366c5a2efa23f5197a5df5479be9eb5bf06441bd6ad1eaa0d829df1232eb",
+    "scripts/probe_workspace.mjs": "350d04da16ff113b2c71747ccc4eb7ce83dd6f010701a605450c1e66fb54dbdb",
+    "scripts/probe_source_workspace.mjs": "3867c4fc73a2531d1ff8752b3f1f270f21068ec3667ac098d0e6bea506972205",
+    "scripts/probe_files_workspace.mjs": "d3b51e783fd63f0a57261b58c7b35b0fd678d9eee45344ac6b457945a0e8827a",
+    "scripts/probe_editor_workspace.mjs": "30789ef3937b7307221f7a6e858da8b19f848c91f4a929d93365f159b30225e5"
+  },
+  "runs": [
+    {
+      "probe": "workspace",
+      "returncode": 0,
+      "seconds": 8.53,
+      "state": "passed",
+      "checks": 13,
+      "error": null,
+      "asset_errors": [],
+      "script_errors": [],
+      "asset_capture": {
+        "method": "original-browser-network-entity-bytes-paused-before-unchanged-CDP-continueResponse",
+        "source_sha256": "4ce3366c5a2efa23f5197a5df5479be9eb5bf06441bd6ad1eaa0d829df1232eb",
+        "browser_http_cache": "harness-does-not-change-cache-settings",
+        "protocol_scope": "http://127.0.0.1:36049/verilog-workbench/*",
+        "protocol_stage": "Response",
+        "original_network_responses": true,
+        "request_refetches": 0,
+        "response_overrides": 0,
+        "delivered_responses": 56,
+        "delivered_entity_bytes": 762072,
+        "pending_responses": 0
+      }
+    },
+    {
+      "probe": "source",
+      "returncode": 0,
+      "seconds": 5.37,
+      "state": "passed",
+      "checks": 15,
+      "error": null,
+      "asset_errors": [],
+      "script_errors": [],
+      "asset_capture": {
+        "method": "original-browser-network-entity-bytes-paused-before-unchanged-CDP-continueResponse",
+        "source_sha256": "4ce3366c5a2efa23f5197a5df5479be9eb5bf06441bd6ad1eaa0d829df1232eb",
+        "browser_http_cache": "harness-does-not-change-cache-settings",
+        "protocol_scope": "http://127.0.0.1:39737/verilog-workbench/*",
+        "protocol_stage": "Response",
+        "original_network_responses": true,
+        "request_refetches": 0,
+        "response_overrides": 0,
+        "delivered_responses": 17,
+        "delivered_entity_bytes": 238174,
+        "pending_responses": 0
+      }
+    },
+    {
+      "probe": "files",
+      "returncode": 0,
+      "seconds": 5.87,
+      "state": "passed",
+      "checks": 16,
+      "error": null,
+      "asset_errors": [],
+      "script_errors": [],
+      "asset_capture": {
+        "method": "original-browser-network-entity-bytes-paused-before-unchanged-CDP-continueResponse",
+        "source_sha256": "4ce3366c5a2efa23f5197a5df5479be9eb5bf06441bd6ad1eaa0d829df1232eb",
+        "browser_http_cache": "harness-does-not-change-cache-settings",
+        "protocol_scope": "http://127.0.0.1:40879/verilog-workbench/*",
+        "protocol_stage": "Response",
+        "original_network_responses": true,
+        "request_refetches": 0,
+        "response_overrides": 0,
+        "delivered_responses": 33,
+        "delivered_entity_bytes": 474165,
+        "pending_responses": 0
+      }
+    },
+    {
+      "probe": "editor",
+      "returncode": 0,
+      "seconds": 12.79,
+      "state": "passed",
+      "checks": 3,
+      "error": null,
+      "asset_errors": [],
+      "script_errors": [],
+      "asset_capture": [
+        {
+          "language": "systemverilog",
+          "method": "original-browser-network-entity-bytes-paused-before-unchanged-CDP-continueResponse",
+          "source_sha256": "4ce3366c5a2efa23f5197a5df5479be9eb5bf06441bd6ad1eaa0d829df1232eb",
+          "browser_http_cache": "harness-does-not-change-cache-settings",
+          "protocol_scope": "http://127.0.0.1:33093/verilog-workbench/*",
+          "protocol_stage": "Response",
+          "original_network_responses": true,
+          "request_refetches": 0,
+          "response_overrides": 0,
+          "delivered_responses": 16,
+          "delivered_entity_bytes": 235991,
+          "pending_responses": 0
+        },
+        {
+          "language": "vhdl",
+          "method": "original-browser-network-entity-bytes-paused-before-unchanged-CDP-continueResponse",
+          "source_sha256": "4ce3366c5a2efa23f5197a5df5479be9eb5bf06441bd6ad1eaa0d829df1232eb",
+          "browser_http_cache": "harness-does-not-change-cache-settings",
+          "protocol_scope": "http://127.0.0.1:33093/verilog-workbench/*",
+          "protocol_stage": "Response",
+          "original_network_responses": true,
+          "request_refetches": 0,
+          "response_overrides": 0,
+          "delivered_responses": 16,
+          "delivered_entity_bytes": 235991,
+          "pending_responses": 0
+        },
+        {
+          "language": "python",
+          "method": "original-browser-network-entity-bytes-paused-before-unchanged-CDP-continueResponse",
+          "source_sha256": "4ce3366c5a2efa23f5197a5df5479be9eb5bf06441bd6ad1eaa0d829df1232eb",
+          "browser_http_cache": "harness-does-not-change-cache-settings",
+          "protocol_scope": "http://127.0.0.1:33093/verilog-workbench/*",
+          "protocol_stage": "Response",
+          "original_network_responses": true,
+          "request_refetches": 0,
+          "response_overrides": 0,
+          "delivered_responses": 16,
+          "delivered_entity_bytes": 235991,
+          "pending_responses": 0
+        }
+      ]
+    }
+  ],
+  "source_unchanged": true,
+  "schema": "vwb.browser-asset-regression-summary/1",
+  "state": "passed",
+  "recorded_at": "2026-10-20T03:54:29.609332+00:00",
+  "retained_reports": {
+    "workspace": {
+      "path": "docs/workspace-evidence/hdl-workspace-regression-linux-x64.json",
+      "bytes": 2859,
+      "sha256": "a1448b9032a552f41ec1e5769960f4787a4e2d0c78927ce39af1ea6c23f1aad5"
+    },
+    "source": {
+      "path": "docs/workspace-evidence/hdl-source-regression-linux-x64.json",
+      "bytes": 5950,
+      "sha256": "a1ee6beb56f5279642b99aec9ba65c7943345b69c9fcd477a5209001ac6865ef"
+    },
+    "files": {
+      "path": "docs/workspace-evidence/hdl-files-regression-linux-x64.json",
+      "bytes": 3710,
+      "sha256": "9e22a3a9ccbebe502bb53779dfcfa2476837c613e5d08aba2a7768e9d4cac749"
+    },
+    "editor": {
+      "path": "docs/workspace-evidence/hdl-editor-regression-linux-x64.json",
+      "bytes": 15432,
+      "sha256": "b1f8c595291dafa6dd117d3b32334ce7869c0033008af32810c49854f32f5857"
+    }
+  },
+  "scope": "Four complete built-app browser regression probes with the direct static-origin CDP response-stage collector. Native companion requests, permissions, existing explicit transport-fault cases, manifest hash assertions and native/semantic result oracles are unchanged. No app, backend or HDL runtime change.",
+  "late_error_negative_control": {
+    "state": "passed-expected-failed-CLI-verdict",
+    "method": "Explicit temporary Node import hook wraps the genuine capture.close and emits one Node-side pageerror afterward; no app or shared-helper file is changed. This is a deliberately injected test fault, not a product failure.",
+    "completed_real_source_groups": 15,
+    "CLI_returncode": 1,
+    "final_report_state": "failed",
+    "script_errors": [
+      "EXPLICIT_NEGATIVE_CONTROL_LATE_SCRIPT_ERROR_AFTER_CAPTURE_CLOSE"
+    ],
+    "asset_errors": [],
+    "temporary_hook_sha256": "f2c8a69a39330316d0791a0c7e097f9ac5cc0be3f1263b91d6fa5987be51d5ad"
+  },
+  "physical_programming": "not-run"
+}

@@ -1,17 +1,43 @@
 # M0 implementation and evidence status
 
-Recorded 2026-10-18. **M0's engineering foundation is implemented; the full M0
-exit gate remains open.** Linux x86-64, Arch userspace and Apple Silicon pass
-the complete 14-check HDL smoke probe. Required tool packages on four target
-rows, actual Pages/browser connectivity, clean installation, and physical board
-programming remain gates. This is a development foundation, not the requested
-complete first usable website release.
+Initial checkpoint recorded 2026-10-18; native evidence updated 2026-10-20 UTC.
+**M0's engineering foundation is implemented; the full M0 exit gate remains
+open.** All six required platform targets and Arch userspace now pass the
+complete 14-workflow HDL smoke probe. All six native companion builds also
+pass their unit, CLI, browser protocol, bundle and isolated smoke checks.
+Clean installation, the supported browser/permission matrix and physical board
+programming remain release gates. This remains a development foundation.
+
+The [complete native run](https://github.com/sfmth/verilog-workbench/actions/runs/39366706022)
+tests `9acd8bb8d071cf5a3660bfc16b0870e1a1271bcb`. Its
+[retained report](workspace-evidence/hdl-native-ci.json) records each
+platform's 266 unit tests and 171 CLI tests, explicit platform skips, actual
+14-workflow results, package hashes, tool versions and architecture routes.
+The earlier [all-green portable-runtime run](https://github.com/sfmth/verilog-workbench/actions/runs/39364175524)
+at `304832b233916ce8e4cd69a325396a3b27b40c95` remains retained in its own
+[report](workspace-evidence/hdl-native-portable-ci.json); the later revision
+changes browser-probe evidence collection, with production/runtime/toolchain
+code unchanged.
+The [intermediate native run](https://github.com/sfmth/verilog-workbench/actions/runs/39364816202)
+at `8484840400edc50096c949a2de376000464145cc` also remains retained in its
+[report](workspace-evidence/hdl-native-drained-ci.json), before the shared
+collector adopted narrowly scoped original-response CDP capture. Independent
+[CORS](workspace-evidence/hdl-browser-cors-collector-review-linux-x64.json) and
+[short-lived worker](workspace-evidence/hdl-browser-worker-collector-review-linux-x64.json)
+method controls distinguish preserved browser networking from the rejected
+Playwright routing candidate; they are separate from native HDL passes.
+The earlier [initial attempt](workspace-evidence/hdl-native-initial-ci.json)
+and [runtime correction attempt](workspace-evidence/hdl-native-runtime-attempt-ci.json)
+remain available, including the failures that led to the fixes. The four
+previously missing platform tool routes now have actual passing workflow
+evidence for these fixtures.
 
 Update 2026-10-19: the development workspace is now
 [published and tested from its actual HTTPS Pages origin](WEB_WORKSPACE.md#published-https-evidence).
 The initial publication blocker recorded below is closed for the preview;
 remaining manual permission/browser/platform/install/hardware gates stay open.
-The table and historical observations below retain the original M0 checkpoint.
+The task table and historical observations below retain the original M0
+checkpoint; the required-platform table reflects the newer native evidence.
 
 The [workspace semantic editor extension](EDITOR_WORKSPACE.md) now integrates
 the proven language-service route into the browser/HTTP companion, with dirty
@@ -24,7 +50,8 @@ The [file/folder workspace integration](FILES_WORKSPACE.md) now adds native
 revision-checked creation/moves, private persistent trash and conflict-safe
 restoration. Its Linux Chromium built/public probes pass 15 groups; all six
 native unit/CLI/bundle/smoke jobs pass. Broader browser/install/hardware gates
-and the four documented toolchain package gaps remain open.
+remain open; the previous four toolchain package gaps have since passed the
+complete native workflow probes linked above.
 
 The local Linux x86-64 toolchain passed **14 real checks in each of three path
 cases: 42 executions** across ordinary paths, spaces, and Unicode/spaces. Native
@@ -41,11 +68,15 @@ and smoke-report logging are checked by
 at `831ae23f8f10ebc89c09ed3b3a4cae9a0bbebe2e`. Runtime bundle success does not
 certify an incomplete HDL package or a clean desktop installation.
 
-All six native runtime bundles now pass their matching-host smoke checks:
+All six native runtime bundles pass their matching-host smoke checks again in
+the current complete native run:
 isolated startup, pairing, ordinary local-folder I/O, exact revision-checked
 saves and a real bundled VWB job. The browser integration also passes again.
 
-| Plan task | Outcome at this checkpoint | Evidence and remaining gate |
+The following table preserves the original 2026-10-18 M0 checkpoint. Later
+workspace and native proofs are linked above and in the platform table below.
+
+| Plan task | Outcome at the original checkpoint | Evidence and remaining gate at that checkpoint |
 | --- | --- | --- |
 | M0-01 — Protocol and capabilities | Implemented proof | [Protocol](M0_PROTOCOL.md), [reference schema](../protocol/companion-v1.schema.json), [companion](../companion/README.md), and [tool discovery](M0_TOOLCHAINS.md). Project files, authenticated jobs/status, revisions/staleness, and artifacts are exposed. Production diagnostics/editor transport contracts remain integration work. |
 | M0-02 — Runtime/tool acquisition | Partial | [Pinned native runtimes and bundle proof](M0_PACKAGING.md); [managed HDL acquisition and architecture routes](M0_TOOLCHAINS.md). A newly checksum-verified/extracted Linux suite passes all 14 real workflow checks. Other targets, complete managed tools, minimum OS verification, and GHDL gaps remain open. |
@@ -82,18 +113,23 @@ not constitute a production editor or general-purpose refactoring engine.
 
 | Required target | Current evidence | Required remaining proof |
 | --- | --- | --- |
-| Linux x86-64, including Manjaro/Arch | Development-host proofs; Linux and Arch userspace each pass 14/14 HDL checks | Clean native Manjaro/Arch setup, actual Pages/browser matrix, both boards and complete UI workflows |
-| Windows x86-64 | Nine HDL checks pass; five are blocked by absent Cocotb, GHDL and Graphviz | Integrated Python/VPI, GHDL and schematic routes; browser, clean install and boards |
-| macOS Apple Silicon | Fourteen HDL checks pass with an external native Tcl-enabled Homebrew Yosys overlay | Reproducible complete tool package, quarantine/signing, browser, clean setup and boards |
-| macOS Intel | Eleven HDL checks pass; three blocked by missing GHDL | Supplemental GHDL and sustainable suite distribution, browser, clean install and boards |
-| Linux ARM64 | Eleven HDL checks pass; three blocked by missing GHDL | Supplemental GHDL route, browser, clean install and boards; no assumed x64 translation |
-| Windows ARM64 | Native ARM64 companion checks; nine HDL checks pass with OS x64 tool translation, five blocked | Cocotb, GHDL and Graphviz routes, ARM64 drivers, browser, clean install and boards |
+| Linux x86-64, including Manjaro/Arch | Native companion checks pass; Linux and Arch userspace each pass 14/14 HDL workflows | Clean native Manjaro/Arch setup, supported Pages/browser and permission matrix, both boards and broader projects |
+| Windows x86-64 | Native companion checks and 14/14 HDL workflows pass with pinned GHDL/Graphviz and explicit MSVC CPython/Cocotb | Browser/permission matrix, clean installation and native board drivers/programming |
+| macOS Apple Silicon | Native companion checks and 14/14 HDL workflows pass with an explicitly receipted external native Tcl-enabled Homebrew Yosys overlay | Complete tool distribution without a separately managed prerequisite, quarantine/signing, browser, clean setup and boards |
+| macOS Intel | Native companion checks and 14/14 HDL workflows pass with pinned supplemental GHDL, verified executable anchoring and its matching standard-library prefix | Sustainable complete tool distribution, browser, clean installation and boards |
+| Linux ARM64 | Native companion checks and 14/14 HDL workflows pass with explicitly declared Ubuntu ARM64 GHDL/LLVM prerequisites | Managed prerequisite installation, browser, clean installation and boards; no x64 translation is assumed |
+| Windows ARM64 | Native ARM64 companion checks and 14/14 HDL workflows pass; the explicitly selected x64 tools and MSVC CPython execute through Windows 11 x64 translation | ARM64 drivers/USB and physical programming, browser/permission matrix and clean installation |
 
-OSS CAD Suite currently supplies GHDL and its Yosys plugin only on Linux x86-64
-and macOS ARM64. A separately pinned Windows x64 GHDL archive is a candidate,
-not an integrated pass; Linux ARM64 and Intel Mac need additional reproducible
-routes. Owner-approved OS x64 translation applies to individual tools and does
-not waive any native companion, driver or workflow requirement.
+The passing reports distinguish the pinned suite, supplemental archives and
+externally managed prerequisites. Windows uses checksum-pinned GHDL and
+Graphviz archives plus pinned Cocotb packages in an explicit x64 MSVC CPython
+environment. Intel macOS uses a pinned GHDL executable copied with integrity
+checks into the suite runtime anchor, while retaining the supplemental GHDL
+standard libraries. Linux ARM64 uses the declared native Ubuntu GHDL/LLVM
+route. These are actual workflow passes, with the package and architecture
+receipts retained above; they do not establish a clean desktop installer.
+Owner-approved Windows x64 translation applies to individual tools and does
+not waive native companion, driver or hardware requirements.
 
 The additional formal build-path proof exercises a relative build component
 such as `build files µ`. VWB keeps the actual configuration cwd and sources in
@@ -116,15 +152,17 @@ early missing diagnoses and records subsequent fixes. Configuration and asset
 availability are not passes. Artifacts retain JSON diagnoses and native logs
 even when a required workflow is blocked.
 
-Public GitHub Pages configuration failed with site Not Found, so publication
-enablement and real deployed-origin/browser acceptance remain open. A local
-browser demo alone cannot satisfy that gate. No unavailable host, missing tool,
-unrun CI job or unattached board is labeled passed in this report.
+The original GitHub Pages configuration failed with site Not Found; the later
+[published HTTPS evidence](WEB_WORKSPACE.md#published-https-evidence) closes
+that initial preview publication gate. The broader supported browser/OS and
+denied-permission acceptance matrix remains open. No unavailable host, unrun
+CI job or unattached board is labeled passed in this report.
 
 ## Next work
 
-Close the Pages/browser and native platform evidence gaps and supplemental
-tool distribution routes, then carry the proven project/process/editor adapters
-into the M1 workspace. M1 may
-advance as an internal prototype while these gaps are visible; the complete
-first release remains gated by every owner-selected workflow and launch target.
+Complete clean native installation and repair/uninstall, sustainable tool
+distribution, the supported browser/permission matrix and physical FPGA
+programming. Extend the fixture proofs to broader projects and supported
+minimum OS versions. The workspace may advance while these gaps remain
+visible; the complete first release remains gated by every owner-selected
+workflow and launch target.

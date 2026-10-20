@@ -1,0 +1,566 @@
+{
+  "schema": "vwb.hdl-pages-evidence/1",
+  "recorded_at": "2026-10-20T04:01:55.636709+00:00",
+  "run_url": "https://github.com/sfmth/verilog-workbench/actions/runs/39366706107",
+  "head_sha": "9acd8bb8d071cf5a3660bfc16b0870e1a1271bcb",
+  "branch": "web-port-plan",
+  "status": "completed",
+  "conclusion": "success",
+  "jobs": [
+    {
+      "name": "build",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/sfmth/verilog-workbench/actions/runs/39366706107/job/118445082398"
+    },
+    {
+      "name": "deploy",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/sfmth/verilog-workbench/actions/runs/39366706107/job/118446046647"
+    },
+    {
+      "name": "verify-public",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/sfmth/verilog-workbench/actions/runs/39366706107/job/118446102377"
+    }
+  ],
+  "runtime_shutdown_controls": {
+    "step": "Verify real Cocotb shutdown and failure controls",
+    "conclusion": "success",
+    "tests": 9,
+    "skipped": 0,
+    "real_native_controls": [
+      "build\tVerify real Cocotb shutdown and failure controls\t2026-10-20T03:56:08.0004690Z test_explicit_original_startup_keeps_real_crash_a_failure (test_cocotb_runtime.ManagedRuntimeTests.test_explicit_original_startup_keeps_real_crash_a_failure) ... ok",
+      "build\tVerify real Cocotb shutdown and failure controls\t2026-10-20T03:56:09.2423833Z test_real_assertion_failure_remains_failure_with_pending_write (test_cocotb_runtime.ManagedRuntimeTests.test_real_assertion_failure_remains_failure_with_pending_write) ... ok",
+      "build\tVerify real Cocotb shutdown and failure controls\t2026-10-20T03:56:10.4721606Z test_real_final_queued_write_passes_with_unchanged_truth_table (test_cocotb_runtime.ManagedRuntimeTests.test_real_final_queued_write_passes_with_unchanged_truth_table) ... ok"
+    ],
+    "log_sha256": "3552d49478acd88f36b6eee7d51771000dc1ade78f1d461f9c305367335fc4f7",
+    "limits": "Three actual managed native controls assert a passing truth table with final pending deposit, a genuine assertion failure that remains failure, and explicit original startup that retains the native crash/failure. Six fake/unit tests verify exact-version guards, live scheduling preservation and trusted module staging.",
+    "test_source_sha256": "9c27a5d1af88d9d372ec8e594a99acb836fc1e43c4e77b26a6285d07dba2533c"
+  },
+  "retained_reports": {
+    "built": {
+      "path": "docs/workspace-evidence/hdl-runtime-ci-linux-x64.json",
+      "bytes": 91916,
+      "sha256": "e1e399345bae849c157d4b7d13bed6e260819bd8505151acf672e289e8334e48"
+    },
+    "public": {
+      "path": "docs/workspace-evidence/hdl-runtime-public-ci-linux-x64.json",
+      "bytes": 92005,
+      "sha256": "8a877a44ec4d8c2c9718c74306b421a7fa9bfd51d6cd2358e08bb8df4049ec38"
+    }
+  },
+  "reports": {
+    "built_hdl": {
+      "state": "passed",
+      "browser": "151.0.7922.34",
+      "checks": [
+        "verilog_simulation-real-browser-native-HDL-workflow",
+        "systemverilog_simulation-real-browser-native-HDL-workflow",
+        "waveforms-real-browser-native-HDL-workflow",
+        "cocotb_verilog-real-browser-native-HDL-workflow",
+        "vhdl_simulation-real-browser-native-HDL-workflow",
+        "cocotb_vhdl-real-browser-native-HDL-workflow",
+        "lint-real-browser-native-HDL-workflow",
+        "synthesis-real-browser-native-HDL-workflow",
+        "schematics-real-browser-native-HDL-workflow",
+        "vhdl_synthesis-real-browser-native-HDL-workflow",
+        "formal_proof-real-browser-native-HDL-workflow",
+        "formal_counterexample-real-browser-native-HDL-workflow",
+        "fpga_tangnano9k_build-real-browser-native-HDL-workflow",
+        "fpga_icebreaker_build-real-browser-native-HDL-workflow",
+        "native_verilog_assertion_failure-real-browser-native-HDL-workflow",
+        "native_vhdl_assertion_failure-real-browser-native-HDL-workflow",
+        "cocotb_function_filter-real-browser-native-HDL-workflow",
+        "cocotb_expected_assertion_failure-real-browser-native-HDL-workflow",
+        "lint_source_diagnostic-real-browser-native-HDL-workflow",
+        "gate_level_verilog-real-browser-native-HDL-workflow",
+        "gate_level_cocotb_vhdl-real-browser-native-HDL-workflow",
+        "compile_defines_includes_plusargs-real-browser-native-HDL-workflow",
+        "wave_saved_roundtrip-real-browser-native-HDL-workflow",
+        "starter_native_verilog-real-browser-native-HDL-workflow",
+        "hierarchy_and_test_selection-real-browser-native-HDL-workflow",
+        "cocotb_pending_write_shutdown-real-browser-native-HDL-workflow"
+      ],
+      "deployed_manifest": {
+        "schema": "vwb.web-build/1",
+        "status": "development-preview",
+        "base_path": "/verilog-workbench/",
+        "file_count": 20,
+        "loaded_runtime_sha256": {
+          "workspace/index.html": "f008d96b0035ffd0e2974d6215f399b5d5ac56bf7b189e4adc0bfe224f122d90",
+          "workspace/app.mjs": "767f81afbc874f28e6d45ce0a1c14d309776ff11a2616c7a6255b6871ef56e3d",
+          "workspace/style.css": "6a96f62de55dde894b894d09fe65096b83471e09e1018275e08d3021d87658c6",
+          "workspace/model.mjs": "56fcd7aee518afdb4cbd44d87604dbfac0fee07af2e8f8f62aca99ad606cad88",
+          "workspace/hdl.mjs": "eeff4b3dec001beeb7fdd7f39e279be431df4ebf36eb66eb0d2894783d6b4a95",
+          "workspace/schematic.mjs": "8c08a1e676f68ae3706e2f64064d6a5498f8701e4556b40f56d4dbbc2a3d5101"
+        }
+      },
+      "original_M0_workflows_passed": true,
+      "full_probe_scope": true,
+      "all_requested_workflows_passed": true,
+      "tool_acquisition": {
+        "release": "2026-10-18",
+        "archive": "oss-cad-suite-linux-x64-20261018.tgz",
+        "sha256": "639c8c0366d74dc56201729c9907bf2d8281db7f18bb025abe2e4f3f2ebaa24e",
+        "size_bytes": 748315612,
+        "target": "linux-x64"
+      },
+      "source_sha256": {
+        "vwb.py": "3db956c3e660a7cab81ced56278cfa23e95f11619699be9a76292827d572dc60",
+        "companion/server.py": "356030df6ef4ca139126259a610acde920fc90928dda9166063a0ea380142fa2",
+        "companion/projects.py": "92fa5d30f405090231504b30413ce13d7a5ab1fbe2e38edfc0763f9992e830d1",
+        "companion/process.py": "500b9a1cfac6aded8028923aa2ba35c14b4efa6677c2d8a81bfdff85cb0c266d",
+        "companion/cocotb_runtime.py": "b8794d6f2b1f3d9008001d165ca32d9c829547a9dffe40d064d08be9a33c4153",
+        "scripts/probe_hdl_workspace.mjs": "6504f125e6c876ca630a61f268c8976430d24d20dc1ee9a97534dae78f97f9e8",
+        "scripts/browser_assets.mjs": "4ce3366c5a2efa23f5197a5df5479be9eb5bf06441bd6ad1eaa0d829df1232eb"
+      },
+      "runtime_manifest_sha256": "30e9f4381b7f7a8bedcc933e6905ba01f74b7214cff307e347fb526a449ecfbd",
+      "all_26_context_collectors_drained_before_close": true,
+      "asset_capture_method": "original-browser-network-entity-bytes-paused-before-unchanged-CDP-continueResponse",
+      "asset_capture_helper_sha256": "4ce3366c5a2efa23f5197a5df5479be9eb5bf06441bd6ad1eaa0d829df1232eb"
+    },
+    "built_workspace": {
+      "state": "passed",
+      "browser": "151.0.7922.34",
+      "checks": [
+        "built-root-project-prefix-and-fragment-reload",
+        "real-pairing-multifile-tabs-revision-save-CRLF-and-keyboard",
+        "external-change-conflict-without-overwrite",
+        "draft-export-import-explicit-recovery-reload-and-no-stored-credentials",
+        "native-companion-discover-job",
+        "saved-and-reverted-edits-retain-stale-job-status",
+        "artifact-download-vcd-worker-render-and-malformed-recovery",
+        "native-Icarus-pass-assertions-generated-VCD-download-and-worker-render",
+        "native-compiler-failure-and-raw-diagnostics",
+        "native-infinite-simulation-stop-after-runtime-marker",
+        "native-simulation-recovery-after-failure-and-cancellation",
+        "optional-guide-open-and-close",
+        "distinct-project-clears-results-and-ignores-simulated-late-old-session-responses"
+      ],
+      "asset_capture": {
+        "method": "original-browser-network-entity-bytes-paused-before-unchanged-CDP-continueResponse",
+        "source_sha256": "4ce3366c5a2efa23f5197a5df5479be9eb5bf06441bd6ad1eaa0d829df1232eb",
+        "browser_http_cache": "harness-does-not-change-cache-settings",
+        "protocol_scope": "http://127.0.0.1:40853/verilog-workbench/*",
+        "protocol_stage": "Response",
+        "original_network_responses": true,
+        "request_refetches": 0,
+        "response_overrides": 0,
+        "delivered_responses": 56,
+        "delivered_entity_bytes": 762072,
+        "pending_responses": 0
+      }
+    },
+    "built_source": {
+      "state": "passed",
+      "browser": "151.0.7922.34",
+      "checks": [
+        "project-prefix-entry-and-real-native-companion-UI-pairing",
+        "systemverilog-real-lexical-tokens-exact-Unicode-tabs-trailing-lines-and-no-source-HTML-injection",
+        "vhdl-real-lexical-tokens-exact-Unicode-tabs-trailing-lines-and-no-source-HTML-injection",
+        "python-real-lexical-tokens-exact-Unicode-tabs-trailing-lines-and-no-source-HTML-injection",
+        "explicit-persisted-pagehide-DOM-event-keeps-real-worker-and-Find-functional-without-BFCache-claim",
+        "actual-token-and-line-number-geometry-matches-native-textarea-after-both-scroll-axes",
+        "read-only-literal-find-Unicode-offsets-case-toggle-next-previous-and-keyboard-focus",
+        "native-textarea-input-undo-redo-and-keyboard-save-preserve-CRLF-BOM-and-Unicode",
+        "byte-line-and-token-budgets-use-explicit-plain-text-fallback-with-complete-editable-source",
+        "large-literal-search-remains-bounded-and-discloses-truncated-match-inventory",
+        "large-plain-file-native-input-save-and-Stop-request-remain-responsive",
+        "delayed-real-worker-output-cannot-repaint-a-different-file-or-change-its-source",
+        "worker-failure-reveals-native-plain-text-retains-draft-and-permits-real-save",
+        "real-companion-disconnect-retains-editable-unsaved-source-and-prevents-disk-save",
+        "real-lexical-worker-loaded-assets-match-manifest-without-source-or-credentials-in-browser-storage"
+      ],
+      "asset_capture": {
+        "method": "original-browser-network-entity-bytes-paused-before-unchanged-CDP-continueResponse",
+        "source_sha256": "4ce3366c5a2efa23f5197a5df5479be9eb5bf06441bd6ad1eaa0d829df1232eb",
+        "browser_http_cache": "harness-does-not-change-cache-settings",
+        "protocol_scope": "http://127.0.0.1:39401/verilog-workbench/*",
+        "protocol_stage": "Response",
+        "original_network_responses": true,
+        "request_refetches": 0,
+        "response_overrides": 0,
+        "delivered_responses": 17,
+        "delivered_entity_bytes": 238174,
+        "pending_responses": 0
+      },
+      "deployed_manifest": {
+        "schema": "vwb.web-build/1",
+        "status": "development-preview",
+        "base_path": "/verilog-workbench/",
+        "file_count": 20
+      }
+    },
+    "built_semantic": {
+      "state": "passed",
+      "browser": "151.0.7922.34",
+      "checks": [
+        "systemverilog-real-semantic-editor-UI-and-transaction-acceptance",
+        "vhdl-real-semantic-editor-UI-and-transaction-acceptance",
+        "python-real-semantic-editor-UI-and-transaction-acceptance"
+      ],
+      "asset_capture": [
+        {
+          "language": "systemverilog",
+          "method": "original-browser-network-entity-bytes-paused-before-unchanged-CDP-continueResponse",
+          "source_sha256": "4ce3366c5a2efa23f5197a5df5479be9eb5bf06441bd6ad1eaa0d829df1232eb",
+          "browser_http_cache": "harness-does-not-change-cache-settings",
+          "protocol_scope": "http://127.0.0.1:39573/verilog-workbench/*",
+          "protocol_stage": "Response",
+          "original_network_responses": true,
+          "request_refetches": 0,
+          "response_overrides": 0,
+          "delivered_responses": 16,
+          "delivered_entity_bytes": 235991,
+          "pending_responses": 0
+        },
+        {
+          "language": "vhdl",
+          "method": "original-browser-network-entity-bytes-paused-before-unchanged-CDP-continueResponse",
+          "source_sha256": "4ce3366c5a2efa23f5197a5df5479be9eb5bf06441bd6ad1eaa0d829df1232eb",
+          "browser_http_cache": "harness-does-not-change-cache-settings",
+          "protocol_scope": "http://127.0.0.1:39573/verilog-workbench/*",
+          "protocol_stage": "Response",
+          "original_network_responses": true,
+          "request_refetches": 0,
+          "response_overrides": 0,
+          "delivered_responses": 16,
+          "delivered_entity_bytes": 235991,
+          "pending_responses": 0
+        },
+        {
+          "language": "python",
+          "method": "original-browser-network-entity-bytes-paused-before-unchanged-CDP-continueResponse",
+          "source_sha256": "4ce3366c5a2efa23f5197a5df5479be9eb5bf06441bd6ad1eaa0d829df1232eb",
+          "browser_http_cache": "harness-does-not-change-cache-settings",
+          "protocol_scope": "http://127.0.0.1:39573/verilog-workbench/*",
+          "protocol_stage": "Response",
+          "original_network_responses": true,
+          "request_refetches": 0,
+          "response_overrides": 0,
+          "delivered_responses": 16,
+          "delivered_entity_bytes": 235991,
+          "pending_responses": 0
+        }
+      ]
+    },
+    "built_lifecycle": {
+      "state": "passed",
+      "browser": "151.0.7922.34",
+      "checks": [
+        "real-workspace-project-prefix-and-companion-UI-pairing",
+        "pending-trash-reads-across-dialog-reopen-block-buttons-and-Enter-without-native-mutation",
+        "UI-Enter-creates-Unicode-folder-and-button-creates-empty-file-then-edits-and-saves",
+        "delayed-entry-response-after-deselection-cannot-stick-loading-or-enable-stale-mutation",
+        "post-create-open-transport-failure-keeps-committed-file-reports-applied-error-and-never-retries-POST",
+        "multi-file-folder-move-preserves-exact-bytes-remaps-clean-tabs-hash-and-save-target",
+        "dirty-buffer-blocks-lifecycle-without-disk-changes",
+        "unresolved-recovery-draft-blocks-lifecycle",
+        "stale-entry-revision-conflict-preserves-external-bytes-and-path",
+        "existing-destination-conflict-never-overwrites-either-file",
+        "UI-folder-trash-closes-remapped-tabs-retains-private-undownloadable-data",
+        "trash-survives-real-native-clean-companion-restart-and-new-UI-session",
+        "UI-restore-refuses-external-replacement-then-restores-original-four-language-tree",
+        "authenticated-HTTP-rejects-configured-roots-config-build-Git-traversal-and-private-trash",
+        "restored-project-runs-real-native-discovery-through-UI",
+        "loaded-assets-match-manifest-and-browser-storage-keeps-credentials-and-unopted-drafts-out"
+      ],
+      "asset_capture": {
+        "method": "original-browser-network-entity-bytes-paused-before-unchanged-CDP-continueResponse",
+        "source_sha256": "4ce3366c5a2efa23f5197a5df5479be9eb5bf06441bd6ad1eaa0d829df1232eb",
+        "browser_http_cache": "harness-does-not-change-cache-settings",
+        "protocol_scope": "http://127.0.0.1:39885/verilog-workbench/*",
+        "protocol_stage": "Response",
+        "original_network_responses": true,
+        "request_refetches": 0,
+        "response_overrides": 0,
+        "delivered_responses": 33,
+        "delivered_entity_bytes": 474165,
+        "pending_responses": 0
+      },
+      "deployed_manifest": {
+        "schema": "vwb.web-build/1",
+        "status": "development-preview",
+        "base_path": "/verilog-workbench/",
+        "file_count": 20
+      }
+    },
+    "public_hdl": {
+      "state": "passed",
+      "browser": "151.0.7922.34",
+      "checks": [
+        "verilog_simulation-real-browser-native-HDL-workflow",
+        "systemverilog_simulation-real-browser-native-HDL-workflow",
+        "waveforms-real-browser-native-HDL-workflow",
+        "cocotb_verilog-real-browser-native-HDL-workflow",
+        "vhdl_simulation-real-browser-native-HDL-workflow",
+        "cocotb_vhdl-real-browser-native-HDL-workflow",
+        "lint-real-browser-native-HDL-workflow",
+        "synthesis-real-browser-native-HDL-workflow",
+        "schematics-real-browser-native-HDL-workflow",
+        "vhdl_synthesis-real-browser-native-HDL-workflow",
+        "formal_proof-real-browser-native-HDL-workflow",
+        "formal_counterexample-real-browser-native-HDL-workflow",
+        "fpga_tangnano9k_build-real-browser-native-HDL-workflow",
+        "fpga_icebreaker_build-real-browser-native-HDL-workflow",
+        "native_verilog_assertion_failure-real-browser-native-HDL-workflow",
+        "native_vhdl_assertion_failure-real-browser-native-HDL-workflow",
+        "cocotb_function_filter-real-browser-native-HDL-workflow",
+        "cocotb_expected_assertion_failure-real-browser-native-HDL-workflow",
+        "lint_source_diagnostic-real-browser-native-HDL-workflow",
+        "gate_level_verilog-real-browser-native-HDL-workflow",
+        "gate_level_cocotb_vhdl-real-browser-native-HDL-workflow",
+        "compile_defines_includes_plusargs-real-browser-native-HDL-workflow",
+        "wave_saved_roundtrip-real-browser-native-HDL-workflow",
+        "starter_native_verilog-real-browser-native-HDL-workflow",
+        "hierarchy_and_test_selection-real-browser-native-HDL-workflow",
+        "cocotb_pending_write_shutdown-real-browser-native-HDL-workflow"
+      ],
+      "deployed_manifest": {
+        "schema": "vwb.web-build/1",
+        "status": "development-preview",
+        "base_path": "/verilog-workbench/",
+        "file_count": 20,
+        "loaded_runtime_sha256": {
+          "workspace/index.html": "f008d96b0035ffd0e2974d6215f399b5d5ac56bf7b189e4adc0bfe224f122d90",
+          "workspace/app.mjs": "767f81afbc874f28e6d45ce0a1c14d309776ff11a2616c7a6255b6871ef56e3d",
+          "workspace/style.css": "6a96f62de55dde894b894d09fe65096b83471e09e1018275e08d3021d87658c6",
+          "workspace/model.mjs": "56fcd7aee518afdb4cbd44d87604dbfac0fee07af2e8f8f62aca99ad606cad88",
+          "workspace/hdl.mjs": "eeff4b3dec001beeb7fdd7f39e279be431df4ebf36eb66eb0d2894783d6b4a95",
+          "workspace/schematic.mjs": "8c08a1e676f68ae3706e2f64064d6a5498f8701e4556b40f56d4dbbc2a3d5101"
+        }
+      },
+      "original_M0_workflows_passed": true,
+      "full_probe_scope": true,
+      "all_requested_workflows_passed": true,
+      "tool_acquisition": {
+        "release": "2026-10-18",
+        "archive": "oss-cad-suite-linux-x64-20261018.tgz",
+        "sha256": "639c8c0366d74dc56201729c9907bf2d8281db7f18bb025abe2e4f3f2ebaa24e",
+        "size_bytes": 748315612,
+        "target": "linux-x64"
+      },
+      "source_sha256": {
+        "vwb.py": "3db956c3e660a7cab81ced56278cfa23e95f11619699be9a76292827d572dc60",
+        "companion/server.py": "356030df6ef4ca139126259a610acde920fc90928dda9166063a0ea380142fa2",
+        "companion/projects.py": "92fa5d30f405090231504b30413ce13d7a5ab1fbe2e38edfc0763f9992e830d1",
+        "companion/process.py": "500b9a1cfac6aded8028923aa2ba35c14b4efa6677c2d8a81bfdff85cb0c266d",
+        "companion/cocotb_runtime.py": "b8794d6f2b1f3d9008001d165ca32d9c829547a9dffe40d064d08be9a33c4153",
+        "scripts/probe_hdl_workspace.mjs": "6504f125e6c876ca630a61f268c8976430d24d20dc1ee9a97534dae78f97f9e8",
+        "scripts/browser_assets.mjs": "4ce3366c5a2efa23f5197a5df5479be9eb5bf06441bd6ad1eaa0d829df1232eb"
+      },
+      "runtime_manifest_sha256": "30e9f4381b7f7a8bedcc933e6905ba01f74b7214cff307e347fb526a449ecfbd",
+      "all_26_context_collectors_drained_before_close": true,
+      "asset_capture_method": "original-browser-network-entity-bytes-paused-before-unchanged-CDP-continueResponse",
+      "asset_capture_helper_sha256": "4ce3366c5a2efa23f5197a5df5479be9eb5bf06441bd6ad1eaa0d829df1232eb"
+    },
+    "public_workspace": {
+      "state": "passed",
+      "browser": "151.0.7922.34",
+      "checks": [
+        "fresh-context-observed-loopback-health-without-test-permission-grant",
+        "actual-HTTPS-Pages-app-brand-preview-manifest-and-fragment-route",
+        "real-public-app-UI-pairing-Unicode-project-multifile-CRLF-and-keyboard-save",
+        "real-disk-revision-conflict-preserves-external-edit-and-explicit-reload",
+        "public-fragment-reload-forgets-session-and-new-one-time-UI-pairing-restores-file",
+        "real-native-discovery-job-and-output-through-public-app",
+        "exact-companion-viewer-fixture-download-and-public-VCD-worker-render",
+        "deployed-document-styles-modules-and-worker-bytes-match-public-build-manifest",
+        "no-browser-script-errors-or-stored-credentials"
+      ],
+      "asset_capture": [
+        {
+          "method": "original-browser-network-entity-bytes-paused-before-unchanged-CDP-continueResponse",
+          "source_sha256": "4ce3366c5a2efa23f5197a5df5479be9eb5bf06441bd6ad1eaa0d829df1232eb",
+          "browser_http_cache": "harness-does-not-change-cache-settings",
+          "protocol_scope": "https://sfmth.github.io/verilog-workbench/*",
+          "protocol_stage": "Response",
+          "original_network_responses": true,
+          "request_refetches": 0,
+          "response_overrides": 0,
+          "delivered_responses": 22,
+          "delivered_entity_bytes": 278087,
+          "pending_responses": 0
+        }
+      ],
+      "verified_deployed_assets": {
+        "m0/client.mjs": "b00b1560eb55a8da374c59c0903b9281727d44132e3227f7da3063944167f9f4",
+        "workspace/app.mjs": "767f81afbc874f28e6d45ce0a1c14d309776ff11a2616c7a6255b6871ef56e3d",
+        "workspace/files.mjs": "35aab4320e716da536bcc2f4228af47c54c8ae4eee324b7c8c57e8e30028e438",
+        "workspace/hdl.mjs": "eeff4b3dec001beeb7fdd7f39e279be431df4ebf36eb66eb0d2894783d6b4a95",
+        "workspace/index.html": "f008d96b0035ffd0e2974d6215f399b5d5ac56bf7b189e4adc0bfe224f122d90",
+        "workspace/intelligence.mjs": "737a179def2088dba8e4d45f7c1ef02f971484d890ad9f9f95c851296ca6d556",
+        "workspace/model.mjs": "56fcd7aee518afdb4cbd44d87604dbfac0fee07af2e8f8f62aca99ad606cad88",
+        "workspace/schematic.mjs": "8c08a1e676f68ae3706e2f64064d6a5498f8701e4556b40f56d4dbbc2a3d5101",
+        "workspace/search.mjs": "a5cf5b25d679a70a6a911dcabd694b0e9247abf265b8f617d4c03fba0ce14e24",
+        "workspace/style.css": "6a96f62de55dde894b894d09fe65096b83471e09e1018275e08d3021d87658c6",
+        "workspace/syntax-view.mjs": "2762ad1daf4bdadcd03a0e10856f6e276da35f767253fc06b8b095f221af97ed",
+        "workspace/syntax-worker.mjs": "a2a32b3e911873858c6808ed8ad8af8150f4a66d53f74c1cb16f013eea066136",
+        "workspace/syntax.mjs": "7ff937c236481cfa97aa8867cfd14aa25cf40bedf351a4103b1d0471704faf95",
+        "workspace/vcd-worker.mjs": "ae1cf96d1cdff4435311cb13df4be3d6670854faece90b518489115a24043a20",
+        "workspace/vcd.mjs": "ba8509f15d38d0e1824e41101c0d9bb30c00b4a2aade00f57575f27d8f66f7f7",
+        "workspace/waveform.mjs": "cfd91d2a7f5ae378f8253b7ade5ca047dd90e721af77be9285e22941ece907fd"
+      },
+      "deployed_manifest": {
+        "schema": "vwb.web-build/1",
+        "status": "development-preview",
+        "base_path": "/verilog-workbench/",
+        "entry_points": [
+          "/verilog-workbench/",
+          "/verilog-workbench/workspace/",
+          "/verilog-workbench/m0/"
+        ],
+        "file_count": 20
+      }
+    },
+    "public_source": {
+      "state": "passed",
+      "browser": "151.0.7922.34",
+      "checks": [
+        "project-prefix-entry-and-real-native-companion-UI-pairing",
+        "systemverilog-real-lexical-tokens-exact-Unicode-tabs-trailing-lines-and-no-source-HTML-injection",
+        "vhdl-real-lexical-tokens-exact-Unicode-tabs-trailing-lines-and-no-source-HTML-injection",
+        "python-real-lexical-tokens-exact-Unicode-tabs-trailing-lines-and-no-source-HTML-injection",
+        "explicit-persisted-pagehide-DOM-event-keeps-real-worker-and-Find-functional-without-BFCache-claim",
+        "actual-token-and-line-number-geometry-matches-native-textarea-after-both-scroll-axes",
+        "read-only-literal-find-Unicode-offsets-case-toggle-next-previous-and-keyboard-focus",
+        "native-textarea-input-undo-redo-and-keyboard-save-preserve-CRLF-BOM-and-Unicode",
+        "byte-line-and-token-budgets-use-explicit-plain-text-fallback-with-complete-editable-source",
+        "large-literal-search-remains-bounded-and-discloses-truncated-match-inventory",
+        "large-plain-file-native-input-save-and-Stop-request-remain-responsive",
+        "delayed-real-worker-output-cannot-repaint-a-different-file-or-change-its-source",
+        "worker-failure-reveals-native-plain-text-retains-draft-and-permits-real-save",
+        "real-companion-disconnect-retains-editable-unsaved-source-and-prevents-disk-save",
+        "real-lexical-worker-loaded-assets-match-manifest-without-source-or-credentials-in-browser-storage"
+      ],
+      "asset_capture": {
+        "method": "original-browser-network-entity-bytes-paused-before-unchanged-CDP-continueResponse",
+        "source_sha256": "4ce3366c5a2efa23f5197a5df5479be9eb5bf06441bd6ad1eaa0d829df1232eb",
+        "browser_http_cache": "harness-does-not-change-cache-settings",
+        "protocol_scope": "https://sfmth.github.io/verilog-workbench/*",
+        "protocol_stage": "Response",
+        "original_network_responses": true,
+        "request_refetches": 0,
+        "response_overrides": 0,
+        "delivered_responses": 17,
+        "delivered_entity_bytes": 238174,
+        "pending_responses": 0
+      },
+      "deployed_manifest": {
+        "schema": "vwb.web-build/1",
+        "status": "development-preview",
+        "base_path": "/verilog-workbench/",
+        "file_count": 20
+      }
+    },
+    "public_semantic": {
+      "state": "passed",
+      "browser": "151.0.7922.34",
+      "checks": [
+        "systemverilog-real-semantic-editor-UI-and-transaction-acceptance",
+        "vhdl-real-semantic-editor-UI-and-transaction-acceptance",
+        "python-real-semantic-editor-UI-and-transaction-acceptance"
+      ],
+      "asset_capture": [
+        {
+          "language": "systemverilog",
+          "method": "original-browser-network-entity-bytes-paused-before-unchanged-CDP-continueResponse",
+          "source_sha256": "4ce3366c5a2efa23f5197a5df5479be9eb5bf06441bd6ad1eaa0d829df1232eb",
+          "browser_http_cache": "harness-does-not-change-cache-settings",
+          "protocol_scope": "https://sfmth.github.io/verilog-workbench/*",
+          "protocol_stage": "Response",
+          "original_network_responses": true,
+          "request_refetches": 0,
+          "response_overrides": 0,
+          "delivered_responses": 16,
+          "delivered_entity_bytes": 235991,
+          "pending_responses": 0
+        },
+        {
+          "language": "vhdl",
+          "method": "original-browser-network-entity-bytes-paused-before-unchanged-CDP-continueResponse",
+          "source_sha256": "4ce3366c5a2efa23f5197a5df5479be9eb5bf06441bd6ad1eaa0d829df1232eb",
+          "browser_http_cache": "harness-does-not-change-cache-settings",
+          "protocol_scope": "https://sfmth.github.io/verilog-workbench/*",
+          "protocol_stage": "Response",
+          "original_network_responses": true,
+          "request_refetches": 0,
+          "response_overrides": 0,
+          "delivered_responses": 16,
+          "delivered_entity_bytes": 235991,
+          "pending_responses": 0
+        },
+        {
+          "language": "python",
+          "method": "original-browser-network-entity-bytes-paused-before-unchanged-CDP-continueResponse",
+          "source_sha256": "4ce3366c5a2efa23f5197a5df5479be9eb5bf06441bd6ad1eaa0d829df1232eb",
+          "browser_http_cache": "harness-does-not-change-cache-settings",
+          "protocol_scope": "https://sfmth.github.io/verilog-workbench/*",
+          "protocol_stage": "Response",
+          "original_network_responses": true,
+          "request_refetches": 0,
+          "response_overrides": 0,
+          "delivered_responses": 16,
+          "delivered_entity_bytes": 235991,
+          "pending_responses": 0
+        }
+      ]
+    },
+    "public_lifecycle": {
+      "state": "passed",
+      "browser": "151.0.7922.34",
+      "checks": [
+        "real-workspace-project-prefix-and-companion-UI-pairing",
+        "pending-trash-reads-across-dialog-reopen-block-buttons-and-Enter-without-native-mutation",
+        "UI-Enter-creates-Unicode-folder-and-button-creates-empty-file-then-edits-and-saves",
+        "delayed-entry-response-after-deselection-cannot-stick-loading-or-enable-stale-mutation",
+        "post-create-open-transport-failure-keeps-committed-file-reports-applied-error-and-never-retries-POST",
+        "multi-file-folder-move-preserves-exact-bytes-remaps-clean-tabs-hash-and-save-target",
+        "dirty-buffer-blocks-lifecycle-without-disk-changes",
+        "unresolved-recovery-draft-blocks-lifecycle",
+        "stale-entry-revision-conflict-preserves-external-bytes-and-path",
+        "existing-destination-conflict-never-overwrites-either-file",
+        "UI-folder-trash-closes-remapped-tabs-retains-private-undownloadable-data",
+        "trash-survives-real-native-clean-companion-restart-and-new-UI-session",
+        "UI-restore-refuses-external-replacement-then-restores-original-four-language-tree",
+        "authenticated-HTTP-rejects-configured-roots-config-build-Git-traversal-and-private-trash",
+        "restored-project-runs-real-native-discovery-through-UI",
+        "loaded-assets-match-manifest-and-browser-storage-keeps-credentials-and-unopted-drafts-out"
+      ],
+      "asset_capture": {
+        "method": "original-browser-network-entity-bytes-paused-before-unchanged-CDP-continueResponse",
+        "source_sha256": "4ce3366c5a2efa23f5197a5df5479be9eb5bf06441bd6ad1eaa0d829df1232eb",
+        "browser_http_cache": "harness-does-not-change-cache-settings",
+        "protocol_scope": "https://sfmth.github.io/verilog-workbench/*",
+        "protocol_stage": "Response",
+        "original_network_responses": true,
+        "request_refetches": 0,
+        "response_overrides": 0,
+        "delivered_responses": 33,
+        "delivered_entity_bytes": 474165,
+        "pending_responses": 0
+      },
+      "deployed_manifest": {
+        "schema": "vwb.web-build/1",
+        "status": "development-preview",
+        "base_path": "/verilog-workbench/",
+        "file_count": 20
+      }
+    }
+  },
+  "scope": "Final 9acd8bb strict-probe production Pages build/deploy/public HTTPS verification. Built and actual public HTTPS suites each pass all 26 HDL workflows and all existing workspace, semantic, lifecycle and source probes. M0 keeps four original XOR assertions plus the documented final queued-write shutdown extension. Public Chromium local-network access uses the test permission API. Physical FPGA programming is not tested. Separate unchanged processor integration remains smoke coverage because its original functional assertions are commented out.",
+  "native_shutdown_diagnosis": "hdl-cocotb-shutdown-local-linux-x64.json",
+  "original_network_capture_control": "browser-asset-capture-control-linux-x64.json",
+  "probe_source_sha256": {
+    "scripts/browser_assets.mjs": "4ce3366c5a2efa23f5197a5df5479be9eb5bf06441bd6ad1eaa0d829df1232eb",
+    "scripts/probe_hdl_workspace.mjs": "6504f125e6c876ca630a61f268c8976430d24d20dc1ee9a97534dae78f97f9e8",
+    "scripts/probe_pages.mjs": "bceb2276477dc1fc29fcfd0358580aa29574aacdc0d63ba53cec05abc72a7ad6",
+    "scripts/probe_workspace.mjs": "350d04da16ff113b2c71747ccc4eb7ce83dd6f010701a605450c1e66fb54dbdb",
+    "scripts/probe_source_workspace.mjs": "3867c4fc73a2531d1ff8752b3f1f270f21068ec3667ac098d0e6bea506972205",
+    "scripts/probe_files_workspace.mjs": "d3b51e783fd63f0a57261b58c7b35b0fd678d9eee45344ac6b457945a0e8827a",
+    "scripts/probe_editor_workspace.mjs": "30789ef3937b7307221f7a6e858da8b19f848c91f4a929d93365f159b30225e5"
+  }
+}

@@ -1,0 +1,465 @@
+{
+  "schema": "vwb.cocotb-shutdown-proof/1",
+  "state": "passed-controlled-reproduction-and-native-regressions",
+  "affected_build": "2.1.0.dev0+41564633",
+  "cause": "A queued final deposit leaves cocotb.handle._apply_writes_cb registered through Python finalization; Icarus then invokes it with no Python interpreter. Direct native vvp and system Icarus 13 controls reproduce the same SIGSEGV.",
+  "minimal_reproduction": "await Timer(1, unit=\"ns\"); dut.stall.value = 1; then return",
+  "stack": [
+    "PyThreadState_New(interp=0x0)",
+    "PyGILState_Ensure",
+    "handle_gpi_callback",
+    "VpiCbHdl::run",
+    "handle_vpi_callback",
+    "sync_cb::run_run",
+    "generic_event_s::run_run",
+    "schedule_simulate",
+    "vvp_run"
+  ],
+  "guard": "Only Cocotb 2.1.0.dev0+41564633 with Icarus; existing startup variables are preserved. Final shutdown cancels the known pending write callback after regression completion. Test bodies, timing, verdicts and nonzero-exit handling are retained.",
+  "matrix": [
+    {
+      "name": "original-minimal",
+      "returncode": -11,
+      "log": "<temporary-diagnostic>/original-minimal.log",
+      "xml": "<temporary-diagnostic>/original-minimal.xml",
+      "log_file": {
+        "path": "<temporary-diagnostic>/original-minimal.log",
+        "bytes": 2510,
+        "sha256": "94f3ceb02391d09b29bbf1a1b21d75f5ac0a682416357ba09d9c85948c68f091"
+      },
+      "xml_file": {
+        "path": "<temporary-diagnostic>/original-minimal.xml",
+        "bytes": 398,
+        "sha256": "379ddf8d1b91ca5d911cda1ce01ef006e532f8b87c8ceab99adc8ae9792dd72a"
+      },
+      "xml_cases": [
+        {
+          "name": "test_pwm",
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        }
+      ]
+    },
+    {
+      "name": "final-write",
+      "returncode": -11,
+      "log": "<temporary-diagnostic>/final-write.log",
+      "xml": "<temporary-diagnostic>/final-write.xml",
+      "log_file": {
+        "path": "<temporary-diagnostic>/final-write.log",
+        "bytes": 2425,
+        "sha256": "c632b0860ca8d3a7026539d2e6e23d44600a53b472dbccc17d47ff89f77284ef"
+      },
+      "xml_file": {
+        "path": "<temporary-diagnostic>/final-write.xml",
+        "bytes": 348,
+        "sha256": "aec11d4619ee8de868feddea6509c3b999e51846e32e35a601a3bef72c89902d"
+      },
+      "xml_cases": [
+        {
+          "name": "pending_callback",
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        }
+      ]
+    },
+    {
+      "name": "final-write-drained",
+      "returncode": 0,
+      "log": "<temporary-diagnostic>/final-write-drained.log",
+      "xml": "<temporary-diagnostic>/final-write-drained.xml",
+      "log_file": {
+        "path": "<temporary-diagnostic>/final-write-drained.log",
+        "bytes": 3500,
+        "sha256": "246c806a31c56160edd8d71fc023e71d748fbdd92cd1c5d697090dbafc7542fd"
+      },
+      "xml_file": {
+        "path": "<temporary-diagnostic>/final-write-drained.xml",
+        "bytes": 448,
+        "sha256": "448b71cb5163db9bc9f7c50c22c8188d7f5f330ddfd37cb9a05ac6776f45ffd9"
+      },
+      "xml_cases": [
+        {
+          "name": "pending_callback",
+          "failures": 1,
+          "errors": 0,
+          "skipped": 0
+        }
+      ]
+    },
+    {
+      "name": "clock-coincident",
+      "returncode": 0,
+      "log": "<temporary-diagnostic>/clock-coincident.log",
+      "xml": "<temporary-diagnostic>/clock-coincident.xml",
+      "log_file": {
+        "path": "<temporary-diagnostic>/clock-coincident.log",
+        "bytes": 2429,
+        "sha256": "3ad7252325f5f60ae789f505adfe3c581490b8ba6502eba7289e2e5d73701737"
+      },
+      "xml_file": {
+        "path": "<temporary-diagnostic>/clock-coincident.xml",
+        "bytes": 353,
+        "sha256": "cd0ec68db7e77046608df71dabc20112ac6ae89504298552dd9b307a131ab19b"
+      },
+      "xml_cases": [
+        {
+          "name": "pending_callback",
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        }
+      ]
+    },
+    {
+      "name": "clock-noncoincident",
+      "returncode": 0,
+      "log": "<temporary-diagnostic>/clock-noncoincident.log",
+      "xml": "<temporary-diagnostic>/clock-noncoincident.xml",
+      "log_file": {
+        "path": "<temporary-diagnostic>/clock-noncoincident.log",
+        "bytes": 2429,
+        "sha256": "6dcb145c5907ad3734e929dbe6f03df20a9c60457ee2febbd9a226d9a8c1a6fe"
+      },
+      "xml_file": {
+        "path": "<temporary-diagnostic>/clock-noncoincident.xml",
+        "bytes": 352,
+        "sha256": "ce20fccaeda3082e79998ffe6cd6e13111dd5ff163e95afae74885fca2bbaf6b"
+      },
+      "xml_cases": [
+        {
+          "name": "pending_callback",
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        }
+      ]
+    },
+    {
+      "name": "clock-drained",
+      "returncode": 0,
+      "log": "<temporary-diagnostic>/clock-drained.log",
+      "xml": "<temporary-diagnostic>/clock-drained.xml",
+      "log_file": {
+        "path": "<temporary-diagnostic>/clock-drained.log",
+        "bytes": 2429,
+        "sha256": "1d21b409ccb34c34cc7f5a261cf73fd448242582c3926ddfb0d9db93e05d1ab4"
+      },
+      "xml_file": {
+        "path": "<temporary-diagnostic>/clock-drained.xml",
+        "bytes": 351,
+        "sha256": "bcd830b1492e662c4ccdd553d6006819102022630f7d8bf58f82461245e3f133"
+      },
+      "xml_cases": [
+        {
+          "name": "pending_callback",
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        }
+      ]
+    },
+    {
+      "name": "original-minimal-fixed",
+      "returncode": 0,
+      "log": "<temporary-diagnostic>/original-minimal-fixed.log",
+      "xml": "<temporary-diagnostic>/original-minimal-fixed.xml",
+      "log_file": {
+        "path": "<temporary-diagnostic>/original-minimal-fixed.log",
+        "bytes": 2510,
+        "sha256": "ee9cd508537828e3aa4f5a48601f13bf9a28739c389a5d3b49b884631bb29696"
+      },
+      "xml_file": {
+        "path": "<temporary-diagnostic>/original-minimal-fixed.xml",
+        "bytes": 397,
+        "sha256": "15de13a38b97d3eaaab5d00dec1389e7e43611c4493be402a3f3cd3616e10c45"
+      },
+      "xml_cases": [
+        {
+          "name": "test_pwm",
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        }
+      ]
+    },
+    {
+      "name": "original-processor-fixed",
+      "returncode": 0,
+      "log": "<temporary-diagnostic>/original-processor-fixed.log",
+      "xml": "<temporary-diagnostic>/original-processor-fixed.xml",
+      "log_file": {
+        "path": "<temporary-diagnostic>/original-processor-fixed.log",
+        "bytes": 2510,
+        "sha256": "a199acc7d9ae55796cc6e4ef96be30f1852f95735c7e47d98d61a0d1e771ae4a"
+      },
+      "xml_file": {
+        "path": "<temporary-diagnostic>/original-processor-fixed.xml",
+        "bytes": 395,
+        "sha256": "4425dc63f8dd886a27543f60a3753495977b57fdf68dde1baad9a854d9587628"
+      },
+      "xml_cases": [
+        {
+          "name": "test_pwm",
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        }
+      ]
+    },
+    {
+      "name": "final-write-fixed",
+      "returncode": 0,
+      "log": "<temporary-diagnostic>/final-write-fixed.log",
+      "xml": "<temporary-diagnostic>/final-write-fixed.xml",
+      "log_file": {
+        "path": "<temporary-diagnostic>/final-write-fixed.log",
+        "bytes": 2425,
+        "sha256": "fb9205ad645a0a6c317a8591fbf99d6a4afef8de8042ab41708656db871a67ca"
+      },
+      "xml_file": {
+        "path": "<temporary-diagnostic>/final-write-fixed.xml",
+        "bytes": 347,
+        "sha256": "e86576543a77945eb460469ae141b3d403188f33b80997ddc541926f6155df0e"
+      },
+      "xml_cases": [
+        {
+          "name": "pending_callback",
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        }
+      ]
+    },
+    {
+      "name": "clock-fixed",
+      "returncode": 0,
+      "log": "<temporary-diagnostic>/clock-fixed.log",
+      "xml": "<temporary-diagnostic>/clock-fixed.xml",
+      "log_file": {
+        "path": "<temporary-diagnostic>/clock-fixed.log",
+        "bytes": 2429,
+        "sha256": "3d485b03969ac90e255d653d4ef1ea8d5aef840bdb14fd9b534cc5bd4748dc52"
+      },
+      "xml_file": {
+        "path": "<temporary-diagnostic>/clock-fixed.xml",
+        "bytes": 352,
+        "sha256": "cca9c6314a92ea131b5164c701a6cb67c3df4299469c204ba2a2dba2358299e8"
+      },
+      "xml_cases": [
+        {
+          "name": "pending_callback",
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        }
+      ]
+    }
+  ],
+  "system_icarus13": [
+    {
+      "name": "minimal-final-write",
+      "returncode": -11,
+      "log": "<temporary-diagnostic>/minimal-final-write-13.log",
+      "log_file": {
+        "path": "<temporary-diagnostic>/minimal-final-write-13.log",
+        "bytes": 2426,
+        "sha256": "1ce81401d30d181c7968d7619e9112f4058104bb820ac79f1e2e4242c35e143c"
+      }
+    },
+    {
+      "name": "processor-original",
+      "returncode": -11,
+      "log": "<temporary-diagnostic>/processor-original-13.log",
+      "log_file": {
+        "path": "<temporary-diagnostic>/processor-original-13.log",
+        "bytes": 2511,
+        "sha256": "aae9d40a67bb14b27fde5056e0e09f09e06204c9fc4b62cb1f021917d615ae6d"
+      }
+    }
+  ],
+  "gdb": {
+    "path": "<temporary-diagnostic>/gdb.log",
+    "bytes": 21436,
+    "sha256": "422940a55cf1d6287602f712af367d9bc4f05d792bd2e95d51ff4951acfd6508"
+  },
+  "integrated_M0_before": [
+    {
+      "name": "icarus",
+      "returncode": 1,
+      "log": "<temporary-final-write>-before-icarus.log",
+      "log_file": {
+        "path": "<temporary-final-write>-before-icarus.log",
+        "bytes": 4008,
+        "sha256": "6841fbe1f819fcd2be03a61391440c83450918b67a54bc3159c4a1695b2f7e06"
+      }
+    },
+    {
+      "name": "ghdl",
+      "returncode": 0,
+      "log": "<temporary-final-write>-before-ghdl.log",
+      "log_file": {
+        "path": "<temporary-final-write>-before-ghdl.log",
+        "bytes": 4383,
+        "sha256": "f4890da784e1b4092a7afb1128856ed45ec4bb4500b7a6a3afbaa4eeb4e9ceaa"
+      }
+    }
+  ],
+  "integrated_M0_after": [
+    {
+      "name": "icarus",
+      "returncode": 0,
+      "log": "<temporary-final-write>-after-icarus.log",
+      "log_file": {
+        "path": "<temporary-final-write>-after-icarus.log",
+        "bytes": 4036,
+        "sha256": "506acbfcdca0ab8a9caf1133e771c704a810bb8f4214ed247d0af218a818ab02"
+      }
+    },
+    {
+      "name": "ghdl",
+      "returncode": 0,
+      "log": "<temporary-final-write>-after-ghdl.log",
+      "log_file": {
+        "path": "<temporary-final-write>-after-ghdl.log",
+        "bytes": 4515,
+        "sha256": "ad047db80ae336ffa0ad48a21fa8301acb83fe0172187dcb8c57f0822abce816"
+      }
+    }
+  ],
+  "managed_regressions": {
+    "command": [
+      "/usr/bin/python",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "tests",
+      "-p",
+      "test_cocotb_runtime.py",
+      "-v"
+    ],
+    "acquisition": "<temporary-acquisition>/hdl-tool-acquisition.json",
+    "returncode": 0,
+    "duration_seconds": 2.803,
+    "log": {
+      "path": "<temporary-runtime-controls>-controls.log",
+      "bytes": 1857,
+      "sha256": "b1c54f2bb4f6d8366749d4b718bc15ed5ee13e2e3157c4a43fda13ac60d207a4"
+    },
+    "test_count": 9,
+    "expected_skips": 0,
+    "passing_control": "four actual XOR assertions followed by pending final deposit produce native exit0 and passing XML",
+    "assertion_negative_control": "a real final assertion failure after pending deposit remains native nonzero with XML failure and VWB_PENDING_WRITE_NEGATIVE_CONTROL marker",
+    "startup_negative_control": "explicit original startup remains untouched and actual native crash remains nonzero despite passing XML",
+    "captured_output": "test_explicit_original_startup_keeps_real_crash_a_failure (test_cocotb_runtime.ManagedRuntimeTests.test_explicit_original_startup_keeps_real_crash_a_failure) ... ok\ntest_real_assertion_failure_remains_failure_with_pending_write (test_cocotb_runtime.ManagedRuntimeTests.test_real_assertion_failure_remains_failure_with_pending_write) ... ok\ntest_real_final_queued_write_passes_with_unchanged_truth_table (test_cocotb_runtime.ManagedRuntimeTests.test_real_final_queued_write_passes_with_unchanged_truth_table) ... ok\ntest_cli_loads_known_build_hook_and_stages_only_private_module_before_project_imports (test_cocotb_runtime.ShutdownCompatibilityTests.test_cli_loads_known_build_hook_and_stages_only_private_module_before_project_imports) ... ok\ntest_known_build_requires_expected_features_and_does_not_suppress_cancellation_errors (test_cocotb_runtime.ShutdownCompatibilityTests.test_known_build_requires_expected_features_and_does_not_suppress_cancellation_errors) ... ok\ntest_only_exact_version_uses_default_startup_and_explicit_config_always_wins (test_cocotb_runtime.ShutdownCompatibilityTests.test_only_exact_version_uses_default_startup_and_explicit_config_always_wins) ... ok\ntest_other_builds_and_simulators_are_untouched (test_cocotb_runtime.ShutdownCompatibilityTests.test_other_builds_and_simulators_are_untouched) ... ok\ntest_registration_never_mutates_live_writes_and_final_cleanup_cancels_once (test_cocotb_runtime.ShutdownCompatibilityTests.test_registration_never_mutates_live_writes_and_final_cleanup_cancels_once) ... ok\ntest_trusted_staging_is_exact_idempotent_and_rejects_different_or_symlinked_source (test_cocotb_runtime.ShutdownCompatibilityTests.test_trusted_staging_is_exact_idempotent_and_rejects_different_or_symlinked_source) ... ok\n\n----------------------------------------------------------------------\nRan 9 tests in 2.733s\n\nOK\n"
+  },
+  "unchanged_processor": {
+    "source_sha256": {
+      "examples/src/processor.v": "a100e4304f2aa9b8875fa1eeffd40a8af8d1a6613a9772c28e49f86af2bfb964",
+      "examples/test/test_processor.py": "c642d6cc937488efeb0b5edec8bbdd9fcdb60b1b456580f8b3f807974e9e3d13",
+      "vwb.py": "3db956c3e660a7cab81ced56278cfa23e95f11619699be9a76292827d572dc60",
+      "companion/cocotb_runtime.py": "b8794d6f2b1f3d9008001d165ca32d9c829547a9dffe40d064d08be9a33c4153"
+    },
+    "source_unchanged": true,
+    "commands": [
+      {
+        "label": "RTL simulation processor:cocotb",
+        "argv": [
+          "<managed-suite>/bin/tabbypy3",
+          "<representative-project>/vwb.py",
+          "--root",
+          "<representative-project>",
+          "--src-dir",
+          "examples/src",
+          "--test-dir",
+          "examples/test",
+          "--build-dir",
+          "<representative-project>/build-native-acceptance",
+          "--color",
+          "never",
+          "test",
+          "processor",
+          "--test",
+          "examples/test/test_processor.py",
+          "--test-language",
+          "cocotb",
+          "--seed",
+          "1"
+        ],
+        "returncode": 0,
+        "expected": [
+          0
+        ],
+        "duration_seconds": 0.877,
+        "captured_log": "<representative-run>/commands/0005.log",
+        "captured_log_sha256": "a82621e5011fd931673c2647524e9960cc82166c1d3972d39f71c49c4196edf5"
+      },
+      {
+        "label": "gate simulation processor:cocotb",
+        "argv": [
+          "<managed-suite>/bin/tabbypy3",
+          "<representative-project>/vwb.py",
+          "--root",
+          "<representative-project>",
+          "--src-dir",
+          "examples/src",
+          "--test-dir",
+          "examples/test",
+          "--build-dir",
+          "<representative-project>/build-native-acceptance",
+          "--color",
+          "never",
+          "test",
+          "processor",
+          "--test",
+          "examples/test/test_processor.py",
+          "--test-language",
+          "cocotb",
+          "--seed",
+          "1",
+          "--gate-level"
+        ],
+        "returncode": 0,
+        "expected": [
+          0
+        ],
+        "duration_seconds": 1.97,
+        "captured_log": "<representative-run>/commands/0006.log",
+        "captured_log_sha256": "71d58b8cdb3d8d7a466fbc883986cd665c0ea7bb9de010ef2cd6f3de7ecbb642"
+      }
+    ],
+    "limit": "The original processor test has commented-out functional assertions. This is execution and shutdown smoke coverage, not functional algorithm correctness."
+  },
+  "browser": {
+    "report": {
+      "path": "<temporary-browser>/hdl-browser-evidence.json",
+      "bytes": 71143,
+      "sha256": "f7aff8f0220499e2f6592f3e6ae2c6e6baf2e15869c2cc14181f5b4a437e07a1"
+    },
+    "checks": 26,
+    "runtime_manifest_sha256": "30e9f4381b7f7a8bedcc933e6905ba01f74b7214cff307e347fb526a449ecfbd",
+    "state": "passed"
+  },
+  "source_sha256": {
+    "companion/cocotb_runtime.py": "b8794d6f2b1f3d9008001d165ca32d9c829547a9dffe40d064d08be9a33c4153",
+    "tests/test_cocotb_runtime.py": "9c27a5d1af88d9d372ec8e594a99acb836fc1e43c4e77b26a6285d07dba2533c",
+    "vwb.py": "3db956c3e660a7cab81ced56278cfa23e95f11619699be9a76292827d572dc60",
+    "toolchains/fixtures/test/test_m0_cocotb.py": "6eef750e30cb0f1eb6164219b011e4d0d5888f2cca6ac93c90169e56ba0cddcc",
+    "scripts/probe_hdl_workspace.mjs": "ed811684e1aaa0c52edf53fd6cacda092f6a2048f42306ae1f0730db4fcde57b"
+  },
+  "recorded_at": "2026-10-20T03:21:54.618441+00:00",
+  "fixture_extension": {
+    "path": "toolchains/fixtures/test/test_m0_cocotb.py",
+    "four_original_XOR_assertions_retained": true,
+    "intentional_extension": "dut.a.value = 0 after all four original XOR assertions; tests final queued write shutdown on Icarus and GHDL",
+    "before_after_control": "Same copied extended fixture failed on Icarus before compatibility cleanup and passes after; GHDL passed both. Every nonzero native exit remained failure."
+  },
+  "retention": {
+    "raw_consolidated_receipt_sha256": "2f1804a08d8d491bb5755d1c509cf4d912775f81b40f3e16e4e6fa8d1a34d796",
+    "sanitization": "Operator repository, suite and temporary absolute path prefixes replaced with explicit placeholders. Artifact/log hashes refer to actual original bytes. Native trace and controlled return codes retained. No credentials or user files retained.",
+    "scope": "Native crash diagnosis and narrow compatibility validation only. Processor coverage remains smoke because its original functional assertions are commented out. Physical FPGA programming was not exercised."
+  }
+}

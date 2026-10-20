@@ -1,6 +1,6 @@
 {
   "schema": "vwb.workspace-browser-probe/1",
-  "recorded_at": "2026-10-20T02:57:14.505Z",
+  "recorded_at": "2026-10-20T03:53:03.438Z",
   "state": "passed",
   "checks": [
     "built-root-project-prefix-and-fragment-reload",
@@ -26,17 +26,31 @@
   "native_failure": "passed-real-compiler-failure-with-raw-source-diagnostics",
   "native_cancellation": "passed-real-vvp-runtime-stop-and-terminal-cancelled",
   "note": "Built local preview and native inventory acceptance; fixture VCD is not a simulation or FPGA programming result.",
-  "iverilog_version": "Icarus Verilog version 13.0 (stable) (v13_0-dirty)",
+  "iverilog_version": "Icarus Verilog version 14.0 (devel) (s20260301-596-gad0260be5-dirty)",
   "browser": "141.0.7390.37",
   "session_isolation": "passed-distinct-real-projects-with-simulated-delayed-old-tool-success-and-artifact401",
+  "asset_capture": {
+    "method": "original-browser-network-entity-bytes-paused-before-unchanged-CDP-continueResponse",
+    "source_sha256": "4ce3366c5a2efa23f5197a5df5479be9eb5bf06441bd6ad1eaa0d829df1232eb",
+    "browser_http_cache": "harness-does-not-change-cache-settings",
+    "protocol_scope": "http://127.0.0.1:36049/verilog-workbench/*",
+    "protocol_stage": "Response",
+    "original_network_responses": true,
+    "request_refetches": 0,
+    "response_overrides": 0,
+    "delivered_responses": 56,
+    "delivered_entity_bytes": 762072,
+    "pending_responses": 0
+  },
+  "asset_errors": [],
   "static_errors": [],
   "script_errors": [],
   "workers": [
-    "http://127.0.0.1:43345/verilog-workbench/workspace/syntax-worker.mjs",
-    "http://127.0.0.1:43345/verilog-workbench/workspace/syntax-worker.mjs",
-    "http://127.0.0.1:43345/verilog-workbench/workspace/vcd-worker.mjs",
-    "http://127.0.0.1:43345/verilog-workbench/workspace/vcd-worker.mjs",
-    "http://127.0.0.1:43345/verilog-workbench/workspace/vcd-worker.mjs",
-    "http://127.0.0.1:43345/verilog-workbench/workspace/vcd-worker.mjs"
+    "http://127.0.0.1:36049/verilog-workbench/workspace/syntax-worker.mjs",
+    "http://127.0.0.1:36049/verilog-workbench/workspace/syntax-worker.mjs",
+    "http://127.0.0.1:36049/verilog-workbench/workspace/vcd-worker.mjs",
+    "http://127.0.0.1:36049/verilog-workbench/workspace/vcd-worker.mjs",
+    "http://127.0.0.1:36049/verilog-workbench/workspace/vcd-worker.mjs",
+    "http://127.0.0.1:36049/verilog-workbench/workspace/vcd-worker.mjs"
   ]
 }

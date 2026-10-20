@@ -1,0 +1,86 @@
+{
+  "state": "passed",
+  "kind": "independent-CORS-negative-control",
+  "playwright_version": "1.56.1",
+  "browser": "141.0.7390.37",
+  "scope": "Real local cross-origin browser fetch with required custom-header CORS preflight; endpoint explicitly returns 403 to OPTIONS. No companion or production files changed.",
+  "outcomes": [
+    {
+      "mode": "unrouted",
+      "result": {
+        "state": "rejected",
+        "error": "Failed to fetch"
+      },
+      "native_methods": [
+        "OPTIONS"
+      ],
+      "static_entities_captured": []
+    },
+    {
+      "mode": "scoped-static-glob-route",
+      "result": {
+        "state": "resolved",
+        "status": 200,
+        "body": "actual upstream native endpoint"
+      },
+      "native_methods": [
+        "GET"
+      ],
+      "static_entities_captured": []
+    },
+    {
+      "mode": "scoped-static-CDP-response-capture",
+      "result": {
+        "state": "rejected",
+        "error": "Failed to fetch"
+      },
+      "native_methods": [
+        "OPTIONS"
+      ],
+      "static_entities_captured": [
+        {
+          "status": 200,
+          "sha256": "3ce4f4234c90b51c040c39550337bd96b16813344cfd2ed825052a393b5906fc"
+        },
+        {
+          "status": 200,
+          "sha256": "3ce4f4234c90b51c040c39550337bd96b16813344cfd2ed825052a393b5906fc"
+        }
+      ]
+    }
+  ],
+  "recorded_at": "2026-10-20T03:48:18.382880+00:00",
+  "scope_note": "Independent method controls on local Linux x86_64, Playwright 1.56.1 and Chromium 141.0.7390.37. These are collection/security-method controls, not additional native HDL workflow passes, deployed Pages acceptance or an actual Playwright 1.62.1 run.",
+  "schema_version": "vwb.browser-collector-method-review/1",
+  "control_source_sha256": "09a7b3acff588c3f663b82bba8af5b5a0cfd74ca1aa3f2fdcdc7652eeff090ff",
+  "interpretation": {
+    "rejected_candidate": "Playwright context.route with an exact static-origin glob caused an unrelated cross-origin request to bypass a real denied OPTIONS preflight: the native endpoint saw GET only and the browser resolved 200. This candidate must not support native CORS/security acceptance claims.",
+    "accepted_method_control": "Direct CDP Fetch Response interception used an exact static-origin prefix. The browser captured static entity bytes while the unrelated native endpoint received OPTIONS and returned 403; the browser rejected the cross-origin fetch, matching the unrouted baseline."
+  },
+  "official_source_review": {
+    "version": "1.62.1",
+    "kind": "Source review only; this is not an executed 1.62.1 browser control.",
+    "chromium_global_interception": "https://github.com/microsoft/playwright/blob/v1.62.1/packages/playwright-core/src/server/chromium/crNetworkManager.ts#L149-L160",
+    "automatic_preflight_fulfillment": "https://github.com/microsoft/playwright/blob/v1.62.1/packages/playwright-core/src/server/chromium/crNetworkManager.ts#L287-L307"
+  },
+  "actual_shared_helper_control": {
+    "state": "passed",
+    "helper_source_sha256": "4ce3366c5a2efa23f5197a5df5479be9eb5bf06441bd6ad1eaa0d829df1232eb",
+    "playwright_version": "1.56.1",
+    "browser": "141.0.7390.37",
+    "recorded_at": "2026-10-20T03:51:07.188725+00:00",
+    "scope_note": "Actual shared scripts/browser_assets.mjs method control on local Linux x86_64, Playwright 1.56.1, Chromium 141.0.7390.37. It is not additional HDL workflow or deployed Pages acceptance.",
+    "native_methods": [
+      "OPTIONS"
+    ],
+    "checks": {
+      "native_denied_preflight_preserved": true,
+      "worker_executed_42": true,
+      "worker_terminated_immediately": true,
+      "original_gzip_worker_module_hash_matches": true,
+      "all_three_actual_hashes_match": true,
+      "no_capture_errors": true,
+      "no_pending_readers_after_close": true
+    }
+  }
+}

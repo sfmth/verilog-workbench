@@ -5,6 +5,16 @@ not certify six-platform release support. The actual local execution evidence is
 recorded separately from package availability, missing tools, and physical-board
 tests. No probe command programs an attached board.
 
+The [complete native CI run](https://github.com/sfmth/verilog-workbench/actions/runs/39366706022)
+at `9acd8bb8d071cf5a3660bfc16b0870e1a1271bcb` passes all 14 HDL workflows on
+all six required targets, plus Arch userspace. The
+[retained report](workspace-evidence/hdl-native-ci.json) includes the
+actual workflow results, package receipts, architecture routes and each host's
+266 unit tests and 171 CLI tests with explicit skips. This supersedes the
+earlier package-gap observations below for these fixtures. See
+[native HDL workspace acceptance](HDL_WORKSPACE.md) and the
+[remaining M0 release gates](M0_STATUS.md).
+
 ## Run and interpret the probe
 
 From the repository root, using an activated native runtime/tool environment:
@@ -49,13 +59,23 @@ out; discovery exits 0 without pretending workflows passed. The schema is
 
 [`native-lock.json`](../toolchains/native-lock.json) pins OSS CAD Suite
 **2026-10-18**, all five published target archives, their exact sizes and SHA-256
-digests, plus an independent Windows x64 GHDL 6.0.0 candidate. The digest source
-is the upstream GitHub release asset API. All five archive assets have now been
+digests, plus supplemental GHDL and Graphviz archives and Windows Cocotb wheels.
+The suite digest source is the upstream GitHub release asset API; each supplement
+records its own integrity source. All five suite archive assets have now been
 downloaded, checksum verified and extracted on matching native CI hosts; Windows
 ARM64 uses the same x64 archive through OS translation. The
 [native CI observations](M0_CI_TOOLCHAINS.md) record actual workflow outcomes.
 Verified acquisition alone does not establish complete tool support or a clean
 end-user installation.
+
+The lock's target `status`, `ci_status`, `blockers` and `ci_evidence` fields retain
+the original base-suite observations from run 39153200306. Acquisition receipts
+copy those blockers without recomputing them after supplements; they describe
+that historical suite snapshot, not the combined route's current workflow
+verdict. The supplemental package receipts and
+[current native execution report](workspace-evidence/hdl-native-portable-ci.json)
+record the later passing routes. The base archives themselves still lack the
+tools supplied by those supplements.
 
 For manual acquisition, select the `targets[TARGET].archive_target` asset from
 the lock, download exactly its `url`, verify its exact `sha256` and `size_bytes`,
@@ -85,12 +105,31 @@ Target IDs are `linux-x64`, `windows-x64`, `darwin-arm64`, `darwin-x64`,
 `linux-arm64` and `windows-arm64`. Existing installations are never overwritten.
 `--archive` reuses a local locked archive; otherwise a verified archive is cached.
 The JSON gives `suitePath`, its exact archive receipt, architecture/compatibility
-route and environment paths. `--probe-output` selects the **bundled** Python,
-uses a constructed native environment matching upstream activation settings and
-runs the real probe; `--probe-work-dir` retains logs and test artifacts for CI.
+route and environment paths. `--probe-output` uses a constructed native
+environment matching upstream activation settings and runs the real probe;
+`--probe-work-dir` retains logs and test artifacts for CI. It selects the bundled
+Python unless the explicit Windows supplemental runtime described below is used.
 No system-Python fallback or arbitrary activation-script evaluation is used.
-Windows ARM selects the pinned x64 suite as an OS-emulation candidate, not a
-native ARM64 tool distribution. Missing GHDL still blocks required workflows.
+Windows ARM selects the pinned x64 suite through the verified OS translation
+route; it is not a native ARM64 tool distribution.
+
+`--supplementals` enables the locked supplemental routes. Intel macOS adds the
+official GHDL 4.1 mcode archive. Its integrity-checked executable is exclusively
+copied into `suite/bin/ghdl` so Cocotb's Python dylib dependencies resolve relative
+to the suite; `GHDL_PREFIX` still selects the supplement's matching standard
+libraries. Windows adds the locked GHDL 6.0.0 and Graphviz 14.1.1 archives and
+requires `--windows-cocotb-python /path/to/python.exe`: an explicit external x64
+MSVC CPython 3.12. The helper creates a local virtual environment and installs
+the pinned Cocotb 2.1.0 dependency wheels offline, without changing global Python
+packages or mixing them with the suite's MinGW Python.
+
+Linux ARM64 uses declared external native Ubuntu GHDL LLVM packages
+`ghdl-llvm=4.1.0+dfsg-0ubuntu2` and `ghdl-common=4.1.0+dfsg-0ubuntu2`.
+Pass `--external-ghdl /usr/bin/ghdl-llvm --ghdl-prefix /usr/lib/ghdl/llvm/vhdl`
+with `--supplementals`; the receipt records the executable and matching prefix.
+These OS packages and the external Windows CPython remain prerequisites rather
+than a portable managed installation. Apple Silicon retains the explicitly
+receipted external Tcl-enabled Yosys overlay described below.
 
 The [actual managed Linux acquisition](m0-evidence/toolchain-acquisition-linux-x64.json)
 verified and extracted the locked archive; its [native probe](m0-evidence/toolchain-acquired-probe-linux-x64.json)
@@ -98,8 +137,9 @@ passed all 14 non-programming checks using the newly acquired suite.
 
 This implements managed suite acquisition, not the promised finished platform
 installer. Repair/uninstall, signing/notarization, clean-machine setup and the
-complete tool/runtime installation remain separate packaging gates. The Windows
-GHDL supplement remains pinned but is not automatically integrated. Preserve the upstream component license notices when
+complete tool/runtime installation remain separate packaging gates. Supplemental
+acquisition still requires actual execution acceptance; the linked native run
+provides that evidence for all 14 fixtures on each target. Preserve the upstream component license notices when
 redistributing packages; the suite's repository license does not replace the
 individual tools' licenses.
 
@@ -111,19 +151,20 @@ a result from running VWB on that system.
 | Launch target | Pinned tool route | Candidate floor | Unresolved release proof |
 | --- | --- | --- | --- |
 | Linux x64, including Arch/Manjaro | OSS suite Linux x64, native binaries | Numeric kernel/glibc floor not yet established; development run uses Ubuntu 24.04 | Linux and Arch userspace smoke pass; clean native Manjaro/Arch installation and physical-board tests remain |
-| Windows x64 | OSS suite Windows x64 plus separately pinned standalone GHDL candidate | Windows 10, from suite documentation | GHDL/VPI/Python DLL compatibility, VHDL synthesis, clean setup and native USB drivers |
-| macOS Apple Silicon | OSS suite Darwin ARM64, including GHDL; guarded external Tcl-enabled Yosys candidate | macOS 13, from suite documentation | Full workflow evidence, reproducible integrated package, quarantine/signing, clean setup and USB access |
-| macOS Intel | Pinned current Darwin x64 suite; separate VHDL route still required | macOS 13, from suite documentation | Upstream plans to stop Intel packages; sustainable tool distribution and GHDL remain blockers |
-| Linux ARM64 | OSS suite Linux ARM64 plus a native GHDL LLVM/GCC build | ARM64 Linux; numeric kernel/glibc floor not established | Eleven native HDL checks pass; pinned supplemental GHDL/dependencies, clean setup and USB access remain |
-| Windows ARM64 | Native companion/runtime required; individual x64 tool candidates use Windows' own translation | Windows 11 on ARM for x64 translation | Full runtime set not integrated; no ARM64 suite asset; ARM64 drivers and physical programming proof required |
+| Windows x64 | OSS suite Windows x64, pinned GHDL/Graphviz and local pinned Cocotb environment under explicit external x64 MSVC CPython 3.12; 14/14 pass | Windows 10, from suite documentation; full route minimum unverified | Clean setup, complete managed runtime distribution and native USB drivers |
+| macOS Apple Silicon | OSS suite Darwin ARM64, including GHDL, with receipted external Tcl-enabled Yosys overlay; 14/14 pass | macOS 13, from suite documentation | Reproducible integrated package, quarantine/signing, clean setup and USB access |
+| macOS Intel | Pinned Darwin x64 suite plus pinned GHDL 4.1 mcode, verified suite executable anchor and matching library prefix; 14/14 pass | macOS 13, from suite documentation | Sustainable tool distribution after upstream Intel retirement, signing/quarantine, clean setup and USB access |
+| Linux ARM64 | OSS suite Linux ARM64 plus declared native Ubuntu GHDL LLVM packages and matching prefix; 14/14 pass | ARM64 Linux; numeric kernel/glibc floor not established | Managed prerequisite installation, clean setup and USB access |
+| Windows ARM64 | Native ARM64 companion/runtime; suite and supplemental x64 tools/CPython use Windows' verified translation route; 14/14 pass | Windows 11 on ARM for x64 translation | Complete managed runtime distribution, ARM64 drivers, clean setup and physical programming |
 
 OSS CAD Suite currently bundles GHDL and the Yosys GHDL plugin only on Linux x64
-and Darwin ARM64. Official standalone GHDL 6.0.0 Windows x64 ZIPs provide a
-candidate for the Windows gap; the locked ZIP has not been integrated or tested.
-Its release has no Linux ARM64 or Intel Mac archive. A source build needs an Ada
-compiler and the proper dependencies; GHDL's mcode backend is x86/x64-only,
-whereas the LLVM backend supports AArch64. An unpinned build suggestion is not
-a reproducible native installation and therefore remains a blocker.
+and Darwin ARM64. The current supplemental routes close the original GHDL
+workflow gaps with a locked official Windows 6.0.0 ZIP, a locked official Intel
+Mac 4.1 mcode archive and the declared Ubuntu ARM64 LLVM packages. All passed
+native VHDL simulation, Cocotb/VHDL and VHDL synthesis in the linked six-platform
+run. The absence of a standalone 6.0.0 Linux ARM64 or Intel Mac archive remains
+a distribution constraint, rather than an unrun workflow claim. Sustainable
+packages and tested clean installation remain required.
 
 The owner permits OS-provided x64 compatibility for individual tools on ARM.
 Windows 11 supports x64 user-mode emulation; Windows 10 on ARM does not. Device
@@ -200,8 +241,9 @@ found`; its developer host now installs GCC. A managed suite archive alone
 therefore does not establish complete native prerequisites. The Windows
 archive inspection also confirmed absent Cocotb and Graphviz packages; its
 native `verilator_bin.exe` supplies lint without the Perl launcher. The third
-native CI run verified that lint passes on both Windows targets; their Cocotb,
-Graphviz and GHDL workflows remain blocked.
+native CI run verified Windows lint while Cocotb, Graphviz and GHDL workflows
+were still blocked. Those are historical failures: the current supplemental
+routes passed all 14 workflows on both Windows targets in run 39364175524.
 
 The optional Mac ARM Tcl-enabled Yosys candidate is an explicitly external
 Homebrew dependency. `--overlay-tool yosys=/absolute/path/to/yosys` preserves

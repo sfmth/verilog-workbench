@@ -1,0 +1,326 @@
+{
+  "schema": "vwb.hdl-pages-evidence/1",
+  "recorded_at": "2026-10-20T03:35:06.223572+00:00",
+  "run_url": "https://github.com/sfmth/verilog-workbench/actions/runs/39364175494",
+  "head_sha": "304832b233916ce8e4cd69a325396a3b27b40c95",
+  "branch": "web-port-plan",
+  "status": "completed",
+  "conclusion": "success",
+  "jobs": [
+    {
+      "name": "build",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/sfmth/verilog-workbench/actions/runs/39364175494/job/118437590715"
+    },
+    {
+      "name": "deploy",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/sfmth/verilog-workbench/actions/runs/39364175494/job/118438613289"
+    },
+    {
+      "name": "verify-public",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/sfmth/verilog-workbench/actions/runs/39364175494/job/118438740826"
+    }
+  ],
+  "runtime_shutdown_controls": {
+    "step": "Verify real Cocotb shutdown and failure controls",
+    "conclusion": "success",
+    "tests": 9,
+    "skipped": 0,
+    "real_native_controls": [
+      "build\tVerify real Cocotb shutdown and failure controls\t2026-10-20T03:29:00.0385695Z test_explicit_original_startup_keeps_real_crash_a_failure (test_cocotb_runtime.ManagedRuntimeTests.test_explicit_original_startup_keeps_real_crash_a_failure) ... ok",
+      "build\tVerify real Cocotb shutdown and failure controls\t2026-10-20T03:29:01.4972995Z test_real_assertion_failure_remains_failure_with_pending_write (test_cocotb_runtime.ManagedRuntimeTests.test_real_assertion_failure_remains_failure_with_pending_write) ... ok",
+      "build\tVerify real Cocotb shutdown and failure controls\t2026-10-20T03:29:03.1690109Z test_real_final_queued_write_passes_with_unchanged_truth_table (test_cocotb_runtime.ManagedRuntimeTests.test_real_final_queued_write_passes_with_unchanged_truth_table) ... ok"
+    ],
+    "log_sha256": "ace0c4b0552c5569447417ae21c79be7b9a2315cf069e4c6f84a79a05a3cac23",
+    "limits": "Three actual managed native controls assert a passing truth table with final pending deposit, a genuine assertion failure that remains failure, and explicit original startup that retains the native crash/failure. Six fake/unit tests verify exact-version guards, live scheduling preservation and trusted module staging."
+  },
+  "retained_reports": {
+    "built": {
+      "path": "docs/workspace-evidence/hdl-portable-attempt-ci-linux-x64.json",
+      "bytes": 71144,
+      "sha256": "e7b2da3132a85f8b90b6633aa5ed3fb8f50e685662134ce18faccd5290e3750c"
+    },
+    "public": {
+      "path": "docs/workspace-evidence/hdl-portable-attempt-public-ci-linux-x64.json",
+      "bytes": 71209,
+      "sha256": "2757f3d7327c2a3a81aee1bc63f9429d1c47ed68e26139eca5ee87dcb1096679"
+    }
+  },
+  "reports": {
+    "built_hdl": {
+      "state": "passed",
+      "browser": "151.0.7922.34",
+      "checks": [
+        "verilog_simulation-real-browser-native-HDL-workflow",
+        "systemverilog_simulation-real-browser-native-HDL-workflow",
+        "waveforms-real-browser-native-HDL-workflow",
+        "cocotb_verilog-real-browser-native-HDL-workflow",
+        "vhdl_simulation-real-browser-native-HDL-workflow",
+        "cocotb_vhdl-real-browser-native-HDL-workflow",
+        "lint-real-browser-native-HDL-workflow",
+        "synthesis-real-browser-native-HDL-workflow",
+        "schematics-real-browser-native-HDL-workflow",
+        "vhdl_synthesis-real-browser-native-HDL-workflow",
+        "formal_proof-real-browser-native-HDL-workflow",
+        "formal_counterexample-real-browser-native-HDL-workflow",
+        "fpga_tangnano9k_build-real-browser-native-HDL-workflow",
+        "fpga_icebreaker_build-real-browser-native-HDL-workflow",
+        "native_verilog_assertion_failure-real-browser-native-HDL-workflow",
+        "native_vhdl_assertion_failure-real-browser-native-HDL-workflow",
+        "cocotb_function_filter-real-browser-native-HDL-workflow",
+        "cocotb_expected_assertion_failure-real-browser-native-HDL-workflow",
+        "lint_source_diagnostic-real-browser-native-HDL-workflow",
+        "gate_level_verilog-real-browser-native-HDL-workflow",
+        "gate_level_cocotb_vhdl-real-browser-native-HDL-workflow",
+        "compile_defines_includes_plusargs-real-browser-native-HDL-workflow",
+        "wave_saved_roundtrip-real-browser-native-HDL-workflow",
+        "starter_native_verilog-real-browser-native-HDL-workflow",
+        "hierarchy_and_test_selection-real-browser-native-HDL-workflow",
+        "cocotb_pending_write_shutdown-real-browser-native-HDL-workflow"
+      ],
+      "original_M0_workflows_passed": true,
+      "full_probe_scope": true,
+      "all_requested_workflows_passed": true,
+      "deployed_manifest": {
+        "schema": "vwb.web-build/1",
+        "status": "development-preview",
+        "base_path": "/verilog-workbench/",
+        "file_count": 20,
+        "loaded_runtime_sha256": {
+          "workspace/index.html": "f008d96b0035ffd0e2974d6215f399b5d5ac56bf7b189e4adc0bfe224f122d90",
+          "workspace/app.mjs": "767f81afbc874f28e6d45ce0a1c14d309776ff11a2616c7a6255b6871ef56e3d",
+          "workspace/style.css": "6a96f62de55dde894b894d09fe65096b83471e09e1018275e08d3021d87658c6",
+          "workspace/model.mjs": "56fcd7aee518afdb4cbd44d87604dbfac0fee07af2e8f8f62aca99ad606cad88",
+          "workspace/hdl.mjs": "eeff4b3dec001beeb7fdd7f39e279be431df4ebf36eb66eb0d2894783d6b4a95",
+          "workspace/schematic.mjs": "8c08a1e676f68ae3706e2f64064d6a5498f8701e4556b40f56d4dbbc2a3d5101"
+        }
+      },
+      "tool_acquisition": {
+        "release": "2026-10-18",
+        "archive": "oss-cad-suite-linux-x64-20261018.tgz",
+        "sha256": "639c8c0366d74dc56201729c9907bf2d8281db7f18bb025abe2e4f3f2ebaa24e",
+        "size_bytes": 748315612,
+        "target": "linux-x64"
+      },
+      "source_sha256": {
+        "vwb.py": "3db956c3e660a7cab81ced56278cfa23e95f11619699be9a76292827d572dc60",
+        "companion/server.py": "356030df6ef4ca139126259a610acde920fc90928dda9166063a0ea380142fa2",
+        "companion/projects.py": "92fa5d30f405090231504b30413ce13d7a5ab1fbe2e38edfc0763f9992e830d1",
+        "companion/process.py": "500b9a1cfac6aded8028923aa2ba35c14b4efa6677c2d8a81bfdff85cb0c266d",
+        "companion/cocotb_runtime.py": "b8794d6f2b1f3d9008001d165ca32d9c829547a9dffe40d064d08be9a33c4153",
+        "scripts/probe_hdl_workspace.mjs": "ed811684e1aaa0c52edf53fd6cacda092f6a2048f42306ae1f0730db4fcde57b"
+      },
+      "runtime_manifest_sha256": "30e9f4381b7f7a8bedcc933e6905ba01f74b7214cff307e347fb526a449ecfbd"
+    },
+    "built_workspace": {
+      "state": "passed",
+      "browser": "151.0.7922.34",
+      "checks": [
+        "built-root-project-prefix-and-fragment-reload",
+        "real-pairing-multifile-tabs-revision-save-CRLF-and-keyboard",
+        "external-change-conflict-without-overwrite",
+        "draft-export-import-explicit-recovery-reload-and-no-stored-credentials",
+        "native-companion-discover-job",
+        "saved-and-reverted-edits-retain-stale-job-status",
+        "artifact-download-vcd-worker-render-and-malformed-recovery",
+        "native-Icarus-pass-assertions-generated-VCD-download-and-worker-render",
+        "native-compiler-failure-and-raw-diagnostics",
+        "native-infinite-simulation-stop-after-runtime-marker",
+        "native-simulation-recovery-after-failure-and-cancellation",
+        "optional-guide-open-and-close",
+        "distinct-project-clears-results-and-ignores-simulated-late-old-session-responses"
+      ]
+    },
+    "built_source": {
+      "state": "passed",
+      "browser": "151.0.7922.34",
+      "checks": [
+        "project-prefix-entry-and-real-native-companion-UI-pairing",
+        "systemverilog-real-lexical-tokens-exact-Unicode-tabs-trailing-lines-and-no-source-HTML-injection",
+        "vhdl-real-lexical-tokens-exact-Unicode-tabs-trailing-lines-and-no-source-HTML-injection",
+        "python-real-lexical-tokens-exact-Unicode-tabs-trailing-lines-and-no-source-HTML-injection",
+        "explicit-persisted-pagehide-DOM-event-keeps-real-worker-and-Find-functional-without-BFCache-claim",
+        "actual-token-and-line-number-geometry-matches-native-textarea-after-both-scroll-axes",
+        "read-only-literal-find-Unicode-offsets-case-toggle-next-previous-and-keyboard-focus",
+        "native-textarea-input-undo-redo-and-keyboard-save-preserve-CRLF-BOM-and-Unicode",
+        "byte-line-and-token-budgets-use-explicit-plain-text-fallback-with-complete-editable-source",
+        "large-literal-search-remains-bounded-and-discloses-truncated-match-inventory",
+        "large-plain-file-native-input-save-and-Stop-request-remain-responsive",
+        "delayed-real-worker-output-cannot-repaint-a-different-file-or-change-its-source",
+        "worker-failure-reveals-native-plain-text-retains-draft-and-permits-real-save",
+        "real-companion-disconnect-retains-editable-unsaved-source-and-prevents-disk-save",
+        "real-lexical-worker-loaded-assets-match-manifest-without-source-or-credentials-in-browser-storage"
+      ]
+    },
+    "built_semantic": {
+      "state": "passed",
+      "browser": "151.0.7922.34",
+      "checks": [
+        "systemverilog-real-semantic-editor-UI-and-transaction-acceptance",
+        "vhdl-real-semantic-editor-UI-and-transaction-acceptance",
+        "python-real-semantic-editor-UI-and-transaction-acceptance"
+      ]
+    },
+    "built_lifecycle": {
+      "state": "passed",
+      "browser": "151.0.7922.34",
+      "checks": [
+        "real-workspace-project-prefix-and-companion-UI-pairing",
+        "pending-trash-reads-across-dialog-reopen-block-buttons-and-Enter-without-native-mutation",
+        "UI-Enter-creates-Unicode-folder-and-button-creates-empty-file-then-edits-and-saves",
+        "delayed-entry-response-after-deselection-cannot-stick-loading-or-enable-stale-mutation",
+        "post-create-open-transport-failure-keeps-committed-file-reports-applied-error-and-never-retries-POST",
+        "multi-file-folder-move-preserves-exact-bytes-remaps-clean-tabs-hash-and-save-target",
+        "dirty-buffer-blocks-lifecycle-without-disk-changes",
+        "unresolved-recovery-draft-blocks-lifecycle",
+        "stale-entry-revision-conflict-preserves-external-bytes-and-path",
+        "existing-destination-conflict-never-overwrites-either-file",
+        "UI-folder-trash-closes-remapped-tabs-retains-private-undownloadable-data",
+        "trash-survives-real-native-clean-companion-restart-and-new-UI-session",
+        "UI-restore-refuses-external-replacement-then-restores-original-four-language-tree",
+        "authenticated-HTTP-rejects-configured-roots-config-build-Git-traversal-and-private-trash",
+        "restored-project-runs-real-native-discovery-through-UI",
+        "loaded-assets-match-manifest-and-browser-storage-keeps-credentials-and-unopted-drafts-out"
+      ]
+    },
+    "public_hdl": {
+      "state": "passed",
+      "browser": "151.0.7922.34",
+      "checks": [
+        "verilog_simulation-real-browser-native-HDL-workflow",
+        "systemverilog_simulation-real-browser-native-HDL-workflow",
+        "waveforms-real-browser-native-HDL-workflow",
+        "cocotb_verilog-real-browser-native-HDL-workflow",
+        "vhdl_simulation-real-browser-native-HDL-workflow",
+        "cocotb_vhdl-real-browser-native-HDL-workflow",
+        "lint-real-browser-native-HDL-workflow",
+        "synthesis-real-browser-native-HDL-workflow",
+        "schematics-real-browser-native-HDL-workflow",
+        "vhdl_synthesis-real-browser-native-HDL-workflow",
+        "formal_proof-real-browser-native-HDL-workflow",
+        "formal_counterexample-real-browser-native-HDL-workflow",
+        "fpga_tangnano9k_build-real-browser-native-HDL-workflow",
+        "fpga_icebreaker_build-real-browser-native-HDL-workflow",
+        "native_verilog_assertion_failure-real-browser-native-HDL-workflow",
+        "native_vhdl_assertion_failure-real-browser-native-HDL-workflow",
+        "cocotb_function_filter-real-browser-native-HDL-workflow",
+        "cocotb_expected_assertion_failure-real-browser-native-HDL-workflow",
+        "lint_source_diagnostic-real-browser-native-HDL-workflow",
+        "gate_level_verilog-real-browser-native-HDL-workflow",
+        "gate_level_cocotb_vhdl-real-browser-native-HDL-workflow",
+        "compile_defines_includes_plusargs-real-browser-native-HDL-workflow",
+        "wave_saved_roundtrip-real-browser-native-HDL-workflow",
+        "starter_native_verilog-real-browser-native-HDL-workflow",
+        "hierarchy_and_test_selection-real-browser-native-HDL-workflow",
+        "cocotb_pending_write_shutdown-real-browser-native-HDL-workflow"
+      ],
+      "original_M0_workflows_passed": true,
+      "full_probe_scope": true,
+      "all_requested_workflows_passed": true,
+      "deployed_manifest": {
+        "schema": "vwb.web-build/1",
+        "status": "development-preview",
+        "base_path": "/verilog-workbench/",
+        "file_count": 20,
+        "loaded_runtime_sha256": {
+          "workspace/index.html": "f008d96b0035ffd0e2974d6215f399b5d5ac56bf7b189e4adc0bfe224f122d90",
+          "workspace/app.mjs": "767f81afbc874f28e6d45ce0a1c14d309776ff11a2616c7a6255b6871ef56e3d",
+          "workspace/style.css": "6a96f62de55dde894b894d09fe65096b83471e09e1018275e08d3021d87658c6",
+          "workspace/model.mjs": "56fcd7aee518afdb4cbd44d87604dbfac0fee07af2e8f8f62aca99ad606cad88",
+          "workspace/hdl.mjs": "eeff4b3dec001beeb7fdd7f39e279be431df4ebf36eb66eb0d2894783d6b4a95",
+          "workspace/schematic.mjs": "8c08a1e676f68ae3706e2f64064d6a5498f8701e4556b40f56d4dbbc2a3d5101"
+        }
+      },
+      "tool_acquisition": {
+        "release": "2026-10-18",
+        "archive": "oss-cad-suite-linux-x64-20261018.tgz",
+        "sha256": "639c8c0366d74dc56201729c9907bf2d8281db7f18bb025abe2e4f3f2ebaa24e",
+        "size_bytes": 748315612,
+        "target": "linux-x64"
+      },
+      "source_sha256": {
+        "vwb.py": "3db956c3e660a7cab81ced56278cfa23e95f11619699be9a76292827d572dc60",
+        "companion/server.py": "356030df6ef4ca139126259a610acde920fc90928dda9166063a0ea380142fa2",
+        "companion/projects.py": "92fa5d30f405090231504b30413ce13d7a5ab1fbe2e38edfc0763f9992e830d1",
+        "companion/process.py": "500b9a1cfac6aded8028923aa2ba35c14b4efa6677c2d8a81bfdff85cb0c266d",
+        "companion/cocotb_runtime.py": "b8794d6f2b1f3d9008001d165ca32d9c829547a9dffe40d064d08be9a33c4153",
+        "scripts/probe_hdl_workspace.mjs": "ed811684e1aaa0c52edf53fd6cacda092f6a2048f42306ae1f0730db4fcde57b"
+      },
+      "runtime_manifest_sha256": "30e9f4381b7f7a8bedcc933e6905ba01f74b7214cff307e347fb526a449ecfbd"
+    },
+    "public_workspace": {
+      "state": "passed",
+      "browser": "151.0.7922.34",
+      "checks": [
+        "fresh-context-observed-loopback-health-without-test-permission-grant",
+        "actual-HTTPS-Pages-app-brand-preview-manifest-and-fragment-route",
+        "real-public-app-UI-pairing-Unicode-project-multifile-CRLF-and-keyboard-save",
+        "real-disk-revision-conflict-preserves-external-edit-and-explicit-reload",
+        "public-fragment-reload-forgets-session-and-new-one-time-UI-pairing-restores-file",
+        "real-native-discovery-job-and-output-through-public-app",
+        "exact-companion-viewer-fixture-download-and-public-VCD-worker-render",
+        "deployed-document-styles-modules-and-worker-bytes-match-public-build-manifest",
+        "no-browser-script-errors-or-stored-credentials"
+      ]
+    },
+    "public_source": {
+      "state": "passed",
+      "browser": "151.0.7922.34",
+      "checks": [
+        "project-prefix-entry-and-real-native-companion-UI-pairing",
+        "systemverilog-real-lexical-tokens-exact-Unicode-tabs-trailing-lines-and-no-source-HTML-injection",
+        "vhdl-real-lexical-tokens-exact-Unicode-tabs-trailing-lines-and-no-source-HTML-injection",
+        "python-real-lexical-tokens-exact-Unicode-tabs-trailing-lines-and-no-source-HTML-injection",
+        "explicit-persisted-pagehide-DOM-event-keeps-real-worker-and-Find-functional-without-BFCache-claim",
+        "actual-token-and-line-number-geometry-matches-native-textarea-after-both-scroll-axes",
+        "read-only-literal-find-Unicode-offsets-case-toggle-next-previous-and-keyboard-focus",
+        "native-textarea-input-undo-redo-and-keyboard-save-preserve-CRLF-BOM-and-Unicode",
+        "byte-line-and-token-budgets-use-explicit-plain-text-fallback-with-complete-editable-source",
+        "large-literal-search-remains-bounded-and-discloses-truncated-match-inventory",
+        "large-plain-file-native-input-save-and-Stop-request-remain-responsive",
+        "delayed-real-worker-output-cannot-repaint-a-different-file-or-change-its-source",
+        "worker-failure-reveals-native-plain-text-retains-draft-and-permits-real-save",
+        "real-companion-disconnect-retains-editable-unsaved-source-and-prevents-disk-save",
+        "real-lexical-worker-loaded-assets-match-manifest-without-source-or-credentials-in-browser-storage"
+      ]
+    },
+    "public_semantic": {
+      "state": "passed",
+      "browser": "151.0.7922.34",
+      "checks": [
+        "systemverilog-real-semantic-editor-UI-and-transaction-acceptance",
+        "vhdl-real-semantic-editor-UI-and-transaction-acceptance",
+        "python-real-semantic-editor-UI-and-transaction-acceptance"
+      ]
+    },
+    "public_lifecycle": {
+      "state": "passed",
+      "browser": "151.0.7922.34",
+      "checks": [
+        "real-workspace-project-prefix-and-companion-UI-pairing",
+        "pending-trash-reads-across-dialog-reopen-block-buttons-and-Enter-without-native-mutation",
+        "UI-Enter-creates-Unicode-folder-and-button-creates-empty-file-then-edits-and-saves",
+        "delayed-entry-response-after-deselection-cannot-stick-loading-or-enable-stale-mutation",
+        "post-create-open-transport-failure-keeps-committed-file-reports-applied-error-and-never-retries-POST",
+        "multi-file-folder-move-preserves-exact-bytes-remaps-clean-tabs-hash-and-save-target",
+        "dirty-buffer-blocks-lifecycle-without-disk-changes",
+        "unresolved-recovery-draft-blocks-lifecycle",
+        "stale-entry-revision-conflict-preserves-external-bytes-and-path",
+        "existing-destination-conflict-never-overwrites-either-file",
+        "UI-folder-trash-closes-remapped-tabs-retains-private-undownloadable-data",
+        "trash-survives-real-native-clean-companion-restart-and-new-UI-session",
+        "UI-restore-refuses-external-replacement-then-restores-original-four-language-tree",
+        "authenticated-HTTP-rejects-configured-roots-config-build-Git-traversal-and-private-trash",
+        "restored-project-runs-real-native-discovery-through-UI",
+        "loaded-assets-match-manifest-and-browser-storage-keeps-credentials-and-unopted-drafts-out"
+      ]
+    }
+  },
+  "scope": "Intermediate portable 304832b verification with the previous probe. Built and actual public HTTPS suites each pass all 26 HDL workflows and all existing workspace, semantic, lifecycle and source probes. M0 keeps four original XOR assertions plus the documented final queued-write shutdown extension. Public Chromium local-network access uses the test permission API. Physical FPGA programming is not tested. Separate unchanged processor integration remains smoke coverage because its original functional assertions are commented out.",
+  "native_shutdown_diagnosis": "hdl-cocotb-shutdown-local-linux-x64.json"
+}

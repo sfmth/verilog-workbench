@@ -1,6 +1,6 @@
 {
   "schema": "vwb.files-workspace-browser-probe/1",
-  "recorded_at": "2026-10-20T02:59:41.215Z",
+  "recorded_at": "2026-10-20T03:53:17.342Z",
   "state": "passed",
   "target": "built-local-project-prefix-workspace",
   "pages_prefix": "/verilog-workbench/",
@@ -46,6 +46,19 @@
     "side.v": "3e401e460801a3ff52f8679ace09fff675dadfb8883f3405f2343ca24a0c40e3",
     "helper.vhd": "5b6bdc089480d25a51a1f810abc62acf182fd57dcf4c8ec3831716c974dc424f",
     "model.py": "d45fab155724c77198750f8191a1f3ae69e0fd78e799403175af04aa0f826293"
+  },
+  "asset_capture": {
+    "method": "original-browser-network-entity-bytes-paused-before-unchanged-CDP-continueResponse",
+    "source_sha256": "4ce3366c5a2efa23f5197a5df5479be9eb5bf06441bd6ad1eaa0d829df1232eb",
+    "browser_http_cache": "harness-does-not-change-cache-settings",
+    "protocol_scope": "http://127.0.0.1:40879/verilog-workbench/*",
+    "protocol_stage": "Response",
+    "original_network_responses": true,
+    "request_refetches": 0,
+    "response_overrides": 0,
+    "delivered_responses": 33,
+    "delivered_entity_bytes": 474165,
+    "pending_responses": 0
   },
   "script_errors": [],
   "asset_errors": []

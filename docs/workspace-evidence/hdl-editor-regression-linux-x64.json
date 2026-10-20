@@ -1,6 +1,6 @@
 {
   "schema": "vwb.editor-workspace-browser-probe/1",
-  "recorded_at": "2026-10-20T02:59:41.275Z",
+  "recorded_at": "2026-10-20T03:53:23.221Z",
   "state": "passed",
   "target": "built-local-project-prefix-workspace",
   "pages_prefix": "/verilog-workbench/",
@@ -147,8 +147,10 @@
       "native_post_edit": {
         "tool": "ghdl",
         "scope": "Isolated post-edit HDL compilation or Python syntax/helper behavior; not hardware/full Cocotb.",
-        "status": "not_run",
-        "reason": "Native fixture compiler is absent."
+        "status": "passed",
+        "returncode": 0,
+        "stdout": "",
+        "stderr": ""
       },
       "server": "vhdl_ls",
       "hover": {
@@ -450,6 +452,51 @@
   "browser_security_flags": [
     "--no-sandbox"
   ],
+  "asset_capture": [
+    {
+      "language": "systemverilog",
+      "method": "original-browser-network-entity-bytes-paused-before-unchanged-CDP-continueResponse",
+      "source_sha256": "4ce3366c5a2efa23f5197a5df5479be9eb5bf06441bd6ad1eaa0d829df1232eb",
+      "browser_http_cache": "harness-does-not-change-cache-settings",
+      "protocol_scope": "http://127.0.0.1:33093/verilog-workbench/*",
+      "protocol_stage": "Response",
+      "original_network_responses": true,
+      "request_refetches": 0,
+      "response_overrides": 0,
+      "delivered_responses": 16,
+      "delivered_entity_bytes": 235991,
+      "pending_responses": 0
+    },
+    {
+      "language": "vhdl",
+      "method": "original-browser-network-entity-bytes-paused-before-unchanged-CDP-continueResponse",
+      "source_sha256": "4ce3366c5a2efa23f5197a5df5479be9eb5bf06441bd6ad1eaa0d829df1232eb",
+      "browser_http_cache": "harness-does-not-change-cache-settings",
+      "protocol_scope": "http://127.0.0.1:33093/verilog-workbench/*",
+      "protocol_stage": "Response",
+      "original_network_responses": true,
+      "request_refetches": 0,
+      "response_overrides": 0,
+      "delivered_responses": 16,
+      "delivered_entity_bytes": 235991,
+      "pending_responses": 0
+    },
+    {
+      "language": "python",
+      "method": "original-browser-network-entity-bytes-paused-before-unchanged-CDP-continueResponse",
+      "source_sha256": "4ce3366c5a2efa23f5197a5df5479be9eb5bf06441bd6ad1eaa0d829df1232eb",
+      "browser_http_cache": "harness-does-not-change-cache-settings",
+      "protocol_scope": "http://127.0.0.1:33093/verilog-workbench/*",
+      "protocol_stage": "Response",
+      "original_network_responses": true,
+      "request_refetches": 0,
+      "response_overrides": 0,
+      "delivered_responses": 16,
+      "delivered_entity_bytes": 235991,
+      "pending_responses": 0
+    }
+  ],
+  "asset_errors": [],
   "script_errors": [],
   "static_errors": []
 }

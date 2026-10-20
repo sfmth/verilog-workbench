@@ -1,0 +1,176 @@
+{
+  "schema": "vwb.hdl-output-format-proof/1",
+  "state": "passed",
+  "recorded_at": "2026-10-20T03:22:00.137208+00:00",
+  "platform": "linux-x64",
+  "archive": {
+    "release": "2026-10-18",
+    "archive": "oss-cad-suite-linux-x64-20261018.tgz",
+    "sha256": "639c8c0366d74dc56201729c9907bf2d8281db7f18bb025abe2e4f3f2ebaa24e",
+    "size_bytes": 748315612,
+    "external_tool_overlays": [],
+    "relocatable": true
+  },
+  "source_sha256": {
+    "vwb.py": "3db956c3e660a7cab81ced56278cfa23e95f11619699be9a76292827d572dc60"
+  },
+  "commands": [
+    {
+      "argv": [
+        "[suite]/py3bin/python3",
+        "[repository]/vwb.py",
+        "--root",
+        "[project]",
+        "--src-dir",
+        "src",
+        "--test-dir",
+        "test",
+        "--build-dir",
+        "build",
+        "--color",
+        "never",
+        "wave",
+        "m0_gate",
+        "--test",
+        "test/test_m0_gate.v",
+        "--test-top",
+        "tb_m0_gate",
+        "--test-language",
+        "verilog",
+        "--wave-format",
+        "fst",
+        "--tag",
+        "native-fst",
+        "--no-view"
+      ],
+      "returncode": 0,
+      "output": "==> [1/1] m0_gate (verilog:test_m0_gate.v)\n  RTL PASS\nResult:\n  Your code: PASS - 1/1 test runs passed\n  Your setup: OK\nsaved native-fst build/saved-waves/native-fst\nwaveform build/sim/m0_gate/verilog-test_m0_gate/m0_gate.fst\n"
+    },
+    {
+      "argv": [
+        "[suite]/py3bin/python3",
+        "[repository]/vwb.py",
+        "--root",
+        "[project]",
+        "--src-dir",
+        "src",
+        "--test-dir",
+        "test",
+        "--build-dir",
+        "build",
+        "--color",
+        "never",
+        "wave",
+        "--list-saved",
+        "--json"
+      ],
+      "returncode": 0,
+      "output": "[\n  {\n    \"created_at\": \"2026-10-20T03:21:59.819959+00:00\",\n    \"directory\": \"build/saved-waves/native-fst\",\n    \"dut\": \"m0_gate\",\n    \"layout\": null,\n    \"tag\": \"native-fst\",\n    \"test_language\": \"verilog\",\n    \"test_path\": \"test/test_m0_gate.v\",\n    \"wave_format\": \"fst\",\n    \"waveform\": \"m0_gate.fst\"\n  }\n]\n"
+    },
+    {
+      "argv": [
+        "[suite]/py3bin/python3",
+        "[repository]/vwb.py",
+        "--root",
+        "[project]",
+        "--src-dir",
+        "src",
+        "--test-dir",
+        "test",
+        "--build-dir",
+        "build",
+        "--color",
+        "never",
+        "wave",
+        "--load",
+        "native-fst",
+        "--no-view",
+        "--json"
+      ],
+      "returncode": 0,
+      "output": "{\n  \"created_at\": \"2026-10-20T03:21:59.819959+00:00\",\n  \"directory\": \"build/saved-waves/native-fst\",\n  \"dut\": \"m0_gate\",\n  \"layout\": null,\n  \"tag\": \"native-fst\",\n  \"test_language\": \"verilog\",\n  \"test_path\": \"test/test_m0_gate.v\",\n  \"wave_format\": \"fst\",\n  \"waveform\": \"m0_gate.fst\"\n}\n"
+    },
+    {
+      "argv": [
+        "[suite]/bin/fst2vcd",
+        "[project]/build/sim/m0_gate/verilog-test_m0_gate/m0_gate.fst"
+      ],
+      "returncode": 0,
+      "converted_vcd_bytes": 596,
+      "converted_vcd_sha256": "35ea5ef3101d7f3987e4dc677678b97f2ecb374328d1b05d4ca5b2d4dc4ddef4",
+      "assertions": "nonempty real signal declarations and VCD header"
+    },
+    {
+      "argv": [
+        "[suite]/py3bin/python3",
+        "[repository]/vwb.py",
+        "--root",
+        "[project]",
+        "--src-dir",
+        "src",
+        "--test-dir",
+        "test",
+        "--build-dir",
+        "build",
+        "--color",
+        "never",
+        "synth",
+        "m0_gate",
+        "--format",
+        "dot",
+        "--no-view"
+      ],
+      "returncode": 0,
+      "output": "build/synth/m0_gate/m0_gate.dot\n"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "build/sim/m0_gate/verilog-test_m0_gate/m0_gate.fst",
+      "bytes": 692,
+      "sha256": "4b107d657da7cdba0a64bc88f54d9f9dcfef690eef5cfbf299c9c2f4cfb04de9"
+    },
+    {
+      "path": "build/saved-waves/native-fst/m0_gate.fst",
+      "bytes": 692,
+      "sha256": "4b107d657da7cdba0a64bc88f54d9f9dcfef690eef5cfbf299c9c2f4cfb04de9"
+    },
+    {
+      "path": "build/synth/m0_gate/m0_gate.dot",
+      "bytes": 656,
+      "sha256": "af84797849fe415599f9d666b519ce4e60e1e86d159a1a2541cd0f225a05786d"
+    }
+  ],
+  "saved_metadata": {
+    "created_at": "2026-10-20T03:21:59.819959+00:00",
+    "directory": "build/saved-waves/native-fst",
+    "dut": "m0_gate",
+    "layout": null,
+    "tag": "native-fst",
+    "test_language": "verilog",
+    "test_path": "test/test_m0_gate.v",
+    "wave_format": "fst",
+    "waveform": "m0_gate.fst"
+  },
+  "saved_list": [
+    {
+      "created_at": "2026-10-20T03:21:59.819959+00:00",
+      "directory": "build/saved-waves/native-fst",
+      "dut": "m0_gate",
+      "layout": null,
+      "tag": "native-fst",
+      "test_language": "verilog",
+      "test_path": "test/test_m0_gate.v",
+      "wave_format": "fst",
+      "waveform": "m0_gate.fst"
+    }
+  ],
+  "checks": [
+    "native-FST-capture",
+    "archive-and-load-without-simulation-or-GUI",
+    "archive-matches-capture-bytes",
+    "FST-converts-to-real-VCD",
+    "native-DOT-schematic"
+  ],
+  "physical_programming": "not_run"
+}

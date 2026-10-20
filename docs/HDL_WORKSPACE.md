@@ -116,6 +116,14 @@ and the deployed HTTPS app, using the integrity-pinned Linux tool suite. Public
 local-network permission is granted explicitly through the Chromium test API;
 manual permission UX remains separate evidence.
 
+Static asset verification uses Chromium's response-stage inspection, scoped to
+the static site origin/prefix. It pauses the genuine browser response, hashes
+its entity bytes, then continues that original response unchanged. This records
+module bytes before a completed parser worker can terminate its inspection
+target. Native companion requests retain the browser's ordinary permission,
+CORS preflight and HTTP path. Cache behavior remains outside this probe.
+Earlier receipts retain the closed-worker-target collection failures explicitly.
+
 ## Native platform package candidates
 
 The acquisition helper adds explicit supplemental routes for the previously
@@ -148,7 +156,7 @@ substitute for the separate hosted/public and foreign-host results.
 The [runtime follow-up browser report](workspace-evidence/hdl-runtime-local-linux-x64.json)
 passes all 26 workflows against one coherent
 [20-file build](workspace-evidence/hdl-runtime-web-build.json). Every fresh
-workflow context verifies its loaded asset hashes. The additional workflow
+workflow context verifies its six declared core runtime asset hashes. The additional workflow
 executes the pending-write shutdown regression and checks the staged startup
 module against the trusted source. The
 [follow-up source receipt](workspace-evidence/hdl-runtime-source-linux-x64.json)
@@ -157,3 +165,52 @@ checks, and a separate nine-check managed-runtime run with no skips, including
 three real simulator controls. The
 [missing-dependency negative control](workspace-evidence/hdl-cocotb-missing-results-local-linux-x64.json)
 also verifies the actual simulator's nonzero exit and improved setup diagnosis.
+The [shutdown diagnosis](workspace-evidence/hdl-cocotb-shutdown-local-linux-x64.json)
+retains the native stack, affected Icarus versions and before/after controls.
+
+[Representative acceptance](HDL_REPRESENTATIVE_ACCEPTANCE.md) exercises 10
+larger example modules across five phases: 73 real commands and 38 hashed
+artifacts, including unchanged processor and processing-array RTL/gate runs.
+Their weak legacy assertions are documented explicitly. Separate
+[output-format evidence](workspace-evidence/hdl-output-formats-local-linux-x64.json)
+verifies native FST capture, archive/list/reopen, byte-identical saved output,
+FST-to-VCD conversion and DOT schematic generation.
+
+The final [portable archive validation](workspace-evidence/hdl-portable-archive-local-linux-x64.json)
+adds a host-independent POSIX link-graph check before extraction. It rejects
+symlink-plus-`..` escapes consistently on Windows and Unix, retains the original
+real extraction test, and accepts all 86 symlinks in the locked Linux archive.
+All 266 native regression checks pass locally (eight optional skips), including
+25 acquisition checks. The earlier 264-check receipt remains historical.
+
+[Final native CI](https://github.com/sfmth/verilog-workbench/actions/runs/39366706022)
+passes every job at `9acd8bb8d071cf5a3660bfc16b0870e1a1271bcb`:
+six native unit/CLI/runtime-package jobs, all six 14-workflow toolchain suites,
+Arch userspace's 14 workflows and the browser-source job. The
+[retained final report](workspace-evidence/hdl-native-ci.json) records exact
+tool/package/architecture evidence and platform skips. Earlier failed attempts
+and the preceding passing portable-runtime run remain separately retained.
+
+The accepted response-stage collector passes all 26 HDL workflows against both
+the [local build](workspace-evidence/hdl-runtime-cdp-local-linux-x64.json) and
+the [actual public HTTPS app](workspace-evidence/hdl-runtime-cdp-public-local-linux-x64.json)
+on the local Linux host. Each workflow's captured asset map matches its manifest;
+waveform cases require both the parser worker and its imported module bytes.
+The [independent method controls](workspace-evidence/browser-asset-capture-control-linux-x64.json)
+verify an immediately terminated worker, a compressed module and a genuine
+rejected native CORS preflight. The
+[other browser regressions](workspace-evidence/hdl-browser-asset-regression-local-linux-x64.json)
+pass workspace 13, source 15, file lifecycle 16 and semantic editing in three
+languages. A deliberate late script error remains a failed probe after cleanup.
+
+[Final hosted Pages CI](https://github.com/sfmth/verilog-workbench/actions/runs/39366706107)
+passes build, deployment and public HTTPS verification at `9acd8bb`. Both the
+[built-output HDL report](workspace-evidence/hdl-runtime-ci-linux-x64.json) and
+[public HTTPS HDL report](workspace-evidence/hdl-runtime-public-ci-linux-x64.json)
+pass all 26 workflows in Chromium 151 with original-network asset capture.
+The [retained Pages summary](workspace-evidence/hdl-pages-ci.json) also records
+the existing workspace, source, semantic and lifecycle probes on both origins,
+and nine Cocotb shutdown checks, including three real simulator controls, in
+the build job. Public local
+network permission is still explicitly granted by the test API; manual
+permission UX, clean installers and physical programming remain separate gates.

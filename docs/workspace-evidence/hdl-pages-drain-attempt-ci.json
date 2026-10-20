@@ -1,0 +1,78 @@
+{
+  "schema": "vwb.hdl-pages-evidence/1",
+  "recorded_at": "2026-10-20T03:53:23.387392+00:00",
+  "run_url": "https://github.com/sfmth/verilog-workbench/actions/runs/39364816198",
+  "head_sha": "8484840400edc50096c949a2de376000464145cc",
+  "status": "completed",
+  "conclusion": "failure",
+  "jobs": [
+    {
+      "name": "build",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/sfmth/verilog-workbench/actions/runs/39364816198/job/118439660723"
+    },
+    {
+      "name": "deploy",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/sfmth/verilog-workbench/actions/runs/39364816198/job/118440707009"
+    },
+    {
+      "name": "verify-public",
+      "status": "completed",
+      "conclusion": "failure",
+      "url": "https://github.com/sfmth/verilog-workbench/actions/runs/39364816198/job/118441096095"
+    }
+  ],
+  "reports": {
+    "built_hdl": {
+      "state": "passed",
+      "checks": 26,
+      "browser": "151.0.7922.34",
+      "receipt": "hdl-runtime-drain-attempt-ci-linux-x64.json",
+      "sha256": "7bf4adcd416703841667d176fa7da824b27eaec02011e0bc36105e4cc8a14ab9",
+      "source_sha256": {
+        "vwb.py": "3db956c3e660a7cab81ced56278cfa23e95f11619699be9a76292827d572dc60",
+        "companion/server.py": "356030df6ef4ca139126259a610acde920fc90928dda9166063a0ea380142fa2",
+        "companion/projects.py": "92fa5d30f405090231504b30413ce13d7a5ab1fbe2e38edfc0763f9992e830d1",
+        "companion/process.py": "500b9a1cfac6aded8028923aa2ba35c14b4efa6677c2d8a81bfdff85cb0c266d",
+        "companion/cocotb_runtime.py": "b8794d6f2b1f3d9008001d165ca32d9c829547a9dffe40d064d08be9a33c4153",
+        "scripts/probe_hdl_workspace.mjs": "f4561b06c88abe91b9f9c8e9dcba17258ad44df40201f9174756b1bf1ba15ac7"
+      }
+    },
+    "public_workspace": {
+      "state": "failed",
+      "checks": [
+        "fresh-context-observed-loopback-health-without-test-permission-grant",
+        "actual-HTTPS-Pages-app-brand-preview-manifest-and-fragment-route",
+        "real-public-app-UI-pairing-Unicode-project-multifile-CRLF-and-keyboard-save",
+        "real-disk-revision-conflict-preserves-external-edit-and-explicit-reload",
+        "public-fragment-reload-forgets-session-and-new-one-time-UI-pairing-restores-file",
+        "real-native-discovery-job-and-output-through-public-app",
+        "exact-companion-viewer-fixture-download-and-public-VCD-worker-render"
+      ],
+      "browser": "151.0.7922.34",
+      "receipt": "pages-runtime-drain-attempt-public-ci-linux-x64.json",
+      "sha256": "8a3eb3e59dee0bf63349b74598002e17a0064156393543b3d40149c087709e15",
+      "error": "AssertionError [ERR_ASSERTION]: The public app requested missing or unreadable site assets\n+ actual - expected\n\n+ [\n+   {\n+     error: 'response.body: Target page, context or browser has been closed',\n+     path: 'workspace/vcd.mjs'\n+   }\n+ ]\n- []\n\n    at file://[redacted]/scripts/probe_pages.mjs:329:10",
+      "asset_errors": [
+        {
+          "path": "workspace/vcd.mjs",
+          "error": "response.body: Target page, context or browser has been closed"
+        }
+      ],
+      "script_errors": []
+    },
+    "public_hdl": {
+      "state": "not_run",
+      "reason": "Earlier public workspace probe failed before semantic/source/lifecycle/HDL public steps."
+    }
+  },
+  "runtime_shutdown_controls": {
+    "state": "passed",
+    "tests": 9,
+    "real_native_controls": 3
+  },
+  "scope": "Intermediate strict context-drain probe: built HDL26, all previous built suites and deployment passed. Existing public Pages probe failed its strict response.body collector on workspace/vcd.mjs after actual pairing, native inventory, exact VCD download/render/cursor passed; main page remained alive. Product waveform parser intentionally terminates the successful worker, making later CDP response.body reads race worker-target lifetime. This failure is retained unchanged. A later shared helper pauses only original static responses at CDP Response stage, reads their original entity bytes, then continues without overrides; native OPTIONS policy is preserved by an independent real negative control. This historical run is not final public acceptance."
+}
