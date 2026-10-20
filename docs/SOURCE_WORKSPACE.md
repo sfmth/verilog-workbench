@@ -82,3 +82,22 @@ tested bytes. Separate [workspace](workspace-evidence/source-workspace-regressio
 pass 238 Python checks (five skips), 162 CLI checks (one skip) and 106 JavaScript
 checks. Local GHDL is unavailable; semantic VHDL language-service checks pass,
 with its separate post-edit compiler result explicitly `not_run`.
+
+[Pages run 39357760699](https://github.com/sfmth/verilog-workbench/actions/runs/39357760699)
+deployed `8bbb67e` and passed build, deploy and public HTTPS verification. The
+[hosted source report](workspace-evidence/source-ci-linux-x64.json) and
+[actual HTTPS source report](workspace-evidence/source-public-ci-linux-x64.json)
+each pass all 15 groups in Chromium 151, with every new runtime module's loaded
+hash matching the tested manifest. The [Pages summary](workspace-evidence/source-pages-ci.json)
+also retains the existing 13 built/nine public workspace groups, three semantic
+language groups and 16 lifecycle groups passing. Hosted build semantic checks
+include real Icarus, GHDL and Python post-edit validation; the public job reports
+unavailable HDL compilers explicitly rather than inferring native passes.
+
+All six native unit/CLI/protocol/bundle/smoke jobs pass in
+[run 39357760768](https://github.com/sfmth/verilog-workbench/actions/runs/39357760768),
+with [retained native evidence](workspace-evidence/source-native-ci.json).
+The overall wider workflow still fails four established toolchain rows:
+GHDL is missing on Linux ARM64 and Intel macOS; Windows also lacks the Cocotb
+and Graphviz package routes. Linux x86-64, Arch and Apple Silicon pass 14/14
+toolchain checks. The preview remains subject to the release gates above.

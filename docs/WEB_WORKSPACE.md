@@ -190,7 +190,11 @@ The [source-editing increment](SOURCE_WORKSPACE.md) adds bounded lexical colors
 for all three source languages, synchronized line numbers and literal Unicode
 current-file search. Native textarea input, undo, save/recovery and semantic
 editing remain in place. Built-output and actual HTTPS source probes are now
-required by Pages CI; retained deployment evidence is recorded separately.
+required by Pages CI. [Run 39357760699](https://github.com/sfmth/verilog-workbench/actions/runs/39357760699)
+passes build, deploy and actual HTTPS acceptance on `8bbb67e`: all 15 source
+groups and the existing semantic/lifecycle/workspace probes pass. All six native
+runtime jobs pass in [run 39357760768](https://github.com/sfmth/verilog-workbench/actions/runs/39357760768);
+the wider toolchain workflow retains its four documented package-gap failures.
 
 M1 still requires broader semantic/rename, project lifecycle and recovery
 fixtures, broader syntax coverage and complete folder-selection/watch behavior. M2 needs full

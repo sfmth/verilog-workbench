@@ -1,0 +1,120 @@
+{
+  "schema": "vwb.source-workspace-browser-probe/1",
+  "recorded_at": "2026-10-20T02:16:27.735Z",
+  "state": "passed",
+  "target": "public-HTTPS-workspace",
+  "pages_prefix": "/verilog-workbench/",
+  "public_url": "https://sfmth.github.io/verilog-workbench/workspace/",
+  "checks": [
+    "project-prefix-entry-and-real-native-companion-UI-pairing",
+    "systemverilog-real-lexical-tokens-exact-Unicode-tabs-trailing-lines-and-no-source-HTML-injection",
+    "vhdl-real-lexical-tokens-exact-Unicode-tabs-trailing-lines-and-no-source-HTML-injection",
+    "python-real-lexical-tokens-exact-Unicode-tabs-trailing-lines-and-no-source-HTML-injection",
+    "explicit-persisted-pagehide-DOM-event-keeps-real-worker-and-Find-functional-without-BFCache-claim",
+    "actual-token-and-line-number-geometry-matches-native-textarea-after-both-scroll-axes",
+    "read-only-literal-find-Unicode-offsets-case-toggle-next-previous-and-keyboard-focus",
+    "native-textarea-input-undo-redo-and-keyboard-save-preserve-CRLF-BOM-and-Unicode",
+    "byte-line-and-token-budgets-use-explicit-plain-text-fallback-with-complete-editable-source",
+    "large-literal-search-remains-bounded-and-discloses-truncated-match-inventory",
+    "large-plain-file-native-input-save-and-Stop-request-remain-responsive",
+    "delayed-real-worker-output-cannot-repaint-a-different-file-or-change-its-source",
+    "worker-failure-reveals-native-plain-text-retains-draft-and-permits-real-save",
+    "real-companion-disconnect-retains-editable-unsaved-source-and-prevents-disk-save",
+    "real-lexical-worker-loaded-assets-match-manifest-without-source-or-credentials-in-browser-storage"
+  ],
+  "permission_grant": "explicit-simulated-Chromium-context-grantPermissions-local-network-access",
+  "native_job": "real-vwb-list-and-real-Stop-request-with-explicit-delayed-poll",
+  "native_simulation": "not_run",
+  "language_services": "not_run",
+  "hardware_tested": false,
+  "transport_fault_injection": [
+    "held-real-native-inventory-poll-for-Stop-UI-responsiveness-without-running-process-cancellation-claim",
+    "delayed-genuine-lexical-worker-response-delivered-after-active-file-change",
+    "one-explicit-browser-worker-transport-error-no-substituted-token-or-source-response"
+  ],
+  "note": "Actual Chromium native textarea, lexical worker and real temporary Unicode project. Pairing, editing, saving and search use normal rendered controls. Explicit browser instrumentation delays real worker responses, raises one simulated worker transport error and holds one real native inventory poll. Stop responsiveness is a real cancellation HTTP request while that poll is held; no running compiler cancellation or semantic correctness is implied. Public runs grant local-network access through Chromium test APIs, not a manual permission prompt.",
+  "browser": "151.0.7922.34",
+  "browser_security_flags": [
+    "--no-sandbox"
+  ],
+  "screenshot_stage": "normal-highlighted-source-before-explicit-worker-and-network-faults",
+  "persisted_pagehide": "explicit-DOM-event-only-real-worker-and-Find-remain-functional-not-actual-BFCache-proof",
+  "alignment": {
+    "same": [
+      {
+        "property": "fontFamily",
+        "editor": "SFMono-Regular, Consolas, \"Liberation Mono\", monospace",
+        "backdrop": "SFMono-Regular, Consolas, \"Liberation Mono\", monospace"
+      },
+      {
+        "property": "fontSize",
+        "editor": "13px",
+        "backdrop": "13px"
+      },
+      {
+        "property": "fontWeight",
+        "editor": "400",
+        "backdrop": "400"
+      },
+      {
+        "property": "fontStyle",
+        "editor": "normal",
+        "backdrop": "normal"
+      },
+      {
+        "property": "fontVariantLigatures",
+        "editor": "none",
+        "backdrop": "none"
+      },
+      {
+        "property": "lineHeight",
+        "editor": "23px",
+        "backdrop": "23px"
+      },
+      {
+        "property": "letterSpacing",
+        "editor": "normal",
+        "backdrop": "normal"
+      },
+      {
+        "property": "wordSpacing",
+        "editor": "0px",
+        "backdrop": "0px"
+      },
+      {
+        "property": "tabSize",
+        "editor": "4",
+        "backdrop": "4"
+      }
+    ],
+    "scrollTop": 2967,
+    "scrollLeft": 110,
+    "x_delta": 0,
+    "y_delta": 0,
+    "gutter_y_delta": 0,
+    "gutter_x_delta": 0
+  },
+  "large_file": {
+    "utf8_bytes_after_real_edit_and_save": 2096922,
+    "supported_file_limit_bytes": 2097152
+  },
+  "real_worker_response_count": 12,
+  "deployed_manifest": {
+    "schema": "vwb.web-build/1",
+    "status": "development-preview",
+    "base_path": "/verilog-workbench/",
+    "file_count": 18
+  },
+  "fixture_sha256": {
+    "src/highlight.sv": "894c254b11c971660d9ff3943c8f31c2a2f4ec868611c1504ef171d98f7b91ad",
+    "src/highlight.vhd": "45cd233744b205eff329e7573212dc356c0570faf2641b7b36dc0457d81166d1",
+    "src/highlight.py": "0906269b0d788da27c5024b0d8e33a0b86dccb1583e5064360cbde618563b5d8",
+    "src/find.py": "40d80b03207dc2809181ecf7b3319372611660304b8ee09e759895d5dcf5a928",
+    "src/byte_limit.py": "f90d7139dbef88629e96bacda5faf036892e488b49e02dc32e29eaf19352e84c",
+    "src/line_limit.py": "65ae27e72078c752d166651e2bccdb95b2aa9d67f44e0c718fbde7328b2a75fa",
+    "src/token_limit.py": "3fc296ff1119e84436dbf8a3b3639afda108782f92a9cd06a79d9d2e3b7d11f0",
+    "src/layout.sv": "df0acfd0533747eda8e19ec0ab74818d68a74fa6a79bcd8efaa8ae72bda75acd"
+  },
+  "script_errors": [],
+  "asset_errors": []
+}

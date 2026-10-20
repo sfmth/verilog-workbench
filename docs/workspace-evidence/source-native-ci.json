@@ -1,0 +1,464 @@
+{
+  "head_sha": "8bbb67e70c0a9f2ef32049ac1a12bb2ef080c990",
+  "run_id": 39357760768,
+  "run_url": "https://github.com/sfmth/verilog-workbench/actions/runs/39357760768",
+  "observed_at": "2026-10-20T02:17:05.888360+00:00",
+  "run_status": "completed",
+  "run_conclusion": "failure",
+  "native_jobs": [
+    {
+      "name": "Native linux-arm64",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/sfmth/verilog-workbench/actions/runs/39357760768/job/118416434783",
+      "job_id": 118416434783,
+      "checks": {
+        "unit": {
+          "status": "completed",
+          "conclusion": "success"
+        },
+        "cli": {
+          "status": "completed",
+          "conclusion": "success"
+        },
+        "browser_protocol": {
+          "status": "completed",
+          "conclusion": "success"
+        },
+        "bundle_build": {
+          "status": "completed",
+          "conclusion": "success"
+        },
+        "bundle_smoke": {
+          "status": "completed",
+          "conclusion": "success"
+        }
+      },
+      "suites": {
+        "python_unit": {
+          "tests": 238,
+          "passed": 230,
+          "skipped": 8,
+          "duration_seconds": 8.365,
+          "result": "OK (skipped=8)"
+        },
+        "cli_regression": {
+          "tests": 162,
+          "passed": 154,
+          "skipped": 8,
+          "duration_seconds": 3.134,
+          "result": "OK (skipped=8)"
+        }
+      },
+      "browser_protocol_tests": {
+        "tests": 5,
+        "pass": 5,
+        "fail": 0,
+        "skipped": 0
+      },
+      "suite_summaries": [
+        "Ran 238 tests in 8.365s",
+        "Ran 162 tests in 3.134s"
+      ],
+      "failure_summaries": []
+    },
+    {
+      "name": "Native linux-x86_64",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/sfmth/verilog-workbench/actions/runs/39357760768/job/118416434720",
+      "job_id": 118416434720,
+      "checks": {
+        "unit": {
+          "status": "completed",
+          "conclusion": "success"
+        },
+        "cli": {
+          "status": "completed",
+          "conclusion": "success"
+        },
+        "browser_protocol": {
+          "status": "completed",
+          "conclusion": "success"
+        },
+        "bundle_build": {
+          "status": "completed",
+          "conclusion": "success"
+        },
+        "bundle_smoke": {
+          "status": "completed",
+          "conclusion": "success"
+        }
+      },
+      "suites": {
+        "python_unit": {
+          "tests": 238,
+          "passed": 230,
+          "skipped": 8,
+          "duration_seconds": 9.547,
+          "result": "OK (skipped=8)"
+        },
+        "cli_regression": {
+          "tests": 162,
+          "passed": 154,
+          "skipped": 8,
+          "duration_seconds": 4.162,
+          "result": "OK (skipped=8)"
+        }
+      },
+      "browser_protocol_tests": {
+        "tests": 5,
+        "pass": 5,
+        "fail": 0,
+        "skipped": 0
+      },
+      "suite_summaries": [
+        "Ran 238 tests in 9.547s",
+        "Ran 162 tests in 4.162s"
+      ],
+      "failure_summaries": []
+    },
+    {
+      "name": "Native macos-arm64",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/sfmth/verilog-workbench/actions/runs/39357760768/job/118416434479",
+      "job_id": 118416434479,
+      "checks": {
+        "unit": {
+          "status": "completed",
+          "conclusion": "success"
+        },
+        "cli": {
+          "status": "completed",
+          "conclusion": "success"
+        },
+        "browser_protocol": {
+          "status": "completed",
+          "conclusion": "success"
+        },
+        "bundle_build": {
+          "status": "completed",
+          "conclusion": "success"
+        },
+        "bundle_smoke": {
+          "status": "completed",
+          "conclusion": "success"
+        }
+      },
+      "suites": {
+        "python_unit": {
+          "tests": 238,
+          "passed": 229,
+          "skipped": 9,
+          "duration_seconds": 14.144,
+          "result": "OK (skipped=9)"
+        },
+        "cli_regression": {
+          "tests": 162,
+          "passed": 143,
+          "skipped": 19,
+          "duration_seconds": 3.757,
+          "result": "OK (skipped=19)"
+        }
+      },
+      "browser_protocol_tests": {
+        "tests": 5,
+        "pass": 5,
+        "fail": 0,
+        "skipped": 0
+      },
+      "suite_summaries": [
+        "Ran 238 tests in 14.144s",
+        "Ran 162 tests in 3.757s"
+      ],
+      "failure_summaries": []
+    },
+    {
+      "name": "Native macos-x86_64",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/sfmth/verilog-workbench/actions/runs/39357760768/job/118416434654",
+      "job_id": 118416434654,
+      "checks": {
+        "unit": {
+          "status": "completed",
+          "conclusion": "success"
+        },
+        "cli": {
+          "status": "completed",
+          "conclusion": "success"
+        },
+        "browser_protocol": {
+          "status": "completed",
+          "conclusion": "success"
+        },
+        "bundle_build": {
+          "status": "completed",
+          "conclusion": "success"
+        },
+        "bundle_smoke": {
+          "status": "completed",
+          "conclusion": "success"
+        }
+      },
+      "suites": {
+        "python_unit": {
+          "tests": 238,
+          "passed": 229,
+          "skipped": 9,
+          "duration_seconds": 27.234,
+          "result": "OK (skipped=9)"
+        },
+        "cli_regression": {
+          "tests": 162,
+          "passed": 143,
+          "skipped": 19,
+          "duration_seconds": 8.846,
+          "result": "OK (skipped=19)"
+        }
+      },
+      "browser_protocol_tests": {
+        "tests": 5,
+        "pass": 5,
+        "fail": 0,
+        "skipped": 0
+      },
+      "suite_summaries": [
+        "Ran 238 tests in 27.234s",
+        "Ran 162 tests in 8.846s"
+      ],
+      "failure_summaries": []
+    },
+    {
+      "name": "Native windows-arm64",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/sfmth/verilog-workbench/actions/runs/39357760768/job/118416434804",
+      "job_id": 118416434804,
+      "checks": {
+        "unit": {
+          "status": "completed",
+          "conclusion": "success"
+        },
+        "cli": {
+          "status": "completed",
+          "conclusion": "success"
+        },
+        "browser_protocol": {
+          "status": "completed",
+          "conclusion": "success"
+        },
+        "bundle_build": {
+          "status": "completed",
+          "conclusion": "success"
+        },
+        "bundle_smoke": {
+          "status": "completed",
+          "conclusion": "success"
+        }
+      },
+      "suites": {
+        "python_unit": {
+          "tests": 238,
+          "passed": 221,
+          "skipped": 17,
+          "duration_seconds": 16.893,
+          "result": "OK (skipped=17)"
+        },
+        "cli_regression": {
+          "tests": 162,
+          "passed": 141,
+          "skipped": 21,
+          "duration_seconds": 6.109,
+          "result": "OK (skipped=21)"
+        }
+      },
+      "browser_protocol_tests": {
+        "tests": 5,
+        "pass": 5,
+        "fail": 0,
+        "skipped": 0
+      },
+      "suite_summaries": [
+        "Ran 238 tests in 16.893s",
+        "Ran 162 tests in 6.109s"
+      ],
+      "failure_summaries": []
+    },
+    {
+      "name": "Native windows-x86_64",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/sfmth/verilog-workbench/actions/runs/39357760768/job/118416434729",
+      "job_id": 118416434729,
+      "checks": {
+        "unit": {
+          "status": "completed",
+          "conclusion": "success"
+        },
+        "cli": {
+          "status": "completed",
+          "conclusion": "success"
+        },
+        "browser_protocol": {
+          "status": "completed",
+          "conclusion": "success"
+        },
+        "bundle_build": {
+          "status": "completed",
+          "conclusion": "success"
+        },
+        "bundle_smoke": {
+          "status": "completed",
+          "conclusion": "success"
+        }
+      },
+      "suites": {
+        "python_unit": {
+          "tests": 238,
+          "passed": 221,
+          "skipped": 17,
+          "duration_seconds": 16.929,
+          "result": "OK (skipped=17)"
+        },
+        "cli_regression": {
+          "tests": 162,
+          "passed": 141,
+          "skipped": 21,
+          "duration_seconds": 5.168,
+          "result": "OK (skipped=21)"
+        }
+      },
+      "browser_protocol_tests": {
+        "tests": 5,
+        "pass": 5,
+        "fail": 0,
+        "skipped": 0
+      },
+      "suite_summaries": [
+        "Ran 238 tests in 16.929s",
+        "Ran 162 tests in 5.168s"
+      ],
+      "failure_summaries": []
+    }
+  ],
+  "toolchain_jobs": [
+    {
+      "name": "Arch Linux userspace toolchain feasibility",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/sfmth/verilog-workbench/actions/runs/39357760768/job/118416434757",
+      "job_id": 118416434757,
+      "workflow_summaries": [
+        "Native workflows linux-x64: 14/14 passed"
+      ],
+      "blocked_workflows": [],
+      "baseline_gaps_confirmed": false
+    },
+    {
+      "name": "Toolchain feasibility darwin-arm64",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/sfmth/verilog-workbench/actions/runs/39357760768/job/118416434685",
+      "job_id": 118416434685,
+      "workflow_summaries": [
+        "Native workflows darwin-arm64: 14/14 passed"
+      ],
+      "blocked_workflows": [],
+      "baseline_gaps_confirmed": false
+    },
+    {
+      "name": "Toolchain feasibility darwin-x64",
+      "status": "completed",
+      "conclusion": "failure",
+      "url": "https://github.com/sfmth/verilog-workbench/actions/runs/39357760768/job/118416434702",
+      "job_id": 118416434702,
+      "workflow_summaries": [
+        "Native workflows darwin-x64: 11/14 passed"
+      ],
+      "blocked_workflows": [
+        "vhdl_simulation: blocked; missing tools: ghdl",
+        "cocotb_vhdl: blocked; missing tools: ghdl",
+        "vhdl_synthesis: blocked; missing tools: ghdl"
+      ],
+      "baseline_gaps_confirmed": true
+    },
+    {
+      "name": "Toolchain feasibility linux-arm64",
+      "status": "completed",
+      "conclusion": "failure",
+      "url": "https://github.com/sfmth/verilog-workbench/actions/runs/39357760768/job/118416434797",
+      "job_id": 118416434797,
+      "workflow_summaries": [
+        "Native workflows linux-arm64: 11/14 passed"
+      ],
+      "blocked_workflows": [
+        "vhdl_simulation: blocked; missing tools: ghdl",
+        "cocotb_vhdl: blocked; missing tools: ghdl",
+        "vhdl_synthesis: blocked; missing tools: ghdl"
+      ],
+      "baseline_gaps_confirmed": true
+    },
+    {
+      "name": "Toolchain feasibility linux-x64",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/sfmth/verilog-workbench/actions/runs/39357760768/job/118416434690",
+      "job_id": 118416434690,
+      "workflow_summaries": [
+        "Native workflows linux-x64: 14/14 passed"
+      ],
+      "blocked_workflows": [],
+      "baseline_gaps_confirmed": false
+    },
+    {
+      "name": "Toolchain feasibility windows-arm64",
+      "status": "completed",
+      "conclusion": "failure",
+      "url": "https://github.com/sfmth/verilog-workbench/actions/runs/39357760768/job/118416434782",
+      "job_id": 118416434782,
+      "workflow_summaries": [
+        "Native workflows windows-arm64: 9/14 passed"
+      ],
+      "blocked_workflows": [
+        "cocotb_verilog: blocked; missing tools: cocotb-config",
+        "vhdl_simulation: blocked; missing tools: ghdl",
+        "cocotb_vhdl: blocked; missing tools: ghdl, cocotb-config",
+        "schematics: blocked; missing tools: dot",
+        "vhdl_synthesis: blocked; missing tools: ghdl"
+      ],
+      "baseline_gaps_confirmed": true
+    },
+    {
+      "name": "Toolchain feasibility windows-x64",
+      "status": "completed",
+      "conclusion": "failure",
+      "url": "https://github.com/sfmth/verilog-workbench/actions/runs/39357760768/job/118416434648",
+      "job_id": 118416434648,
+      "workflow_summaries": [
+        "Native workflows windows-x64: 9/14 passed"
+      ],
+      "blocked_workflows": [
+        "cocotb_verilog: blocked; missing tools: cocotb-config",
+        "vhdl_simulation: blocked; missing tools: ghdl",
+        "cocotb_vhdl: blocked; missing tools: ghdl, cocotb-config",
+        "schematics: blocked; missing tools: dot",
+        "vhdl_synthesis: blocked; missing tools: ghdl"
+      ],
+      "baseline_gaps_confirmed": true
+    }
+  ],
+  "web_source_job": {
+    "name": "web-source",
+    "status": "completed",
+    "conclusion": "success",
+    "url": "https://github.com/sfmth/verilog-workbench/actions/runs/39357760768/job/118416434682",
+    "job_id": 118416434682
+  },
+  "scope": "Native companion/Python unit and CLI regression checks, five browser-client protocol tests, frozen bundle build and bundled companion local-project smoke on six native targets. Source-editor browser acceptance is retained separately in the Pages evidence.",
+  "all_six_native_jobs_passed": true,
+  "backend_or_test_fixes_required": false,
+  "baseline_reference": "docs/workspace-evidence/files-native-final-ci.json",
+  "known_toolchain_gaps": "The four failing toolchain feasibility rows match the recorded baseline: Linux ARM64 and Intel macOS lack GHDL (11/14); Windows ARM64/x64 lack GHDL, Cocotb and Graphviz (9/14). Linux x64, Arch userspace and Apple Silicon pass 14/14. The overall run is therefore failure despite all six native companion jobs passing."
+}
