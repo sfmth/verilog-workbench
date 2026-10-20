@@ -1,0 +1,405 @@
+{
+  "recorded_at": "2026-10-20T01:11:15.581044+00:00",
+  "run_url": "https://github.com/sfmth/verilog-workbench/actions/runs/39351677421",
+  "head_sha": "a5243380050ca76a1700e45e3bb19cdf55a3e252",
+  "run_status": "completed",
+  "run_conclusion": "failure",
+  "scope": "Native companion units, CLI regressions, bundle build and local-project smoke. Runtime proof is not proof that all editor semantics pass on all platforms. Real semantic browser evidence is separate.",
+  "native_jobs": [
+    {
+      "name": "Native macos-arm64",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/sfmth/verilog-workbench/actions/runs/39351677421/job/118397052491",
+      "steps": [
+        {
+          "name": "Companion, process, protocol, packaging and LSP unit checks",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Existing VWB regression checks",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Browser client protocol checks",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Build pinned self-contained native bundle",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Exercise native bundle with local project",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "Native macos-x86_64",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/sfmth/verilog-workbench/actions/runs/39351677421/job/118397052493",
+      "steps": [
+        {
+          "name": "Companion, process, protocol, packaging and LSP unit checks",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Existing VWB regression checks",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Browser client protocol checks",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Build pinned self-contained native bundle",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Exercise native bundle with local project",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "Native windows-x86_64",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/sfmth/verilog-workbench/actions/runs/39351677421/job/118397052560",
+      "steps": [
+        {
+          "name": "Companion, process, protocol, packaging and LSP unit checks",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Existing VWB regression checks",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Browser client protocol checks",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Build pinned self-contained native bundle",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Exercise native bundle with local project",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "Native windows-arm64",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/sfmth/verilog-workbench/actions/runs/39351677421/job/118397052570",
+      "steps": [
+        {
+          "name": "Companion, process, protocol, packaging and LSP unit checks",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Existing VWB regression checks",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Browser client protocol checks",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Build pinned self-contained native bundle",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Exercise native bundle with local project",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "Native linux-x86_64",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/sfmth/verilog-workbench/actions/runs/39351677421/job/118397052578",
+      "steps": [
+        {
+          "name": "Companion, process, protocol, packaging and LSP unit checks",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Existing VWB regression checks",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Browser client protocol checks",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Build pinned self-contained native bundle",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Exercise native bundle with local project",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "Native linux-arm64",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/sfmth/verilog-workbench/actions/runs/39351677421/job/118397052584",
+      "steps": [
+        {
+          "name": "Companion, process, protocol, packaging and LSP unit checks",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Existing VWB regression checks",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Browser client protocol checks",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Build pinned self-contained native bundle",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Exercise native bundle with local project",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    }
+  ],
+  "toolchain_jobs": [
+    {
+      "name": "Arch Linux userspace toolchain feasibility",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/sfmth/verilog-workbench/actions/runs/39351677421/job/118397052245"
+    },
+    {
+      "name": "Toolchain feasibility linux-x64",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/sfmth/verilog-workbench/actions/runs/39351677421/job/118397052547"
+    },
+    {
+      "name": "Toolchain feasibility windows-x64",
+      "status": "completed",
+      "conclusion": "failure",
+      "url": "https://github.com/sfmth/verilog-workbench/actions/runs/39351677421/job/118397052594",
+      "workflow_summary": {
+        "passed": 9,
+        "total": 14,
+        "blocked": [
+          {
+            "workflow": "cocotb_verilog",
+            "status": "blocked",
+            "missing_tools": [
+              "cocotb-config"
+            ]
+          },
+          {
+            "workflow": "vhdl_simulation",
+            "status": "blocked",
+            "missing_tools": [
+              "ghdl"
+            ]
+          },
+          {
+            "workflow": "cocotb_vhdl",
+            "status": "blocked",
+            "missing_tools": [
+              "ghdl",
+              "cocotb-config"
+            ]
+          },
+          {
+            "workflow": "schematics",
+            "status": "blocked",
+            "missing_tools": [
+              "dot"
+            ]
+          },
+          {
+            "workflow": "vhdl_synthesis",
+            "status": "blocked",
+            "missing_tools": [
+              "ghdl"
+            ]
+          }
+        ],
+        "executed_failures": 0,
+        "baseline_match": true,
+        "verification": "Completed GitHub Actions job log fetched through actions/jobs/{job_id}/logs; exact workflow names, pass counts and missing tools inspected."
+      }
+    },
+    {
+      "name": "Toolchain feasibility windows-arm64",
+      "status": "completed",
+      "conclusion": "failure",
+      "url": "https://github.com/sfmth/verilog-workbench/actions/runs/39351677421/job/118397052610",
+      "workflow_summary": {
+        "passed": 9,
+        "total": 14,
+        "blocked": [
+          {
+            "workflow": "cocotb_verilog",
+            "status": "blocked",
+            "missing_tools": [
+              "cocotb-config"
+            ]
+          },
+          {
+            "workflow": "vhdl_simulation",
+            "status": "blocked",
+            "missing_tools": [
+              "ghdl"
+            ]
+          },
+          {
+            "workflow": "cocotb_vhdl",
+            "status": "blocked",
+            "missing_tools": [
+              "ghdl",
+              "cocotb-config"
+            ]
+          },
+          {
+            "workflow": "schematics",
+            "status": "blocked",
+            "missing_tools": [
+              "dot"
+            ]
+          },
+          {
+            "workflow": "vhdl_synthesis",
+            "status": "blocked",
+            "missing_tools": [
+              "ghdl"
+            ]
+          }
+        ],
+        "executed_failures": 0,
+        "baseline_match": true,
+        "verification": "Completed GitHub Actions job log fetched through actions/jobs/{job_id}/logs; exact workflow names, pass counts and missing tools inspected."
+      }
+    },
+    {
+      "name": "Toolchain feasibility darwin-arm64",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/sfmth/verilog-workbench/actions/runs/39351677421/job/118397052623"
+    },
+    {
+      "name": "Toolchain feasibility darwin-x64",
+      "status": "completed",
+      "conclusion": "failure",
+      "url": "https://github.com/sfmth/verilog-workbench/actions/runs/39351677421/job/118397052631",
+      "workflow_summary": {
+        "passed": 11,
+        "total": 14,
+        "blocked": [
+          {
+            "workflow": "vhdl_simulation",
+            "status": "blocked",
+            "missing_tools": [
+              "ghdl"
+            ]
+          },
+          {
+            "workflow": "cocotb_vhdl",
+            "status": "blocked",
+            "missing_tools": [
+              "ghdl"
+            ]
+          },
+          {
+            "workflow": "vhdl_synthesis",
+            "status": "blocked",
+            "missing_tools": [
+              "ghdl"
+            ]
+          }
+        ],
+        "executed_failures": 0,
+        "baseline_match": true,
+        "verification": "Completed GitHub Actions job log fetched through actions/jobs/{job_id}/logs; exact workflow names, pass counts and missing tools inspected."
+      }
+    },
+    {
+      "name": "Toolchain feasibility linux-arm64",
+      "status": "completed",
+      "conclusion": "failure",
+      "url": "https://github.com/sfmth/verilog-workbench/actions/runs/39351677421/job/118397052713",
+      "workflow_summary": {
+        "passed": 11,
+        "total": 14,
+        "blocked": [
+          {
+            "workflow": "vhdl_simulation",
+            "status": "blocked",
+            "missing_tools": [
+              "ghdl"
+            ]
+          },
+          {
+            "workflow": "cocotb_vhdl",
+            "status": "blocked",
+            "missing_tools": [
+              "ghdl"
+            ]
+          },
+          {
+            "workflow": "vhdl_synthesis",
+            "status": "blocked",
+            "missing_tools": [
+              "ghdl"
+            ]
+          }
+        ],
+        "executed_failures": 0,
+        "baseline_match": true,
+        "verification": "Completed GitHub Actions job log fetched through actions/jobs/{job_id}/logs; exact workflow names, pass counts and missing tools inspected."
+      }
+    }
+  ],
+  "all_native_passed": true,
+  "failed_toolchain_jobs_match_documented_baseline": true,
+  "baseline_reference": "docs/M0_CI_TOOLCHAINS.md sixth-run observations (39153500063): Linux ARM64/macOS Intel GHDL gaps; Windows x64/ARM64 GHDL, Cocotb configuration and Graphviz gaps."
+}

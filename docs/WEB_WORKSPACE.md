@@ -164,6 +164,14 @@ regression runs completed 188 companion/platform/build checks (five skips),
 162 CLI checks (one skip), and 61 JavaScript checks. These observations advance
 the preview while preserving the remaining release gates below.
 
+After a test-only canonical-path correction, all six native unit/CLI/bundle
+jobs pass in [run 39351677421](https://github.com/sfmth/verilog-workbench/actions/runs/39351677421).
+The final [Pages run 39351677436](https://github.com/sfmth/verilog-workbench/actions/runs/39351677436)
+also passes build, deploy and public HTTPS verification on `a524338`. Retained
+[native](workspace-evidence/editor-native-ci.json) and
+[Pages](workspace-evidence/editor-final-pages-ci.json) summaries separate these
+passes from the wider toolchain matrix's four existing package-gap failures.
+
 ## Remaining release gates
 
 M1 still requires broader semantic/rename and recovery fixtures, syntax

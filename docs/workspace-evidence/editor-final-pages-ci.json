@@ -1,0 +1,234 @@
+{
+  "schema": "vwb.editor-final-pages-evidence/1",
+  "recorded_at": "2026-10-20T01:11:21.864058+00:00",
+  "run_url": "https://github.com/sfmth/verilog-workbench/actions/runs/39351677436",
+  "head_sha": "a5243380050ca76a1700e45e3bb19cdf55a3e252",
+  "status": "completed",
+  "conclusion": "success",
+  "jobs": [
+    {
+      "name": "build",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/sfmth/verilog-workbench/actions/runs/39351677436/job/118397052011"
+    },
+    {
+      "name": "deploy",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/sfmth/verilog-workbench/actions/runs/39351677436/job/118397455322"
+    },
+    {
+      "name": "verify-public",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/sfmth/verilog-workbench/actions/runs/39351677436/job/118397529521"
+    }
+  ],
+  "browser_reports": {
+    "built_semantic": {
+      "report_sha256": "2574da5e673ecea68687dd84033683fa5f8656dc6987d5a9ab675a3dd1f8ee1d",
+      "recorded_at": "2026-10-20T01:08:24.936Z",
+      "state": "passed",
+      "browser": "151.0.7922.34",
+      "checks": [
+        "systemverilog-real-semantic-editor-UI-and-transaction-acceptance",
+        "vhdl-real-semantic-editor-UI-and-transaction-acceptance",
+        "python-real-semantic-editor-UI-and-transaction-acceptance"
+      ],
+      "languages": {
+        "systemverilog": {
+          "status": "passed",
+          "checks": [
+            "real-companion-pairing-language-capabilities-and-code-intelligence-tab",
+            "real-hover-definition-navigation-exact-references-and-completion-insertion",
+            "dirty-buffer-blocks-rename-without-disk-writes",
+            "semantic-cross-file-rename-preview-explicit-apply-exact-bytes-and-undo",
+            "external-cross-file-change-rejects-apply-without-partial-writes",
+            "credentials-and-source-not-persisted-without-opt-in"
+          ],
+          "native_post_edit": {
+            "tool": "iverilog",
+            "scope": "Isolated post-edit HDL compilation or Python syntax/helper behavior; not hardware/full Cocotb.",
+            "status": "passed",
+            "returncode": 0,
+            "stdout": "",
+            "stderr": ""
+          }
+        },
+        "vhdl": {
+          "status": "passed",
+          "checks": [
+            "real-companion-pairing-language-capabilities-and-code-intelligence-tab",
+            "real-hover-definition-navigation-exact-references-and-completion-insertion",
+            "dirty-buffer-blocks-rename-without-disk-writes",
+            "semantic-cross-file-rename-preview-explicit-apply-exact-bytes-and-undo",
+            "external-cross-file-change-rejects-apply-without-partial-writes",
+            "credentials-and-source-not-persisted-without-opt-in"
+          ],
+          "native_post_edit": {
+            "tool": "ghdl",
+            "scope": "Isolated post-edit HDL compilation or Python syntax/helper behavior; not hardware/full Cocotb.",
+            "status": "passed",
+            "returncode": 0,
+            "stdout": "",
+            "stderr": ""
+          }
+        },
+        "python": {
+          "status": "passed",
+          "checks": [
+            "real-companion-pairing-language-capabilities-and-code-intelligence-tab",
+            "real-hover-definition-navigation-exact-references-and-completion-insertion",
+            "dirty-buffer-blocks-rename-without-disk-writes",
+            "semantic-cross-file-rename-preview-explicit-apply-exact-bytes-and-undo",
+            "external-cross-file-change-rejects-apply-without-partial-writes",
+            "credentials-and-source-not-persisted-without-opt-in",
+            "actual-native-disconnect-refreshes-global-controls-and-retains-dirty-drafts"
+          ],
+          "native_post_edit": {
+            "tool": "python3",
+            "scope": "Isolated post-edit HDL compilation or Python syntax/helper behavior; not hardware/full Cocotb.",
+            "status": "passed",
+            "returncode": 0,
+            "stdout": "",
+            "stderr": ""
+          },
+          "disconnect": {
+            "status": "passed",
+            "actual_owned_companion_stopped": true,
+            "disconnected_header": true,
+            "run_and_save_disabled": true,
+            "unsaved_draft_retained_and_editable": true,
+            "disk_unchanged": true
+          }
+        }
+      }
+    },
+    "public_semantic": {
+      "report_sha256": "a112ed228679a4f1c8efa382ed3617cba70ed5afa85d63e1d35b0356cef291f6",
+      "recorded_at": "2026-10-20T01:09:57.899Z",
+      "state": "passed",
+      "browser": "151.0.7922.34",
+      "checks": [
+        "systemverilog-real-semantic-editor-UI-and-transaction-acceptance",
+        "vhdl-real-semantic-editor-UI-and-transaction-acceptance",
+        "python-real-semantic-editor-UI-and-transaction-acceptance"
+      ],
+      "languages": {
+        "systemverilog": {
+          "status": "passed",
+          "checks": [
+            "real-companion-pairing-language-capabilities-and-code-intelligence-tab",
+            "real-hover-definition-navigation-exact-references-and-completion-insertion",
+            "dirty-buffer-blocks-rename-without-disk-writes",
+            "semantic-cross-file-rename-preview-explicit-apply-exact-bytes-and-undo",
+            "external-cross-file-change-rejects-apply-without-partial-writes",
+            "credentials-and-source-not-persisted-without-opt-in"
+          ],
+          "native_post_edit": {
+            "tool": "iverilog",
+            "scope": "Isolated post-edit HDL compilation or Python syntax/helper behavior; not hardware/full Cocotb.",
+            "status": "not_run",
+            "reason": "Native fixture compiler is absent."
+          }
+        },
+        "vhdl": {
+          "status": "passed",
+          "checks": [
+            "real-companion-pairing-language-capabilities-and-code-intelligence-tab",
+            "real-hover-definition-navigation-exact-references-and-completion-insertion",
+            "dirty-buffer-blocks-rename-without-disk-writes",
+            "semantic-cross-file-rename-preview-explicit-apply-exact-bytes-and-undo",
+            "external-cross-file-change-rejects-apply-without-partial-writes",
+            "credentials-and-source-not-persisted-without-opt-in"
+          ],
+          "native_post_edit": {
+            "tool": "ghdl",
+            "scope": "Isolated post-edit HDL compilation or Python syntax/helper behavior; not hardware/full Cocotb.",
+            "status": "not_run",
+            "reason": "Native fixture compiler is absent."
+          }
+        },
+        "python": {
+          "status": "passed",
+          "checks": [
+            "real-companion-pairing-language-capabilities-and-code-intelligence-tab",
+            "real-hover-definition-navigation-exact-references-and-completion-insertion",
+            "dirty-buffer-blocks-rename-without-disk-writes",
+            "semantic-cross-file-rename-preview-explicit-apply-exact-bytes-and-undo",
+            "external-cross-file-change-rejects-apply-without-partial-writes",
+            "credentials-and-source-not-persisted-without-opt-in",
+            "actual-native-disconnect-refreshes-global-controls-and-retains-dirty-drafts"
+          ],
+          "native_post_edit": {
+            "tool": "python3",
+            "scope": "Isolated post-edit HDL compilation or Python syntax/helper behavior; not hardware/full Cocotb.",
+            "status": "passed",
+            "returncode": 0,
+            "stdout": "",
+            "stderr": ""
+          },
+          "disconnect": {
+            "status": "passed",
+            "actual_owned_companion_stopped": true,
+            "disconnected_header": true,
+            "run_and_save_disabled": true,
+            "unsaved_draft_retained_and_editable": true,
+            "disk_unchanged": true
+          }
+        }
+      }
+    },
+    "built_workspace": {
+      "report_sha256": "10ec8501142022dc77ea6b0fe8848dddb89225eb1223fad513f3a0bf7d118b8d",
+      "recorded_at": "2026-10-20T01:08:41.319Z",
+      "state": "passed",
+      "browser": "151.0.7922.34",
+      "checks": [
+        "built-root-project-prefix-and-fragment-reload",
+        "real-pairing-multifile-tabs-revision-save-CRLF-and-keyboard",
+        "external-change-conflict-without-overwrite",
+        "draft-export-import-explicit-recovery-reload-and-no-stored-credentials",
+        "native-companion-discover-job",
+        "saved-and-reverted-edits-retain-stale-job-status",
+        "artifact-download-vcd-worker-render-and-malformed-recovery",
+        "native-Icarus-pass-assertions-generated-VCD-download-and-worker-render",
+        "native-compiler-failure-and-raw-diagnostics",
+        "native-infinite-simulation-stop-after-runtime-marker",
+        "native-simulation-recovery-after-failure-and-cancellation",
+        "optional-guide-open-and-close",
+        "distinct-project-clears-results-and-ignores-simulated-late-old-session-responses"
+      ]
+    },
+    "public_workspace": {
+      "report_sha256": "f5560a695c0382f8659bb9f517301d02be422ad7369b9bd01690ea048154cfdb",
+      "recorded_at": "2026-10-20T01:09:51.350Z",
+      "state": "passed",
+      "browser": "151.0.7922.34",
+      "checks": [
+        "fresh-context-observed-loopback-health-without-test-permission-grant",
+        "actual-HTTPS-Pages-app-brand-preview-manifest-and-fragment-route",
+        "real-public-app-UI-pairing-Unicode-project-multifile-CRLF-and-keyboard-save",
+        "real-disk-revision-conflict-preserves-external-edit-and-explicit-reload",
+        "public-fragment-reload-forgets-session-and-new-one-time-UI-pairing-restores-file",
+        "real-native-discovery-job-and-output-through-public-app",
+        "exact-companion-viewer-fixture-download-and-public-VCD-worker-render",
+        "deployed-document-styles-modules-and-worker-bytes-match-public-build-manifest",
+        "no-browser-script-errors-or-stored-credentials"
+      ],
+      "verified_deployed_assets": {
+        "m0/client.mjs": "b00b1560eb55a8da374c59c0903b9281727d44132e3227f7da3063944167f9f4",
+        "workspace/app.mjs": "1f16394c96617f4b90430690ff45d723af962519f1c01bd0a9f679ad480c4bef",
+        "workspace/index.html": "60f046bb68f7e6b42d3fd2157878c58bb8ac960c30db5df83d4ec7425231d1ef",
+        "workspace/intelligence.mjs": "b86c242bcdb9f3f5c5a4e1b5e149a0763e46bf1345e2082b29024689f23b5dcd",
+        "workspace/model.mjs": "33d5d2375a720311a41c5aac76a1cff56b9651ee55a10f50e4bf98e9ca84c12d",
+        "workspace/style.css": "5ca23488f6e46d0b0316ccccecf3d2584169d3e3a1a50f52ce89104820943aff",
+        "workspace/vcd-worker.mjs": "ae1cf96d1cdff4435311cb13df4be3d6670854faece90b518489115a24043a20",
+        "workspace/vcd.mjs": "ba8509f15d38d0e1824e41101c0d9bb30c00b4a2aade00f57575f27d8f66f7f7",
+        "workspace/waveform.mjs": "cfd91d2a7f5ae378f8253b7ade5ca047dd90e721af77be9285e22941ece907fd"
+      }
+    }
+  },
+  "scope": "Actual built/public Chromium acceptance and matching web asset hashes. Public local-network permission uses the Chromium test API. Full language/platform/install/hardware release gates remain open."
+}

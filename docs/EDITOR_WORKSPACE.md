@@ -88,7 +88,7 @@ processes, and a crash can interrupt the replacement sequence.
 
 An interrupted transaction retains a journal under
 `<build-directory>/editor-recovery/pending`. On restart, a pending recovery blocks
-editor queries, ordinary saves and native jobs. **Recover interrupted edit**
+editor queries, ordinary saves and native jobs. **Recover interrupted rename**
 explicitly restores verified backups where safe. External changes leave recovery
 pending for manual resolution. The companion never adopts a foreign nonempty
 build directory as its recovery store. Private backups are excluded from project
@@ -155,6 +155,19 @@ Python validation passes. The [public workspace regression](workspace-evidence/e
 also passes all nine existing groups. These public probes explicitly grant
 Chromium local-network permission through its test API; manual permission UX
 and other-browser acceptance remain open.
+
+The final correction `a524338` canonicalizes temporary paths in transaction
+tests for macOS `/var` aliases and Windows short names; production code and web
+assets are unchanged. [Pages run 39351677436](https://github.com/sfmth/verilog-workbench/actions/runs/39351677436)
+again passes build, deploy and both public probes. Its
+[retained final summary](workspace-evidence/editor-final-pages-ci.json) records
+all four browser reports and nine delivered asset hashes matching the tested
+manifest. All six native unit, CLI, bundle and local-project smoke jobs pass in
+[native run 39351677421](https://github.com/sfmth/verilog-workbench/actions/runs/39351677421),
+with [separate native evidence](workspace-evidence/editor-native-ci.json).
+The wider toolchain workflow still fails its four previously documented package
+gap rows. Native runtime success does not establish semantic service acceptance
+on every platform.
 
 Broader construct/configuration fixtures, diagnostic accuracy, interactive
 snippets, syntax highlighting, file/folder lifecycle, managed service/runtime
