@@ -1,0 +1,690 @@
+{
+  "schema_version": "vwb.toolchains/1",
+  "mode": "execution",
+  "path_case": "ordinary",
+  "source_sha256": {
+    "vwb.py": "3b08aaaa1451d4e207aa0557e23d2626c6ef8fdd178ed96a27c70aa8852c7819",
+    "companion/process.py": "500b9a1cfac6aded8028923aa2ba35c14b4efa6677c2d8a81bfdff85cb0c266d",
+    "companion/toolchains.py": "85a05055679bf019083f5cf49244688b574922bd189dc88307c82a19209b2af8",
+    "scripts/probe_toolchain.py": "0dc0d36ab70f816ca4b2ea90a4a265d4b0c07a5bfebea418037d120ffdc9d26e"
+  },
+  "fixture_sha256": {
+    "formal/bad.sby": "22efd573b67bda3f3ca48e219cf8cd037e27cc671b13141d31553ee2662dee34",
+    "formal/bad.sv": "eb307c86c6ae93064f44115f33a586b629e429a52e403fd35cc3faec14907b67",
+    "formal/good.sby": "fc19c2609e5f1b45a03ef7d9a282cd92262ecc2a33a473047fca2c64d8045461",
+    "formal/good.sv": "6ccf9855c885a2991db3e2b53bf4b947d9861aa5e6368f8c34a4808ed612af9a",
+    "src/io.cst": "3226e050934c81563db1242fb2d1bf95066fb9d44cffa0c061866d59111e4878",
+    "src/io.pcf": "97ae9b2c677d62cdfea5486a366535505dce5f2180961330abce1ac4707e124d",
+    "src/m0_fpga.v": "3dee0e1e7fc940e8f05185431c5d4a4d9b9254b3f1043f87eb139f3d66cccc5d",
+    "src/m0_gate.v": "ad3ef15d3236ddd1938216b9342606fffc34ce1fd466c9363f9a383a8d1c9239",
+    "src/m0_sv.sv": "8ea99a4c742652e65c0948980770ebfe0d82b600b5fa9b4818624148e8a4a937",
+    "src/m0_vhdl.vhd": "c4d34c7683974d7092950955567040812f9b5bf17f40b48896a2e17e04b9fe62",
+    "test/__init__.py": "f7436bf802698546bfd6f6d9fc6c5b01540a553b015edecb2e6c010469470627",
+    "test/test_m0_cocotb.py": "9497c26c826c1080ede032d51241023732bbefa3467ace087f609183dcf78fcf",
+    "test/test_m0_gate.v": "841ef9457f6851014fd64589d55f4cb8fd2af520696bc679bdafda1587824ede",
+    "test/test_m0_sv.sv": "11a9d7c487d9dcafcd1c90d9ac0b3631702dcd403a2ad1f7fbd20c0e0807a0e6",
+    "test/test_m0_vhdl.vhd": "439bc82fbf99b6e951a48a4b143131ea1a86be01dfb2e48d69fef14f1e5b2fae"
+  },
+  "schema": "vwb.hdl-native-local-evidence/1",
+  "original_report_sha256": "19e6aa95bb442dc3d5d9606c8a02b8b1198cb06091c067255e060a473d80d992",
+  "smoke_passed": true,
+  "workflows": {
+    "verilog_simulation": {
+      "state": "passed",
+      "returncode": 0,
+      "note": "Actual HDL assertions completed.",
+      "duration_seconds": 0.141,
+      "log_sha256": "3a95ab713bb74760cdec8f8e5354a6a52908ab91c358e40516790573d00aa568",
+      "artifacts": [
+        {
+          "path": "build/.vwb-root",
+          "bytes": 72,
+          "sha256": "be613ded069cb8d3b10898976846ffb6533224788b40f9f10d5a10f979e5f477"
+        },
+        {
+          "path": "build/sim/m0_gate/verilog-test_m0_gate/cmds.f",
+          "bytes": 19,
+          "sha256": "46969f38f339d3fde8758e37f30c904f5d53cd1861f1136925c1fb53e8763e94"
+        },
+        {
+          "path": "build/sim/m0_gate/verilog-test_m0_gate/sim.vvp",
+          "bytes": 3137,
+          "sha256": "41019ed776880a2e29a7437561fee6e475783f5f55e00e8faef25f5ea4b99ead"
+        }
+      ]
+    },
+    "systemverilog_simulation": {
+      "state": "passed",
+      "returncode": 0,
+      "note": "Actual HDL assertions completed.",
+      "duration_seconds": 0.142,
+      "log_sha256": "b986ad0ff6adf793cf9a7c46faacb114653c6fc0b968962e2d9bba0fee686018",
+      "artifacts": [
+        {
+          "path": "build/.vwb-root",
+          "bytes": 72,
+          "sha256": "be613ded069cb8d3b10898976846ffb6533224788b40f9f10d5a10f979e5f477"
+        },
+        {
+          "path": "build/sim/m0_sv/verilog-test_m0_sv/cmds.f",
+          "bytes": 19,
+          "sha256": "46969f38f339d3fde8758e37f30c904f5d53cd1861f1136925c1fb53e8763e94"
+        },
+        {
+          "path": "build/sim/m0_sv/verilog-test_m0_sv/sim.vvp",
+          "bytes": 3167,
+          "sha256": "ddf0c69c689df14570b5e78f5d4651bd76c2220aa2eb3fd566d6cab4a7788bff"
+        }
+      ]
+    },
+    "waveforms": {
+      "state": "passed",
+      "returncode": 0,
+      "note": "Expected VCD declarations and time changes.",
+      "duration_seconds": 0.162,
+      "log_sha256": "6fce42b0c40568fc40aab33ed86f0d3b0a0e5b21b66626c9dbf752576ff6fdc8",
+      "artifacts": [
+        {
+          "path": "build/.vwb-root",
+          "bytes": 72,
+          "sha256": "be613ded069cb8d3b10898976846ffb6533224788b40f9f10d5a10f979e5f477"
+        },
+        {
+          "path": "build/sim/m0_gate/verilog-test_m0_gate/cmds.f",
+          "bytes": 19,
+          "sha256": "46969f38f339d3fde8758e37f30c904f5d53cd1861f1136925c1fb53e8763e94"
+        },
+        {
+          "path": "build/sim/m0_gate/verilog-test_m0_gate/m0_gate.vcd",
+          "bytes": 499,
+          "sha256": "fe52c54a12ff53017391e57073384383bf412f63d630837528444eb8e62d8bd1"
+        },
+        {
+          "path": "build/sim/m0_gate/verilog-test_m0_gate/preprocessed.sv",
+          "bytes": 369,
+          "sha256": "2b8f1f31a4e8c93e796cb9859228fb09c09738da7696b476ba1fa4de60155dd3"
+        },
+        {
+          "path": "build/sim/m0_gate/verilog-test_m0_gate/sim.vvp",
+          "bytes": 3486,
+          "sha256": "958fa7b17e0b0bd55c76df9e0b8c09d635bfd1bb6e3d3d89d05a33d119ea2204"
+        },
+        {
+          "path": "build/sim/m0_gate/verilog-test_m0_gate/vwb_dump.v",
+          "bytes": 128,
+          "sha256": "93f30808b2dd8ccbdf906304c648606e0487227e369fa9adb919cd37fcbca09b"
+        }
+      ]
+    },
+    "cocotb_verilog": {
+      "state": "passed",
+      "returncode": 0,
+      "note": "Cocotb truth-table assertions reported passing test cases.",
+      "duration_seconds": 0.664,
+      "log_sha256": "6d39f027f415a1bf7adcfeb6a700e9e910a8429c0db2a76bc343ec82bea11cc7",
+      "artifacts": [
+        {
+          "path": "build/.vwb-root",
+          "bytes": 72,
+          "sha256": "be613ded069cb8d3b10898976846ffb6533224788b40f9f10d5a10f979e5f477"
+        },
+        {
+          "path": "build/sim/m0_gate/cocotb-test_m0_cocotb/cmds.f",
+          "bytes": 19,
+          "sha256": "46969f38f339d3fde8758e37f30c904f5d53cd1861f1136925c1fb53e8763e94"
+        },
+        {
+          "path": "build/sim/m0_gate/cocotb-test_m0_cocotb/m0_gate.vcd",
+          "bytes": 337,
+          "sha256": "a09443a99af1f2aefc310c2990c124871dc720446b1bef4832da7839c99f56b3"
+        },
+        {
+          "path": "build/sim/m0_gate/cocotb-test_m0_cocotb/preprocessed.sv",
+          "bytes": 89,
+          "sha256": "ad3ef15d3236ddd1938216b9342606fffc34ce1fd466c9363f9a383a8d1c9239"
+        },
+        {
+          "path": "build/sim/m0_gate/cocotb-test_m0_cocotb/results.xml",
+          "bytes": 403,
+          "sha256": "94d5cf0887eaab4c2663875790be17606459cf1715a0e1b59eb8ca992b2ff0b2"
+        },
+        {
+          "path": "build/sim/m0_gate/cocotb-test_m0_cocotb/sim.vvp",
+          "bytes": 2391,
+          "sha256": "40062c3c2fefd3e5b0016d4cc205a795ab26a92c801249fc28ab357d33ef420a"
+        },
+        {
+          "path": "build/sim/m0_gate/cocotb-test_m0_cocotb/vwb_dump.v",
+          "bytes": 125,
+          "sha256": "63b0dd1699a4b6b9134f0809bbbe3b768fa567b7e6ed122a84a74f839741803b"
+        }
+      ]
+    },
+    "vhdl_simulation": {
+      "state": "passed",
+      "returncode": 0,
+      "note": "Expected VCD declarations and time changes.",
+      "duration_seconds": 0.325,
+      "log_sha256": "1887a5538481ace4b600a0b890a5841199b41dd3f877a321ac81b351c668a2c5",
+      "artifacts": [
+        {
+          "path": "build/.vwb-root",
+          "bytes": 72,
+          "sha256": "be613ded069cb8d3b10898976846ffb6533224788b40f9f10d5a10f979e5f477"
+        },
+        {
+          "path": "build/sim/m0_vhdl/vhdl-test_m0_vhdl/e~tb_m0_vhdl.o",
+          "bytes": 6784,
+          "sha256": "15628c163c05a87273532eef6110ec23d23675fc416ddc45b923a3132739c3c4"
+        },
+        {
+          "path": "build/sim/m0_vhdl/vhdl-test_m0_vhdl/ghdl-work/m0_vhdl.o",
+          "bytes": 7224,
+          "sha256": "af6f5b843415ed961573cf629d6899954d4527b6fffe3744bcb30cb79eb1084b"
+        },
+        {
+          "path": "build/sim/m0_vhdl/vhdl-test_m0_vhdl/ghdl-work/test_m0_vhdl.o",
+          "bytes": 12808,
+          "sha256": "8b20bce79c4a9c37e5f0b543b66774de731aea7d73e77f8098875c8eeb241cdf"
+        },
+        {
+          "path": "build/sim/m0_vhdl/vhdl-test_m0_vhdl/ghdl-work/work-obj08.cf",
+          "bytes": 497,
+          "sha256": "02032b2086240fa886ca0b6652ba31d64eaebee4e5a7e90dd62a1d10ed4a8f9c"
+        },
+        {
+          "path": "build/sim/m0_vhdl/vhdl-test_m0_vhdl/m0_vhdl.vcd",
+          "bytes": 612,
+          "sha256": "cfe94edf477d6dd96a99b2c22d7b76808c3ec88694ccba8ccd3b56e38f2346ee"
+        },
+        {
+          "path": "build/sim/m0_vhdl/vhdl-test_m0_vhdl/tb_m0_vhdl",
+          "bytes": 2660736,
+          "sha256": "cec81f5798006a623f62350e5ea9cce81dcd881aa6411ca6442aa8eaabc1396c"
+        }
+      ]
+    },
+    "cocotb_vhdl": {
+      "state": "passed",
+      "returncode": 0,
+      "note": "Cocotb truth-table assertions reported passing test cases.",
+      "duration_seconds": 0.666,
+      "log_sha256": "4215f8d51ee756361335d68eb7a3ae5bf3d62da87c53226d07e220c42b98edd6",
+      "artifacts": [
+        {
+          "path": "build/.vwb-root",
+          "bytes": 72,
+          "sha256": "be613ded069cb8d3b10898976846ffb6533224788b40f9f10d5a10f979e5f477"
+        },
+        {
+          "path": "build/sim/m0_vhdl/cocotb-test_m0_cocotb/e~m0_vhdl.o",
+          "bytes": 6208,
+          "sha256": "efd9f1b8daf1def97044fe73ab44f8048dd5248525c015115c9017165f22ae09"
+        },
+        {
+          "path": "build/sim/m0_vhdl/cocotb-test_m0_cocotb/ghdl-work/m0_vhdl.o",
+          "bytes": 7192,
+          "sha256": "47d5cc09fcb39f5785636c56625bd7dc9b8632f16d07fab3433939bfa1b4c127"
+        },
+        {
+          "path": "build/sim/m0_vhdl/cocotb-test_m0_cocotb/ghdl-work/work-obj08.cf",
+          "bytes": 240,
+          "sha256": "9b162cdf480e7e7aa619d24da2345037670d179e4ec083fa8e08e44e819b3dab"
+        },
+        {
+          "path": "build/sim/m0_vhdl/cocotb-test_m0_cocotb/m0_vhdl",
+          "bytes": 2289784,
+          "sha256": "eb2ac99a5c700f1835accbc73427ce4458ce9884867e6447da2b7a9d51d17561"
+        },
+        {
+          "path": "build/sim/m0_vhdl/cocotb-test_m0_cocotb/m0_vhdl.vcd",
+          "bytes": 403,
+          "sha256": "940a724cb7321dfd684c9f7ffe8adbccce83ecfe94147ecdb77ab34f778337c1"
+        },
+        {
+          "path": "build/sim/m0_vhdl/cocotb-test_m0_cocotb/results.xml",
+          "bytes": 398,
+          "sha256": "4f7a2e96b849ccffda6c0b39ab4eba302a40ee26bf88a1d830fe1421fc9ddd1f"
+        }
+      ]
+    },
+    "lint": {
+      "state": "passed",
+      "returncode": 0,
+      "note": "Actual tool command completed.",
+      "duration_seconds": 0.162,
+      "log_sha256": "bfc3f520e120b4568dd95f2df96bab1e9729f9903e576c309ecb779ca80726a0",
+      "artifacts": [
+        {
+          "path": "build/.vwb-root",
+          "bytes": 72,
+          "sha256": "be613ded069cb8d3b10898976846ffb6533224788b40f9f10d5a10f979e5f477"
+        }
+      ]
+    },
+    "synthesis": {
+      "state": "passed",
+      "returncode": 0,
+      "note": "Yosys netlist contains modules.",
+      "duration_seconds": 0.142,
+      "log_sha256": "d7ef216866d21dba0b4101a217c18e7af6ebb3482e03d214dff1163847e703a6",
+      "artifacts": [
+        {
+          "path": "build/.vwb-root",
+          "bytes": 72,
+          "sha256": "be613ded069cb8d3b10898976846ffb6533224788b40f9f10d5a10f979e5f477"
+        },
+        {
+          "path": "build/synth/m0_gate/m0_gate.json",
+          "bytes": 2144,
+          "sha256": "b81d25125b9c6c04858ccb4e8083bf3915605dd66af7c141de5fbcd044f803e0"
+        },
+        {
+          "path": "build/synth/m0_gate/synth.tcl",
+          "bytes": 463,
+          "sha256": "fa3dd9b8c9fab56907906cb82e9a383fd0334d46b8cd3e29ab085cab8ba5f91b"
+        }
+      ]
+    },
+    "schematics": {
+      "state": "passed",
+      "returncode": 0,
+      "note": "SVG parsed successfully.",
+      "duration_seconds": 0.383,
+      "log_sha256": "929bcce0839c0a59d69b1b9b934031cd224fe6b4ea6204021e5bace25edd6d2f",
+      "artifacts": [
+        {
+          "path": "build/.vwb-root",
+          "bytes": 72,
+          "sha256": "be613ded069cb8d3b10898976846ffb6533224788b40f9f10d5a10f979e5f477"
+        },
+        {
+          "path": "build/synth/m0_gate/m0_gate.dot",
+          "bytes": 564,
+          "sha256": "53e1dde146651842b385590d7217bfcdefc218c494fe4fa3b6d3efbcbc298834"
+        },
+        {
+          "path": "build/synth/m0_gate/m0_gate.il",
+          "bytes": 1138,
+          "sha256": "5f069ed7ab9b6624a05f86ce6092a0109d25a239e8144f38f293d38fd423e0a2"
+        },
+        {
+          "path": "build/synth/m0_gate/m0_gate.json",
+          "bytes": 2150,
+          "sha256": "c13819ad188555e01c05e275a84d4ddb7109ddb1786f404321d1f68808aebcf7"
+        },
+        {
+          "path": "build/synth/m0_gate/m0_gate.svg",
+          "bytes": 3263,
+          "sha256": "df5418c2f372ad722c847621547bff276b8a38a141d83115eb33f32d11bb3822"
+        },
+        {
+          "path": "build/synth/m0_gate/render.ys",
+          "bytes": 103,
+          "sha256": "65487f766a7ed723fbcebc7cfa06128273532c2c9b4726cdd40a87d76ca1b60b"
+        },
+        {
+          "path": "build/synth/m0_gate/synth.tcl",
+          "bytes": 573,
+          "sha256": "3edcbb2b058211b039e12a08e5ade706151b94f73478c63badcb5e50efa24556"
+        }
+      ]
+    },
+    "vhdl_synthesis": {
+      "state": "passed",
+      "returncode": 0,
+      "note": "Yosys netlist contains modules.",
+      "duration_seconds": 0.284,
+      "log_sha256": "b252f6d29b7869d35c0fe934b75b31bf1c4a372c89bca717f67667727ee4e61d",
+      "artifacts": [
+        {
+          "path": "build/.vwb-root",
+          "bytes": 72,
+          "sha256": "be613ded069cb8d3b10898976846ffb6533224788b40f9f10d5a10f979e5f477"
+        },
+        {
+          "path": "build/synth/m0_vhdl/e~m0_vhdl.o",
+          "bytes": 6192,
+          "sha256": "bdb48193e4f749ff31cca0bb345b41a94950d91d0adbb4cea84848ed59335dd9"
+        },
+        {
+          "path": "build/synth/m0_vhdl/ghdl-work/m0_vhdl.o",
+          "bytes": 7200,
+          "sha256": "cbe5b02c852b1f862f80d209d5735a81b8278fc8e150bb77ebb4a427aa37e951"
+        },
+        {
+          "path": "build/synth/m0_vhdl/ghdl-work/work-obj08.cf",
+          "bytes": 243,
+          "sha256": "0972ed619328ce85e245d2d31e82f729f86ca30cf35ea74e7002d59ed7bf5c3a"
+        },
+        {
+          "path": "build/synth/m0_vhdl/m0_vhdl",
+          "bytes": 2289768,
+          "sha256": "017363371c856ceb9a909549f37182429e42f3d86cef9a96a2f233c1652e0c9b"
+        },
+        {
+          "path": "build/synth/m0_vhdl/m0_vhdl.json",
+          "bytes": 2506,
+          "sha256": "6f4bdce7c73544f91cd35d7ecd2c68ea808e0f6b1244238d00809563a3421d09"
+        },
+        {
+          "path": "build/synth/m0_vhdl/m0_vhdl.v",
+          "bytes": 223,
+          "sha256": "8ef743c97e462b7b850222e0f5704e802a93e1053f285739d7cab7b2db0800ad"
+        },
+        {
+          "path": "build/synth/m0_vhdl/synth.tcl",
+          "bytes": 504,
+          "sha256": "3446f9a41039bcb55d49d2beb90359a608d4c094df12cd0e377562c3560d132c"
+        }
+      ]
+    },
+    "formal_proof": {
+      "state": "passed",
+      "returncode": 0,
+      "note": "Expected SBY PASS status file.",
+      "duration_seconds": 0.283,
+      "log_sha256": "7f020ad5b23957df9a9adc889458d1ce45654eaf6d719b2548c19e48887eb428",
+      "artifacts": [
+        {
+          "path": "build/.vwb-root",
+          "bytes": 72,
+          "sha256": "be613ded069cb8d3b10898976846ffb6533224788b40f9f10d5a10f979e5f477"
+        },
+        {
+          "path": "build/formal/good/PASS",
+          "bytes": 266,
+          "sha256": "aae5c1a329433f0f2ebf0182ae9630af73d97fd6516cb3d76457cc52f456f617"
+        },
+        {
+          "path": "build/formal/good/config.sby",
+          "bytes": 118,
+          "sha256": "fc19c2609e5f1b45a03ef7d9a282cd92262ecc2a33a473047fca2c64d8045461"
+        },
+        {
+          "path": "build/formal/good/engine_0/logfile_basecase.txt",
+          "bytes": 240,
+          "sha256": "b310f598b4a491bfd884190038e89cd43a242577d9d7d898ffeea7a562c7c2ce"
+        },
+        {
+          "path": "build/formal/good/engine_0/logfile_induction.txt",
+          "bytes": 142,
+          "sha256": "f2777dbe7187356a7dcd08270c5d1a77e7333abb662f7b52fe6778abf8809185"
+        },
+        {
+          "path": "build/formal/good/good.xml",
+          "bytes": 4305,
+          "sha256": "5f8e8efe4ffe84ac5770688576a593cf7c739a1a5306904205a9772c42e54d5a"
+        },
+        {
+          "path": "build/formal/good/logfile.txt",
+          "bytes": 3540,
+          "sha256": "b0665e6682dfbcd5f5ea63dad727fc78f398b524d791643d9f14db774247f882"
+        },
+        {
+          "path": "build/formal/good/model/design.il",
+          "bytes": 927,
+          "sha256": "288531483264f460a9420a00f72d06d9375f9041bef73fc48765a55f8c0346f9"
+        },
+        {
+          "path": "build/formal/good/model/design.json",
+          "bytes": 2112,
+          "sha256": "439eb7402d661f3dabbc04de0bcbf7eaa7ff544c69aa23b58fe928d2f1fdbb12"
+        },
+        {
+          "path": "build/formal/good/model/design.log",
+          "bytes": 8107,
+          "sha256": "6ff8ed00b369f35a0c80f166ecf643aae43d13cdc326104a694b179d1878d7ee"
+        },
+        {
+          "path": "build/formal/good/model/design.ys",
+          "bytes": 195,
+          "sha256": "0a4b345cde4a6a7367e3cd368df097dbe74660308376f9659cb3f0dc3264d7a2"
+        },
+        {
+          "path": "build/formal/good/model/design_prep.il",
+          "bytes": 655,
+          "sha256": "45bb841f9938ea423b9d727a87f3a3687cfece77fec5a2ae34ae72f14f532e7f"
+        },
+        {
+          "path": "build/formal/good/model/design_prep.log",
+          "bytes": 2380,
+          "sha256": "449511177a17d9293e38dfa92b9fa8a8b07dfd37515ccd5da988d95c037a713e"
+        },
+        {
+          "path": "build/formal/good/model/design_prep.ys",
+          "bytes": 360,
+          "sha256": "32a46e4ec231a0a743f797229047da906ba59bc10afdbf0b1f8a5d3b1964c9bf"
+        },
+        {
+          "path": "build/formal/good/model/design_smt2.log",
+          "bytes": 1731,
+          "sha256": "6fe6e63288612ba848faf40ac28bba62366bf176ca35199aa771192545fe63e6"
+        },
+        {
+          "path": "build/formal/good/model/design_smt2.smt2",
+          "bytes": 1432,
+          "sha256": "fb8dce932a94cdf863ec0ac5e6de6dbe8ad42eaf52b715b2ea4085916ad62b1a"
+        },
+        {
+          "path": "build/formal/good/model/design_smt2.ys",
+          "bytes": 171,
+          "sha256": "5ead236a3f2a5869f81c1f95055d03ffff818bdbdda6f018366008c9071d74f2"
+        },
+        {
+          "path": "build/formal/good/src/good.sv",
+          "bytes": 108,
+          "sha256": "6ccf9855c885a2991db3e2b53bf4b947d9861aa5e6368f8c34a4808ed612af9a"
+        },
+        {
+          "path": "build/formal/good/status",
+          "bytes": 9,
+          "sha256": "4d489b9bfaac73d73a64a4023bf4d947ca1d4216d9f72864c97bfb6a2bc07d56"
+        },
+        {
+          "path": "build/formal/good/status.sqlite",
+          "bytes": 24576,
+          "sha256": "cbf54947eac9d73d906b51e5e38141415829388d3b575feb402b7162c1ad8285"
+        }
+      ]
+    },
+    "formal_counterexample": {
+      "state": "passed",
+      "returncode": 2,
+      "note": "Expected SBY FAIL and nonempty counterexample VCD.",
+      "duration_seconds": 0.263,
+      "log_sha256": "8b0c33633a6eb47d1f22d0e0d7d22c300337c1703e54339dabadc43a99121092",
+      "artifacts": [
+        {
+          "path": "build/.vwb-root",
+          "bytes": 72,
+          "sha256": "be613ded069cb8d3b10898976846ffb6533224788b40f9f10d5a10f979e5f477"
+        },
+        {
+          "path": "build/formal/bad/FAIL",
+          "bytes": 334,
+          "sha256": "84268a64b6b760bb3035755c518a1f7245adb40101b830dfdac3fefa40779e68"
+        },
+        {
+          "path": "build/formal/bad/bad.xml",
+          "bytes": 4719,
+          "sha256": "61039b6c415882c987df93ffac7d3b391d4585fd02f3bc2e6e69eab92096a9c0"
+        },
+        {
+          "path": "build/formal/bad/config.sby",
+          "bytes": 116,
+          "sha256": "22efd573b67bda3f3ca48e219cf8cd037e27cc671b13141d31553ee2662dee34"
+        },
+        {
+          "path": "build/formal/bad/engine_0/logfile_basecase.txt",
+          "bytes": 536,
+          "sha256": "346e420149f4adbdffbe8a921de030854e49e9ce31dc9aa2a985b5b97b6811c6"
+        },
+        {
+          "path": "build/formal/bad/engine_0/logfile_induction.txt",
+          "bytes": 68,
+          "sha256": "3218f6223299f87940c779542ef07a0906c70849466568205411d0ba9061cfd3"
+        },
+        {
+          "path": "build/formal/bad/engine_0/trace.smtc",
+          "bytes": 57,
+          "sha256": "dcfddab9b0e6dbe24e15edbd91886d5a811db4ed681269df3ab083a7ce87fa64"
+        },
+        {
+          "path": "build/formal/bad/engine_0/trace.vcd",
+          "bytes": 358,
+          "sha256": "6d6b7342bef1ad9c34e6f944e2921f8e579d77eb2f4d32801f77117afa0647de"
+        },
+        {
+          "path": "build/formal/bad/engine_0/trace.yw",
+          "bytes": 271,
+          "sha256": "668c088bcfbfb99dded17062f7cc7c23dab8e3e3a9ea09620fe1f461bae012cd"
+        },
+        {
+          "path": "build/formal/bad/engine_0/trace_tb.v",
+          "bytes": 751,
+          "sha256": "ade9d6de6218ea897adaf255b372f4adf50dae6570b179ed4ee3bbced69e8c8a"
+        },
+        {
+          "path": "build/formal/bad/logfile.txt",
+          "bytes": 3742,
+          "sha256": "cbc47467d1418eba5a74629a1298f3fc08ae701203da5dd5f0de2e5162e69aa5"
+        },
+        {
+          "path": "build/formal/bad/model/design.il",
+          "bytes": 2210,
+          "sha256": "e976f6e7770705117c677362b4e5d296b6bbf0975e5b6e8b684a26245ff07435"
+        },
+        {
+          "path": "build/formal/bad/model/design.json",
+          "bytes": 5448,
+          "sha256": "d3dc840c9d7b3638c69ab55deaea3181ea41f57eb234da161d75d17ccb92070c"
+        },
+        {
+          "path": "build/formal/bad/model/design.log",
+          "bytes": 6112,
+          "sha256": "67c5e94cbebbce16cb7bc5976c970262386050d3614a21e841dc9718136f4d63"
+        },
+        {
+          "path": "build/formal/bad/model/design.ys",
+          "bytes": 193,
+          "sha256": "20c3c15e5ab44447dd21d16a2b981339793027bbaa730306ef5150d6f7d02b91"
+        },
+        {
+          "path": "build/formal/bad/model/design_prep.il",
+          "bytes": 1938,
+          "sha256": "c563757d1e41f14134d9dc96035bd46f8fbc7906e3cffa8e97fea0127275b647"
+        },
+        {
+          "path": "build/formal/bad/model/design_prep.log",
+          "bytes": 2375,
+          "sha256": "384043089ab3bb2255cb899769a1eabe098f6a021000781487a3f595442c7b24"
+        },
+        {
+          "path": "build/formal/bad/model/design_prep.ys",
+          "bytes": 359,
+          "sha256": "69a3e80301f667ac62825189fdf369110d56667482f34c3712adf87789e9b9c9"
+        },
+        {
+          "path": "build/formal/bad/model/design_smt2.log",
+          "bytes": 1781,
+          "sha256": "1a603a8dec7071c9dbc26490c771e39ef33943eca8b18f695624878c63ae6dc6"
+        },
+        {
+          "path": "build/formal/bad/model/design_smt2.smt2",
+          "bytes": 2010,
+          "sha256": "b47aa30bb0dd582345ce714baa4756acc2dd97eb2f3a3bc339cd85feb98b50a4"
+        },
+        {
+          "path": "build/formal/bad/model/design_smt2.ys",
+          "bytes": 170,
+          "sha256": "e097baf2e5dfcd1d799eca2cb44a8a12937c5483d27ea0f7d4ea9a991d34dc2f"
+        },
+        {
+          "path": "build/formal/bad/src/bad.sv",
+          "bytes": 181,
+          "sha256": "eb307c86c6ae93064f44115f33a586b629e429a52e403fd35cc3faec14907b67"
+        },
+        {
+          "path": "build/formal/bad/status",
+          "bytes": 9,
+          "sha256": "54c2862151d1efdbec1fb49edb5766e6e0c15c24e532866ac1305bd25dabc02c"
+        },
+        {
+          "path": "build/formal/bad/status.sqlite",
+          "bytes": 24576,
+          "sha256": "e518381e63e288a937e4386eee4274e13479d12bc5d1430dcda673eca3644c4c"
+        }
+      ]
+    },
+    "fpga_tangnano9k_build": {
+      "state": "passed",
+      "returncode": 0,
+      "note": "Expected nonempty packed bitstream; no USB programming performed.",
+      "duration_seconds": 2.654,
+      "log_sha256": "8eb886105097a941334bfe670b7d276e6084e5605155c8f49a1bfa76c30dc05b",
+      "artifacts": [
+        {
+          "path": "build/.vwb-root",
+          "bytes": 72,
+          "sha256": "be613ded069cb8d3b10898976846ffb6533224788b40f9f10d5a10f979e5f477"
+        },
+        {
+          "path": "build/fpga/gowin/m0_fpga/fpga.tcl",
+          "bytes": 466,
+          "sha256": "7e6e169f9474b3eca84eb6a4a1fbddc509056e1224f8fbe7522a1d37e5a4b385"
+        },
+        {
+          "path": "build/fpga/gowin/m0_fpga/m0_fpga-pnr.json",
+          "bytes": 8587,
+          "sha256": "52edac93cc813b3b08bf34594e7f7aef0c042c3e03838a929583244ed4efd135"
+        },
+        {
+          "path": "build/fpga/gowin/m0_fpga/m0_fpga.fs",
+          "bytes": 2069320,
+          "sha256": "461808fd9776dff169a90700123cb91dddb05555a1641ea18bfcc8611fc48c37"
+        },
+        {
+          "path": "build/fpga/gowin/m0_fpga/m0_fpga.json",
+          "bytes": 1090319,
+          "sha256": "2e0488be2b08cf2be967ee2056725bc6524adcccf4f3877e77c6f15fbc88a019"
+        }
+      ]
+    },
+    "fpga_icebreaker_build": {
+      "state": "passed",
+      "returncode": 0,
+      "note": "Expected nonempty packed bitstream; no USB programming performed.",
+      "duration_seconds": 0.624,
+      "log_sha256": "11146bf3da15a84be1dde8fce64a38b2a4edd31c0473cf3c9173cfd1cf5bfbac",
+      "artifacts": [
+        {
+          "path": "build/.vwb-root",
+          "bytes": 72,
+          "sha256": "be613ded069cb8d3b10898976846ffb6533224788b40f9f10d5a10f979e5f477"
+        },
+        {
+          "path": "build/fpga/ice40/m0_fpga/fpga.tcl",
+          "bytes": 466,
+          "sha256": "0a5941ea1904de52262446dbb5d81232e72a97fd7e5adaea987e68c8e151b3c6"
+        },
+        {
+          "path": "build/fpga/ice40/m0_fpga/m0_fpga.asc",
+          "bytes": 704747,
+          "sha256": "f2bd8c1a7056c488524adb4cfc93af02ff938aef6cd75d76e1737f2ad8339e7d"
+        },
+        {
+          "path": "build/fpga/ice40/m0_fpga/m0_fpga.bin",
+          "bytes": 104090,
+          "sha256": "fe65f21ee6137e7fe9970181dba55dc55786dcdf7375687082c03aef078e31cd"
+        },
+        {
+          "path": "build/fpga/ice40/m0_fpga/m0_fpga.json",
+          "bytes": 452165,
+          "sha256": "a757898fbfc53aea21c918a0beef2d487166706e07058054c1876848bd86d330"
+        }
+      ]
+    }
+  },
+  "scope": "Pinned native Linux CLI smoke workflows in an isolated project; physical programming and full browser/platform/install support are separate."
+}

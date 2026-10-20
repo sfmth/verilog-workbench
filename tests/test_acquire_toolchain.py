@@ -10,6 +10,7 @@ import subprocess
 import tarfile
 import tempfile
 import unittest
+import zipfile
 from unittest import mock
 
 REPO = Path(__file__).resolve().parents[1]
@@ -191,6 +192,139 @@ class AcquisitionTests(unittest.TestCase):
                 acquire.overlay_tools(suite, {"yosys": external})
         self.assertEqual(launcher.read_bytes(), b"original")
         self.assertFalse((suite / ".vwb-overlays/originals/yosys").exists())
+
+    def test_supplement_tar_root_directory_and_native_bytes_are_preserved(self):
+        archive = self.root / 'mac.tgz'
+        with tarfile.open(archive, 'w:gz') as output:
+            member = tarfile.TarInfo('.')
+            member.type = tarfile.DIRTYPE
+            output.addfile(member)
+            member = tarfile.TarInfo('./bin/ghdl')
+            member.mode = 0o4755
+            member.size = 6
+            output.addfile(member, io.BytesIO(b'native'))
+        destination = self.root / 'supplement'
+        acquire.extract_supplement(archive, destination)
+        binary = destination / 'bin/ghdl'
+        self.assertEqual(binary.read_bytes(), b'native')
+        self.assertFalse(binary.stat().st_mode & 0o6000)
+        with self.assertRaisesRegex(ValueError, 'fresh'):
+            acquire.extract_supplement(archive, destination)
+
+    def test_supplement_tar_rejects_links_and_cleans_failed_install(self):
+        for kind in ('symlink', 'hardlink', 'fifo'):
+            with self.subTest(kind=kind):
+                archive = self.archive([('bin/tool', b'bytes', 'file'), ('bin/link', 'tool', kind)])
+                target = self.root / 'supplement'
+                with self.assertRaisesRegex(ValueError, 'link or special'):
+                    acquire.extract_supplement(archive, target)
+                self.assertFalse(target.exists())
+
+    def test_supplement_zip_rejects_traversal_links_and_duplicate_canonical_names(self):
+        for entries in [[('../outside', b'bad')], [('a/./b', b'one'), ('a/b', b'two')], [('C:/outside', b'bad')]]:
+            with self.subTest(entries=entries):
+                archive = self.root / 'supplement.zip'
+                with zipfile.ZipFile(archive, 'w') as package:
+                    for name, value in entries:
+                        package.writestr(name, value)
+                with self.assertRaisesRegex(ValueError, 'unsafe'):
+                    acquire.extract_supplement(archive, self.root / 'extract')
+                self.assertFalse((self.root / 'extract').exists())
+        with zipfile.ZipFile(archive, 'w') as package:
+            member = zipfile.ZipInfo('alias')
+            member.external_attr = 0o120777 << 16
+            package.writestr(member, 'outside')
+        with self.assertRaisesRegex(ValueError, 'link or special'):
+            acquire.extract_supplement(archive, self.root / 'extract')
+
+    def test_supplement_download_revalidates_cached_bytes_and_restricts_source(self):
+        cache = self.root / 'cache'; cache.mkdir()
+        cached = cache / 'pinned.zip'; cached.write_bytes(b'valid')
+        asset = {'name': cached.name, 'url': 'https://github.com/ghdl/ghdl/releases/download/v6.0.0/pinned.zip',
+                 'size_bytes': 5, 'sha256': hashlib.sha256(b'valid').hexdigest()}
+        self.assertEqual(acquire.download_supplement(asset, cache), cached)
+        cached.write_bytes(b'wrong')
+        with self.assertRaisesRegex(ValueError, 'SHA-256'):
+            acquire.download_supplement(asset, cache)
+        with self.assertRaisesRegex(ValueError, 'locked upstream'):
+            acquire.download_supplement({**asset, 'url': 'https://unrelated.example/pinned.zip'}, cache)
+
+    def test_external_arm_ghdl_uses_only_its_alias_and_matching_prefix(self):
+        self.require_symlink_permission()
+        binary = self.root / 'os-bin/ghdl-llvm'; binary.parent.mkdir()
+        binary.write_bytes(b'OS GHDL'); binary.chmod(0o755)
+        prefix = self.root / 'os-lib/ghdl/llvm/vhdl'; prefix.mkdir(parents=True)
+        environment = {'PATH': 'suite-first', 'GHDL_PREFIX': 'wrong-suite-libraries'}
+        lock = {'supplemental_candidates': {}}
+        result, records, interpreter = acquire.supplement_environment(lock, 'linux-arm64', self.root / 'supplements', environment,
+            external_ghdl=binary, ghdl_prefix=prefix)
+        self.assertEqual(result['GHDL_PREFIX'], str(prefix))
+        alias = Path(result['PATH'].split(os.pathsep)[0]) / 'ghdl'
+        self.assertEqual(alias.resolve(), binary.resolve())
+        self.assertEqual(result['PATH'].split(os.pathsep)[1:], ['suite-first'])
+        self.assertEqual(records[0]['executable_sha256'], hashlib.sha256(b'OS GHDL').hexdigest())
+        self.assertFalse(records[0]['relocatable'])
+        self.assertIsNone(interpreter)
+        self.assertEqual(environment['GHDL_PREFIX'], 'wrong-suite-libraries')
+
+    def test_windows_wheels_require_explicit_matching_msvc_cpython_before_install(self):
+        source = self.root / 'python.exe'; source.write_bytes(b'python')
+        for metadata in [{'implementation': 'CPython', 'version': [3, 11, 6], 'compiler': 'GCC'},
+                         {'implementation': 'CPython', 'version': [3, 12, 10], 'compiler': 'GCC'},
+                         {'implementation': 'PyPy', 'version': [3, 12, 10], 'compiler': 'MSC'}]:
+            with mock.patch.object(acquire, 'binary_architecture', return_value={'architectures': ['x64']}), \
+                 mock.patch.object(acquire, 'run_process', return_value=type('Result', (), {'returncode': 0, 'stdout': json.dumps(metadata)})()), \
+                 mock.patch.object(acquire, 'download_supplement') as download:
+                with self.assertRaisesRegex(ValueError, 'explicit external x64 MSVC CPython 3.12'):
+                    acquire.prepare_windows_cocotb({'wheels': []}, source, self.root / 'runtime')
+                download.assert_not_called()
+
+    def test_windows_supplement_environment_selects_the_explicit_venv_and_dll_dirs(self):
+        lock = {'supplemental_candidates': {'ghdl-windows-x64': {'prefix': 'lib/ghdl'},
+                'graphviz-windows-x64': {}, 'cocotb-windows-cpython312': {}}}
+        base = self.root / 'supplements'
+        ghdl = base / 'ghdl/bin/ghdl.exe'; ghdl.parent.mkdir(parents=True)
+        (base / 'ghdl/lib/ghdl').mkdir(parents=True)
+        dot = base / 'graphviz/bin/dot.exe'
+        python = base / 'venv/Scripts/python.exe'
+        packages = [(ghdl, {'directory': str(base / 'ghdl')}), (dot, {'directory': str(base / 'graphviz')})]
+        with mock.patch.object(acquire, 'acquire_supplement', side_effect=packages), \
+             mock.patch.object(acquire, 'prepare_windows_cocotb', return_value=(python, {'relocatable': False})):
+            environment, records, selected = acquire.supplement_environment(lock, 'windows-arm64', base,
+                {'PATH': 'suite', 'PYTHON_EXECUTABLE': 'wrong-suite-python'}, windows_python=Path('explicit.exe'))
+        self.assertEqual(selected, str(python))
+        self.assertEqual(environment['PYTHON_EXECUTABLE'], str(python))
+        self.assertEqual(environment['VIRTUAL_ENV'], str(base / 'venv'))
+        self.assertEqual(environment['GHDL_PREFIX'], str(base / 'ghdl/lib/ghdl'))
+        self.assertEqual(environment['PATH'].split(os.pathsep), [str(python.parent), str(ghdl.parent), str(base / 'ghdl/lib'), str(dot.parent), 'suite'])
+        self.assertEqual(len(records), 3)
+
+    def test_windows_cocotb_install_is_offline_local_and_records_arm_translation(self):
+        source = self.root / 'external-python.exe'; source.write_bytes(b'CPython')
+        directory = self.root / 'tools'; directory.mkdir()
+        wheel = directory / 'locked.whl'; wheel.write_bytes(b'wheel')
+        runtime = {'implementation': 'CPython', 'version': [3, 12, 10], 'compiler': 'MSC v.1943'}
+        commands = []
+        def execute(command, **options):
+            commands.append(command)
+            if command[1:3] == ['-m', 'venv']:
+                (Path(command[3]) / 'Scripts').mkdir(parents=True)
+            return type('Result', (), {'returncode': 0, 'stdout': json.dumps(runtime), 'stderr': ''})()
+        with mock.patch.object(acquire, 'binary_architecture', return_value={'format': 'pe', 'architectures': ['x64']}), \
+             mock.patch.object(acquire, 'host_platform', return_value={'architecture': 'arm64', 'system': 'windows'}), \
+             mock.patch.object(acquire, 'run_process', side_effect=execute), \
+             mock.patch.object(acquire, 'download_supplement', return_value=wheel):
+            python, record = acquire.prepare_windows_cocotb({'wheels': [{'name': 'locked.whl'}]}, source, directory)
+        self.assertEqual(python, directory / 'windows-cocotb-python/Scripts/python.exe')
+        install = commands[-1]
+        self.assertEqual(install[:4], [str(python), '-m', 'pip', 'install'])
+        self.assertIn('--no-index', install)
+        self.assertIn('--no-deps', install)
+        self.assertEqual(install[-1], str(wheel))
+        self.assertEqual(record['compatibility']['mechanism'], 'windows-11-x64-emulation')
+        self.assertFalse(record['compatibility']['verified'])
+        self.assertFalse(record['relocatable'])
+        self.assertEqual(record['workflow_support'], 'not-tested')
 
 
 if __name__ == "__main__":

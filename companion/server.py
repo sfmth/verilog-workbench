@@ -20,13 +20,16 @@ MAX_EDITOR_BODY_BYTES = 12 * 1024 * 1024
 MAX_ARTIFACT_BYTES = 32 * 1024 * 1024
 MAX_JOB_SECONDS = 300
 IDENTIFIER = re.compile(r"[A-Za-z_][A-Za-z0-9_$]*\Z")
+SIMULATION_OPTIONS = {"modules", "test", "test_language", "test_top", "testcase", "waves", "wave_format", "seed",
+                      "max_array_words", "defines", "includes", "plusargs", "gate_level", "keep_going"}
 COMMAND_OPTIONS = {
     "list": set(), "doctor": set(),
-    "test": {"modules", "test_language", "waves", "wave_format", "seed"},
-    "lint": {"modules", "all", "linters"},
-    "synth": {"module", "format", "full", "flatten", "schematic"},
+    "test": SIMULATION_OPTIONS,
+    "wave": SIMULATION_OPTIONS | {"tag", "replace_tag", "load", "list_saved"},
+    "lint": {"modules", "all", "linters", "defines", "includes", "keep_going"},
+    "synth": {"module", "format", "full", "flatten", "schematic", "defines", "includes"},
     "formal": {"config"},
-    "fpga": {"module", "board", "stage", "constraints", "program"},
+    "fpga": {"module", "board", "stage", "constraints", "program", "defines", "includes"},
 }
 
 
@@ -181,7 +184,13 @@ class CompanionState:
                          "runpy.run_path(driver,run_name='__main__')")
             argv = [sys.executable, "-I", "-c", bootstrap, str(application), str(driver)]
         argv += ["--root", str(project.root), "--src-dir", project.src_dir,
-                "--test-dir", project.test_dir, "--build-dir", project.build_dir, "--color", "never", command]
+                "--test-dir", project.test_dir, "--build-dir", project.build_dir, "--color", "never"]
+        management = command == 'wave' and (options.get('list_saved') is True or 'load' in options)
+        if command not in ('list', 'doctor') and not management:
+            # The browser's Output panel is the native terminal for this job.
+            # Retain passing simulator output as well as compiler failures.
+            argv.append('--verbose')
+        argv.append(command)
         def enum(key, values, flag=None):
             if key in options:
                 value = options[key]
@@ -200,6 +209,37 @@ class CompanionState:
             if not isinstance(value, str) or len(value) > 128 or not IDENTIFIER.fullmatch(value):
                 raise ProjectError(400, "module must be an ordinary HDL identifier")
             return value
+        def integer(key, maximum):
+            if key in options:
+                value = options[key]
+                if type(value) is not int or not 0 <= value <= maximum:
+                    raise ProjectError(400, f"{key} must be an integer from 0 to {maximum}")
+                argv.extend(["--" + key.replace("_", "-"), str(value)])
+        def strings(key):
+            values = options[key]
+            if not isinstance(values, list) or len(values) > 32:
+                raise ProjectError(400, f"{key} must be a list of at most 32 strings")
+            for value in values:
+                if not isinstance(value, str) or not value or len(value) > 512 or any(ord(char) < 32 or ord(char) == 127 for char in value):
+                    raise ProjectError(400, f"invalid {key} value")
+                try:
+                    value.encode('utf-8')
+                except UnicodeError as exc:
+                    raise ProjectError(400, f"invalid UTF-8 {key} value") from exc
+            return values
+        def source_path(value, *, directory=False):
+            path = project.path(value, allow_root=directory)
+            if path == project.build_path or project.build_path in path.parents:
+                raise ProjectError(403, 'HDL inputs must be outside the generated build directory')
+            if not (path.is_dir() if directory else path.is_file()):
+                raise ProjectError(400, 'HDL input must be an existing project ' + ('directory' if directory else 'file'))
+            return path
+        def tag(key):
+            value = options[key]
+            if not isinstance(value, str) or len(value) > 128 or not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._-]*', value):
+                raise ProjectError(400, f'{key} must be a portable saved-wave tag of at most 128 characters')
+            project.path(project.build_dir + '/saved-waves/' + value)
+            argv.extend(['--' + key.replace('_', '-'), value])
         if "module" in options:
             argv.append(identifier(options["module"]))
         if "modules" in options:
@@ -207,19 +247,83 @@ class CompanionState:
             if not isinstance(values, list) or len(values) > 32:
                 raise ProjectError(400, "modules must be a list of at most 32 identifiers")
             argv.extend(identifier(value) for value in values)
+        if command in ('test', 'wave', 'lint', 'synth', 'fpga'):
+            if 'defines' in options:
+                for value in strings('defines'):
+                    if not IDENTIFIER.fullmatch(value.split('=', 1)[0]) or len(value.split('=', 1)[0]) > 128:
+                        raise ProjectError(400, 'defines must use NAME or NAME=VALUE')
+                    # Equals spelling keeps even a value beginning '-' inside
+                    # its single typed option; it cannot become a driver flag.
+                    argv.append('--define=' + value)
+            if 'includes' in options:
+                for value in strings('includes'):
+                    argv.append('--include=' + str(source_path(value, directory=True)))
         if command in ("list", "doctor"):
             argv.append("--json")
-        elif command == "test":
+        elif command in ('test', 'wave'):
+            management = command == 'wave' and (options.get('list_saved') is True or 'load' in options)
+            if command == 'wave':
+                argv.append('--no-view')
+                if 'list_saved' in options and type(options['list_saved']) is not bool:
+                    raise ProjectError(400, 'list_saved must be boolean')
+                if options.get('list_saved') is True:
+                    if set(options) - {'modules', 'list_saved'}:
+                        raise ProjectError(400, 'list_saved cannot be combined with simulation or archive options')
+                    argv.extend(['--list-saved', '--json'])
+                elif 'load' in options:
+                    if set(options) - {'modules', 'load'} or len(options.get('modules', [])) > 1:
+                        raise ProjectError(400, 'load accepts only one optional module filter')
+                    tag('load')
+                    argv.append('--json')
+                else:
+                    if 'tag' in options:
+                        tag('tag')
+                    boolean('replace_tag', '--replace-tag')
+                    if options.get('replace_tag') and 'tag' not in options:
+                        raise ProjectError(400, 'replace_tag requires tag')
+                    if options.get('waves') is False:
+                        raise ProjectError(400, 'wave always captures a waveform')
+            if management:
+                return argv
             enum("test_language", {"auto", "cocotb", "verilog", "vhdl"})
             enum("wave_format", {"vcd", "fst"})
             boolean("waves", "--waves")
-            if "seed" in options:
-                seed = options["seed"]
-                if type(seed) is not int or not 0 <= seed <= 2**32 - 1:
-                    raise ProjectError(400, "seed must be a 32-bit unsigned integer")
-                argv.extend(["--seed", str(seed)])
+            boolean('gate_level', '--gate-level')
+            boolean('keep_going', '--keep-going')
+            integer('seed', 2**32 - 1)
+            integer('max_array_words', 1000000)
+            detected = None
+            if 'test' in options:
+                path = source_path(options['test'])
+                detected = {'.py': 'cocotb', '.v': 'verilog', '.sv': 'verilog', '.vhd': 'vhdl', '.vhdl': 'vhdl'}.get(path.suffix.lower())
+                if detected is None:
+                    raise ProjectError(400, 'test must be a Python, Verilog, SystemVerilog or VHDL test file')
+                if len(options.get('modules', [])) > 1:
+                    raise ProjectError(400, 'an explicit test accepts at most one DUT module')
+                if options.get('test_language', 'auto') not in ('auto', detected):
+                    raise ProjectError(400, 'test_language does not match the selected test file')
+                argv.extend(['--test', str(path)])
+            if 'test_top' in options:
+                if detected == 'cocotb' or options.get('test_language') == 'cocotb':
+                    raise ProjectError(400, 'test_top only applies to HDL testbenches')
+                argv.extend(['--test-top', identifier(options['test_top'])])
+            if 'testcase' in options:
+                value = options['testcase']
+                if not isinstance(value, str) or len(value) > 128 or not re.fullmatch(r'[A-Za-z_][A-Za-z0-9_]*', value):
+                    raise ProjectError(400, 'testcase must be one ordinary Python test function name')
+                argv.extend(['--testcase', value])
+            if ('testcase' in options or 'seed' in options) and (detected in ('verilog', 'vhdl') or options.get('test_language') in ('verilog', 'vhdl')):
+                raise ProjectError(400, 'testcase and seed only apply to Cocotb tests')
+            if 'plusargs' in options:
+                for value in strings('plusargs'):
+                    if not re.fullmatch(r'\+[A-Za-z_][A-Za-z0-9_]*(?:=.*)?', value):
+                        raise ProjectError(400, 'plusargs must use +NAME or +NAME=VALUE')
+                    argv.append('--plusarg=' + value)
         elif command == "lint":
             boolean("all", "--all")
+            boolean('keep_going', '--keep-going')
+            if options.get('all') and options.get('modules'):
+                raise ProjectError(400, 'choose modules or all, not both')
             if "linters" in options:
                 values = options["linters"]
                 if not isinstance(values, list) or len(values) > 6:

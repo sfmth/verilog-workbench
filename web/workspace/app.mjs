@@ -5,15 +5,19 @@ import {mountIntelligence, offsetAt, positionAt} from './intelligence.mjs';
 import {mountFileManager} from './files.mjs';
 import {mountSyntax} from './syntax-view.mjs';
 import {mountSearch} from './search.mjs';
+import {buildHdlJob, selectedTest, runSummary, designHierarchy} from './hdl.mjs';
+import {mountSchematic} from './schematic.mjs';
 
 const $ = id => document.getElementById(id);
 const all = selector => [...document.querySelectorAll(selector)];
 const terminal = new Set(['passed', 'failed', 'cancelled', 'timed_out']);
 let client, model, activePath, discovery, activeJob, lastJob, online = false;
 let explorerView = 'files', resultView = 'logs', preparing = false, epoch = 0, pollGeneration = 0;
-let disposeWaveform, previewUrl, openGeneration = 0;
+let disposeWaveform, disposeSchematic, previewUrl, openGeneration = 0;
 let pendingPath = new URLSearchParams(location.hash.slice(1)).get('file');
 let editVersion = 0, lastJobEditVersion = 0;
+let lastJobPayload;
+let artifactGeneration = 0, lastJobPreviewGeneration;
 let pairing = false;
 const dirty = () => [...(model?.buffers.values() || [])].some(buffer => buffer.dirty);
 let intelligence;
@@ -172,16 +176,46 @@ function renderExplorer() {
   } else if (!discovery) {
     container.append(node('p', 'Run “Discover project” to populate design units and tests.', 'empty'));
   } else {
+    if (explorerView === 'designs') {
+      const selected = $('module').value.trim();
+      if ((discovery.modules || []).some(unit => unit.name === selected)) {
+        const tree = node('details', undefined, 'design-hierarchy'); tree.open = true;
+        tree.append(node('summary', 'Selected top · dependency hierarchy'));
+        function branch(unit) {
+          const row = node('li');
+          row.append(button(unit.name + (unit.cycle ? ' · cycle' : unit.unresolved ? ' · unresolved' : ''), () => {
+            $('module').value = unit.name;
+            if (unit.files.length) return openFile(unit.files[0]);
+            renderExplorer();
+          }, 'design-row'));
+          for (const problem of unit.problems) row.append(node('p', problem, 'error'));
+          if (unit.children.length) { const list = node('ul'); for (const child of unit.children) list.append(branch(child)); row.append(list); }
+          if (unit.truncated) row.append(node('p', 'Expansion limit reached. Select a child to inspect it.', 'muted'));
+          return row;
+        }
+        const list = node('ul'); list.append(branch(designHierarchy(discovery, selected))); tree.append(list); container.append(tree);
+      }
+      for (const [kind, units] of [['Package', discovery.packages], ['Interface', discovery.interfaces], ['Primitive', discovery.primitives]]) {
+        for (const unit of units || []) {
+          if (!`${unit.name} ${(unit.files || []).join(' ')}`.toLowerCase().includes(needle)) continue;
+          container.append(node('p', `${kind} · ${unit.name} · ${unit.language}`, 'folder-label'));
+          for (const path of unit.files || []) container.append(button(path, () => openFile(path), 'design-row'));
+        }
+      }
+    }
     for (const design of discovery.modules || []) {
       if (explorerView === 'designs' && (design.name.toLowerCase().includes(needle) || design.files?.some(path => path.toLowerCase().includes(needle)))) {
         container.append(node('p', `${design.name} · ${design.language}`, 'folder-label'));
         for (const path of design.files || []) container.append(button(path, () => { $('module').value = design.name; return openFile(path); }, 'design-row'));
         if (design.dependencies?.length) container.append(node('p', 'Uses: ' + design.dependencies.join(', '), 'empty'));
+        for (const problem of design.problems || []) container.append(node('p', problem, 'error'));
       }
       if (explorerView === 'tests') for (const test of design.tests || []) {
         if (!`${test.path} ${design.name}`.toLowerCase().includes(needle)) continue;
         container.append(button(`${design.name} · ${test.kind}\n${test.path}`, () => {
-          $('module').value = design.name; $('command').value = 'test'; commandChanged(); return openFile(test.path);
+          const selection = selectedTest(design, test);
+          for (const [key, id] of [['module', 'module'], ['test', 'test-file'], ['test_top', 'test-top'], ['test_language', 'test-language'], ['testcase', 'testcase'], ['seed', 'seed']]) $(id).value = selection[key];
+          $('command').value = 'test'; commandChanged(); return openFile(test.path);
         }, 'test-row'));
       }
     }
@@ -233,36 +267,26 @@ async function readHash() {
 }
 function commandChanged() {
   const command = $('command').value;
-  for (const id of ['test', 'lint', 'synth', 'formal', 'fpga']) $(id + '-options').hidden = id !== command;
+  const simulation = command === 'test' || (command === 'wave' && $('wave-mode').value === 'simulate');
+  for (const id of ['lint', 'synth', 'formal', 'fpga', 'wave']) $(id + '-options').hidden = id !== command;
+  $('test-options').hidden = !simulation;
+  $('hdl-options').hidden = !simulation && !['lint', 'synth', 'fpga'].includes(command);
+  $('simulation-options').hidden = !simulation;
+  $('keep-going-option').hidden = !['test', 'lint'].includes(command);
+  $('replace-tag').disabled = command !== 'wave' || $('wave-mode').value !== 'simulate';
   $('module').disabled = ['list', 'doctor', 'formal'].includes(command);
 }
 function jobPayload(program) {
-  const command = $('command').value, top = $('module').value.trim(), options = {};
-  if (top && !/^[A-Za-z_][A-Za-z0-9_$]*$/.test(top)) throw new Error('Choose one ordinary HDL top/module identifier.');
-  if (['synth', 'fpga'].includes(command) && !top) throw new Error('Choose a top/module for this action.');
-  if (['test', 'lint'].includes(command) && top) options.modules = [top];
-  if (['synth', 'fpga'].includes(command)) options.module = top;
-  if (command === 'test') {
-    Object.assign(options, {test_language: $('test-language').value, waves: $('waves').checked, wave_format: 'vcd'});
-    if ($('seed').value) {
-      const seed = Number($('seed').value);
-      if (!Number.isInteger(seed) || seed < 0 || seed > 4294967295) throw new Error('Seed must be a 32-bit unsigned integer.');
-      options.seed = seed;
-    }
-  }
-  if (command === 'lint') { options.linters = [$('linter').value]; if (!top) options.all = true; }
-  if (command === 'synth') Object.assign(options, {format: $('synth-format').value, schematic: ['svg', 'png'].includes($('synth-format').value)});
-  if (command === 'formal' && $('formal-config').value.trim()) options.config = $('formal-config').value.trim();
-  if (command === 'fpga') {
-    Object.assign(options, {board: $('board').value, stage: program ? 'flash' : $('stage').value, program: !!program});
-    if ($('constraints').value.trim()) options.constraints = $('constraints').value.trim();
-  }
-  return {command, options, timeout: 300};
+  const ids = {command: 'command', module: 'module', test_language: 'test-language', test: 'test-file', test_top: 'test-top', testcase: 'testcase', seed: 'seed', wave_format: 'wave-format', max_array_words: 'max-array-words', defines: 'hdl-defines', includes: 'hdl-includes', plusargs: 'plusargs', linter: 'linter', synth_format: 'synth-format', formal_config: 'formal-config', board: 'board', stage: 'stage', constraints: 'constraints', wave_mode: 'wave-mode', wave_tag: 'wave-tag'};
+  const state = Object.fromEntries(Object.entries(ids).map(([key, id]) => [key, $(id).value]));
+  for (const [key, id] of [['waves', 'waves'], ['gate_level', 'gate-level'], ['keep_going', 'keep-going'], ['full', 'synth-full'], ['flatten', 'synth-flatten'], ['replace_tag', 'replace-tag']]) state[key] = $(id).checked;
+  return buildHdlJob(state, program);
 }
 async function startJob(program = false) {
   if (!online || activeJob || preparing) return;
   const payload = jobPayload(program);
   if (program && !confirm(`Build and program ${payload.options.module} on ${$('board').selectedOptions[0].textContent}? This runs the flash stage on the attached board with the saved sources and selected constraints.`)) return;
+  const previewGeneration = payload.command === 'wave' && payload.options.load ? ++artifactGeneration : undefined;
   preparing = true; renderControls();
   try {
     say('Saving open files before running…');
@@ -270,6 +294,8 @@ async function startJob(program = false) {
     if (dirty()) throw new Error('A buffer changed during save. Save again before running.');
     renderTabs();
     const job = await client.request('/v1/jobs', {method: 'POST', body: payload});
+    lastJobPayload = payload;
+    lastJobPreviewGeneration = previewGeneration;
     lastJobEditVersion = editVersion;
     activeJob = job.id; lastJob = job;
     showResult('logs'); renderJob(job);
@@ -285,6 +311,8 @@ function renderJob(job) {
   $('job-output').textContent = [job.stdout, job.stderr].filter(Boolean).join('\n') || (job.status === 'running' ? 'Running… Output becomes available when the native process finishes.' : 'No output.');
   if (job.stdout_truncated || job.stderr_truncated) $('job-output').textContent += '\n[Output truncated by companion limit]';
   renderDiagnostics(job);
+  const summary = runSummary(job);
+  $('hdl-summary').textContent = summary; $('hdl-summary').hidden = !summary;
 }
 async function pollJob() {
   if (!activeJob || !client?.token) return;
@@ -297,15 +325,54 @@ async function pollJob() {
       online = true; renderJob(job); renderControls();
       if (terminal.has(job.status)) {
         activeJob = null;
+        let completionNotice, completionError = false;
         if (job.command === 'list' && job.status === 'passed' && !job.stale) {
           try { discovery = JSON.parse(job.stdout); } catch { say('Discovery output was not valid JSON. Raw output is retained.', 'global-status', true); }
           $('module-list').replaceChildren();
           for (const item of discovery?.modules || []) { const option = node('option'); option.value = item.name; $('module-list').append(option); }
+          $('test-file-list').replaceChildren();
+          const tests = new Set((discovery?.modules || []).flatMap(item => (item.tests || []).map(test => test.path)));
+          for (const path of tests) { const option = node('option'); option.value = path; $('test-file-list').append(option); }
           renderExplorer();
         }
         if (job.command === 'doctor') { $('tools-output').textContent = job.stdout || job.stderr; }
         await refreshArtifacts();
-        say(`${job.command}: ${job.status}${job.stale ? ' (source changed; rerun before using results)' : ''}`);
+        if (sessionEpoch !== epoch || generation !== pollGeneration) return;
+        if (['test', 'wave'].includes(job.command)) {
+          const before = model.files.map(file => `${file.path}:${file.size}`).join('\n');
+          await refresh();
+          if (sessionEpoch !== epoch || generation !== pollGeneration) return;
+          if (before !== model.files.map(file => `${file.path}:${file.size}`).join('\n')) {
+            discovery = null; $('test-file-list').replaceChildren(); renderExplorer();
+            completionNotice = `${job.command}: ${job.status}. Project files changed; run Discover project to refresh designs and tests.`;
+          }
+        }
+        if (sessionEpoch !== epoch || generation !== pollGeneration) return;
+        if (job.command === 'wave' && job.status === 'passed' && !job.stale) {
+          const options = lastJobPayload?.command === 'wave' ? lastJobPayload.options : {};
+          if (options.list_saved) {
+            try {
+              const saved = JSON.parse(job.stdout);
+              if (!Array.isArray(saved)) throw new Error('Invalid saved-wave list.');
+              $('saved-wave-list').replaceChildren();
+              for (const item of saved) if (typeof item.tag === 'string') { const option = node('option'); option.value = item.tag; $('saved-wave-list').append(option); }
+            } catch { completionNotice = 'Saved-wave output was not valid JSON. Raw output is retained.'; completionError = true; }
+          } else if (options.load) {
+            try {
+              const saved = JSON.parse(job.stdout);
+              const path = saved.directory + '/' + saved.waveform;
+              if (/\.vcd$/i.test(path) && lastJobPreviewGeneration === artifactGeneration) {
+                const blob = await artifact(path), text = await blob.text();
+                if (sessionEpoch !== epoch || generation !== pollGeneration) return;
+                if (lastJobPreviewGeneration === artifactGeneration) openWaveform(text, path);
+              } else completionNotice = /\.vcd$/i.test(path) ? 'Saved waveform loaded. It is available in Artifacts.' : 'Saved FST is available to download from Artifacts.';
+            } catch (error) {
+              if (sessionEpoch !== epoch || generation !== pollGeneration) return;
+              completionNotice = 'Saved wave could not be opened: ' + describe(error); completionError = true;
+            }
+          }
+        }
+        say(completionNotice || `${job.command}: ${job.status}${job.stale ? ' (source changed; rerun before using results)' : ''}`, 'global-status', completionError);
         return;
       }
       await new Promise(resolve => setTimeout(resolve, 350));
@@ -348,18 +415,19 @@ async function refreshArtifacts() {
     row.append(button('Download', async () => download(await artifact(file.path), file.path.split('/').at(-1))));
     if (/\.(vcd|svg|png)$/i.test(file.path)) {
       row.append(button('View', async () => {
-        const viewEpoch = epoch;
+        const viewEpoch = epoch, generation = ++artifactGeneration;
         const blob = await artifact(file.path);
+        if (viewEpoch !== epoch || generation !== artifactGeneration) return;
         if (/\.vcd$/i.test(file.path)) {
           const text = await blob.text();
-          if (viewEpoch === epoch) openWaveform(text, file.path);
+          if (viewEpoch === epoch && generation === artifactGeneration) openWaveform(text, file.path);
         }
         else {
+          disposeSchematic?.(); disposeSchematic = null;
           if (previewUrl) URL.revokeObjectURL(previewUrl);
           // SVG is displayed in an image context; project scripts are never executed.
           previewUrl = URL.createObjectURL(new Blob([blob], {type: /\.svg$/i.test(file.path) ? 'image/svg+xml' : 'image/png'}));
-          const image = node('img'); image.src = previewUrl; image.alt = 'Schematic artifact ' + file.path;
-          $('artifact-preview').replaceChildren(image); showResult('artifacts');
+          disposeSchematic = mountSchematic($('artifact-preview'), previewUrl, file.path); showResult('artifacts');
         }
       }));
     }
@@ -380,6 +448,7 @@ function download(blob, filename) {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 function openWaveform(text, filename) {
+  artifactGeneration++;
   disposeWaveform?.();
   showResult('waveform');
   disposeWaveform = mountWaveform($('waveform-view'), text, {filename});
@@ -398,7 +467,9 @@ async function refresh() {
   renderExplorer(); renderRecovery();
 }
 function resetResults() {
+  artifactGeneration++; lastJobPreviewGeneration = undefined;
   disposeWaveform?.(); disposeWaveform = null;
+  disposeSchematic?.(); disposeSchematic = null;
   if (previewUrl) URL.revokeObjectURL(previewUrl);
   previewUrl = null;
   $('artifact-preview').replaceChildren(); $('artifact-list').replaceChildren(); $('diagnostics').replaceChildren();
@@ -406,8 +477,14 @@ function resetResults() {
   $('job-status').textContent = 'No job submitted'; $('job-status').classList.remove('error');
   $('diagnostic-count').textContent = '0';
   $('job-output').textContent = 'No job submitted for this project.';
+  $('hdl-summary').textContent = ''; $('hdl-summary').hidden = true; lastJobPayload = null;
   $('tools-output').textContent = 'No capability report loaded.';
   $('module-list').replaceChildren(); $('module').value = ''; $('formal-config').value = ''; $('constraints').value = '';
+  for (const id of ['test-file', 'test-top', 'testcase', 'seed', 'hdl-defines', 'hdl-includes', 'plusargs', 'wave-tag', 'max-array-words']) $(id).value = '';
+  for (const id of ['gate-level', 'keep-going', 'synth-full', 'synth-flatten', 'replace-tag']) $(id).checked = false;
+  $('test-language').value = 'auto'; $('wave-mode').value = 'simulate'; $('wave-format').value = 'vcd';
+  $('test-file-list').replaceChildren(); $('saved-wave-list').replaceChildren();
+  commandChanged();
 }
 
 const launch = `python -m companion --project /path/to/project --origin ${location.origin} --port 0`;
@@ -480,6 +557,8 @@ for (const item of all('[data-explorer]')) item.addEventListener('click', () => 
 });
 for (const item of all('[data-result]')) item.addEventListener('click', () => showResult(item.dataset.result));
 $('command').addEventListener('change', commandChanged);
+$('wave-mode').addEventListener('change', commandChanged);
+$('module').addEventListener('input', () => { if (explorerView === 'designs') renderExplorer(); });
 $('editor').addEventListener('input', () => {
   try {
     model.edit(activePath, $('editor').value); editVersion++; renderTabs(); renderControls(); renderFileStatus();
@@ -539,11 +618,11 @@ $('refresh-artifacts').addEventListener('click', () => perform(refreshArtifacts)
 $('check-tools').addEventListener('click', () => perform(capabilities));
 $('import-vcd').addEventListener('change', () => perform(async () => {
   const file = $('import-vcd').files[0]; if (!file) return;
-  const importEpoch = epoch;
+  const importEpoch = epoch, generation = ++artifactGeneration;
   try {
     if (file.size > 16 * 1024 * 1024) throw new Error('VCD viewer limit is 16 MiB.');
     const text = await file.text();
-    if (importEpoch === epoch) openWaveform(text, file.name);
+    if (importEpoch === epoch && generation === artifactGeneration) openWaveform(text, file.name);
   } finally { $('import-vcd').value = ''; }
 }));
 window.addEventListener('hashchange', () => perform(readHash));
@@ -613,7 +692,7 @@ fileSearch = mountSearch($('find-bar'), {editor: $('editor'), openButton: $('fin
 window.addEventListener('pagehide', event => {
   // A back/forward cache restore keeps the same objects and listeners alive.
   if (event.persisted) return;
-  disposeWaveform?.(); if (previewUrl) URL.revokeObjectURL(previewUrl);
+  disposeWaveform?.(); disposeSchematic?.(); if (previewUrl) URL.revokeObjectURL(previewUrl);
   intelligence.dispose(); fileManager.dispose(); syntaxView.dispose(); fileSearch.dispose();
 });
 commandChanged(); renderControls(); perform(readHash);

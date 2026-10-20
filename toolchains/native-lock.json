@@ -66,8 +66,10 @@
       "url": "https://github.com/ghdl/ghdl/releases/download/v6.0.0/ghdl-mcode-6.0.0-mingw64.zip",
       "size_bytes": 24053403,
       "sha256": "c1562b2a4767e34d33159b536b5e36a8a38ebdb6e7672aa9969a4f4ac2cadffe",
-      "status": "candidate-not-downloaded-or-integrated",
-      "note": "Standalone native MinGW64 simulator candidate; must prove VPI runtime compatibility, VHDL synthesis route and DLL dependencies."
+      "status": "download-verified-native-CI-not-run",
+      "note": "Standalone native MinGW64 simulator candidate; must prove VPI runtime compatibility, VHDL synthesis route and DLL dependencies.",
+      "entry": "bin/ghdl.exe",
+      "prefix": "lib/ghdl"
     },
     "yosys-darwin-arm64-homebrew-tcl": {
       "provider": "Homebrew/homebrew-core",
@@ -88,6 +90,112 @@
       "observed_version": "Yosys 0.70+post",
       "observed_git_sha": "0c11ea098be065e585a90a06e7b7da49936cf231",
       "ci_evidence": "https://github.com/sfmth/verilog-workbench/actions/runs/39153200306/job/117750929273"
+    },
+    "ghdl-darwin-x64": {
+      "repository": "https://github.com/ghdl/ghdl",
+      "release": "v4.1.0",
+      "name": "ghdl-macos-11-mcode.tgz",
+      "url": "https://github.com/ghdl/ghdl/releases/download/v4.1.0/ghdl-macos-11-mcode.tgz",
+      "size_bytes": 8251376,
+      "sha256": "8521aafad389eb769de25db13ecaaaade8444431447eb5e801dc2fcf981cdeed",
+      "integrity_source": "Locally computed SHA-256 of official HTTPS release archive; legacy GitHub asset has no published digest",
+      "status": "download-verified-native-CI-not-run",
+      "entry": "bin/ghdl",
+      "prefix": "lib/ghdl",
+      "note": "Native x64 Mach-O mcode; inspected executable links only Apple system libz and libSystem. Native simulation/VPI/synthesis remain CI gates."
+    },
+    "graphviz-windows-x64": {
+      "provider": "Graphviz",
+      "version": "14.1.1",
+      "name": "windows_10_cmake_Release_Graphviz-14.1.1-win64.zip",
+      "url": "https://gitlab.com/api/v4/projects/4207231/packages/generic/graphviz-releases/14.1.1/windows_10_cmake_Release_Graphviz-14.1.1-win64.zip",
+      "size_bytes": 9780290,
+      "sha256": "2a9b856a6b73591bdef5409e8b47ec6c90df40551d510709e1cb3e69016c1924",
+      "integrity_source": "Official adjacent .sha256 file linked by https://graphviz.org/download/",
+      "status": "download-verified-native-CI-not-run",
+      "entry": "Graphviz-14.1.1-win64/bin/dot.exe"
+    },
+    "ghdl-linux-arm64-ubuntu": {
+      "provider": "Ubuntu noble universe",
+      "package": "ghdl-llvm",
+      "version": "4.1.0+dfsg-0ubuntu2",
+      "reference": "https://packages.ubuntu.com/noble/ghdl-llvm",
+      "status": "external-prerequisite-native-CI-not-run",
+      "binary": "/usr/bin/ghdl-llvm",
+      "prefix": "/usr/lib/ghdl/llvm/vhdl",
+      "note": "Native ARM64 LLVM package plus OS dependencies and C compiler. Installed only on disposable CI host; not a managed portable supplement."
+    },
+    "cocotb-windows-cpython312": {
+      "provider": "PyPI",
+      "python_requirement": "Explicit external x64 CPython 3.12 built with MSVC; x64 OS translation on Windows ARM64",
+      "status": "integrity-pinned-native-CI-not-run",
+      "note": "Local venv only. Do not install MSVC wheels into the suite custom MinGW Python. All listed wheels installed offline without dependency resolution after exact hash/size verification.",
+      "wheels": [
+        {
+          "package": "cocotb",
+          "version": "2.1.0",
+          "name": "cocotb-2.1.0-cp312-cp312-win_amd64.whl",
+          "url": "https://files.pythonhosted.org/packages/4b/34/139b341b7867e129037b2631edb8702fd8b98ae3e1f21713982182b65b01/cocotb-2.1.0-cp312-cp312-win_amd64.whl",
+          "sha256": "069364019aacd0e3a299185bf5145aacb599b0576a0b0f2d2c96d9f8bf73b842",
+          "size_bytes": 659066
+        },
+        {
+          "package": "find-libpython",
+          "version": "0.5.0",
+          "name": "find_libpython-0.5.0-py3-none-any.whl",
+          "url": "https://files.pythonhosted.org/packages/a7/3f/0eb94bfca99e54404901536ea8c80ddacff4953257514c6b8fb01f9a75a8/find_libpython-0.5.0-py3-none-any.whl",
+          "sha256": "7690dcf6442cdce39c0df191903fd5ecf9af437fa920effb6569fbf2c8ca8ab4",
+          "size_bytes": 9194
+        },
+        {
+          "package": "pytest",
+          "version": "8.4.2",
+          "name": "pytest-8.4.2-py3-none-any.whl",
+          "url": "https://files.pythonhosted.org/packages/a8/a4/20da314d277121d6534b3a980b29035dcd51e6744bd79075a6ce8fa4eb8d/pytest-8.4.2-py3-none-any.whl",
+          "sha256": "872f880de3fc3a5bdc88a11b39c9710c3497a547cfa9320bc3c5e62fbf272e79",
+          "size_bytes": 365750
+        },
+        {
+          "package": "iniconfig",
+          "version": "2.1.0",
+          "name": "iniconfig-2.1.0-py3-none-any.whl",
+          "url": "https://files.pythonhosted.org/packages/2c/e1/e6716421ea10d38022b952c159d5161ca1193197fb744506875fbb87ea7b/iniconfig-2.1.0-py3-none-any.whl",
+          "sha256": "9deba5723312380e77435581c6bf4935c94cbfab9b1ed33ef8d238ea168eb760",
+          "size_bytes": 6050
+        },
+        {
+          "package": "packaging",
+          "version": "25.0",
+          "name": "packaging-25.0-py3-none-any.whl",
+          "url": "https://files.pythonhosted.org/packages/20/12/38679034af332785aac8774540895e234f4d07f7545804097de4b666afd8/packaging-25.0-py3-none-any.whl",
+          "sha256": "29572ef2b1f17581046b3a2227d5c611fb25ec70ca1ba8554b24b0e69331a484",
+          "size_bytes": 66469
+        },
+        {
+          "package": "pluggy",
+          "version": "1.6.0",
+          "name": "pluggy-1.6.0-py3-none-any.whl",
+          "url": "https://files.pythonhosted.org/packages/54/20/4d324d65cc6d9205fabedc306948156824eb9f0ee1633355a8f7ec5c66bf/pluggy-1.6.0-py3-none-any.whl",
+          "sha256": "e920276dd6813095e9377c0bc5566d94c932c33b27a3e3945d8389c374dd4746",
+          "size_bytes": 20538
+        },
+        {
+          "package": "pygments",
+          "version": "2.19.2",
+          "name": "pygments-2.19.2-py3-none-any.whl",
+          "url": "https://files.pythonhosted.org/packages/c7/21/705964c7812476f378728bdf590ca4b771ec72385c533964653c68e86bdc/pygments-2.19.2-py3-none-any.whl",
+          "sha256": "86540386c03d588bb81d44bc3928634ff26449851e99741617ecb9037ee5ec0b",
+          "size_bytes": 1225217
+        },
+        {
+          "package": "colorama",
+          "version": "0.4.6",
+          "name": "colorama-0.4.6-py2.py3-none-any.whl",
+          "url": "https://files.pythonhosted.org/packages/d1/d6/3965ed04c63042e047cb6a3e6ed1a63a35087b6a609aa3a15ed8ac56c221/colorama-0.4.6-py2.py3-none-any.whl",
+          "sha256": "4f1d9991f5acc0ca119f9d443620b77f9d6b33703e51011c16baf57afb285fc6",
+          "size_bytes": 25335
+        }
+      ]
     }
   },
   "targets": {

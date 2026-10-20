@@ -14,6 +14,9 @@ on:
       - 'scripts/probe_editor_workspace.mjs'
       - 'scripts/probe_files_workspace.mjs'
       - 'scripts/probe_source_workspace.mjs'
+      - 'scripts/probe_hdl_workspace.mjs'
+      - 'scripts/acquire_toolchain.py'
+      - 'toolchains/**'
       - 'scripts/acquire_editor_tools.py'
       - 'editor-fixtures/**'
       - 'tests/test_editor.py'
@@ -21,6 +24,8 @@ on:
       - 'tests/test_companion_editor.py'
       - 'tests/test_files.py'
       - 'tests/test_companion_files.py'
+      - 'tests/test_hdl.py'
+      - 'tests/test_acquire_toolchain.py'
       - 'tests/test_acquire_editor_tools.py'
       - 'tests/test_web_build.py'
       - 'tests/test_*.mjs'
@@ -37,6 +42,9 @@ on:
       - 'scripts/probe_editor_workspace.mjs'
       - 'scripts/probe_files_workspace.mjs'
       - 'scripts/probe_source_workspace.mjs'
+      - 'scripts/probe_hdl_workspace.mjs'
+      - 'scripts/acquire_toolchain.py'
+      - 'toolchains/**'
       - 'scripts/acquire_editor_tools.py'
       - 'editor-fixtures/**'
       - 'tests/test_editor.py'
@@ -44,6 +52,8 @@ on:
       - 'tests/test_companion_editor.py'
       - 'tests/test_files.py'
       - 'tests/test_companion_files.py'
+      - 'tests/test_hdl.py'
+      - 'tests/test_acquire_toolchain.py'
       - 'tests/test_acquire_editor_tools.py'
       - 'tests/test_web_build.py'
       - 'tests/test_*.mjs'
@@ -81,6 +91,8 @@ jobs:
           python -m unittest discover -s tests -p test_acquire_editor_tools.py -v
           python -m unittest discover -s tests -p test_files.py -v
           python -m unittest discover -s tests -p test_companion_files.py -v
+          python -m unittest discover -s tests -p test_hdl.py -v
+          python -m unittest discover -s tests -p test_acquire_toolchain.py -v
       - name: Build validated development preview
         run: python scripts/build_web.py --output dist/web --base-path /verilog-workbench/
       - name: Install pinned browser acceptance harness
@@ -101,6 +113,10 @@ jobs:
         run: node scripts/probe_files_workspace.mjs --playwright-module ../.web-browser/node_modules/playwright --output files-browser-evidence.json --screenshot files-workspace.png
       - name: Exercise syntax, native editing and literal search through the built browser UI
         run: node scripts/probe_source_workspace.mjs --playwright-module ../.web-browser/node_modules/playwright --output source-browser-evidence.json --screenshot source-workspace.png
+      - name: Acquire pinned complete Linux HDL toolchain for browser acceptance
+        run: python scripts/acquire_toolchain.py --target linux-x64 --directory .m0-tools/hdl --output hdl-tool-acquisition.json
+      - name: Execute complete HDL workflows through the built browser UI
+        run: node scripts/probe_hdl_workspace.mjs --acquisition hdl-tool-acquisition.json --playwright-module ../.web-browser/node_modules/playwright --output hdl-browser-evidence.json --screenshot hdl-workspace.png
       - name: Retain browser evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -115,6 +131,9 @@ jobs:
             files-workspace.png
             source-browser-evidence.json
             source-workspace.png
+            hdl-tool-acquisition.json
+            hdl-browser-evidence.json
+            hdl-workspace.png
           if-no-files-found: warn
       - uses: actions/upload-pages-artifact@v3
         with:
@@ -173,6 +192,12 @@ jobs:
         env:
           VWB_PUBLIC_WORKSPACE: ${{ format('{0}workspace/', needs.deploy.outputs.page_url) }}
         run: node scripts/probe_source_workspace.mjs --public-url "$VWB_PUBLIC_WORKSPACE" --playwright-module ../.web-browser/node_modules/playwright --output source-public-evidence.json --screenshot source-public-workspace.png
+      - name: Acquire pinned complete Linux HDL toolchain for public acceptance
+        run: python scripts/acquire_toolchain.py --target linux-x64 --directory .m0-tools/hdl --output hdl-public-tool-acquisition.json
+      - name: Execute complete HDL workflows from the actual HTTPS app
+        env:
+          VWB_PUBLIC_WORKSPACE: ${{ format('{0}workspace/', needs.deploy.outputs.page_url) }}
+        run: node scripts/probe_hdl_workspace.mjs --public-url "$VWB_PUBLIC_WORKSPACE" --acquisition hdl-public-tool-acquisition.json --playwright-module ../.web-browser/node_modules/playwright --output hdl-public-evidence.json --screenshot hdl-public-workspace.png
       - name: Retain public HTTPS evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -187,4 +212,7 @@ jobs:
             files-public-workspace.png
             source-public-evidence.json
             source-public-workspace.png
+            hdl-public-tool-acquisition.json
+            hdl-public-evidence.json
+            hdl-public-workspace.png
           if-no-files-found: warn

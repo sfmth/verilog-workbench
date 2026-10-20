@@ -1,0 +1,54 @@
+{
+  "schema": "vwb.hdl-workspace-source-evidence/1",
+  "recorded_at": "2026-10-20T03:01:07.270072+00:00",
+  "source_sha256": {
+    "companion/server.py": "356030df6ef4ca139126259a610acde920fc90928dda9166063a0ea380142fa2",
+    "vwb.py": "e39e36bafbe57ad43e0718aec1a3f975c77fd834cef95e3858597aeb553dd479",
+    "protocol/companion-v1.schema.json": "5741b804e380125e3b9929af7b169bc6808a0a78d2cb2945cb25fdd845a9168b",
+    "web/workspace/app.mjs": "088957d3e8bfc979a027be89c06ca9c73ad56092c59366ecf9f340f4eb8c7811",
+    "web/workspace/hdl.mjs": "eeff4b3dec001beeb7fdd7f39e279be431df4ebf36eb66eb0d2894783d6b4a95",
+    "web/workspace/schematic.mjs": "8c08a1e676f68ae3706e2f64064d6a5498f8701e4556b40f56d4dbbc2a3d5101",
+    "web/workspace/index.html": "666b4dc9d4a1a0550d32d94a011f2b6d7cef94c50cfaff97be8eb4e9392acfb1",
+    "web/workspace/style.css": "6a96f62de55dde894b894d09fe65096b83471e09e1018275e08d3021d87658c6",
+    "scripts/probe_hdl_workspace.mjs": "384967c3ded077b2e18f074365be5b98f4b246726a7ab793fd6524fce45628c0",
+    "scripts/acquire_toolchain.py": "ad2ccabe247e5f0a23d5d9ebf6ed93098ae3b480a18ff7ec3db8966a8ba2ac2f",
+    "toolchains/native-lock.json": "f6dcbacb4e12f6b201bc1b1f6a92510931aeeec16b3dee0d7ed2db23f29f6637",
+    ".github/workflows/pages.yml": "0f2d01413f27287fcee89d635927b95b32791c9366a721a46502e264915e1873",
+    ".github/workflows/m0.yml": "e7f867a6f074007eff4f180a5cf864261fbdb585aa86334249ef70677944be78",
+    ".github/scripts/validate_vwb.py": "e8ca013f2f3ddfd93cf0995f98aa49e997960c9d9314bf5224db24f5b2a8009c",
+    "tests/test_hdl.py": "952e63b43b70dd4d111ce24c821fd404e86a11555797c5987b21d8473ed29f84",
+    "tests/test_hdl.mjs": "8a636dfcddebf5ef21f946487ef9614169e27a3ceb31e902697b1f46c2fcd187",
+    "tests/test_schematic.mjs": "ec29ad4c92cc080d2a1aa70936d4cd99203a5ea2691a0dd188680f3a9880c559",
+    "tests/test_acquire_toolchain.py": "b43b75c76edbee011719880ff4b506443a72ca6c922d6f8a982d7d66599aaef0",
+    "tests/test_process.py": "84f279d24a7111b48d073772a6b6f8ea2abe6940e758402ad1bdba20c26bb0ee",
+    "examples/test/test_vwb_wave_headless.py": "96953a2953dfe22059a9fa3b6591c690534226d49753473a6a948b69829bf890"
+  },
+  "local_tests": {
+    "python": {
+      "total": 253,
+      "skipped": 5,
+      "state": "passed"
+    },
+    "cli": {
+      "total": 167,
+      "skipped": 1,
+      "state": "passed"
+    },
+    "javascript": {
+      "total": 116,
+      "skipped": 0,
+      "state": "passed"
+    }
+  },
+  "local_browser_groups": {
+    "hdl": 25,
+    "original_m0_hdl": 14,
+    "workspace": 13,
+    "source": 15,
+    "semantic_languages": 3,
+    "lifecycle": 16
+  },
+  "browser": "141.0.7390.37",
+  "native_platform_supplementals": "Candidates verified for locked archives/extraction and unit contracts; actual foreign runtime workflows await CI.",
+  "physical_programming": "not_run"
+}

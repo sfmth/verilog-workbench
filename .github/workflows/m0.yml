@@ -9,6 +9,7 @@ on:
       - 'packaging/**'
       - 'protocol/**'
       - 'scripts/**'
+      - 'toolchains/**'
       - 'tests/**'
       - 'web/**'
       - 'vwb.py'
@@ -92,6 +93,14 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+          architecture: ${{ startsWith(matrix.target, 'windows-') && 'x64' || '' }}
+      - name: Install declared native ARM64 Ubuntu GHDL prerequisite
+        if: matrix.target == 'linux-arm64'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ghdl-llvm=4.1.0+dfsg-0ubuntu2 ghdl-common=4.1.0+dfsg-0ubuntu2
+          /usr/bin/ghdl-llvm --version
+          /usr/bin/ghdl-llvm --disp-config
       - name: Prove native Homebrew Tcl-enabled Yosys candidate on Apple Silicon
         if: matrix.target == 'darwin-arm64'
         shell: bash
@@ -131,7 +140,7 @@ jobs:
           print('Native Tcl Yosys candidate verified; only Yosys is exposed through the explicit override')
           PY
       - name: Acquire exact native package and run real HDL workflows
-        run: python scripts/acquire_toolchain.py --target ${{ matrix.target }} --directory .m0-tools --output .m0-evidence/acquisition-${{ matrix.target }}.json --probe-output .m0-evidence/workflows-${{ matrix.target }}.json --probe-work-dir .m0-evidence/toolchain-logs ${{ matrix.target == 'darwin-arm64' && format('--overlay-tool yosys={0}/.m0-yosys-bin/yosys', github.workspace) || '' }}
+        run: python scripts/acquire_toolchain.py --target ${{ matrix.target }} --directory .m0-tools --output .m0-evidence/acquisition-${{ matrix.target }}.json --probe-output .m0-evidence/workflows-${{ matrix.target }}.json --probe-work-dir .m0-evidence/toolchain-logs --supplementals ${{ matrix.target == 'darwin-arm64' && format('--overlay-tool yosys={0}/.m0-yosys-bin/yosys', github.workspace) || '' }} ${{ matrix.target == 'linux-arm64' && '--external-ghdl /usr/bin/ghdl-llvm --ghdl-prefix /usr/lib/ghdl/llvm/vhdl' || '' }} ${{ startsWith(matrix.target, 'windows-') && format('--windows-cocotb-python "{0}/python.exe"', env.pythonLocation) || '' }}
       - name: Retain passes, missing workflows, failures and native logs
         if: always()
         uses: actions/upload-artifact@v4

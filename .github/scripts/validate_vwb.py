@@ -428,6 +428,7 @@ MATRIX_OPTION_DESTINATIONS: dict[str, set[str]] = {
         "plusarg",
         "gate_level",
         "keep_going",
+        "no_view",
         "save",
         "tag",
         "replace_tag",
@@ -1386,6 +1387,15 @@ def validate_dry_runs(
             for stage in ("GATE PASS", "GATE FAIL", "GATE SKIPPED")
         ):
             runner.failures.append("default wave unexpectedly ran the gate phase")
+
+        headless_wave = runner.run_vwb(
+            [*default_wave_arguments, "--no-view"],
+            label="dry-run headless RTL wave",
+            dry_run=True,
+            capture=True,
+        )
+        if "gtkwave" in headless_wave.stdout.lower():
+            runner.failures.append("wave --no-view unexpectedly launched a viewer")
 
         gated_wave = runner.run_vwb(
             [*default_wave_arguments, "--gate-level"],

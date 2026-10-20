@@ -4932,6 +4932,11 @@ def make_parser() -> argparse.ArgumentParser:
         metavar="FILE",
         help="use this GTKWave layout instead of the automatically saved layout",
     )
+    wave_parser.add_argument(
+        "--no-view",
+        action="store_true",
+        help="capture, archive, or load a waveform without launching GTKWave",
+    )
     wave_tag = wave_parser.add_argument(
         "--tag", metavar="NAME", help="save a passing waveform under this name"
     )
@@ -5505,8 +5510,8 @@ def command_wave(workbench: Workbench, args: argparse.Namespace) -> int:
             )
         return 0
 
-    if args.as_json:
-        raise VWBError("--json requires --list-saved")
+    if args.as_json and not (args.load and getattr(args, 'no_view', False)):
+        raise VWBError("--json requires --list-saved or --load with --no-view")
     if args.replace_tag and not args.tag:
         raise VWBError("--replace-tag requires --tag")
     if args.load:
@@ -5523,6 +5528,12 @@ def command_wave(workbench: Workbench, args: argparse.Namespace) -> int:
                 f"saved waveform {args.load} belongs to {saved.dut}, "
                 f"not {args.modules[0]}"
             )
+        if getattr(args, 'no_view', False):
+            if args.as_json:
+                print(json.dumps(saved.as_json(workbench.root), indent=2, sort_keys=True))
+            else:
+                print(display_path(saved.waveform, workbench.root))
+            return 0
         returncode, active_layout = workbench.open_waveform(
             saved.waveform,
             explicit_save=args.save,
@@ -5577,6 +5588,9 @@ def command_wave(workbench: Workbench, args: argparse.Namespace) -> int:
             archived.tag,
             display_path(archived.directory, workbench.root),
         )
+    if getattr(args, 'no_view', False):
+        print('waveform', display_path(wave_path, workbench.root))
+        return 0
     returncode, active_layout = workbench.open_waveform(
         wave_path,
         explicit_save=args.save,

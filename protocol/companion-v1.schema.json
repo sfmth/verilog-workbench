@@ -27,7 +27,7 @@
     },
     "identifier": {"type": "string", "maxLength": 128, "pattern": "^[A-Za-z_][A-Za-z0-9_$]*(?![\\s\\S])"},
     "modules": {"type": "array", "maxItems": 32, "items": {"$ref": "#/$defs/identifier"}},
-    "command": {"enum": ["list", "doctor", "test", "lint", "synth", "formal", "fpga"]},
+    "command": {"enum": ["list", "doctor", "test", "wave", "lint", "synth", "formal", "fpga"]},
     "projectSummary": {
       "type": "object", "additionalProperties": false,
       "required": ["name", "src_dir", "test_dir", "build_dir"],
@@ -89,7 +89,7 @@
       "properties": {
         "protocol": {"$ref": "#/$defs/protocol"},
         "project": {"$ref": "#/$defs/projectSummary"},
-        "commands": {"type": "array", "uniqueItems": true, "minItems": 7, "maxItems": 7, "items": {"$ref": "#/$defs/command"}},
+        "commands": {"type": "array", "uniqueItems": true, "minItems": 8, "maxItems": 8, "items": {"$ref": "#/$defs/command"}},
         "toolchains": {"$ref": "#/$defs/toolchainReport"},
         "limits": {
           "type": "object", "additionalProperties": false,
@@ -137,27 +137,303 @@
       "properties": {"path": {"$ref": "#/$defs/path"}, "revision": {"$ref": "#/$defs/revision"}, "size": {"type": "integer", "minimum": 0, "maximum": 2097152}}
     },
     "emptyOptions": {"type": "object", "additionalProperties": false},
-    "testOptions": {
-      "type": "object", "additionalProperties": false,
-      "properties": {
-        "modules": {"$ref": "#/$defs/modules"},
-        "test_language": {"enum": ["auto", "cocotb", "verilog", "vhdl"]},
-        "waves": {"type": "boolean"}, "wave_format": {"enum": ["vcd", "fst"]},
-        "seed": {"type": "integer", "minimum": 0, "maximum": 4294967295}
+    "hdlDefines": {
+      "type": "array",
+      "maxItems": 32,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 512,
+        "pattern": "^[A-Za-z_][A-Za-z0-9_$]{0,127}(?:=[^\\u0000-\\u001f\\u007f]*)?$"
       }
     },
-    "lintOptions": {
-      "type": "object", "additionalProperties": false,
+    "hdlIncludes": {
+      "type": "array",
+      "maxItems": 32,
+      "items": {
+        "allOf": [
+          {
+            "$ref": "#/$defs/path"
+          },
+          {
+            "maxLength": 512
+          }
+        ]
+      },
+      "description": "Existing ordinary directories within the project, including root as dot; generated build tree, Git metadata and links are refused."
+    },
+    "hdlPlusargs": {
+      "type": "array",
+      "maxItems": 32,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 512,
+        "pattern": "^\\+[A-Za-z_][A-Za-z0-9_]*(?:=[^\\u0000-\\u001f\\u007f]*)?$"
+      }
+    },
+    "waveTag": {
+      "type": "string",
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+    },
+    "testOptions": {
+      "type": "object",
+      "additionalProperties": false,
       "properties": {
-        "modules": {"$ref": "#/$defs/modules"}, "all": {"type": "boolean"},
-        "linters": {"type": "array", "maxItems": 6, "items": {"enum": ["all", "iverilog", "verilator", "yosys", "verible", "ghdl"]}}
+        "modules": {
+          "$ref": "#/$defs/modules"
+        },
+        "test": {
+          "$ref": "#/$defs/path"
+        },
+        "test_language": {
+          "enum": [
+            "auto",
+            "cocotb",
+            "verilog",
+            "vhdl"
+          ]
+        },
+        "test_top": {
+          "$ref": "#/$defs/identifier"
+        },
+        "testcase": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+        },
+        "waves": {
+          "type": "boolean"
+        },
+        "wave_format": {
+          "enum": [
+            "vcd",
+            "fst"
+          ]
+        },
+        "seed": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "max_array_words": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000000
+        },
+        "defines": {
+          "$ref": "#/$defs/hdlDefines"
+        },
+        "includes": {
+          "$ref": "#/$defs/hdlIncludes"
+        },
+        "plusargs": {
+          "$ref": "#/$defs/hdlPlusargs"
+        },
+        "gate_level": {
+          "type": "boolean"
+        },
+        "keep_going": {
+          "type": "boolean"
+        }
+      },
+      "description": "Selected test must be an existing supported source/test file outside build output. Test-language, test-top, testcase and seed compatibility is additionally checked at runtime."
+    },
+    "waveOptions": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "list_saved"
+          ],
+          "properties": {
+            "modules": {
+              "$ref": "#/$defs/modules"
+            },
+            "list_saved": {
+              "const": true
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "load"
+          ],
+          "properties": {
+            "modules": {
+              "type": "array",
+              "maxItems": 1,
+              "items": {
+                "$ref": "#/$defs/identifier"
+              }
+            },
+            "load": {
+              "$ref": "#/$defs/waveTag"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "modules": {
+              "$ref": "#/$defs/modules"
+            },
+            "test": {
+              "$ref": "#/$defs/path"
+            },
+            "test_language": {
+              "enum": [
+                "auto",
+                "cocotb",
+                "verilog",
+                "vhdl"
+              ]
+            },
+            "test_top": {
+              "$ref": "#/$defs/identifier"
+            },
+            "testcase": {
+              "type": "string",
+              "maxLength": 128,
+              "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+            },
+            "waves": {
+              "const": true
+            },
+            "wave_format": {
+              "enum": [
+                "vcd",
+                "fst"
+              ]
+            },
+            "seed": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4294967295
+            },
+            "max_array_words": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1000000
+            },
+            "defines": {
+              "$ref": "#/$defs/hdlDefines"
+            },
+            "includes": {
+              "$ref": "#/$defs/hdlIncludes"
+            },
+            "plusargs": {
+              "$ref": "#/$defs/hdlPlusargs"
+            },
+            "gate_level": {
+              "type": "boolean"
+            },
+            "keep_going": {
+              "type": "boolean"
+            },
+            "tag": {
+              "$ref": "#/$defs/waveTag"
+            },
+            "replace_tag": {
+              "type": "boolean"
+            },
+            "list_saved": {
+              "const": false
+            }
+          },
+          "allOf": [
+            {
+              "if": {
+                "required": [
+                  "replace_tag"
+                ],
+                "properties": {
+                  "replace_tag": {
+                    "const": true
+                  }
+                }
+              },
+              "then": {
+                "required": [
+                  "tag"
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "description": "Always executes with fixed --no-view. List and load are management-only JSON modes; simulation captures a waveform and may archive it under an explicit tag."
+    },
+    "lintOptions": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "modules": {
+          "$ref": "#/$defs/modules"
+        },
+        "all": {
+          "type": "boolean"
+        },
+        "linters": {
+          "type": "array",
+          "maxItems": 6,
+          "items": {
+            "enum": [
+              "all",
+              "iverilog",
+              "verilator",
+              "yosys",
+              "verible",
+              "ghdl"
+            ]
+          }
+        },
+        "defines": {
+          "$ref": "#/$defs/hdlDefines"
+        },
+        "includes": {
+          "$ref": "#/$defs/hdlIncludes"
+        },
+        "keep_going": {
+          "type": "boolean"
+        }
       }
     },
     "synthOptions": {
-      "type": "object", "additionalProperties": false,
+      "type": "object",
+      "additionalProperties": false,
       "properties": {
-        "module": {"$ref": "#/$defs/identifier"}, "format": {"enum": ["json", "svg", "png", "dot"]},
-        "full": {"type": "boolean"}, "flatten": {"type": "boolean"}, "schematic": {"type": "boolean"}
+        "module": {
+          "$ref": "#/$defs/identifier"
+        },
+        "format": {
+          "enum": [
+            "json",
+            "svg",
+            "png",
+            "dot"
+          ]
+        },
+        "full": {
+          "type": "boolean"
+        },
+        "flatten": {
+          "type": "boolean"
+        },
+        "schematic": {
+          "type": "boolean"
+        },
+        "defines": {
+          "$ref": "#/$defs/hdlDefines"
+        },
+        "includes": {
+          "$ref": "#/$defs/hdlIncludes"
+        }
       }
     },
     "formalOptions": {
@@ -169,6 +445,7 @@
       "properties": {
         "module": {"$ref": "#/$defs/identifier"}, "board": {"enum": ["tangnano9k", "icebreaker"]},
         "stage": {"enum": ["synth", "pnr", "pack", "flash"]}, "program": {"type": "boolean"},
+        "defines": {"$ref": "#/$defs/hdlDefines"}, "includes": {"$ref": "#/$defs/hdlIncludes"},
         "constraints": {"allOf": [{"$ref": "#/$defs/path"}, {"pattern": "\\.(pcf|cst)$"}], "description": "Must name an existing project file."}
       },
       "allOf": [
@@ -185,6 +462,7 @@
       "allOf": [
         {"if": {"properties": {"command": {"enum": ["list", "doctor"]}}}, "then": {"properties": {"options": {"$ref": "#/$defs/emptyOptions"}}}},
         {"if": {"properties": {"command": {"const": "test"}}}, "then": {"properties": {"options": {"$ref": "#/$defs/testOptions"}}}},
+        {"if": {"properties": {"command": {"const": "wave"}}}, "then": {"properties": {"options": {"$ref": "#/$defs/waveOptions"}}}},
         {"if": {"properties": {"command": {"const": "lint"}}}, "then": {"properties": {"options": {"$ref": "#/$defs/lintOptions"}}}},
         {"if": {"properties": {"command": {"const": "synth"}}}, "then": {"properties": {"options": {"$ref": "#/$defs/synthOptions"}}}},
         {"if": {"properties": {"command": {"const": "formal"}}}, "then": {"properties": {"options": {"$ref": "#/$defs/formalOptions"}}}},

@@ -116,7 +116,7 @@ class CompanionTests(unittest.TestCase):
             status, payload, _ = self.request("GET", "/v1/capabilities")
         self.assertEqual(status, 200)
         self.assertEqual(payload["toolchains"]["proof"], "discovered-not-executed")
-        self.assertEqual(set(payload["commands"]), {"list", "doctor", "test", "lint", "synth", "formal", "fpga"})
+        self.assertEqual(set(payload["commands"]), {"list", "doctor", "test", "wave", "lint", "synth", "formal", "fpga"})
 
     def test_pair_one_time_expiry_and_attempts(self):
         self.pair()

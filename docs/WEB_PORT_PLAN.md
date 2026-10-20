@@ -26,6 +26,12 @@ for HDL/Python, synchronized line numbers and literal current-file search while
 preserving native textarea input and undo. Broader syntax/semantic fixtures and
 the remaining release matrix continue to be required.
 
+Current priority: [native HDL workflow completion](HDL_WORKSPACE.md), including
+real browser-driven simulation/Cocotb/VHDL, lint, synthesis, formal and both FPGA
+pack flows, with selected tests, compile settings, gate checks and saved waves.
+The missing platform tool packages now have explicit acquisition candidates;
+only actual native CI runs establish their workflow support.
+
 Started: 2026-10-17 (America/Los_Angeles).
 Latest owner decisions: 2026-10-18 (America/Los_Angeles).
 

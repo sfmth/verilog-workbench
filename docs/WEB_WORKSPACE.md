@@ -186,6 +186,11 @@ unit/CLI/bundle/smoke jobs pass; the four existing toolchain package gaps remain
 
 ## Remaining release gates
 
+The [native HDL workflow extension](HDL_WORKSPACE.md) prioritizes execution:
+explicit bench/Cocotb selection, defines/includes/plusargs, gate checks, saved
+waves, dependency navigation and synthesis viewing. Complete HDL browser
+acceptance now joins the existing regression probes in both Pages jobs.
+
 The [source-editing increment](SOURCE_WORKSPACE.md) adds bounded lexical colors
 for all three source languages, synchronized line numbers and literal Unicode
 current-file search. Native textarea input, undo, save/recovery and semantic
