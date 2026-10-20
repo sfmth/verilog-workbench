@@ -14,6 +14,28 @@ in **Tests** selects that row's actual file, test language and bench top, and
 clears incompatible Cocotb function/seed settings. Test and lint actions also
 accept comma-separated module names when no explicit test file is selected.
 
+The **Simulator** control and CLI `test`/`wave --simulator` option select
+`auto`, `icarus`, `verilator` or `ghdl`. Auto retains Icarus for Verilog and
+SystemVerilog and GHDL for VHDL. Explicit language/engine mismatches fail before
+simulation. Verilator is a simulation backend as well as a linter: native HDL
+benches compile with timing and assertions enabled, while Python benches link
+the installed Cocotb Verilator VPI harness. Both paths save VCD/FST and can
+recheck synthesized Verilog gates with the selected Verilator engine. A failing
+assertion, failed/missing Cocotb XML, compiler failure or missing requested
+wave remains a failed job.
+
+Verilator needs GNU Make and a compatible C++ compiler (timed benches need
+C++20 coroutine support), plus matching Cocotb libraries for Python tests.
+Tool discovery reports those dependencies without claiming execution success.
+For project/build paths containing whitespace, VWB compiles in a scoped
+temporary directory and retains the resulting binary, exact source copies
+and source-hash mapping under the normal project build directory. Runtime
+artifacts and Cocotb imports still use the granted project, including Unicode
+and spaces. The temporary tree is removed on completion or cancellation.
+The locked Linux suite is the real acceptance environment for the added
+engine; selecting an installed engine
+does not certify every version or language construct on every platform.
+
 The compile/test options expose one define/include folder/plusarg per line,
 repeatable Cocotb seeds, waveform array bounds, and an
 explicit synthesized-gate check. Source and test include folders are confined

@@ -1,0 +1,229 @@
+{
+  "schema_version": 1,
+  "description": "Immutable official upstream sources for reproducible external HDL acceptance; acquisition never runs upstream scripts.",
+  "projects": [
+    {
+      "id": "picorv32",
+      "repository": "https://github.com/YosysHQ/picorv32",
+      "revision": "ef203c2b0a3fb793280f5114941416c425c5b461",
+      "archive": {
+        "url": "https://codeload.github.com/YosysHQ/picorv32/tar.gz/ef203c2b0a3fb793280f5114941416c425c5b461",
+        "sha256": "3fb600ef770abefe2cb16f57efe1a7c3ed9c21d1ce9a2dcacedf4683acad5f6a",
+        "size": 198564,
+        "root": "picorv32-ef203c2b0a3fb793280f5114941416c425c5b461"
+      },
+      "license": {
+        "spdx": "ISC",
+        "paths": [
+          "COPYING",
+          "tests/LICENSE"
+        ],
+        "scope": "Primary project license; per-file and vendored component notices remain in the complete retained archive."
+      },
+      "source_roots": [
+        "picorv32.v"
+      ]
+    },
+    {
+      "id": "ibex",
+      "repository": "https://github.com/lowRISC/ibex",
+      "revision": "1b29dae8866e6c0f0a3cd9dead53a77b4f45e357",
+      "archive": {
+        "url": "https://codeload.github.com/lowRISC/ibex/tar.gz/1b29dae8866e6c0f0a3cd9dead53a77b4f45e357",
+        "sha256": "e3e6741a4f11f4cdea7775c063246b3d98f213f2e21e0b1469cdc6d6f0089007",
+        "size": 6573368,
+        "root": "ibex-1b29dae8866e6c0f0a3cd9dead53a77b4f45e357"
+      },
+      "license": {
+        "spdx": "Apache-2.0",
+        "paths": [
+          "LICENSE",
+          "NOTICE",
+          "vendor/eembc_coremark/LICENSE.md",
+          "vendor/lowrisc_ip/ip/prim/dv/prim_ascon/ascon_model_dpi/vendor/ascon_ascon-c/LICENSE",
+          "vendor/riscv-isa-sim/LICENSE",
+          "vendor/riscv-test-env/LICENSE",
+          "vendor/riscv-tests/LICENSE"
+        ],
+        "scope": "Primary project license; per-file and vendored component notices remain in the complete retained archive."
+      },
+      "source_roots": [
+        "rtl",
+        "vendor/lowrisc_ip"
+      ]
+    },
+    {
+      "id": "cv32e40p",
+      "repository": "https://github.com/openhwfoundation/cv32e40p",
+      "revision": "360d272898d81806be3377193870dbf83a3ea79f",
+      "archive": {
+        "url": "https://codeload.github.com/openhwfoundation/cv32e40p/tar.gz/360d272898d81806be3377193870dbf83a3ea79f",
+        "sha256": "774a1844738e8f8837ba8540defe9d05d3d1cfb088841c0e4427a1892bbfa9f8",
+        "size": 1303806,
+        "root": "cv32e40p-360d272898d81806be3377193870dbf83a3ea79f"
+      },
+      "license": {
+        "spdx": "SHL-0.51",
+        "paths": [
+          "LICENSE",
+          "rtl/vendor/pulp_platform_fpnew/vendor/opene906/LICENSE"
+        ],
+        "scope": "Primary project license; per-file and vendored component notices remain in the complete retained archive."
+      },
+      "source_roots": [
+        "rtl"
+      ]
+    },
+    {
+      "id": "vexriscv",
+      "repository": "https://github.com/SpinalHDL/VexRiscv",
+      "revision": "baf7dc82f855eddaf5b0a20a6802c526f127e38a",
+      "archive": {
+        "url": "https://codeload.github.com/SpinalHDL/VexRiscv/tar.gz/baf7dc82f855eddaf5b0a20a6802c526f127e38a",
+        "sha256": "344f4177144e96cffdeab5230c688e443644df9fb0f7bc65f278126e509343d7",
+        "size": 7725703,
+        "root": "VexRiscv-baf7dc82f855eddaf5b0a20a6802c526f127e38a"
+      },
+      "license": {
+        "spdx": "MIT",
+        "paths": [
+          "LICENSE"
+        ],
+        "scope": "Primary project license; per-file and vendored component notices remain in the complete retained archive."
+      },
+      "source_roots": [
+        "src/main/scala",
+        "src/test/cpp/custom"
+      ]
+    },
+    {
+      "id": "serv",
+      "repository": "https://github.com/olofk/serv",
+      "revision": "f200eb2ed7b69ac1c6b8eddd47654522aeee5ce8",
+      "archive": {
+        "url": "https://codeload.github.com/olofk/serv/tar.gz/f200eb2ed7b69ac1c6b8eddd47654522aeee5ce8",
+        "sha256": "43d99e7032dc936e5a9cd106be0a46a7d411c2c80e5c0310536f51c905cac3f2",
+        "size": 8301277,
+        "root": "serv-f200eb2ed7b69ac1c6b8eddd47654522aeee5ce8"
+      },
+      "license": {
+        "spdx": "ISC",
+        "paths": [
+          "LICENSE"
+        ],
+        "scope": "Primary project license; per-file and vendored component notices remain in the complete retained archive."
+      },
+      "source_roots": [
+        "rtl"
+      ]
+    },
+    {
+      "id": "verilog-axis",
+      "repository": "https://github.com/alexforencich/verilog-axis",
+      "revision": "48ff7a7e2ef782cf778d47910cf85835c64b1bce",
+      "archive": {
+        "url": "https://codeload.github.com/alexforencich/verilog-axis/tar.gz/48ff7a7e2ef782cf778d47910cf85835c64b1bce",
+        "sha256": "92d714f9a4711491375c3794d5916860cffc776d91fb4b8c548f4cbd4c562aff",
+        "size": 134144,
+        "root": "verilog-axis-48ff7a7e2ef782cf778d47910cf85835c64b1bce"
+      },
+      "license": {
+        "spdx": "MIT",
+        "paths": [
+          "COPYING"
+        ],
+        "scope": "Primary project license; per-file and vendored component notices remain in the complete retained archive."
+      },
+      "source_roots": [
+        "rtl"
+      ]
+    },
+    {
+      "id": "verilog-axi",
+      "repository": "https://github.com/alexforencich/verilog-axi",
+      "revision": "516bd5dadc3365b7f9e225d2af8fe0b8d804fe53",
+      "archive": {
+        "url": "https://codeload.github.com/alexforencich/verilog-axi/tar.gz/516bd5dadc3365b7f9e225d2af8fe0b8d804fe53",
+        "sha256": "4aaed32673e91a2174ec8e29ee11cc5ef48e00bf01e959b040615f89839e095d",
+        "size": 206639,
+        "root": "verilog-axi-516bd5dadc3365b7f9e225d2af8fe0b8d804fe53"
+      },
+      "license": {
+        "spdx": "MIT",
+        "paths": [
+          "COPYING"
+        ],
+        "scope": "Primary project license; per-file and vendored component notices remain in the complete retained archive."
+      },
+      "source_roots": [
+        "rtl"
+      ]
+    },
+    {
+      "id": "verilog-uart",
+      "repository": "https://github.com/alexforencich/verilog-uart",
+      "revision": "1b867e53af738e4a8bc7c839ca2f1c07f40382dc",
+      "archive": {
+        "url": "https://codeload.github.com/alexforencich/verilog-uart/tar.gz/1b867e53af738e4a8bc7c839ca2f1c07f40382dc",
+        "sha256": "a8d3432f4a921cf204bbc8a034c1fb00faf173ad56047568995b39d1b50f5727",
+        "size": 36387,
+        "root": "verilog-uart-1b867e53af738e4a8bc7c839ca2f1c07f40382dc"
+      },
+      "license": {
+        "spdx": "MIT",
+        "paths": [
+          "COPYING"
+        ],
+        "scope": "Primary project license; per-file and vendored component notices remain in the complete retained archive."
+      },
+      "source_roots": [
+        "rtl"
+      ]
+    },
+    {
+      "id": "verilog-i2c",
+      "repository": "https://github.com/alexforencich/verilog-i2c",
+      "revision": "a65be4045e898a52e791c6ee71f8f79a7cd2e129",
+      "archive": {
+        "url": "https://codeload.github.com/alexforencich/verilog-i2c/tar.gz/a65be4045e898a52e791c6ee71f8f79a7cd2e129",
+        "sha256": "f69f402e5136a4f8d86b4ea2ea80f276dcfb3374e3a8b91ca99917a645903fe6",
+        "size": 41879,
+        "root": "verilog-i2c-a65be4045e898a52e791c6ee71f8f79a7cd2e129"
+      },
+      "license": {
+        "spdx": "MIT",
+        "paths": [
+          "COPYING"
+        ],
+        "scope": "Primary project license; per-file and vendored component notices remain in the complete retained archive."
+      },
+      "source_roots": [
+        "rtl"
+      ]
+    },
+    {
+      "id": "nvdla",
+      "repository": "https://github.com/nvdla/hw",
+      "revision": "1a65f1f5b48268accaa47c95f95c2601918be095",
+      "archive": {
+        "url": "https://codeload.github.com/nvdla/hw/tar.gz/1a65f1f5b48268accaa47c95f95c2601918be095",
+        "sha256": "aea2f7ebe2c8862be30ab214b94376547d354f019fb5449684b738e757d1bb13",
+        "size": 85233962,
+        "root": "hw-1a65f1f5b48268accaa47c95f95c2601918be095"
+      },
+      "license": {
+        "spdx": "LicenseRef-NVIDIA-Open-NVDLA-1.0",
+        "paths": [
+          "LICENSE"
+        ],
+        "scope": "Primary project license; per-file and vendored component notices remain in the complete retained archive.",
+        "name": "NVIDIA Open NVDLA License and Agreement v1.0"
+      },
+      "source_roots": [
+        "vmod",
+        "spec",
+        "tools"
+      ]
+    }
+  ]
+}

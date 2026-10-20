@@ -15,7 +15,11 @@ env:
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
+  upstream-hdl:
+    uses: ./.github/workflows/upstream-hdl.yml
+
   publish:
+    needs: upstream-hdl
     name: Validate ten representative modules and publish
     runs-on: ubuntu-latest
     timeout-minutes: 360

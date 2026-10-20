@@ -23,20 +23,29 @@ from companion.process import run_process
 from companion.toolchains import WORKFLOW_TOOLS, capability_report
 
 FIXTURES = REPO / "toolchains" / "fixtures"
-SMOKE_WORKFLOWS = tuple(name for name in WORKFLOW_TOOLS if not name.endswith("programming"))
+EXTENDED_WORKFLOWS = ("verilator_simulation", "cocotb_verilator")
+# Preserve the established six-platform baseline. Additional engines have
+# explicit acceptance gates and do not inherit another platform's evidence.
+SMOKE_WORKFLOWS = tuple(name for name in WORKFLOW_TOOLS
+                        if not name.endswith("programming") and name not in EXTENDED_WORKFLOWS)
 
 
 def command_for(name: str) -> list[str]:
     native = ["test", "m0_gate", "--test", "test/test_m0_gate.v", "--test-language", "verilog", "--test-top", "tb_m0_gate"]
     if name == "verilog_simulation":
         return native
+    if name == "verilator_simulation":
+        return [*native, "--simulator", "verilator", "--waves", "--wave-format", "vcd"]
     if name == "waveforms":
         return [*native, "--waves", "--wave-format", "vcd"]
     if name == "systemverilog_simulation":
         return ["test", "m0_sv", "--test", "test/test_m0_sv.sv", "--test-language", "verilog", "--test-top", "tb_m0_sv"]
     if name.startswith("cocotb_"):
         top = "m0_vhdl" if name.endswith("vhdl") else "m0_gate"
-        return ["test", top, "--test", "test/test_m0_cocotb.py", "--test-language", "cocotb", "--waves", "--wave-format", "vcd"]
+        command = ["test", top, "--test", "test/test_m0_cocotb.py", "--test-language", "cocotb", "--waves", "--wave-format", "vcd"]
+        if name == "cocotb_verilator":
+            command.extend(["--simulator", "verilator"])
+        return command
     if name == "vhdl_simulation":
         return ["test", "m0_vhdl", "--test", "test/test_m0_vhdl.vhd", "--test-language", "vhdl", "--test-top", "tb_m0_vhdl", "--waves", "--wave-format", "vcd"]
     if name == "lint":
@@ -64,11 +73,11 @@ def inspect_result(name: str, root: Path, returncode: int, log: str) -> tuple[bo
     if name == "formal_proof":
         statuses = list(build.rglob("status"))
         return any(path.read_text(encoding="utf-8").split()[:1] == ["PASS"] for path in statuses), "Expected SBY PASS status file."
-    if name in ("verilog_simulation", "systemverilog_simulation", "vhdl_simulation", "waveforms"):
+    if name in ("verilog_simulation", "verilator_simulation", "systemverilog_simulation", "vhdl_simulation", "waveforms"):
         marker = {"systemverilog_simulation": "M0_SYSTEMVERILOG_PASS", "vhdl_simulation": "M0_VHDL_PASS"}.get(name, "M0_VERILOG_PASS")
         if marker not in log:
             return False, f"Expected actual assertion-test marker {marker}."
-        if name in ("waveforms", "vhdl_simulation"):
+        if name in ("waveforms", "verilator_simulation", "vhdl_simulation"):
             traces = list(build.rglob("*.vcd"))
             valid = any("$var" in path.read_text(encoding="utf-8", errors="replace") and "#" in path.read_text(encoding="utf-8", errors="replace") for path in traces)
             return valid, "Expected VCD declarations and time changes."
@@ -157,7 +166,7 @@ def execute_probe(report: dict, destination: Path, *, only: list[str] | None = N
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--execute", action="store_true", help="actually run native tools; missing/failed selected workflows exit 1")
-    parser.add_argument("--only", action="append", choices=SMOKE_WORKFLOWS, help="run only these fixture workflows (repeatable)")
+    parser.add_argument("--only", action="append", choices=SMOKE_WORKFLOWS + EXTENDED_WORKFLOWS, help="run only these fixture workflows (repeatable; additional engines require explicit selection)")
     parser.add_argument("--work-dir", type=Path, help="parent for fresh evidence directory (kept for inspection)")
     parser.add_argument("--output", type=Path, help="write JSON report here instead of stdout")
     parser.add_argument("--timeout", type=float, default=180, help="per-workflow timeout in seconds")

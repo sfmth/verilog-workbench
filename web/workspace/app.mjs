@@ -277,7 +277,7 @@ function commandChanged() {
   $('module').disabled = ['list', 'doctor', 'formal'].includes(command);
 }
 function jobPayload(program) {
-  const ids = {command: 'command', module: 'module', test_language: 'test-language', test: 'test-file', test_top: 'test-top', testcase: 'testcase', seed: 'seed', wave_format: 'wave-format', max_array_words: 'max-array-words', defines: 'hdl-defines', includes: 'hdl-includes', plusargs: 'plusargs', linter: 'linter', synth_format: 'synth-format', formal_config: 'formal-config', board: 'board', stage: 'stage', constraints: 'constraints', wave_mode: 'wave-mode', wave_tag: 'wave-tag'};
+  const ids = {command: 'command', module: 'module', simulator: 'simulator', test_language: 'test-language', test: 'test-file', test_top: 'test-top', testcase: 'testcase', seed: 'seed', wave_format: 'wave-format', max_array_words: 'max-array-words', defines: 'hdl-defines', includes: 'hdl-includes', plusargs: 'plusargs', linter: 'linter', synth_format: 'synth-format', formal_config: 'formal-config', board: 'board', stage: 'stage', constraints: 'constraints', wave_mode: 'wave-mode', wave_tag: 'wave-tag'};
   const state = Object.fromEntries(Object.entries(ids).map(([key, id]) => [key, $(id).value]));
   for (const [key, id] of [['waves', 'waves'], ['gate_level', 'gate-level'], ['full', 'synth-full'], ['flatten', 'synth-flatten'], ['replace_tag', 'replace-tag']]) state[key] = $(id).checked;
   return buildHdlJob(state, program);
@@ -482,7 +482,7 @@ function resetResults() {
   $('module-list').replaceChildren(); $('module').value = ''; $('formal-config').value = ''; $('constraints').value = '';
   for (const id of ['test-file', 'test-top', 'testcase', 'seed', 'hdl-defines', 'hdl-includes', 'plusargs', 'wave-tag', 'max-array-words']) $(id).value = '';
   for (const id of ['gate-level', 'synth-full', 'synth-flatten', 'replace-tag']) $(id).checked = false;
-  $('test-language').value = 'auto'; $('wave-mode').value = 'simulate'; $('wave-format').value = 'vcd';
+  $('simulator').value = 'auto'; $('test-language').value = 'auto'; $('wave-mode').value = 'simulate'; $('wave-format').value = 'vcd';
   $('test-file-list').replaceChildren(); $('saved-wave-list').replaceChildren();
   commandChanged();
 }

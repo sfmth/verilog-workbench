@@ -41,6 +41,7 @@ export function buildHdlJob(state, program = false) {
     return {command, options, timeout: 300};
   }
   if (['test', 'wave'].includes(command)) {
+    if (state.simulator && state.simulator !== 'auto') options.simulator = choice(state.simulator, ['icarus', 'verilator', 'ghdl'], 'simulator');
     options.test_language = choice(state.test_language || 'auto', ['auto', 'cocotb', 'verilog', 'vhdl'], 'test language');
     options.waves = command === 'wave' || !!state.waves;
     options.wave_format = choice(state.wave_format || 'vcd', ['vcd', 'fst'], 'waveform format');

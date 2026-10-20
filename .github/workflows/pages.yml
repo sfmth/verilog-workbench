@@ -18,6 +18,13 @@ on:
       - 'scripts/browser_assets.mjs'
       - 'scripts/acquire_toolchain.py'
       - 'toolchains/**'
+      - 'upstream/**'
+      - 'scripts/acquire_upstream_hdl.py'
+      - 'scripts/probe_upstream_hdl.py'
+      - 'tests/test_upstream_hdl.py'
+      - 'tests/test_acquire_upstream_hdl.py'
+      - 'tests/test_verilator.py'
+      - '.github/workflows/upstream-hdl.yml'
       - 'scripts/acquire_editor_tools.py'
       - 'editor-fixtures/**'
       - 'tests/test_editor.py'
@@ -49,6 +56,13 @@ on:
       - 'scripts/browser_assets.mjs'
       - 'scripts/acquire_toolchain.py'
       - 'toolchains/**'
+      - 'upstream/**'
+      - 'scripts/acquire_upstream_hdl.py'
+      - 'scripts/probe_upstream_hdl.py'
+      - 'tests/test_upstream_hdl.py'
+      - 'tests/test_acquire_upstream_hdl.py'
+      - 'tests/test_verilator.py'
+      - '.github/workflows/upstream-hdl.yml'
       - 'scripts/acquire_editor_tools.py'
       - 'editor-fixtures/**'
       - 'tests/test_editor.py'
@@ -74,6 +88,9 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  upstream-hdl:
+    uses: ./.github/workflows/upstream-hdl.yml
+
   build:
     runs-on: ubuntu-24.04
     timeout-minutes: 10
@@ -150,7 +167,7 @@ jobs:
           path: dist/web
 
   deploy:
-    needs: build
+    needs: [build, upstream-hdl]
     if: github.ref == 'refs/heads/web-port-plan' && github.event_name != 'pull_request'
     permissions:
       pages: write

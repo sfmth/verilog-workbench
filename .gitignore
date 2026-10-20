@@ -22,3 +22,6 @@ build/
 .m0-evidence/
 .m0-tools/
 .m0-browser/
+.upstream-hdl/
+.upstream-hdl/
+.upstream-evidence/

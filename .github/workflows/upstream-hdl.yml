@@ -1,0 +1,61 @@
+name: Required upstream HDL corpus
+
+on:
+  workflow_call:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  acceptance:
+    name: At least 20 pinned upstream designs
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install native Verilator build prerequisites
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends g++ make
+      - name: Check corpus integrity and failure reporting contracts
+        run: |
+          python -m unittest discover -s tests -p test_acquire_upstream_hdl.py -v
+          python -m unittest discover -s tests -p test_upstream_hdl.py -v
+      - name: Acquire integrity-pinned native HDL suite
+        run: python scripts/acquire_toolchain.py --target linux-x64 --directory .m0-tools/hdl --output upstream-tool-acquisition.json
+      - name: Prove timed Verilator, assertions, VCD, FST and Cocotb VPI
+        env:
+          VWB_VERILATOR_TEST_ACQUISITION: upstream-tool-acquisition.json
+        run: python -m unittest discover -s tests -p test_verilator.py -v
+      - name: Acquire immutable upstream sources and retain their licenses
+        run: python scripts/acquire_upstream_hdl.py --directory .upstream-hdl --output upstream-acquisition.json
+      - name: Execute every required design through VWB
+        run: python scripts/probe_upstream_hdl.py --acquisition upstream-acquisition.json --toolchain-acquisition upstream-tool-acquisition.json --work-dir .upstream-evidence --output upstream-results.json
+      - name: Require complete coverage without skipped designs
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          report = json.loads(Path('upstream-results.json').read_text())
+          assert report['complete_corpus_passed'] is True, report
+          assert report['executed_designs'] == report['required_designs'] >= 20, report
+          assert all(case['state'] == 'passed' for case in report['designs']), report
+          print(report['coverage_counts'])
+          PY
+      - name: Retain provenance, source hashes, commands and assertion logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: upstream-hdl-${{ github.run_id }}-${{ github.job }}
+          include-hidden-files: true
+          path: |
+            upstream-tool-acquisition.json
+            upstream-acquisition.json
+            upstream-results.json
+            .upstream-evidence/**/*.log
+          if-no-files-found: warn
+          retention-days: 14

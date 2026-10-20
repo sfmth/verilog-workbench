@@ -23,6 +23,14 @@ test('saved waveform management excludes stale simulation options', () => {
   const archived = buildHdlJob({command: 'wave', module: 'dut', wave_tag: 'good', replace_tag: true, waves: false}).options;
   assert.equal(archived.waves, true); assert.equal(archived.tag, 'good'); assert.equal(archived.replace_tag, true);
 });
+test('simulation engine selection is bounded and does not leak into saved-wave management', () => {
+  for (const command of ['test', 'wave']) for (const simulator of ['icarus', 'verilator', 'ghdl']) {
+    assert.equal(buildHdlJob({command, simulator}).options.simulator, simulator);
+  }
+  assert.equal(buildHdlJob({command: 'test', simulator: 'auto'}).options.simulator, undefined);
+  assert.throws(() => buildHdlJob({command: 'test', simulator: 'shell'}));
+  assert.deepEqual(buildHdlJob({command: 'wave', wave_mode: 'list', simulator: 'invalid'}).options, {list_saved: true});
+});
 test('synthesis and FPGA expose actual hierarchy and compile settings, with flash explicit', () => {
   const synth = buildHdlJob({command: 'synth', module: 'dut', synth_format: 'json', full: true, flatten: true, defines: 'MODE=1', includes: 'src'}).options;
   assert.equal(synth.schematic, false); assert.equal(synth.full, true); assert.equal(synth.flatten, true);

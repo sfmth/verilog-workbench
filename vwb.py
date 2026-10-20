@@ -3233,6 +3233,168 @@ class Workbench:
             passed = False
         return passed, wave_path
 
+    def _compile_verilator(self, command: list[str | Path], work_dir: Path) -> subprocess.CompletedProcess[str]:
+        """Use an owned, no-space Make output tree while preserving source paths.
+
+        The usual process supervisor still owns Verilator and its compiler
+        descendants. The context removes temporary outputs on every exit;
+        binaries and source receipts are retained under the project build.
+        """
+        if self.dry_run or not any(character.isspace() for character in str(work_dir)):
+            return self.run(command, cwd=work_dir)
+        candidates = [Path(tempfile.gettempdir())]
+        if os.name == "nt":
+            candidates.append(Path(os.environ.get("SystemRoot", "C:/Windows")) / "Temp")
+        else:
+            candidates.append(Path("/tmp"))
+        temporary = None
+        for base in unique_paths(candidates):
+            if any(character.isspace() for character in str(base)):
+                continue
+            try:
+                temporary = tempfile.TemporaryDirectory(prefix="vwb-verilator-", dir=base)
+                break
+            except OSError:
+                continue
+        if temporary is None:
+            raise VWBError("Verilator needs a writable temporary directory whose path contains no whitespace")
+        with temporary:
+            staging = Path(temporary.name)
+            command = list(command)
+            command[command.index("--Mdir") + 1] = staging / "obj_dir"
+            # HDL input paths remain original so diagnostics and runtime $fatal
+            # locations still navigate to the project. Only Make's output cwd
+            # needs the no-space temporary spelling. Retain source bytes too.
+            inputs = work_dir / "verilator_inputs"; inputs.mkdir(exist_ok=True)
+            manifest = []
+            for value in command[1:]:
+                path = Path(str(value))
+                if path.is_absolute() and path.is_file():
+                    alias = inputs / f"source_{len(manifest)}{path.suffix}"
+                    shutil.copy2(path, alias)
+                    manifest.append({"original": str(path), "retained": "verilator_inputs/" + alias.name,
+                                     "sha256": hashlib.sha256(alias.read_bytes()).hexdigest()})
+            (work_dir / "verilator_build.json").write_text(
+                json.dumps({"schema": "vwb.verilator-build/1", "temporary_build": True,
+                            "inputs": manifest}, indent=2) + "\n", encoding="utf-8")
+            result = self.run(command, cwd=work_dir)
+            if (staging / "obj_dir").is_dir():
+                shutil.copytree(staging / "obj_dir", work_dir / "obj_dir", dirs_exist_ok=True)
+            return result
+
+    def _run_verilator_test(
+        self,
+        spec: TestSpec,
+        args: argparse.Namespace,
+        work_dir: Path,
+        *,
+        gate_netlist: Path | None = None,
+    ) -> tuple[bool, Path | None]:
+        """Build a real timed/asserting HDL binary or Cocotb's installed VPI harness."""
+        verilator = self.require_tool("verilator")
+        self.require_tool("make")
+        self.prepare_build_dir()
+        if not self.dry_run:
+            work_dir.mkdir(parents=True, exist_ok=True)
+        if gate_netlist is not None:
+            simlib = gate_netlist.parent / "yosys_simlib.v"
+            if not self.dry_run and (not simlib.is_file() or simlib.stat().st_size == 0):
+                raise VWBError(f"Yosys simulation library is missing: {simlib}")
+            sources = [simlib, gate_netlist]
+        else:
+            sources = self.catalog.closure(spec.dut)
+        if any(path.suffix.lower() in VHDL_SUFFIXES for path in sources):
+            raise VWBError("mixed-language Verilator simulation is not supported")
+        top = spec.dut
+        if spec.kind == "verilog":
+            top = args.test_top or spec.top or ""
+            if not top:
+                raise VWBError(f"cannot infer testbench top in {spec.path}; use --test-top")
+            sources.append(spec.path)
+            definitions = self.test_catalog.modules.get(top, [])
+            if len(definitions) == 1 and definitions[0].path.resolve() == spec.path.resolve():
+                sources.extend(self.test_catalog.closure(top))
+        sources = unique_paths(sources)
+        # Relative build names keep generated makefiles independent of the
+        # parent directory's spelling. Verilator owns the bounded obj_dir only.
+        executable_name = "vwb_sim.exe" if os.name == "nt" else "vwb_sim"
+        executable = work_dir / "obj_dir" / executable_name
+        command: list[str | Path] = [
+            verilator, "--timing", "--assert", "--timescale", "1ns/1ps",
+            "-Wno-fatal", "--top-module", tool_identifier(top),
+            "--Mdir", "obj_dir", "--prefix", "Vtop", "-o", executable_name,
+            "-j", "2",
+        ]
+        if gate_netlist is not None:
+            # Yosys provides this guard for its unsupported bidirectional tran
+            # model. If the netlist actually needs $connect, elaboration still
+            # fails with a missing module; no used cell is blackboxed.
+            sources = [path for path in sources if path != simlib]
+            command.extend(["-DSIMLIB_NOCONNECT", "-v", simlib])
+        environment = os.environ.copy()
+        results_file: Path | None = None
+        if spec.kind == "cocotb":
+            self._load_cocotb_runtime()
+            if self.dry_run:
+                harness = Path("<cocotb-share>") / "lib/verilator/verilator.cpp"
+                library = "<cocotb-verilator-vpi-library>"
+            else:
+                harness = Path(self.capture_tool(["cocotb-config", "--share"])) / "lib/verilator/verilator.cpp"
+                library = self.capture_tool(["cocotb-config", "--lib-name-path", "vpi", "verilator"])
+                if not harness.is_file() or not Path(library).is_file():
+                    raise VWBError("the installed Cocotb distribution lacks its Verilator VPI harness or library")
+            library_dir = str(Path(library).parent)
+            link_flags = f"-Wl,-rpath,{shlex.quote(library_dir)} {shlex.quote(library)}"
+            command.extend(["--cc", "--exe", "--build", "--vpi", "--public-flat-rw", "-LDFLAGS", link_flags, harness])
+            environment, results_file = self._cocotb_environment(spec, work_dir, args, "verilog")
+            environment.setdefault("COCOTB_TRUST_INERTIAL_WRITES", "1")
+        else:
+            command.append("--binary")
+        for directory in self.include_dirs(args.include):
+            command.append("-I" + str(directory))
+        for directory in sorted({path.parent for path in self.catalog.files}):
+            command.extend(["-y", directory])
+        for define in args.define:
+            command.append("-D" + define)
+        command.extend(args.compile_arg)
+        wave_path: Path | None = None
+        if args.waves:
+            wave_path = work_dir / f"{artifact_component(spec.dut)}.{args.wave_format}"
+            command.append("--trace-fst" if args.wave_format == "fst" else "--trace")
+            max_array_words = getattr(args, "max_array_words", DEFAULT_MAX_ARRAY_WORDS)
+            # Zero means save all entries, as with the Icarus instrumentation.
+            command.extend(["--trace-max-array", str(max_array_words or 2147483647)])
+            if spec.kind != "cocotb":
+                dump_module = work_dir / "vwb_dump.sv"
+                if not self.dry_run:
+                    escaped = wave_path.name.replace("\\", "\\\\").replace('"', '\\"')
+                    dump_module.write_text(
+                        "module vwb_dump; initial begin\n"
+                        f'  $dumpfile("{escaped}"); $dumpvars(0);\n'
+                        "end endmodule\n"
+                        f"bind {hdl_reference(top)} vwb_dump vwb_dump_instance();\n",
+                        encoding="utf-8",
+                    )
+                sources.append(dump_module)
+        command.extend(sources)
+        if self._compile_verilator(command, work_dir).returncode != 0:
+            return False, wave_path
+        run_command: list[str | Path] = [executable]
+        if args.waves and spec.kind == "cocotb":
+            run_command.extend(["--trace", "--trace-file", wave_path.name])
+        run_command.extend(args.sim_arg)
+        run_command.extend(item if item.startswith("+") else "+" + item for item in args.plusarg)
+        result = self.run(run_command, cwd=work_dir, env=environment)
+        if self.dry_run:
+            return True, wave_path
+        passed = result.returncode == 0
+        if results_file is not None:
+            passed = self._check_cocotb_results(results_file, passed)
+        if wave_path is not None and (not wave_path.is_file() or wave_path.stat().st_size == 0):
+            print(f"error: waveform was not produced: {wave_path}", file=sys.stderr)
+            passed = False
+        return passed, wave_path
+
     def _run_rtl_test_spec(self, spec: TestSpec, args: argparse.Namespace) -> tuple[bool, Path | None]:
         if spec.kind in {"verilog", "vhdl"} and (args.testcase or args.seed is not None):
             raise VWBError("--testcase and --seed only apply to Cocotb tests")
@@ -3245,12 +3407,19 @@ class Workbench:
         self.prepare_build_dir()
         self._reset_sim_work_dir(work_dir)
         definition = self.catalog.definition(spec.dut)
+        simulator = getattr(args, "simulator", "auto")
         if definition.language == "vhdl":
+            if simulator not in {"auto", "ghdl"}:
+                raise VWBError(f"--simulator {simulator} cannot simulate VHDL; select ghdl or auto")
             if spec.kind == "verilog":
                 raise VWBError("a Verilog testbench cannot directly test a VHDL design")
             return self._run_vhdl_test(spec, args, work_dir)
         if spec.kind == "vhdl":
             raise VWBError("a VHDL testbench cannot directly test a Verilog design")
+        if simulator == "ghdl":
+            raise VWBError("--simulator ghdl requires a VHDL design; select icarus, verilator or auto")
+        if simulator == "verilator":
+            return self._run_verilator_test(spec, args, work_dir)
         compiled, wave_path, simulation = self._compile_simulation(
             spec,
             work_dir,
@@ -3315,6 +3484,9 @@ class Workbench:
         self._reset_sim_work_dir(work_dir)
         gate_args = argparse.Namespace(**vars(args))
         gate_args.waves = False
+        if getattr(args, "simulator", "auto") == "verilator":
+            passed, _ = self._run_verilator_test(spec, gate_args, work_dir, gate_netlist=netlist)
+            return passed
         compiled, _, simulation = self._compile_simulation(
             spec,
             work_dir,
@@ -4752,6 +4924,12 @@ def add_simulation_options(
     )
     modules.completer = module_name_completer  # type: ignore[attr-defined]
     parser.add_argument(
+        "--simulator",
+        choices=["auto", "icarus", "verilator", "ghdl"],
+        default="auto",
+        help="simulation engine; auto uses Icarus for Verilog/SystemVerilog and GHDL for VHDL",
+    )
+    parser.add_argument(
         "--test",
         metavar="FILE",
         help="use this test file instead of an automatically discovered test",
@@ -5365,6 +5543,7 @@ def validate_simulation_args(args: argparse.Namespace) -> None:
 def wave_management_overrides(args: argparse.Namespace) -> list[str]:
     explicit = set(getattr(args, "_explicit_options", ()))
     options = [
+        ("simulator", "--simulator"),
         ("test", "--test"),
         ("test_language", "--test-language"),
         ("test_top", "--test-top"),
@@ -5814,7 +5993,7 @@ def command_fpga(workbench: Workbench, args: argparse.Namespace) -> int:
 
 def command_doctor(workbench: Workbench, args: argparse.Namespace) -> int:
     groups = {
-        "simulation": ["iverilog", "vvp", "ghdl", "sv2v", "cocotb-config"],
+        "simulation": ["iverilog", "vvp", "verilator", "ghdl", "sv2v", "cocotb-config"],
         "waveform": ["gtkwave"],
         "lint": [
             "iverilog",

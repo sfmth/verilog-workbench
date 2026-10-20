@@ -4,6 +4,11 @@
 .docker
 .vwb
 .vwb.json
+.upstream-hdl
+.upstream-evidence
+.m0-tools
+.m0-evidence
+.m0-browser
 **/__pycache__
 **/*.pyc
 **/*.pyo

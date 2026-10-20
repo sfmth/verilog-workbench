@@ -24,6 +24,8 @@ TOOLS = {
     "iverilog": (("iverilog",), ("-V",)),
     "vvp": (("vvp",), ("-V",)),
     "verilator": (("verilator", "verilator_bin"), ("--version",)),
+    "make": (("make",), ("--version",)),
+    "c++": (("g++", "clang++", "c++"), ("--version",)),
     "ghdl": (("ghdl",), ("--version",)),
     "cocotb-config": (("cocotb-config",), ("--version",)),
     "sv2v": (("sv2v",), ("--version",)),
@@ -42,6 +44,8 @@ TOOLS = {
 WORKFLOW_TOOLS = {
     "verilog_simulation": ("iverilog", "vvp"),
     "systemverilog_simulation": ("iverilog", "vvp"),
+    "verilator_simulation": ("verilator", "make", "c++"),
+    "cocotb_verilator": ("verilator", "make", "c++", "cocotb-config"),
     "waveforms": ("iverilog", "vvp"),
     "cocotb_verilog": ("iverilog", "vvp", "cocotb-config"),
     "vhdl_simulation": ("ghdl",),

@@ -15,6 +15,12 @@ Open the [published workspace preview](https://sfmth.github.io/verilog-workbench
 The [M0 acceptance gaps](docs/M0_STATUS.md) and complete-release gates remain
 open; this preview is not the finished six-platform release.
 
+Upstream HDL acceptance covers **23 pinned designs**: RISC-V cores, NVDLA blocks,
+AXI/AXIS, UART and I2C. CI runs 15 functional simulations with failing controls
+and eight elaboration checks, and gates Pages and image releases. See
+[the corpus, coverage and local commands](docs/UPSTREAM_HDL.md). Explicit
+`--simulator verilator` adds timed SystemVerilog and Cocotb VPI simulation.
+
 ## First Five Minutes
 
 Local installation is recommended because it gives VWB direct access to your

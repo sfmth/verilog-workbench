@@ -115,6 +115,7 @@ class TestCase:
 @dataclass(frozen=True)
 class CliMetadata:
     commands: tuple[str, ...]
+    simulators: tuple[str, ...]
     test_languages: tuple[str, ...]
     wave_formats: tuple[str, ...]
     default_wave_format: str
@@ -358,6 +359,7 @@ def load_cli_metadata(vwb_path: Path) -> CliMetadata:
         canonical_parsers[name] = command_parser
     return CliMetadata(
         commands=tuple(sorted(subparsers.choices)),
+        simulators=tuple(parser_action(test_parser, "--simulator").choices or ()),
         test_languages=tuple(test_language.choices or ()),
         wave_formats=tuple(wave_format.choices or ()),
         default_wave_format=str(wave_format.default),
@@ -396,6 +398,7 @@ MATRIX_OPTION_DESTINATIONS: dict[str, set[str]] = {
     "init": {"init_root", "init_src_dir", "init_test_dir", "init_build_dir", "force"},
     "list": {"as_json"},
     "test": {
+        "simulator",
         "test",
         "test_language",
         "test_top",
@@ -413,6 +416,7 @@ MATRIX_OPTION_DESTINATIONS: dict[str, set[str]] = {
         "keep_going",
     },
     "wave": {
+        "simulator",
         "test",
         "test_language",
         "test_top",
@@ -1237,6 +1241,8 @@ def validate_contracts(
         dry_run=True,
     )
     expected_languages = {"auto", "cocotb", "verilog", "vhdl"}
+    if set(metadata.simulators) != {"auto", "icarus", "verilator", "ghdl"}:
+        runner.failures.append(f"unexpected --simulator choices: {metadata.simulators}")
     if set(metadata.test_languages) != expected_languages:
         runner.failures.append(
             "--test-language choices are "
@@ -1260,6 +1266,12 @@ def validate_contracts(
     runner.run_vwb(
         ["wave", "--list-saved", "--wave-format", metadata.default_wave_format],
         label="wave list rejects simulation-only --wave-format",
+        expected=(2,),
+        capture=True,
+    )
+    runner.run_vwb(
+        ["wave", "--list-saved", "--simulator", "auto"],
+        label="wave list rejects simulation-only --simulator",
         expected=(2,),
         capture=True,
     )
@@ -1323,6 +1335,8 @@ def validate_dry_runs(
             arguments.extend(["--testcase", testcases[0]])
         arguments.extend(
             [
+                "--simulator",
+                "auto",
                 "--waves",
                 "--wave-format",
                 metadata.default_wave_format,

@@ -1,0 +1,70 @@
+[
+  {
+    "id": "picorv32-cpu",
+    "project": "picorv32",
+    "top": "picorv32",
+    "sources": [
+      "picorv32.v"
+    ],
+    "bench": "upstream/fixtures/picorv32/tb_picorv32_cpu.sv",
+    "bench_top": "tb_picorv32_cpu",
+    "defines": [],
+    "include_dirs": [],
+    "simulator": "icarus",
+    "kind": "functional_simulation",
+    "marker": "VWB_UPSTREAM_PASS picorv32-cpu",
+    "negative_control": true,
+    "negative_control_error": "CPU signature 6 addr="
+  },
+  {
+    "id": "picorv32-mul",
+    "project": "picorv32",
+    "top": "picorv32_pcpi_mul",
+    "sources": [
+      "picorv32.v"
+    ],
+    "bench": "upstream/fixtures/picorv32/tb_picorv32_mul.sv",
+    "bench_top": "tb_picorv32_mul",
+    "defines": [],
+    "include_dirs": [],
+    "simulator": "icarus",
+    "kind": "functional_simulation",
+    "marker": "VWB_UPSTREAM_PASS picorv32-mul",
+    "negative_control": true,
+    "negative_control_error": "picorv32-mul case 0 op="
+  },
+  {
+    "id": "picorv32-fast-mul",
+    "project": "picorv32",
+    "top": "picorv32_pcpi_fast_mul",
+    "sources": [
+      "picorv32.v"
+    ],
+    "bench": "upstream/fixtures/picorv32/tb_picorv32_fast_mul.sv",
+    "bench_top": "tb_picorv32_fast_mul",
+    "defines": [],
+    "include_dirs": [],
+    "simulator": "icarus",
+    "kind": "functional_simulation",
+    "marker": "VWB_UPSTREAM_PASS picorv32-fast-mul",
+    "negative_control": true,
+    "negative_control_error": "picorv32-fast-mul case 0 op="
+  },
+  {
+    "id": "picorv32-div",
+    "project": "picorv32",
+    "top": "picorv32_pcpi_div",
+    "sources": [
+      "picorv32.v"
+    ],
+    "bench": "upstream/fixtures/picorv32/tb_picorv32_div.sv",
+    "bench_top": "tb_picorv32_div",
+    "defines": [],
+    "include_dirs": [],
+    "simulator": "icarus",
+    "kind": "functional_simulation",
+    "marker": "VWB_UPSTREAM_PASS picorv32-div",
+    "negative_control": true,
+    "negative_control_error": "picorv32-div case 0 op="
+  }
+]

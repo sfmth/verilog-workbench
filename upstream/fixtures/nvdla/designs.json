@@ -1,0 +1,90 @@
+[
+  {
+    "id": "nvdla-apb2csb",
+    "project": "nvdla",
+    "top": "NV_NVDLA_apb2csb",
+    "sources": [
+      "vmod/nvdla/apb2csb/NV_NVDLA_apb2csb.v"
+    ],
+    "bench": "upstream/fixtures/nvdla/tb_nvdla_apb2csb.sv",
+    "bench_top": "tb_nvdla_apb2csb",
+    "defines": [
+      "SYNTHESIS",
+      "NO_PLI",
+      "DISABLE_FUNCPOINT"
+    ],
+    "include_dirs": [],
+    "simulator": "icarus",
+    "kind": "functional_simulation",
+    "marker": "VWB_UPSTREAM_PASS nvdla-apb2csb",
+    "negative_control": true,
+    "negative_control_error": "APB2CSB: address/data conversion wrong"
+  },
+  {
+    "id": "nvdla-cacc-int8",
+    "project": "nvdla",
+    "top": "NV_NVDLA_CACC_CALC_int8",
+    "sources": [
+      "vmod/nvdla/cacc/NV_NVDLA_CACC_CALC_int8.v"
+    ],
+    "bench": "upstream/fixtures/nvdla/tb_nvdla_cacc_int8.sv",
+    "bench_top": "tb_nvdla_cacc_int8",
+    "defines": [
+      "SYNTHESIS",
+      "NO_PLI",
+      "DISABLE_FUNCPOINT"
+    ],
+    "include_dirs": [],
+    "simulator": "icarus",
+    "kind": "functional_simulation",
+    "marker": "VWB_UPSTREAM_PASS nvdla-cacc-int8",
+    "negative_control": true,
+    "negative_control_error": "CACC partial case 0:"
+  },
+  {
+    "id": "nvdla-sdp-alu",
+    "project": "nvdla",
+    "top": "NV_NVDLA_SDP_HLS_X_int_alu",
+    "sources": [
+      "vmod/nvdla/sdp/NV_NVDLA_SDP_HLS_X_int_alu.v",
+      "vmod/nvdla/sdp/NV_NVDLA_SDP_HLS_sync2data.v",
+      "vmod/vlibs/NV_NVDLA_HLS_shiftleftsu.v"
+    ],
+    "bench": "upstream/fixtures/nvdla/tb_nvdla_sdp_alu.sv",
+    "bench_top": "tb_nvdla_sdp_alu",
+    "defines": [
+      "SYNTHESIS",
+      "NO_PLI",
+      "DISABLE_FUNCPOINT"
+    ],
+    "include_dirs": [],
+    "simulator": "icarus",
+    "kind": "functional_simulation",
+    "marker": "VWB_UPSTREAM_PASS nvdla-sdp-alu",
+    "negative_control": true,
+    "negative_control_error": "ALU case 0 got"
+  },
+  {
+    "id": "nvdla-sdp-mul",
+    "project": "nvdla",
+    "top": "NV_NVDLA_SDP_HLS_X_int_mul",
+    "sources": [
+      "vmod/nvdla/sdp/NV_NVDLA_SDP_HLS_X_int_mul.v",
+      "vmod/nvdla/sdp/NV_NVDLA_SDP_HLS_sync2data.v",
+      "vmod/nvdla/sdp/NV_NVDLA_SDP_HLS_prelu.v"
+    ],
+    "bench": "upstream/fixtures/nvdla/tb_nvdla_sdp_mul.sv",
+    "bench_top": "tb_nvdla_sdp_mul",
+    "defines": [
+      "SYNTHESIS",
+      "NO_PLI",
+      "DISABLE_FUNCPOINT"
+    ],
+    "include_dirs": [],
+    "simulator": "icarus",
+    "kind": "functional_simulation",
+    "marker": "VWB_UPSTREAM_PASS nvdla-sdp-mul",
+    "negative_control": true,
+    "negative_control_error": "MUL case 0 got"
+  }
+]

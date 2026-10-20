@@ -77,9 +77,9 @@ function pythonJSON(source, values = []) {
 }
 const definitions = pythonJSON(`import json,sys
 sys.path.insert(0,sys.argv[1])
-from scripts.probe_toolchain import SMOKE_WORKFLOWS,command_for
+from scripts.probe_toolchain import SMOKE_WORKFLOWS,EXTENDED_WORKFLOWS,command_for
 from companion.toolchains import WORKFLOW_TOOLS
-print(json.dumps({name:{'argv':command_for(name),'required_tools':WORKFLOW_TOOLS[name]} for name in SMOKE_WORKFLOWS}))`);
+print(json.dumps({name:{'argv':command_for(name),'required_tools':WORKFLOW_TOOLS[name]} for name in (*SMOKE_WORKFLOWS,*EXTENDED_WORKFLOWS)}))`);
 const extraCases = {
   native_verilog_assertion_failure: {base: 'verilog_simulation', expected: 'failed', modify: 'verilog-assertion'},
   native_vhdl_assertion_failure: {base: 'vhdl_simulation', expected: 'failed', modify: 'vhdl-assertion'},
@@ -93,6 +93,9 @@ const extraCases = {
   starter_native_verilog: {base: 'verilog_simulation', starter: true},
   hierarchy_and_test_selection: {base: 'synthesis', hierarchy: true, required_tools: ['iverilog', 'vvp']},
   cocotb_pending_write_shutdown: {base: 'cocotb_verilog', modify: 'pending-write-shutdown'},
+  verilator_native_assertion_failure: {base: 'verilator_simulation', expected: 'failed', modify: 'verilog-assertion'},
+  verilator_cocotb_assertion_failure: {base: 'cocotb_verilator', expected: 'failed', modify: 'cocotb-guard'},
+  verilator_gate_level: {base: 'verilator_simulation', gate_level: true},
 };
 for (const [name, extra] of Object.entries(extraCases)) definitions[name] = {...definitions[extra.base], ...extra};
 const selected = args['--only'] ? args['--only'].split(',') : Object.keys(definitions);
@@ -162,7 +165,7 @@ function specFor(definition) {
   if (definition.hierarchy) return {command: 'list'};
   const argv = definition.argv, command = argv[0], option = flag => argv.includes(flag) ? argv[argv.indexOf(flag) + 1] : undefined;
   const spec = {command, module: ['test', 'lint', 'synth', 'fpga'].includes(command) ? argv[1] : undefined};
-  if (command === 'test') Object.assign(spec, {test: option('--test'), test_top: option('--test-top'), test_language: option('--test-language'), waves: argv.includes('--waves'), wave_format: 'vcd', testcase: definition.testcase, gate_level: !!definition.gate_level});
+  if (command === 'test') Object.assign(spec, {simulator: option('--simulator') || 'auto', test: option('--test'), test_top: option('--test-top'), test_language: option('--test-language'), waves: argv.includes('--waves'), wave_format: 'vcd', testcase: definition.testcase, gate_level: !!definition.gate_level});
   if (command === 'lint') spec.linter = definition.linter || option('--linter');
   if (command === 'synth') spec.format = option('--format');
   if (command === 'formal') spec.config = argv[1];
@@ -179,6 +182,7 @@ async function configure(spec) {
     await page.locator('#wave-mode').selectOption(spec.wave_mode); await page.locator('#wave-tag').fill(spec.wave_tag || '');
   }
   if (spec.command === 'test' || spec.command === 'wave' && spec.wave_mode === 'simulate') {
+    await page.locator('#simulator').selectOption(spec.simulator || 'auto');
     await page.locator('#test-language').selectOption(spec.test_language);
     await page.locator('#test-file').fill(spec.test || ''); await page.locator('#test-top').fill(spec.test_top || ''); await page.locator('#testcase').fill(spec.testcase || '');
     await page.locator('#waves').setChecked(spec.waves);
@@ -201,6 +205,7 @@ async function runUI(spec, expected, configureControls = true) {
   if (spec.module) assert.ok(payload.options.module === spec.module || payload.options.modules?.length === 1 && payload.options.modules[0] === spec.module, 'The browser must select exactly one requested design.');
   if (spec.command === 'test' || spec.command === 'wave' && spec.wave_mode === 'simulate') {
     assert.equal(payload.options.test, spec.test); assert.equal(payload.options.test_language, spec.test_language);
+    if (spec.simulator && spec.simulator !== 'auto') assert.equal(payload.options.simulator, spec.simulator);
     if (spec.test_top) assert.equal(payload.options.test_top, spec.test_top);
     if (spec.testcase) assert.equal(payload.options.testcase, spec.testcase);
     if (spec.gate_level) assert.equal(payload.options.gate_level, true);
@@ -308,8 +313,8 @@ async function acceptArtifacts(name, evidence) {
   else if (name === 'schematics') selected = evidence.artifacts.find(item => item.path.endsWith('.svg'));
   else if (['synthesis', 'vhdl_synthesis'].includes(name)) selected = evidence.artifacts.find(item => item.path.startsWith('build/synth/') && item.path.endsWith('.json') && !item.path.includes('render'));
   else if (name.includes('cocotb')) selected = evidence.artifacts.find(item => item.path.endsWith('.xml'));
-  else if (['waveforms', 'vhdl_simulation', 'wave_saved_roundtrip'].includes(name)) selected = evidence.artifacts.find(item => item.path.endsWith('.vcd'));
-  else if (name === 'gate_level_verilog') selected = evidence.artifacts.find(item => item.path.endsWith('_gate.v'));
+  else if (['waveforms', 'verilator_simulation', 'vhdl_simulation', 'wave_saved_roundtrip'].includes(name)) selected = evidence.artifacts.find(item => item.path.endsWith('.vcd'));
+  else if (['gate_level_verilog', 'verilator_gate_level'].includes(name)) selected = evidence.artifacts.find(item => item.path.endsWith('_gate.v'));
   if (!selected) return {download: 'not_applicable-no-primary-output-required'};
   assert.ok(selected.bytes > 0); const row = await downloadArtifact(selected);
   const accepted = {download: 'passed-exact-native-disk-bytes-and-sha256', artifact: selected};
@@ -414,7 +419,7 @@ try {
       inspected.original_M0_oracle_applicable = !definition.base;
       evidence.native_inspection = inspected;
       if (!definition.base) assert.equal(inspected.passed, true, inspected.note + '\n' + safe(log, 10000));
-      if (name === 'native_verilog_assertion_failure' || name === 'native_vhdl_assertion_failure') assert.match(log, /xor mismatch/);
+      if (['native_verilog_assertion_failure', 'native_vhdl_assertion_failure', 'verilator_native_assertion_failure'].includes(name)) assert.match(log, /xor mismatch/);
       if (spec.command === 'test' && spec.test_language === 'verilog' && expected === 'passed') assert.ok(!log.includes('M0_VHDL_PASS') && (spec.module === 'm0_sv' ? !log.includes('M0_VERILOG_PASS') : !log.includes('M0_SYSTEMVERILOG_PASS')), 'Explicit test selection must not accidentally run other fixture tests.');
       if (name.includes('cocotb') && expected === 'passed') {
         assert.ok(inspected.xml.length > 0 && inspected.xml.every(item => item.cases.length > 0 && item.failures === 0 && item.errors === 0 && (name === 'cocotb_function_filter' || item.skipped === 0)));
@@ -428,7 +433,7 @@ try {
           evidence.cocotb_filter = 'passed-only-selected-function-executed-failing-sibling-absent-or-explicitly-skipped';
         }
       }
-      if (name === 'cocotb_expected_assertion_failure') { assert.match(log, /BROWSER_UNSELECTED_COCOTB_GUARD/); assert.ok(inspected.xml.some(item => item.cases.includes('unselected_browser_guard') && item.failures > 0)); }
+      if (['cocotb_expected_assertion_failure', 'verilator_cocotb_assertion_failure'].includes(name)) { assert.match(log, /BROWSER_UNSELECTED_COCOTB_GUARD/); assert.ok(inspected.xml.some(item => item.cases.includes('unselected_browser_guard') && item.failures > 0)); }
       if (definition.gate_level) { assert.match(log, /RTL PASS/); assert.match(log, /GATE PASS/); assert.ok(!log.includes('GATE SKIPPED')); assert.ok(inspected.artifacts.some(item => item.path.endsWith('_gate.v') && item.bytes > 0)); }
       if (name === 'compile_defines_includes_plusargs') { assert.match(log, /BROWSER_COMPILE_OPTIONS_PASS/); assert.match(log, /M0_VERILOG_PASS/); }
       if (name === 'cocotb_pending_write_shutdown') {

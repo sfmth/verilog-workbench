@@ -18,6 +18,13 @@ spec.loader.exec_module(probe)
 
 
 class ToolchainTests(unittest.TestCase):
+    def test_verilator_execution_routes_report_compiler_make_and_vpi_dependencies(self):
+        with mock.patch("companion.toolchains.shutil.which", return_value="/a/tool"):
+            report = capability_report(probe_versions=False)
+        self.assertEqual(report['workflows']['verilator_simulation']['required_tools'], ['verilator', 'make', 'c++'])
+        self.assertEqual(report['workflows']['cocotb_verilator']['required_tools'], ['verilator', 'make', 'c++', 'cocotb-config'])
+        self.assertEqual(report['workflows']['cocotb_verilator']['state'], 'not_run')
+
     def test_missing_engines_are_blocked_and_never_spawned(self):
         with mock.patch("companion.toolchains.shutil.which", return_value=None), mock.patch("companion.toolchains.run_process") as run:
             report = capability_report(env={"PATH": ""})
@@ -89,11 +96,27 @@ class ToolchainTests(unittest.TestCase):
 
     def test_all_commands_are_accepted_by_real_cli_and_never_flash(self):
         import vwb
-        for workflow in probe.SMOKE_WORKFLOWS:
+        self.assertEqual(len(probe.SMOKE_WORKFLOWS), 14)
+        self.assertFalse(set(probe.SMOKE_WORKFLOWS) & set(probe.EXTENDED_WORKFLOWS))
+        for workflow in probe.SMOKE_WORKFLOWS + probe.EXTENDED_WORKFLOWS:
             with self.subTest(workflow=workflow):
                 arguments = probe.command_for(workflow)
                 vwb.make_parser().parse_args(arguments)
                 self.assertNotIn("flash", arguments)
+
+    def test_extended_verilator_routes_select_real_engine_and_require_trace(self):
+        for name in probe.EXTENDED_WORKFLOWS:
+            command = probe.command_for(name)
+            self.assertEqual(command[command.index('--simulator') + 1], 'verilator')
+            self.assertIn('--waves', command)
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            self.assertFalse(probe.inspect_result('verilator_simulation', root, 0, 'M0_VERILOG_PASS')[0])
+            trace = root / 'build/dut.vcd'; trace.parent.mkdir(); trace.write_text('$var wire 1 a y $end\n#0\n0a\n#1\n1a\n')
+            self.assertTrue(probe.inspect_result('verilator_simulation', root, 0, 'M0_VERILOG_PASS')[0])
+            self.assertFalse(probe.inspect_result('cocotb_verilator', root, 0, '')[0])
+            (trace.parent / 'results.xml').write_text('<testsuites><testsuite><testcase name="actual"/></testsuite></testsuites>')
+            self.assertTrue(probe.inspect_result('cocotb_verilator', root, 0, '')[0])
 
     def test_verilator_native_engine_fallback_is_used_for_lint(self):
         import vwb

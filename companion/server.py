@@ -20,7 +20,7 @@ MAX_EDITOR_BODY_BYTES = 12 * 1024 * 1024
 MAX_ARTIFACT_BYTES = 32 * 1024 * 1024
 MAX_JOB_SECONDS = 300
 IDENTIFIER = re.compile(r"[A-Za-z_][A-Za-z0-9_$]*\Z")
-SIMULATION_OPTIONS = {"modules", "test", "test_language", "test_top", "testcase", "waves", "wave_format", "seed",
+SIMULATION_OPTIONS = {"modules", "simulator", "test", "test_language", "test_top", "testcase", "waves", "wave_format", "seed",
                       "max_array_words", "defines", "includes", "plusargs", "gate_level", "keep_going"}
 COMMAND_OPTIONS = {
     "list": set(), "doctor": set(),
@@ -286,6 +286,7 @@ class CompanionState:
             if management:
                 return argv
             enum("test_language", {"auto", "cocotb", "verilog", "vhdl"})
+            enum("simulator", {"auto", "icarus", "verilator", "ghdl"})
             enum("wave_format", {"vcd", "fst"})
             boolean("waves", "--waves")
             boolean('gate_level', '--gate-level')

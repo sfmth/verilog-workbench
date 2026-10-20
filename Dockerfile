@@ -53,6 +53,7 @@ RUN sudo apt-get update \
         iverilog \
         librsvg2-bin \
         make \
+        g++ \
         nextpnr-gowin \
         nextpnr-ice40 \
         nodejs \

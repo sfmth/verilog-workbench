@@ -16,6 +16,9 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  upstream-hdl:
+    uses: ./.github/workflows/upstream-hdl.yml
+
   distro-validation:
     name: Main validation - ${{ matrix.name }}
     runs-on: ubuntu-latest

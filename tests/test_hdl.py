@@ -63,6 +63,20 @@ endmodule
             self.assertIn('--define=WIDTH=4', args)
             self.assertIn('--include='+str(self.root), args)
 
+    def test_simulator_is_a_typed_choice_for_test_and_wave_only(self):
+        for command in ('test', 'wave'):
+            for simulator in ('auto', 'icarus', 'verilator', 'ghdl'):
+                args = self.argv(command, simulator=simulator)
+                self.assertEqual(args[args.index('--simulator') + 1], simulator)
+            for simulator in ('sh', '--help', ['verilator'], None, 1):
+                with self.subTest(command=command, simulator=simulator), self.assertRaises(ProjectError):
+                    self.argv(command, simulator=simulator)
+        for command in ('lint', 'synth', 'doctor'):
+            with self.assertRaises(ProjectError):
+                self.argv(command, simulator='verilator')
+        with self.assertRaises(ProjectError):
+            self.argv('wave', list_saved=True, simulator='auto')
+
     def test_wave_modes_are_headless_and_management_is_not_simulation(self):
         args = self.argv('wave', modules=['dut'], list_saved=True)
         self.assertEqual(args[-3:], ['--no-view', '--list-saved', '--json'])

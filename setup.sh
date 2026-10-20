@@ -183,6 +183,10 @@ case "$DISTRO_FAMILY" in
             select_package "Python development files for Cocotb" required python3-dev
         fi
         select_package "Tab completion" fallback python3-argcomplete || true
+        if [[ "$PROFILE" == full ]]; then
+            select_package "C++ compiler for Verilator simulation" required g++
+            select_package "Make for Verilator simulation" required make
+        fi
         CORE_PACKAGE_COUNT=${#PACKAGES[@]}
         if [[ "$PROFILE" == full ]]; then
             add_optional_packages \
@@ -203,6 +207,10 @@ case "$DISTRO_FAMILY" in
             select_package "Python development files for Cocotb" required python3-devel
         fi
         select_package "Tab completion" fallback python3-argcomplete || true
+        if [[ "$PROFILE" == full ]]; then
+            select_package "C++ compiler for Verilator simulation" required gcc-c++
+            select_package "Make for Verilator simulation" required make
+        fi
         CORE_PACKAGE_COUNT=${#PACKAGES[@]}
         if [[ "$PROFILE" == full ]]; then
             add_optional_packages \
@@ -221,6 +229,10 @@ case "$DISTRO_FAMILY" in
             select_package "C++ compiler for Cocotb" required gcc
         fi
         select_package "Tab completion" fallback python-argcomplete || true
+        if [[ "$PROFILE" == full ]]; then
+            select_package "C++ compiler for Verilator simulation" required gcc
+            select_package "Make for Verilator simulation" required make
+        fi
         CORE_PACKAGE_COUNT=${#PACKAGES[@]}
         if [[ "$PROFILE" == full ]]; then
             add_optional_packages \
@@ -401,7 +413,7 @@ if [[ "$PROFILE" == full ]]; then
         [ghdl]="VHDL simulation"
         [gtkwave]="wave viewing"
         [yosys]="synthesis and lint"
-        [verilator]="extra lint"
+        [verilator]="SystemVerilog simulation and extra lint"
         [verible-verilog-lint]="extra SystemVerilog lint"
         [sv2v]="advanced SystemVerilog conversion"
         [netlistsvg]="NetlistSVG schematics"

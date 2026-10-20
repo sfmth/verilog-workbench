@@ -1,0 +1,165 @@
+{
+  "schema_version": 1,
+  "minimum_designs": 20,
+  "recipe_files": [
+    "toolchains/upstream-core-designs.json",
+    "upstream/fixtures/nvdla/designs.json",
+    "upstream/fixtures/picorv32/designs.json",
+    "upstream/fixtures/serial/designs.json"
+  ],
+  "designs": [
+    {
+      "id": "axis-fifo",
+      "project": "verilog-axis",
+      "top": "axis_fifo",
+      "sources": [
+        "rtl/axis_fifo.v"
+      ],
+      "defines": [
+        "VWB_DUT=axis_fifo",
+        "VWB_CASE=\"axis-fifo\"",
+        "AXIS_FIFO"
+      ],
+      "include_dirs": [],
+      "simulator": "icarus",
+      "kind": "functional_simulation",
+      "bench": "upstream/fixtures/axis/tb_axis_stream.sv",
+      "bench_top": "tb_axis_stream",
+      "negative_control": true
+    },
+    {
+      "id": "axis-register",
+      "project": "verilog-axis",
+      "top": "axis_register",
+      "sources": [
+        "rtl/axis_register.v"
+      ],
+      "defines": [
+        "VWB_DUT=axis_register",
+        "VWB_CASE=\"axis-register\""
+      ],
+      "include_dirs": [],
+      "simulator": "icarus",
+      "kind": "functional_simulation",
+      "bench": "upstream/fixtures/axis/tb_axis_stream.sv",
+      "bench_top": "tb_axis_stream",
+      "negative_control": true
+    },
+    {
+      "id": "axis-pipeline-fifo",
+      "project": "verilog-axis",
+      "top": "axis_pipeline_fifo",
+      "sources": [
+        "rtl/axis_pipeline_fifo.v"
+      ],
+      "defines": [
+        "VWB_DUT=axis_pipeline_fifo",
+        "VWB_CASE=\"axis-pipeline-fifo\""
+      ],
+      "include_dirs": [],
+      "simulator": "icarus",
+      "kind": "functional_simulation",
+      "bench": "upstream/fixtures/axis/tb_axis_stream.sv",
+      "bench_top": "tb_axis_stream",
+      "negative_control": true
+    },
+    {
+      "id": "axis-adapter",
+      "project": "verilog-axis",
+      "top": "axis_adapter",
+      "sources": [
+        "rtl/axis_adapter.v"
+      ],
+      "defines": [
+        "VWB_DUT=axis_adapter",
+        "VWB_CASE=\"axis-adapter\"",
+        "AXIS_ADAPTER"
+      ],
+      "include_dirs": [],
+      "simulator": "icarus",
+      "kind": "functional_simulation",
+      "bench": "upstream/fixtures/axis/tb_axis_stream.sv",
+      "bench_top": "tb_axis_stream",
+      "negative_control": true
+    },
+    {
+      "id": "axis-async-fifo",
+      "project": "verilog-axis",
+      "top": "axis_async_fifo",
+      "sources": [
+        "rtl/axis_async_fifo.v"
+      ],
+      "defines": [
+        "VWB_DUT=axis_async_fifo",
+        "VWB_CASE=\"axis-async-fifo\"",
+        "AXIS_ASYNC"
+      ],
+      "include_dirs": [],
+      "simulator": "icarus",
+      "kind": "functional_simulation",
+      "bench": "upstream/fixtures/axis/tb_axis_stream.sv",
+      "bench_top": "tb_axis_stream",
+      "negative_control": true
+    },
+    {
+      "id": "axis-arb-mux",
+      "project": "verilog-axis",
+      "top": "axis_arb_mux",
+      "sources": [
+        "rtl/*.v"
+      ],
+      "defines": [],
+      "include_dirs": [],
+      "simulator": "verilator",
+      "kind": "lint_elaboration"
+    },
+    {
+      "id": "axi-ram",
+      "project": "verilog-axi",
+      "top": "axi_ram",
+      "sources": [
+        "rtl/*.v"
+      ],
+      "defines": [],
+      "include_dirs": [],
+      "simulator": "verilator",
+      "kind": "lint_elaboration"
+    },
+    {
+      "id": "axil-register",
+      "project": "verilog-axi",
+      "top": "axil_register",
+      "sources": [
+        "rtl/*.v"
+      ],
+      "defines": [],
+      "include_dirs": [],
+      "simulator": "verilator",
+      "kind": "lint_elaboration"
+    },
+    {
+      "id": "i2c-master",
+      "project": "verilog-i2c",
+      "top": "i2c_master",
+      "sources": [
+        "rtl/*.v"
+      ],
+      "defines": [],
+      "include_dirs": [],
+      "simulator": "verilator",
+      "kind": "lint_elaboration"
+    },
+    {
+      "id": "i2c-slave",
+      "project": "verilog-i2c",
+      "top": "i2c_slave",
+      "sources": [
+        "rtl/*.v"
+      ],
+      "defines": [],
+      "include_dirs": [],
+      "simulator": "verilator",
+      "kind": "lint_elaboration"
+    }
+  ]
+}

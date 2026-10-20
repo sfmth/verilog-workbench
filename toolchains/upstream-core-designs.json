@@ -1,0 +1,91 @@
+[
+  {
+    "id": "ibex-core",
+    "project": "ibex",
+    "top": "ibex_core",
+    "sources": [
+      "rtl/*.sv",
+      "vendor/lowrisc_ip/ip/prim/rtl/*.sv",
+      "vendor/lowrisc_ip/ip/prim/rtl/*.svh",
+      "vendor/lowrisc_ip/ip/prim_generic/rtl/prim_clock_gating.sv",
+      "vendor/lowrisc_ip/dv/sv/dv_utils/dv_fcov_macros.svh"
+    ],
+    "include_dirs": [
+      "rtl",
+      "vendor/lowrisc_ip/ip/prim/rtl",
+      "vendor/lowrisc_ip/dv/sv/dv_utils"
+    ],
+    "defines": [
+      "SYNTHESIS"
+    ],
+    "simulator": "verilator",
+    "kind": "lint_elaboration",
+    "verilator_args": [
+      "--unroll-count",
+      "72"
+    ],
+    "description": "Full upstream Ibex core default configuration, including instruction/data paths and vendored primitives. Static parsing, dependency ordering and elaboration only; no ISA simulation or UVM claim."
+  },
+  {
+    "id": "cv32e40p-core",
+    "project": "cv32e40p",
+    "top": "cv32e40p_core",
+    "sources": [
+      "rtl/cv32e40p_aligner.sv",
+      "rtl/cv32e40p_alu.sv",
+      "rtl/cv32e40p_alu_div.sv",
+      "rtl/cv32e40p_apu_disp.sv",
+      "rtl/cv32e40p_compressed_decoder.sv",
+      "rtl/cv32e40p_controller.sv",
+      "rtl/cv32e40p_core.sv",
+      "rtl/cv32e40p_cs_registers.sv",
+      "rtl/cv32e40p_decoder.sv",
+      "rtl/cv32e40p_ex_stage.sv",
+      "rtl/cv32e40p_ff_one.sv",
+      "rtl/cv32e40p_fifo.sv",
+      "rtl/cv32e40p_fp_wrapper.sv",
+      "rtl/cv32e40p_hwloop_regs.sv",
+      "rtl/cv32e40p_id_stage.sv",
+      "rtl/cv32e40p_if_stage.sv",
+      "rtl/cv32e40p_int_controller.sv",
+      "rtl/cv32e40p_load_store_unit.sv",
+      "rtl/cv32e40p_mult.sv",
+      "rtl/cv32e40p_obi_interface.sv",
+      "rtl/cv32e40p_popcnt.sv",
+      "rtl/cv32e40p_prefetch_buffer.sv",
+      "rtl/cv32e40p_prefetch_controller.sv",
+      "rtl/cv32e40p_register_file_ff.sv",
+      "rtl/cv32e40p_sleep_unit.sv",
+      "rtl/cv32e40p_top.sv",
+      "rtl/include/*.sv",
+      "bhv/cv32e40p_sim_clock_gate.sv"
+    ],
+    "include_dirs": [
+      "rtl/include",
+      "bhv"
+    ],
+    "defines": [
+      "SYNTHESIS"
+    ],
+    "simulator": "verilator",
+    "kind": "lint_elaboration",
+    "verilator_args": [],
+    "description": "Full upstream CV32E40P core, default non-FPU configuration, upstream flip-flop register-file implementation and simulation clock-gate implementation. Static elaboration only; no ISA regression claim."
+  },
+  {
+    "id": "serv-core",
+    "project": "serv",
+    "top": "serv_top",
+    "sources": [
+      "rtl/*.v"
+    ],
+    "include_dirs": [
+      "rtl"
+    ],
+    "defines": [],
+    "simulator": "verilator",
+    "kind": "lint_elaboration",
+    "verilator_args": [],
+    "description": "Full upstream SERV core default configuration. Static parsing, dependency closure and elaboration only; no firmware or ISA simulation claim."
+  }
+]
