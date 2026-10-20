@@ -1,0 +1,48 @@
+{
+  "schema_version": "vwb.local-native-negative-control/1",
+  "state": "passed",
+  "kind": "real-managed-Cocotb-import-failure-negative-control",
+  "observed_at": "2026-10-20T03:18:42.042597+00:00",
+  "scope": "Local Linux x86_64 managed OSS CAD Suite execution; deliberately missing Python import in an isolated copy of the M0 Cocotb fixture. This is not a cross-platform CI receipt.",
+  "runtime": {
+    "name": "oss-cad-suite-2026-10-18-linux-x64",
+    "target": "linux-x64",
+    "archive": "oss-cad-suite-linux-x64-20261018.tgz",
+    "archive_sha256": "639c8c0366d74dc56201729c9907bf2d8281db7f18bb025abe2e4f3f2ebaa24e",
+    "versions": {
+      "python": "Python 3.11.6",
+      "cocotb": "2.1.0.dev0+41564633",
+      "iverilog": "Icarus Verilog version 14.0 (devel) (s20260301-596-gad0260be5-dirty)"
+    }
+  },
+  "source_sha256": {
+    "vwb.py": "3db956c3e660a7cab81ced56278cfa23e95f11619699be9a76292827d572dc60",
+    "companion/cocotb_runtime.py": "b8794d6f2b1f3d9008001d165ca32d9c829547a9dffe40d064d08be9a33c4153",
+    "toolchains/fixtures/src/m0_gate.v": "ad3ef15d3236ddd1938216b9342606fffc34ce1fd466c9363f9a383a8d1c9239",
+    "toolchains/fixtures/test/test_m0_cocotb.py": "6eef750e30cb0f1eb6164219b011e4d0d5888f2cca6ac93c90169e56ba0cddcc"
+  },
+  "command": [
+    "<managed-suite-python>",
+    "vwb.py",
+    "--root",
+    "<isolated-fixture-copy>",
+    "--verbose",
+    "test",
+    "m0_gate",
+    "--test-language",
+    "cocotb",
+    "--test",
+    "test/test_m0_cocotb.py"
+  ],
+  "negative_control": "Prepend import vwb_missing_dependency_negative_control to the copied Cocotb fixture; the deliberately nonexistent dependency prevents test execution and XML results.",
+  "returncode": 1,
+  "checks": {
+    "real_missing_dependency_error": true,
+    "incomplete_execution_label": true,
+    "setup_needs_attention": true,
+    "false_setup_ok_absent": true,
+    "failure_exit_preserved": true
+  },
+  "output_excerpt": "ModuleNotFoundError: No module named 'vwb_missing_dependency_negative_control'\nwarning: no executed Cocotb test results at .vwb/sim/m0_gate/cocotb-test_m0_cocotb/results.xml; inspect simulator output, matching Python dependencies/imports, Cocotb configuration and simulator startup/crashes\nYour code: NOT FULLY CHECKED - 0/1 test runs passed\nYour setup: NEEDS ATTENTION - 1 test run(s) lack executed Cocotb results; inspect simulator output, Python dependencies/imports and startup/configuration",
+  "isolation": "Temporary project removed after execution; repository fixtures unchanged; no temporary project content or local absolute runtime paths retained."
+}

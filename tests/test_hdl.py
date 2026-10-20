@@ -13,7 +13,7 @@ from companion.server import CompanionState
 class HdlJobTests(unittest.TestCase):
     def setUp(self):
         self.directory = tempfile.TemporaryDirectory()
-        self.root = Path(self.directory.name)
+        self.root = Path(self.directory.name).resolve()
         for name in ('src', 'test', 'include headers'):
             (self.root / name).mkdir()
         (self.root / 'src/dut.sv').write_text('module dut(input a, output b); assign b=a; endmodule\n')

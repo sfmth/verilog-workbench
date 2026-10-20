@@ -1,0 +1,1915 @@
+{
+  "schema": "vwb.hdl-workspace-browser-probe/1",
+  "recorded_at": "2026-10-20T03:06:51.016Z",
+  "state": "passed",
+  "target": "public-HTTPS-workspace",
+  "pages_prefix": "/verilog-workbench/",
+  "public_url": "https://sfmth.github.io/verilog-workbench/workspace/",
+  "checks": [
+    "verilog_simulation-real-browser-native-HDL-workflow",
+    "systemverilog_simulation-real-browser-native-HDL-workflow",
+    "waveforms-real-browser-native-HDL-workflow",
+    "cocotb_verilog-real-browser-native-HDL-workflow",
+    "vhdl_simulation-real-browser-native-HDL-workflow",
+    "cocotb_vhdl-real-browser-native-HDL-workflow",
+    "lint-real-browser-native-HDL-workflow",
+    "synthesis-real-browser-native-HDL-workflow",
+    "schematics-real-browser-native-HDL-workflow",
+    "vhdl_synthesis-real-browser-native-HDL-workflow",
+    "formal_proof-real-browser-native-HDL-workflow",
+    "formal_counterexample-real-browser-native-HDL-workflow",
+    "fpga_tangnano9k_build-real-browser-native-HDL-workflow",
+    "fpga_icebreaker_build-real-browser-native-HDL-workflow",
+    "native_verilog_assertion_failure-real-browser-native-HDL-workflow",
+    "native_vhdl_assertion_failure-real-browser-native-HDL-workflow",
+    "cocotb_function_filter-real-browser-native-HDL-workflow",
+    "cocotb_expected_assertion_failure-real-browser-native-HDL-workflow",
+    "lint_source_diagnostic-real-browser-native-HDL-workflow",
+    "gate_level_verilog-real-browser-native-HDL-workflow",
+    "gate_level_cocotb_vhdl-real-browser-native-HDL-workflow",
+    "compile_defines_includes_plusargs-real-browser-native-HDL-workflow",
+    "wave_saved_roundtrip-real-browser-native-HDL-workflow",
+    "starter_native_verilog-real-browser-native-HDL-workflow",
+    "hierarchy_and_test_selection-real-browser-native-HDL-workflow"
+  ],
+  "workflows": {
+    "verilog_simulation": {
+      "state": "passed",
+      "fixture": "verilog_simulation",
+      "selected_controls": {
+        "command": "test",
+        "module": "m0_gate",
+        "test": "test/test_m0_gate.v",
+        "test_top": "tb_m0_gate",
+        "test_language": "verilog",
+        "waves": false,
+        "wave_format": "vcd",
+        "gate_level": false
+      },
+      "fixture_change": null,
+      "job": {
+        "command": "test",
+        "status": "passed",
+        "returncode": 0,
+        "stale": false,
+        "source_revision": "c495b0e4efe8695a3faa6e416826631621107352cb63224c9fb52cfda9bf0b57",
+        "source_revision_after": "c495b0e4efe8695a3faa6e416826631621107352cb63224c9fb52cfda9bf0b57"
+      },
+      "browser_request": {
+        "command": "test",
+        "options": {
+          "modules": [
+            "m0_gate"
+          ],
+          "test_language": "verilog",
+          "waves": false,
+          "wave_format": "vcd",
+          "test": "test/test_m0_gate.v",
+          "test_top": "tb_m0_gate"
+        },
+        "timeout": 300
+      },
+      "log_sha256": "4110de5b221d048785136aefe4a4b9738c45a2195a5fa640d7833ec59d51264e",
+      "log_characters": 1142,
+      "native_inspection": {
+        "passed": true,
+        "note": "Actual HDL assertions completed.",
+        "artifacts": [],
+        "xml": [],
+        "statuses": [],
+        "original_M0_oracle_applicable": true
+      },
+      "artifact_acceptance": {
+        "download": "not_applicable-no-primary-output-required"
+      },
+      "duration_seconds": 3.93
+    },
+    "systemverilog_simulation": {
+      "state": "passed",
+      "fixture": "systemverilog_simulation",
+      "selected_controls": {
+        "command": "test",
+        "module": "m0_sv",
+        "test": "test/test_m0_sv.sv",
+        "test_top": "tb_m0_sv",
+        "test_language": "verilog",
+        "waves": false,
+        "wave_format": "vcd",
+        "gate_level": false
+      },
+      "fixture_change": null,
+      "job": {
+        "command": "test",
+        "status": "passed",
+        "returncode": 0,
+        "stale": false,
+        "source_revision": "c495b0e4efe8695a3faa6e416826631621107352cb63224c9fb52cfda9bf0b57",
+        "source_revision_after": "c495b0e4efe8695a3faa6e416826631621107352cb63224c9fb52cfda9bf0b57"
+      },
+      "browser_request": {
+        "command": "test",
+        "options": {
+          "modules": [
+            "m0_sv"
+          ],
+          "test_language": "verilog",
+          "waves": false,
+          "wave_format": "vcd",
+          "test": "test/test_m0_sv.sv",
+          "test_top": "tb_m0_sv"
+        },
+        "timeout": 300
+      },
+      "log_sha256": "1e8f1bf3b40b041705c7ff6f91d1da6fe48df633ca1baad7757dd944dda52248",
+      "log_characters": 1191,
+      "native_inspection": {
+        "passed": true,
+        "note": "Actual HDL assertions completed.",
+        "artifacts": [],
+        "xml": [],
+        "statuses": [],
+        "original_M0_oracle_applicable": true
+      },
+      "artifact_acceptance": {
+        "download": "not_applicable-no-primary-output-required"
+      },
+      "duration_seconds": 2.93
+    },
+    "waveforms": {
+      "state": "passed",
+      "fixture": "waveforms",
+      "selected_controls": {
+        "command": "test",
+        "module": "m0_gate",
+        "test": "test/test_m0_gate.v",
+        "test_top": "tb_m0_gate",
+        "test_language": "verilog",
+        "waves": true,
+        "wave_format": "vcd",
+        "gate_level": false
+      },
+      "fixture_change": null,
+      "job": {
+        "command": "test",
+        "status": "passed",
+        "returncode": 0,
+        "stale": false,
+        "source_revision": "c495b0e4efe8695a3faa6e416826631621107352cb63224c9fb52cfda9bf0b57",
+        "source_revision_after": "c495b0e4efe8695a3faa6e416826631621107352cb63224c9fb52cfda9bf0b57"
+      },
+      "browser_request": {
+        "command": "test",
+        "options": {
+          "modules": [
+            "m0_gate"
+          ],
+          "test_language": "verilog",
+          "waves": true,
+          "wave_format": "vcd",
+          "test": "test/test_m0_gate.v",
+          "test_top": "tb_m0_gate"
+        },
+        "timeout": 300
+      },
+      "log_sha256": "b4e984ef05a595f09dd1ba43cb79d8b7cb4e2a2f16bd02d07d06916c4980f1b9",
+      "log_characters": 2114,
+      "native_inspection": {
+        "passed": true,
+        "note": "Expected VCD declarations and time changes.",
+        "artifacts": [
+          {
+            "path": "build/sim/m0_gate/verilog-test_m0_gate/m0_gate.vcd",
+            "bytes": 499,
+            "sha256": "6641e3bd88af87a178d2862625062e1becdd40423e14c92ab463ac0fd0148041"
+          }
+        ],
+        "xml": [],
+        "statuses": [],
+        "original_M0_oracle_applicable": true
+      },
+      "artifact_acceptance": {
+        "download": "passed-exact-native-disk-bytes-and-sha256",
+        "artifact": {
+          "path": "build/sim/m0_gate/verilog-test_m0_gate/m0_gate.vcd",
+          "bytes": 499,
+          "sha256": "6641e3bd88af87a178d2862625062e1becdd40423e14c92ab463ac0fd0148041"
+        },
+        "browser_view": "passed-real-native-VCD-parsed-and-rendered-by-browser-worker"
+      },
+      "duration_seconds": 2.71
+    },
+    "cocotb_verilog": {
+      "state": "passed",
+      "fixture": "cocotb_verilog",
+      "selected_controls": {
+        "command": "test",
+        "module": "m0_gate",
+        "test": "test/test_m0_cocotb.py",
+        "test_language": "cocotb",
+        "waves": true,
+        "wave_format": "vcd",
+        "gate_level": false
+      },
+      "fixture_change": null,
+      "job": {
+        "command": "test",
+        "status": "passed",
+        "returncode": 0,
+        "stale": false,
+        "source_revision": "c495b0e4efe8695a3faa6e416826631621107352cb63224c9fb52cfda9bf0b57",
+        "source_revision_after": "c495b0e4efe8695a3faa6e416826631621107352cb63224c9fb52cfda9bf0b57"
+      },
+      "browser_request": {
+        "command": "test",
+        "options": {
+          "modules": [
+            "m0_gate"
+          ],
+          "test_language": "cocotb",
+          "waves": true,
+          "wave_format": "vcd",
+          "test": "test/test_m0_cocotb.py",
+          "seed": 12345
+        },
+        "timeout": 300
+      },
+      "log_sha256": "2a60fdae454d4787fb50261267219ac2f813936f22210c80bef4d430b9b587c1",
+      "log_characters": 5091,
+      "native_inspection": {
+        "passed": true,
+        "note": "Cocotb truth-table assertions reported passing test cases.",
+        "artifacts": [
+          {
+            "path": "build/sim/m0_gate/cocotb-test_m0_cocotb/m0_gate.vcd",
+            "bytes": 337,
+            "sha256": "402cad463b323ced3b23faae59187e2aa507bc09aa086b8173928d76f0edc22d"
+          },
+          {
+            "path": "build/sim/m0_gate/cocotb-test_m0_cocotb/results.xml",
+            "bytes": 390,
+            "sha256": "572209446aa2eb014f53748d68661d20fb68a25a26437b732b77b343790a5544"
+          }
+        ],
+        "xml": [
+          {
+            "path": "build/sim/m0_gate/cocotb-test_m0_cocotb/results.xml",
+            "cases": [
+              "xor_truth_table"
+            ],
+            "case_details": [
+              {
+                "name": "xor_truth_table",
+                "failures": 0,
+                "errors": 0,
+                "skipped": 0
+              }
+            ],
+            "failures": 0,
+            "errors": 0,
+            "skipped": 0
+          }
+        ],
+        "statuses": [],
+        "original_M0_oracle_applicable": true
+      },
+      "artifact_acceptance": {
+        "download": "passed-exact-native-disk-bytes-and-sha256",
+        "artifact": {
+          "path": "build/sim/m0_gate/cocotb-test_m0_cocotb/results.xml",
+          "bytes": 390,
+          "sha256": "572209446aa2eb014f53748d68661d20fb68a25a26437b732b77b343790a5544"
+        }
+      },
+      "duration_seconds": 3.22
+    },
+    "vhdl_simulation": {
+      "state": "passed",
+      "fixture": "vhdl_simulation",
+      "selected_controls": {
+        "command": "test",
+        "module": "m0_vhdl",
+        "test": "test/test_m0_vhdl.vhd",
+        "test_top": "tb_m0_vhdl",
+        "test_language": "vhdl",
+        "waves": true,
+        "wave_format": "vcd",
+        "gate_level": false
+      },
+      "fixture_change": null,
+      "job": {
+        "command": "test",
+        "status": "passed",
+        "returncode": 0,
+        "stale": false,
+        "source_revision": "c495b0e4efe8695a3faa6e416826631621107352cb63224c9fb52cfda9bf0b57",
+        "source_revision_after": "c495b0e4efe8695a3faa6e416826631621107352cb63224c9fb52cfda9bf0b57"
+      },
+      "browser_request": {
+        "command": "test",
+        "options": {
+          "modules": [
+            "m0_vhdl"
+          ],
+          "test_language": "vhdl",
+          "waves": true,
+          "wave_format": "vcd",
+          "test": "test/test_m0_vhdl.vhd",
+          "test_top": "tb_m0_vhdl"
+        },
+        "timeout": 300
+      },
+      "log_sha256": "6e6fb81ef493fcdd87fcf72b07525ab41cf6886fcb673424b526265c052ecc0a",
+      "log_characters": 1368,
+      "native_inspection": {
+        "passed": true,
+        "note": "Expected VCD declarations and time changes.",
+        "artifacts": [
+          {
+            "path": "build/sim/m0_vhdl/vhdl-test_m0_vhdl/m0_vhdl.vcd",
+            "bytes": 612,
+            "sha256": "80619fc56dc5a3f1c3e13ba5f57b8ce99fce8da90cbf8a88a6793d295dfd0bd5"
+          }
+        ],
+        "xml": [],
+        "statuses": [],
+        "original_M0_oracle_applicable": true
+      },
+      "artifact_acceptance": {
+        "download": "passed-exact-native-disk-bytes-and-sha256",
+        "artifact": {
+          "path": "build/sim/m0_vhdl/vhdl-test_m0_vhdl/m0_vhdl.vcd",
+          "bytes": 612,
+          "sha256": "80619fc56dc5a3f1c3e13ba5f57b8ce99fce8da90cbf8a88a6793d295dfd0bd5"
+        },
+        "browser_view": "passed-real-native-VCD-parsed-and-rendered-by-browser-worker"
+      },
+      "duration_seconds": 2.93
+    },
+    "cocotb_vhdl": {
+      "state": "passed",
+      "fixture": "cocotb_vhdl",
+      "selected_controls": {
+        "command": "test",
+        "module": "m0_vhdl",
+        "test": "test/test_m0_cocotb.py",
+        "test_language": "cocotb",
+        "waves": true,
+        "wave_format": "vcd",
+        "gate_level": false
+      },
+      "fixture_change": null,
+      "job": {
+        "command": "test",
+        "status": "passed",
+        "returncode": 0,
+        "stale": false,
+        "source_revision": "c495b0e4efe8695a3faa6e416826631621107352cb63224c9fb52cfda9bf0b57",
+        "source_revision_after": "c495b0e4efe8695a3faa6e416826631621107352cb63224c9fb52cfda9bf0b57"
+      },
+      "browser_request": {
+        "command": "test",
+        "options": {
+          "modules": [
+            "m0_vhdl"
+          ],
+          "test_language": "cocotb",
+          "waves": true,
+          "wave_format": "vcd",
+          "test": "test/test_m0_cocotb.py",
+          "seed": 12345
+        },
+        "timeout": 300
+      },
+      "log_sha256": "3c756ff13b8020c070b0351f17913028454cd3d5b6efc276e27cc414f43a461f",
+      "log_characters": 4712,
+      "native_inspection": {
+        "passed": true,
+        "note": "Cocotb truth-table assertions reported passing test cases.",
+        "artifacts": [
+          {
+            "path": "build/sim/m0_vhdl/cocotb-test_m0_cocotb/m0_vhdl.vcd",
+            "bytes": 403,
+            "sha256": "a9bcfc7a8c7a6896a71f48498214e7f5e1e648ba8744fe6b4feb49c4c4ec239b"
+          },
+          {
+            "path": "build/sim/m0_vhdl/cocotb-test_m0_cocotb/results.xml",
+            "bytes": 387,
+            "sha256": "9b196ffdf408b723d05175ca9897d4045bee7fe05f40b1b691e38dcf0bcb4fbb"
+          }
+        ],
+        "xml": [
+          {
+            "path": "build/sim/m0_vhdl/cocotb-test_m0_cocotb/results.xml",
+            "cases": [
+              "xor_truth_table"
+            ],
+            "case_details": [
+              {
+                "name": "xor_truth_table",
+                "failures": 0,
+                "errors": 0,
+                "skipped": 0
+              }
+            ],
+            "failures": 0,
+            "errors": 0,
+            "skipped": 0
+          }
+        ],
+        "statuses": [],
+        "original_M0_oracle_applicable": true
+      },
+      "artifact_acceptance": {
+        "download": "passed-exact-native-disk-bytes-and-sha256",
+        "artifact": {
+          "path": "build/sim/m0_vhdl/cocotb-test_m0_cocotb/results.xml",
+          "bytes": 387,
+          "sha256": "9b196ffdf408b723d05175ca9897d4045bee7fe05f40b1b691e38dcf0bcb4fbb"
+        }
+      },
+      "duration_seconds": 3.21
+    },
+    "lint": {
+      "state": "passed",
+      "fixture": "lint",
+      "selected_controls": {
+        "command": "lint",
+        "module": "m0_gate",
+        "linter": "verilator"
+      },
+      "fixture_change": null,
+      "job": {
+        "command": "lint",
+        "status": "passed",
+        "returncode": 0,
+        "stale": false,
+        "source_revision": "c495b0e4efe8695a3faa6e416826631621107352cb63224c9fb52cfda9bf0b57",
+        "source_revision_after": "c495b0e4efe8695a3faa6e416826631621107352cb63224c9fb52cfda9bf0b57"
+      },
+      "browser_request": {
+        "command": "lint",
+        "options": {
+          "modules": [
+            "m0_gate"
+          ],
+          "linters": [
+            "verilator"
+          ]
+        },
+        "timeout": 300
+      },
+      "log_sha256": "d52505b96b387ed7f3481131a3c5db4db67e3e3358cea2a3da342bc00ffe4973",
+      "log_characters": 744,
+      "native_inspection": {
+        "passed": true,
+        "note": "Actual tool command completed.",
+        "artifacts": [],
+        "xml": [],
+        "statuses": [],
+        "original_M0_oracle_applicable": true
+      },
+      "artifact_acceptance": {
+        "download": "not_applicable-no-primary-output-required"
+      },
+      "duration_seconds": 2.35
+    },
+    "synthesis": {
+      "state": "passed",
+      "fixture": "synthesis",
+      "selected_controls": {
+        "command": "synth",
+        "module": "m0_gate",
+        "format": "json"
+      },
+      "fixture_change": null,
+      "job": {
+        "command": "synth",
+        "status": "passed",
+        "returncode": 0,
+        "stale": false,
+        "source_revision": "c495b0e4efe8695a3faa6e416826631621107352cb63224c9fb52cfda9bf0b57",
+        "source_revision_after": "c495b0e4efe8695a3faa6e416826631621107352cb63224c9fb52cfda9bf0b57"
+      },
+      "browser_request": {
+        "command": "synth",
+        "options": {
+          "module": "m0_gate",
+          "format": "json",
+          "schematic": false
+        },
+        "timeout": 300
+      },
+      "log_sha256": "b3670f58d20c6fe8eaa0a32d0671405181f67c3b320c2e9d1e5934ae919c6592",
+      "log_characters": 4793,
+      "native_inspection": {
+        "passed": true,
+        "note": "Yosys netlist contains modules.",
+        "artifacts": [
+          {
+            "path": "build/synth/m0_gate/m0_gate.json",
+            "bytes": 2206,
+            "sha256": "83cbaa757fb88a0f62eef1ded5c0daeac12e0dc04452b4ba38aab1736ba7bc41"
+          }
+        ],
+        "xml": [],
+        "statuses": [],
+        "original_M0_oracle_applicable": true
+      },
+      "artifact_acceptance": {
+        "download": "passed-exact-native-disk-bytes-and-sha256",
+        "artifact": {
+          "path": "build/synth/m0_gate/m0_gate.json",
+          "bytes": 2206,
+          "sha256": "83cbaa757fb88a0f62eef1ded5c0daeac12e0dc04452b4ba38aab1736ba7bc41"
+        }
+      },
+      "duration_seconds": 2.49
+    },
+    "schematics": {
+      "state": "passed",
+      "fixture": "schematics",
+      "selected_controls": {
+        "command": "synth",
+        "module": "m0_gate",
+        "format": "svg"
+      },
+      "fixture_change": null,
+      "job": {
+        "command": "synth",
+        "status": "passed",
+        "returncode": 0,
+        "stale": false,
+        "source_revision": "c495b0e4efe8695a3faa6e416826631621107352cb63224c9fb52cfda9bf0b57",
+        "source_revision_after": "c495b0e4efe8695a3faa6e416826631621107352cb63224c9fb52cfda9bf0b57"
+      },
+      "browser_request": {
+        "command": "synth",
+        "options": {
+          "module": "m0_gate",
+          "format": "svg",
+          "schematic": true
+        },
+        "timeout": 300
+      },
+      "log_sha256": "f08298894e65f499a0879da823b87f90f816eb84b5a0c3dbd99916d8f0bdfe6e",
+      "log_characters": 7086,
+      "native_inspection": {
+        "passed": true,
+        "note": "SVG parsed successfully.",
+        "artifacts": [
+          {
+            "path": "build/synth/m0_gate/m0_gate.json",
+            "bytes": 2212,
+            "sha256": "f5768f06c9f22bccbc3c4ec6be7f79a84932e7572510a1dbfaeef2d2b2624cf8"
+          },
+          {
+            "path": "build/synth/m0_gate/m0_gate.svg",
+            "bytes": 3263,
+            "sha256": "df5418c2f372ad722c847621547bff276b8a38a141d83115eb33f32d11bb3822"
+          }
+        ],
+        "xml": [],
+        "statuses": [],
+        "original_M0_oracle_applicable": true
+      },
+      "artifact_acceptance": {
+        "download": "passed-exact-native-disk-bytes-and-sha256",
+        "artifact": {
+          "path": "build/synth/m0_gate/m0_gate.svg",
+          "bytes": 3263,
+          "sha256": "df5418c2f372ad722c847621547bff276b8a38a141d83115eb33f32d11bb3822"
+        },
+        "browser_view": "passed-real-generated-SVG-decoded-in-image-context",
+        "browser_pan_zoom": {
+          "state": "passed-200-percent-geometry-real-pan-and-fit-reset",
+          "viewport_width": 1217,
+          "image_width": 2434,
+          "scroll_width": 2434
+        }
+      },
+      "duration_seconds": 2.7
+    },
+    "vhdl_synthesis": {
+      "state": "passed",
+      "fixture": "vhdl_synthesis",
+      "selected_controls": {
+        "command": "synth",
+        "module": "m0_vhdl",
+        "format": "json"
+      },
+      "fixture_change": null,
+      "job": {
+        "command": "synth",
+        "status": "passed",
+        "returncode": 0,
+        "stale": false,
+        "source_revision": "c495b0e4efe8695a3faa6e416826631621107352cb63224c9fb52cfda9bf0b57",
+        "source_revision_after": "c495b0e4efe8695a3faa6e416826631621107352cb63224c9fb52cfda9bf0b57"
+      },
+      "browser_request": {
+        "command": "synth",
+        "options": {
+          "module": "m0_vhdl",
+          "format": "json",
+          "schematic": false
+        },
+        "timeout": 300
+      },
+      "log_sha256": "886080d3e8ec2755726ea1529feb227e4c38f645aa0106b09c9bb7c9a4719eb8",
+      "log_characters": 5580,
+      "native_inspection": {
+        "passed": true,
+        "note": "Yosys netlist contains modules.",
+        "artifacts": [
+          {
+            "path": "build/synth/m0_vhdl/m0_vhdl.json",
+            "bytes": 2580,
+            "sha256": "9e710eda8f1b16cf549b50044c6931aef132ee85ba023ece64cf2e8a7ac03739"
+          }
+        ],
+        "xml": [],
+        "statuses": [],
+        "original_M0_oracle_applicable": true
+      },
+      "artifact_acceptance": {
+        "download": "passed-exact-native-disk-bytes-and-sha256",
+        "artifact": {
+          "path": "build/synth/m0_vhdl/m0_vhdl.json",
+          "bytes": 2580,
+          "sha256": "9e710eda8f1b16cf549b50044c6931aef132ee85ba023ece64cf2e8a7ac03739"
+        }
+      },
+      "duration_seconds": 2.74
+    },
+    "formal_proof": {
+      "state": "passed",
+      "fixture": "formal_proof",
+      "selected_controls": {
+        "command": "formal",
+        "config": "formal/good.sby"
+      },
+      "fixture_change": null,
+      "job": {
+        "command": "formal",
+        "status": "passed",
+        "returncode": 0,
+        "stale": false,
+        "source_revision": "c495b0e4efe8695a3faa6e416826631621107352cb63224c9fb52cfda9bf0b57",
+        "source_revision_after": "c495b0e4efe8695a3faa6e416826631621107352cb63224c9fb52cfda9bf0b57"
+      },
+      "browser_request": {
+        "command": "formal",
+        "options": {
+          "config": "formal/good.sby"
+        },
+        "timeout": 300
+      },
+      "log_sha256": "7d7f5a9846d9845c0d988f0e252a097c14e9a4057af1b6e6bb4c220b206fe01f",
+      "log_characters": 3643,
+      "native_inspection": {
+        "passed": true,
+        "note": "Expected SBY PASS status file.",
+        "artifacts": [
+          {
+            "path": "build/formal/good/good.xml",
+            "bytes": 4273,
+            "sha256": "8f43e3d8f5358d5186b89a01815d96ba300e2d6f2ce8a158ae848662c8834b30"
+          },
+          {
+            "path": "build/formal/good/model/design.json",
+            "bytes": 2112,
+            "sha256": "439eb7402d661f3dabbc04de0bcbf7eaa7ff544c69aa23b58fe928d2f1fdbb12"
+          },
+          {
+            "path": "build/formal/good/status",
+            "bytes": 9,
+            "sha256": "4d489b9bfaac73d73a64a4023bf4d947ca1d4216d9f72864c97bfb6a2bc07d56"
+          }
+        ],
+        "xml": [
+          {
+            "path": "build/formal/good/good.xml",
+            "cases": [
+              "build execution",
+              "Property ASSERT in m0_formal at good.sv:3.13-3.33"
+            ],
+            "case_details": [
+              {
+                "name": "build execution",
+                "failures": 0,
+                "errors": 0,
+                "skipped": 0
+              },
+              {
+                "name": "Property ASSERT in m0_formal at good.sv:3.13-3.33",
+                "failures": 0,
+                "errors": 0,
+                "skipped": 0
+              }
+            ],
+            "failures": 0,
+            "errors": 0,
+            "skipped": 0
+          }
+        ],
+        "statuses": [
+          {
+            "path": "build/formal/good/status",
+            "value": "PASS 0 0"
+          }
+        ],
+        "original_M0_oracle_applicable": true
+      },
+      "artifact_acceptance": {
+        "download": "passed-exact-native-disk-bytes-and-sha256",
+        "artifact": {
+          "path": "build/formal/good/status",
+          "bytes": 9,
+          "sha256": "4d489b9bfaac73d73a64a4023bf4d947ca1d4216d9f72864c97bfb6a2bc07d56"
+        }
+      },
+      "duration_seconds": 2.77
+    },
+    "formal_counterexample": {
+      "state": "passed",
+      "fixture": "formal_counterexample",
+      "selected_controls": {
+        "command": "formal",
+        "config": "formal/bad.sby"
+      },
+      "fixture_change": null,
+      "job": {
+        "command": "formal",
+        "status": "failed",
+        "returncode": 2,
+        "stale": false,
+        "source_revision": "c495b0e4efe8695a3faa6e416826631621107352cb63224c9fb52cfda9bf0b57",
+        "source_revision_after": "c495b0e4efe8695a3faa6e416826631621107352cb63224c9fb52cfda9bf0b57"
+      },
+      "browser_request": {
+        "command": "formal",
+        "options": {
+          "config": "formal/bad.sby"
+        },
+        "timeout": 300
+      },
+      "log_sha256": "2a53da4425fcad34b1964e8a8835dfd050872f0d252b22e33004d1fa8c9f2d38",
+      "log_characters": 5238,
+      "native_inspection": {
+        "passed": true,
+        "note": "Expected SBY FAIL and nonempty counterexample VCD.",
+        "artifacts": [
+          {
+            "path": "build/formal/bad/bad.xml",
+            "bytes": 5980,
+            "sha256": "31d283ddd60651c61df86f2a9331c3748bd704d1f569c8616bf1f80a95000b4c"
+          },
+          {
+            "path": "build/formal/bad/engine_0/trace.vcd",
+            "bytes": 358,
+            "sha256": "6d6b7342bef1ad9c34e6f944e2921f8e579d77eb2f4d32801f77117afa0647de"
+          },
+          {
+            "path": "build/formal/bad/engine_0/trace_induct.vcd",
+            "bytes": 488,
+            "sha256": "3e870290281cd947545df2bfea55a913aef3d7898584b0a2134bca6c74b50a79"
+          },
+          {
+            "path": "build/formal/bad/model/design.json",
+            "bytes": 5448,
+            "sha256": "d3dc840c9d7b3638c69ab55deaea3181ea41f57eb234da161d75d17ccb92070c"
+          },
+          {
+            "path": "build/formal/bad/status",
+            "bytes": 9,
+            "sha256": "54c2862151d1efdbec1fb49edb5766e6e0c15c24e532866ac1305bd25dabc02c"
+          }
+        ],
+        "xml": [
+          {
+            "path": "build/formal/bad/bad.xml",
+            "cases": [
+              "build execution",
+              "Property ASSERT in m0_formal at bad.sv:4.13-4.33"
+            ],
+            "case_details": [
+              {
+                "name": "build execution",
+                "failures": 1,
+                "errors": 0,
+                "skipped": 0
+              },
+              {
+                "name": "Property ASSERT in m0_formal at bad.sv:4.13-4.33",
+                "failures": 1,
+                "errors": 0,
+                "skipped": 0
+              }
+            ],
+            "failures": 2,
+            "errors": 0,
+            "skipped": 0
+          }
+        ],
+        "statuses": [
+          {
+            "path": "build/formal/bad/status",
+            "value": "FAIL 2 0"
+          }
+        ],
+        "original_M0_oracle_applicable": true
+      },
+      "artifact_acceptance": {
+        "download": "passed-exact-native-disk-bytes-and-sha256",
+        "artifact": {
+          "path": "build/formal/bad/engine_0/trace.vcd",
+          "bytes": 358,
+          "sha256": "6d6b7342bef1ad9c34e6f944e2921f8e579d77eb2f4d32801f77117afa0647de"
+        },
+        "browser_view": "passed-real-native-VCD-parsed-and-rendered-by-browser-worker"
+      },
+      "duration_seconds": 3.61
+    },
+    "fpga_tangnano9k_build": {
+      "state": "passed",
+      "fixture": "fpga_tangnano9k_build",
+      "selected_controls": {
+        "command": "fpga",
+        "module": "m0_fpga",
+        "board": "tangnano9k",
+        "stage": "pack",
+        "constraints": "src/io.cst"
+      },
+      "fixture_change": null,
+      "job": {
+        "command": "fpga",
+        "status": "passed",
+        "returncode": 0,
+        "stale": false,
+        "source_revision": "c495b0e4efe8695a3faa6e416826631621107352cb63224c9fb52cfda9bf0b57",
+        "source_revision_after": "c495b0e4efe8695a3faa6e416826631621107352cb63224c9fb52cfda9bf0b57"
+      },
+      "browser_request": {
+        "command": "fpga",
+        "options": {
+          "module": "m0_fpga",
+          "board": "tangnano9k",
+          "stage": "pack",
+          "program": false,
+          "constraints": "src/io.cst"
+        },
+        "timeout": 300
+      },
+      "log_sha256": "c8fe7661c17f312bdc6f3502ce52ad42e58773382b082686f629a0570d125936",
+      "log_characters": 60149,
+      "native_inspection": {
+        "passed": true,
+        "note": "Expected nonempty packed bitstream; no USB programming performed.",
+        "artifacts": [
+          {
+            "path": "build/fpga/gowin/m0_fpga/m0_fpga-pnr.json",
+            "bytes": 8638,
+            "sha256": "079711649e89766c51a163a011061fb85643c93409c8d7ae46687011518662cf"
+          },
+          {
+            "path": "build/fpga/gowin/m0_fpga/m0_fpga.fs",
+            "bytes": 2069320,
+            "sha256": "461808fd9776dff169a90700123cb91dddb05555a1641ea18bfcc8611fc48c37"
+          },
+          {
+            "path": "build/fpga/gowin/m0_fpga/m0_fpga.json",
+            "bytes": 1099999,
+            "sha256": "f01ae737ac9f41a2c8d6f21c1f15b3d86e5069db13797f127ba567ca764b0955"
+          }
+        ],
+        "xml": [],
+        "statuses": [],
+        "original_M0_oracle_applicable": true
+      },
+      "artifact_acceptance": {
+        "download": "passed-exact-native-disk-bytes-and-sha256",
+        "artifact": {
+          "path": "build/fpga/gowin/m0_fpga/m0_fpga.fs",
+          "bytes": 2069320,
+          "sha256": "461808fd9776dff169a90700123cb91dddb05555a1641ea18bfcc8611fc48c37"
+        }
+      },
+      "duration_seconds": 6.91
+    },
+    "fpga_icebreaker_build": {
+      "state": "passed",
+      "fixture": "fpga_icebreaker_build",
+      "selected_controls": {
+        "command": "fpga",
+        "module": "m0_fpga",
+        "board": "icebreaker",
+        "stage": "pack",
+        "constraints": "src/io.pcf"
+      },
+      "fixture_change": null,
+      "job": {
+        "command": "fpga",
+        "status": "passed",
+        "returncode": 0,
+        "stale": false,
+        "source_revision": "c495b0e4efe8695a3faa6e416826631621107352cb63224c9fb52cfda9bf0b57",
+        "source_revision_after": "c495b0e4efe8695a3faa6e416826631621107352cb63224c9fb52cfda9bf0b57"
+      },
+      "browser_request": {
+        "command": "fpga",
+        "options": {
+          "module": "m0_fpga",
+          "board": "icebreaker",
+          "stage": "pack",
+          "program": false,
+          "constraints": "src/io.pcf"
+        },
+        "timeout": 300
+      },
+      "log_sha256": "3d23404ea4571f0c5eb1c890aa972c9e25d0b8787c530597c7132aec741ed3e4",
+      "log_characters": 50501,
+      "native_inspection": {
+        "passed": true,
+        "note": "Expected nonempty packed bitstream; no USB programming performed.",
+        "artifacts": [
+          {
+            "path": "build/fpga/ice40/m0_fpga/m0_fpga.bin",
+            "bytes": 104090,
+            "sha256": "fe65f21ee6137e7fe9970181dba55dc55786dcdf7375687082c03aef078e31cd"
+          },
+          {
+            "path": "build/fpga/ice40/m0_fpga/m0_fpga.json",
+            "bytes": 457379,
+            "sha256": "0f904e5f644d363714e8f5e761265a6979f517d9840032dbd3e46560f809a6f5"
+          }
+        ],
+        "xml": [],
+        "statuses": [],
+        "original_M0_oracle_applicable": true
+      },
+      "artifact_acceptance": {
+        "download": "passed-exact-native-disk-bytes-and-sha256",
+        "artifact": {
+          "path": "build/fpga/ice40/m0_fpga/m0_fpga.bin",
+          "bytes": 104090,
+          "sha256": "fe65f21ee6137e7fe9970181dba55dc55786dcdf7375687082c03aef078e31cd"
+        }
+      },
+      "duration_seconds": 3.19
+    },
+    "native_verilog_assertion_failure": {
+      "state": "passed",
+      "fixture": "verilog_simulation",
+      "selected_controls": {
+        "command": "test",
+        "module": "m0_gate",
+        "test": "test/test_m0_gate.v",
+        "test_top": "tb_m0_gate",
+        "test_language": "verilog",
+        "waves": false,
+        "wave_format": "vcd",
+        "gate_level": false
+      },
+      "fixture_change": {
+        "path": "src/m0_gate.v",
+        "before_sha256": "ad3ef15d3236ddd1938216b9342606fffc34ce1fd466c9363f9a383a8d1c9239",
+        "after_sha256": "55fd339d72df334c407beeb53332cc3c1db2f54d949c66b37ed387c71691b142",
+        "reason": "verilog-assertion"
+      },
+      "job": {
+        "command": "test",
+        "status": "failed",
+        "returncode": 1,
+        "stale": false,
+        "source_revision": "e9bfdfd97b78884463df8778ae917f471e10cf8ce05706dc8aec145b44d811b1",
+        "source_revision_after": "e9bfdfd97b78884463df8778ae917f471e10cf8ce05706dc8aec145b44d811b1"
+      },
+      "browser_request": {
+        "command": "test",
+        "options": {
+          "modules": [
+            "m0_gate"
+          ],
+          "test_language": "verilog",
+          "waves": false,
+          "wave_format": "vcd",
+          "test": "test/test_m0_gate.v",
+          "test_top": "tb_m0_gate"
+        },
+        "timeout": 300
+      },
+      "log_sha256": "e30cca1892707f42a8005c1e02d78b8c8a1bf03f004e2fc34485e138f11d1f81",
+      "log_characters": 1408,
+      "native_inspection": {
+        "passed": false,
+        "note": "VWB command returned a nonzero status.",
+        "artifacts": [],
+        "xml": [],
+        "statuses": [],
+        "original_M0_oracle_applicable": false
+      },
+      "artifact_acceptance": {
+        "download": "not_applicable-no-primary-output-required"
+      },
+      "duration_seconds": 2.64
+    },
+    "native_vhdl_assertion_failure": {
+      "state": "passed",
+      "fixture": "vhdl_simulation",
+      "selected_controls": {
+        "command": "test",
+        "module": "m0_vhdl",
+        "test": "test/test_m0_vhdl.vhd",
+        "test_top": "tb_m0_vhdl",
+        "test_language": "vhdl",
+        "waves": true,
+        "wave_format": "vcd",
+        "gate_level": false
+      },
+      "fixture_change": {
+        "path": "src/m0_vhdl.vhd",
+        "before_sha256": "c4d34c7683974d7092950955567040812f9b5bf17f40b48896a2e17e04b9fe62",
+        "after_sha256": "8767ea5bc3e9ef184dd6b259a1e701bb078472cede14f29f1279032681169b77",
+        "reason": "vhdl-assertion"
+      },
+      "job": {
+        "command": "test",
+        "status": "failed",
+        "returncode": 1,
+        "stale": false,
+        "source_revision": "1ee18f91d990ae74f1dd885f6685010d33e3cf746d65f904bc51facff164edb1",
+        "source_revision_after": "1ee18f91d990ae74f1dd885f6685010d33e3cf746d65f904bc51facff164edb1"
+      },
+      "browser_request": {
+        "command": "test",
+        "options": {
+          "modules": [
+            "m0_vhdl"
+          ],
+          "test_language": "vhdl",
+          "waves": true,
+          "wave_format": "vcd",
+          "test": "test/test_m0_vhdl.vhd",
+          "test_top": "tb_m0_vhdl"
+        },
+        "timeout": 300
+      },
+      "log_sha256": "7cbb16bb9c96a9c1154b937d1e258ef04b03f998dde4f20cf106bf9b495fa754",
+      "log_characters": 1725,
+      "native_inspection": {
+        "passed": false,
+        "note": "VWB command returned a nonzero status.",
+        "artifacts": [
+          {
+            "path": "build/sim/m0_vhdl/vhdl-test_m0_vhdl/m0_vhdl.vcd",
+            "bytes": 564,
+            "sha256": "72aaf32b69d947236142d249ba06ed5225b80cb1a931439d2548089cd25e24c7"
+          }
+        ],
+        "xml": [],
+        "statuses": [],
+        "original_M0_oracle_applicable": false
+      },
+      "artifact_acceptance": {
+        "download": "not_applicable-no-primary-output-required"
+      },
+      "duration_seconds": 2.98
+    },
+    "cocotb_function_filter": {
+      "state": "passed",
+      "fixture": "cocotb_verilog",
+      "selected_controls": {
+        "command": "test",
+        "module": "m0_gate",
+        "test": "test/test_m0_cocotb.py",
+        "test_language": "cocotb",
+        "waves": true,
+        "wave_format": "vcd",
+        "testcase": "xor_truth_table",
+        "gate_level": false
+      },
+      "fixture_change": {
+        "path": "test/test_m0_cocotb.py",
+        "before_sha256": "9497c26c826c1080ede032d51241023732bbefa3467ace087f609183dcf78fcf",
+        "after_sha256": "174d79ba953b1af3b95a3b9a153bfe8f2e82d47a74b6efecb1bc939f06c73574",
+        "reason": "cocotb-guard"
+      },
+      "job": {
+        "command": "test",
+        "status": "passed",
+        "returncode": 0,
+        "stale": false,
+        "source_revision": "4fccf68ff6542a8cce657d1cd20ac5c5761623d6101f20936c73dd87ac1453d9",
+        "source_revision_after": "4fccf68ff6542a8cce657d1cd20ac5c5761623d6101f20936c73dd87ac1453d9"
+      },
+      "browser_request": {
+        "command": "test",
+        "options": {
+          "modules": [
+            "m0_gate"
+          ],
+          "test_language": "cocotb",
+          "waves": true,
+          "wave_format": "vcd",
+          "test": "test/test_m0_cocotb.py",
+          "testcase": "xor_truth_table",
+          "seed": 12345
+        },
+        "timeout": 300
+      },
+      "log_sha256": "ec597525c9e2d6238b2db26a59df4af9b7f4b9a986cabe0e378a504e6d4d0b36",
+      "log_characters": 5657,
+      "native_inspection": {
+        "passed": false,
+        "note": "Expected Cocotb XML with executed, passing assertions.",
+        "artifacts": [
+          {
+            "path": "build/sim/m0_gate/cocotb-test_m0_cocotb/m0_gate.vcd",
+            "bytes": 337,
+            "sha256": "828bb578866155b15c4ac99ee52276b79791b537a605c3db1649768bbfb2397b"
+          },
+          {
+            "path": "build/sim/m0_gate/cocotb-test_m0_cocotb/results.xml",
+            "bytes": 655,
+            "sha256": "de0b9a78c26fb0d8536a707f1676d16bbae5b3c10b8223abaf0acd0066740609"
+          }
+        ],
+        "xml": [
+          {
+            "path": "build/sim/m0_gate/cocotb-test_m0_cocotb/results.xml",
+            "cases": [
+              "xor_truth_table",
+              "unselected_browser_guard"
+            ],
+            "case_details": [
+              {
+                "name": "xor_truth_table",
+                "failures": 0,
+                "errors": 0,
+                "skipped": 0
+              },
+              {
+                "name": "unselected_browser_guard",
+                "failures": 0,
+                "errors": 0,
+                "skipped": 1
+              }
+            ],
+            "failures": 0,
+            "errors": 0,
+            "skipped": 1
+          }
+        ],
+        "statuses": [],
+        "original_M0_oracle_applicable": false
+      },
+      "cocotb_filter": "passed-only-selected-function-executed-failing-sibling-absent-or-explicitly-skipped",
+      "artifact_acceptance": {
+        "download": "passed-exact-native-disk-bytes-and-sha256",
+        "artifact": {
+          "path": "build/sim/m0_gate/cocotb-test_m0_cocotb/results.xml",
+          "bytes": 655,
+          "sha256": "de0b9a78c26fb0d8536a707f1676d16bbae5b3c10b8223abaf0acd0066740609"
+        }
+      },
+      "duration_seconds": 3.51
+    },
+    "cocotb_expected_assertion_failure": {
+      "state": "passed",
+      "fixture": "cocotb_verilog",
+      "selected_controls": {
+        "command": "test",
+        "module": "m0_gate",
+        "test": "test/test_m0_cocotb.py",
+        "test_language": "cocotb",
+        "waves": true,
+        "wave_format": "vcd",
+        "gate_level": false
+      },
+      "fixture_change": {
+        "path": "test/test_m0_cocotb.py",
+        "before_sha256": "9497c26c826c1080ede032d51241023732bbefa3467ace087f609183dcf78fcf",
+        "after_sha256": "174d79ba953b1af3b95a3b9a153bfe8f2e82d47a74b6efecb1bc939f06c73574",
+        "reason": "cocotb-guard"
+      },
+      "job": {
+        "command": "test",
+        "status": "failed",
+        "returncode": 1,
+        "stale": false,
+        "source_revision": "4fccf68ff6542a8cce657d1cd20ac5c5761623d6101f20936c73dd87ac1453d9",
+        "source_revision_after": "4fccf68ff6542a8cce657d1cd20ac5c5761623d6101f20936c73dd87ac1453d9"
+      },
+      "browser_request": {
+        "command": "test",
+        "options": {
+          "modules": [
+            "m0_gate"
+          ],
+          "test_language": "cocotb",
+          "waves": true,
+          "wave_format": "vcd",
+          "test": "test/test_m0_cocotb.py",
+          "seed": 12345
+        },
+        "timeout": 300
+      },
+      "log_sha256": "9653bc2e501b0394f21221544276ce6b201ee4159a42cd3a3e6a2c10231649ac",
+      "log_characters": 6670,
+      "native_inspection": {
+        "passed": false,
+        "note": "VWB command returned a nonzero status.",
+        "artifacts": [
+          {
+            "path": "build/sim/m0_gate/cocotb-test_m0_cocotb/m0_gate.vcd",
+            "bytes": 337,
+            "sha256": "bb75ec73800687c656828e8034b993d0a6eef770739ece038dd5682bfdcf40a1"
+          },
+          {
+            "path": "build/sim/m0_gate/cocotb-test_m0_cocotb/results.xml",
+            "bytes": 791,
+            "sha256": "8aa872901aba049d70b7f642cf11218258f7213c0503135b4dd9a4678e833ad3"
+          }
+        ],
+        "xml": [
+          {
+            "path": "build/sim/m0_gate/cocotb-test_m0_cocotb/results.xml",
+            "cases": [
+              "xor_truth_table",
+              "unselected_browser_guard"
+            ],
+            "case_details": [
+              {
+                "name": "xor_truth_table",
+                "failures": 0,
+                "errors": 0,
+                "skipped": 0
+              },
+              {
+                "name": "unselected_browser_guard",
+                "failures": 1,
+                "errors": 0,
+                "skipped": 0
+              }
+            ],
+            "failures": 1,
+            "errors": 0,
+            "skipped": 0
+          }
+        ],
+        "statuses": [],
+        "original_M0_oracle_applicable": false
+      },
+      "artifact_acceptance": {
+        "download": "passed-exact-native-disk-bytes-and-sha256",
+        "artifact": {
+          "path": "build/sim/m0_gate/cocotb-test_m0_cocotb/results.xml",
+          "bytes": 791,
+          "sha256": "8aa872901aba049d70b7f642cf11218258f7213c0503135b4dd9a4678e833ad3"
+        }
+      },
+      "duration_seconds": 3.46
+    },
+    "lint_source_diagnostic": {
+      "state": "passed",
+      "fixture": "lint",
+      "selected_controls": {
+        "command": "lint",
+        "module": "m0_gate",
+        "linter": "iverilog"
+      },
+      "fixture_change": {
+        "path": "src/m0_gate.v",
+        "before_sha256": "ad3ef15d3236ddd1938216b9342606fffc34ce1fd466c9363f9a383a8d1c9239",
+        "after_sha256": "f602971d23de2dcebc6d246eb9d6ee5d2724239f36ee553b59f4c48ad09dd7c4",
+        "reason": "verilog-syntax"
+      },
+      "job": {
+        "command": "lint",
+        "status": "failed",
+        "returncode": 1,
+        "stale": false,
+        "source_revision": "fff7c0f9f3f9efee47dddf163caddcd892eefd56fc559e28fe42bbd0f0880fdc",
+        "source_revision_after": "fff7c0f9f3f9efee47dddf163caddcd892eefd56fc559e28fe42bbd0f0880fdc"
+      },
+      "browser_request": {
+        "command": "lint",
+        "options": {
+          "modules": [
+            "m0_gate"
+          ],
+          "linters": [
+            "iverilog"
+          ]
+        },
+        "timeout": 300
+      },
+      "log_sha256": "c6c0066e168556b42da556b0a161e440dd4b0e0608ba55deff85006edf21b682",
+      "log_characters": 603,
+      "native_inspection": {
+        "passed": false,
+        "note": "VWB command returned a nonzero status.",
+        "artifacts": [],
+        "xml": [],
+        "statuses": [],
+        "original_M0_oracle_applicable": false
+      },
+      "source_diagnostics": "passed-real-native-compiler-error-links-to-edited-source",
+      "artifact_acceptance": {
+        "download": "not_applicable-no-primary-output-required"
+      },
+      "duration_seconds": 2.82
+    },
+    "gate_level_verilog": {
+      "state": "passed",
+      "fixture": "verilog_simulation",
+      "selected_controls": {
+        "command": "test",
+        "module": "m0_gate",
+        "test": "test/test_m0_gate.v",
+        "test_top": "tb_m0_gate",
+        "test_language": "verilog",
+        "waves": false,
+        "wave_format": "vcd",
+        "gate_level": true
+      },
+      "fixture_change": null,
+      "job": {
+        "command": "test",
+        "status": "passed",
+        "returncode": 0,
+        "stale": false,
+        "source_revision": "c495b0e4efe8695a3faa6e416826631621107352cb63224c9fb52cfda9bf0b57",
+        "source_revision_after": "c495b0e4efe8695a3faa6e416826631621107352cb63224c9fb52cfda9bf0b57"
+      },
+      "browser_request": {
+        "command": "test",
+        "options": {
+          "modules": [
+            "m0_gate"
+          ],
+          "test_language": "verilog",
+          "waves": false,
+          "wave_format": "vcd",
+          "test": "test/test_m0_gate.v",
+          "test_top": "tb_m0_gate",
+          "gate_level": true
+        },
+        "timeout": 300
+      },
+      "log_sha256": "56d0ba89e6041f86da3e522a1830e90c75ef5fc01771b837283812efaf7f3665",
+      "log_characters": 18888,
+      "native_inspection": {
+        "passed": true,
+        "note": "Actual HDL assertions completed.",
+        "artifacts": [
+          {
+            "path": "build/synth/m0_gate/gate/m0_gate_gate.v",
+            "bytes": 215,
+            "sha256": "68dfeb4f11c1fa1b602306c6c59b5483a77bc072dc45d62385c63f460f56214e"
+          }
+        ],
+        "xml": [],
+        "statuses": [],
+        "original_M0_oracle_applicable": false
+      },
+      "artifact_acceptance": {
+        "download": "passed-exact-native-disk-bytes-and-sha256",
+        "artifact": {
+          "path": "build/synth/m0_gate/gate/m0_gate_gate.v",
+          "bytes": 215,
+          "sha256": "68dfeb4f11c1fa1b602306c6c59b5483a77bc072dc45d62385c63f460f56214e"
+        }
+      },
+      "duration_seconds": 2.55
+    },
+    "gate_level_cocotb_vhdl": {
+      "state": "passed",
+      "fixture": "cocotb_vhdl",
+      "selected_controls": {
+        "command": "test",
+        "module": "m0_vhdl",
+        "test": "test/test_m0_cocotb.py",
+        "test_language": "cocotb",
+        "waves": true,
+        "wave_format": "vcd",
+        "gate_level": true
+      },
+      "fixture_change": null,
+      "job": {
+        "command": "test",
+        "status": "passed",
+        "returncode": 0,
+        "stale": false,
+        "source_revision": "c495b0e4efe8695a3faa6e416826631621107352cb63224c9fb52cfda9bf0b57",
+        "source_revision_after": "c495b0e4efe8695a3faa6e416826631621107352cb63224c9fb52cfda9bf0b57"
+      },
+      "browser_request": {
+        "command": "test",
+        "options": {
+          "modules": [
+            "m0_vhdl"
+          ],
+          "test_language": "cocotb",
+          "waves": true,
+          "wave_format": "vcd",
+          "test": "test/test_m0_cocotb.py",
+          "seed": 12345,
+          "gate_level": true
+        },
+        "timeout": 300
+      },
+      "log_sha256": "ac4a2f50bd730f509fd2ad5b848396d1469a144ffcdf8e7a7a4d6d3d9872e835",
+      "log_characters": 26079,
+      "native_inspection": {
+        "passed": true,
+        "note": "Cocotb truth-table assertions reported passing test cases.",
+        "artifacts": [
+          {
+            "path": "build/sim/m0_vhdl/cocotb-test_m0_cocotb/m0_vhdl.vcd",
+            "bytes": 403,
+            "sha256": "cb1e4a0cffb4ae7470276cd034187a43f9b22c77e2253b6209fe8237e46f2def"
+          },
+          {
+            "path": "build/sim/m0_vhdl/cocotb-test_m0_cocotb/results.xml",
+            "bytes": 398,
+            "sha256": "83658a7a97ca16ee948ac44cff4ea2791c91dcd528857173e23e5a2ad43f5337"
+          },
+          {
+            "path": "build/sim/m0_vhdl/cocotb-test_m0_cocotb-gate/results.xml",
+            "bytes": 398,
+            "sha256": "e24535cc82bbe9b63997be6753b7a66beb798b877cddfa1801b9f99511c6a3a0"
+          },
+          {
+            "path": "build/synth/m0_vhdl/gate/m0_vhdl_gate.v",
+            "bytes": 243,
+            "sha256": "7ef1bf2e34fc4e17d162d3848fe159cbf8faccf78925946fd1764dc36f590113"
+          }
+        ],
+        "xml": [
+          {
+            "path": "build/sim/m0_vhdl/cocotb-test_m0_cocotb/results.xml",
+            "cases": [
+              "xor_truth_table"
+            ],
+            "case_details": [
+              {
+                "name": "xor_truth_table",
+                "failures": 0,
+                "errors": 0,
+                "skipped": 0
+              }
+            ],
+            "failures": 0,
+            "errors": 0,
+            "skipped": 0
+          },
+          {
+            "path": "build/sim/m0_vhdl/cocotb-test_m0_cocotb-gate/results.xml",
+            "cases": [
+              "xor_truth_table"
+            ],
+            "case_details": [
+              {
+                "name": "xor_truth_table",
+                "failures": 0,
+                "errors": 0,
+                "skipped": 0
+              }
+            ],
+            "failures": 0,
+            "errors": 0,
+            "skipped": 0
+          }
+        ],
+        "statuses": [],
+        "original_M0_oracle_applicable": false
+      },
+      "artifact_acceptance": {
+        "download": "passed-exact-native-disk-bytes-and-sha256",
+        "artifact": {
+          "path": "build/sim/m0_vhdl/cocotb-test_m0_cocotb/results.xml",
+          "bytes": 398,
+          "sha256": "83658a7a97ca16ee948ac44cff4ea2791c91dcd528857173e23e5a2ad43f5337"
+        }
+      },
+      "duration_seconds": 4.3
+    },
+    "compile_defines_includes_plusargs": {
+      "state": "passed",
+      "fixture": "verilog_simulation",
+      "selected_controls": {
+        "command": "test",
+        "module": "m0_gate",
+        "test": "test/test_m0_gate.v",
+        "test_top": "tb_m0_gate",
+        "test_language": "verilog",
+        "waves": false,
+        "wave_format": "vcd",
+        "gate_level": false,
+        "defines": [
+          "VWB_BROWSER_DEFINE=1"
+        ],
+        "includes": [
+          "src/include µ"
+        ],
+        "plusargs": [
+          "+BROWSER_EXPECT=73"
+        ],
+        "max_array_words": 1
+      },
+      "fixture_change": {
+        "reason": "compile-options",
+        "changes": [
+          {
+            "path": "src/m0_gate.v",
+            "before_sha256": "ad3ef15d3236ddd1938216b9342606fffc34ce1fd466c9363f9a383a8d1c9239",
+            "after_sha256": "c42505a57df51e890217beed3b9a28a23dcd1a939f4db0e4b943961e78731ce0"
+          },
+          {
+            "path": "test/test_m0_gate.v",
+            "before_sha256": "841ef9457f6851014fd64589d55f4cb8fd2af520696bc679bdafda1587824ede",
+            "after_sha256": "8ecaafa87e184b9f693e922273f1430d518caf4c54165a2dc1e5377be874ec9c"
+          }
+        ],
+        "prepared_fixture_header": {
+          "path": "src/include µ/browser_defs.vh",
+          "sha256": "635fff7605b22f7fab6395aba88fa484a1bddcb04691a1a817dcee4db3fa36e8"
+        }
+      },
+      "job": {
+        "command": "test",
+        "status": "passed",
+        "returncode": 0,
+        "stale": false,
+        "source_revision": "6cf771d1f2032173fd344339f3061d2d437059482c48409b7b6050cbf87ab080",
+        "source_revision_after": "6cf771d1f2032173fd344339f3061d2d437059482c48409b7b6050cbf87ab080"
+      },
+      "browser_request": {
+        "command": "test",
+        "options": {
+          "modules": [
+            "m0_gate"
+          ],
+          "test_language": "verilog",
+          "waves": false,
+          "wave_format": "vcd",
+          "test": "test/test_m0_gate.v",
+          "test_top": "tb_m0_gate",
+          "max_array_words": 1,
+          "plusargs": [
+            "+BROWSER_EXPECT=73"
+          ],
+          "defines": [
+            "VWB_BROWSER_DEFINE=1"
+          ],
+          "includes": [
+            "src/include µ"
+          ]
+        },
+        "timeout": 300
+      },
+      "log_sha256": "ad9fa5bc4a428750b70c34dbe7f72c7abacd052f9a1a27fa381cd1674c29e24c",
+      "log_characters": 1469,
+      "native_inspection": {
+        "passed": true,
+        "note": "Actual HDL assertions completed.",
+        "artifacts": [],
+        "xml": [],
+        "statuses": [],
+        "original_M0_oracle_applicable": false
+      },
+      "artifact_acceptance": {
+        "download": "not_applicable-no-primary-output-required"
+      },
+      "duration_seconds": 3.07
+    },
+    "wave_saved_roundtrip": {
+      "state": "passed",
+      "fixture": "waveforms",
+      "selected_controls": {
+        "command": "wave",
+        "module": "m0_gate",
+        "test": "test/test_m0_gate.v",
+        "test_top": "tb_m0_gate",
+        "test_language": "verilog",
+        "waves": true,
+        "wave_format": "vcd",
+        "gate_level": false,
+        "wave_mode": "simulate",
+        "wave_tag": "browser_asserted_run"
+      },
+      "fixture_change": null,
+      "job": {
+        "command": "wave",
+        "status": "passed",
+        "returncode": 0,
+        "stale": false,
+        "source_revision": "c495b0e4efe8695a3faa6e416826631621107352cb63224c9fb52cfda9bf0b57",
+        "source_revision_after": "c495b0e4efe8695a3faa6e416826631621107352cb63224c9fb52cfda9bf0b57"
+      },
+      "browser_request": {
+        "command": "wave",
+        "options": {
+          "modules": [
+            "m0_gate"
+          ],
+          "test_language": "verilog",
+          "waves": true,
+          "wave_format": "vcd",
+          "test": "test/test_m0_gate.v",
+          "test_top": "tb_m0_gate",
+          "tag": "browser_asserted_run"
+        },
+        "timeout": 300
+      },
+      "log_sha256": "d44078295730028b2708af425d29f074ed0190f8983570758527f7f7a170d66c",
+      "log_characters": 2449,
+      "native_inspection": {
+        "passed": true,
+        "note": "Expected VCD declarations and time changes.",
+        "artifacts": [
+          {
+            "path": "build/saved-waves/browser_asserted_run/m0_gate.vcd",
+            "bytes": 499,
+            "sha256": "e5e1415164236ff99d66ef815b6bc4961d1e6faaa99b643a4649cb59790ec350"
+          },
+          {
+            "path": "build/saved-waves/browser_asserted_run/metadata.json",
+            "bytes": 326,
+            "sha256": "8a6f1978554e1640cfc79c48cbf79f70e57d5a528783a8c9dbce2274e34a18f9"
+          },
+          {
+            "path": "build/sim/m0_gate/verilog-test_m0_gate/m0_gate.vcd",
+            "bytes": 499,
+            "sha256": "e5e1415164236ff99d66ef815b6bc4961d1e6faaa99b643a4649cb59790ec350"
+          }
+        ],
+        "xml": [],
+        "statuses": [],
+        "original_M0_oracle_applicable": false
+      },
+      "artifact_acceptance": {
+        "download": "passed-exact-native-disk-bytes-and-sha256",
+        "artifact": {
+          "path": "build/saved-waves/browser_asserted_run/m0_gate.vcd",
+          "bytes": 499,
+          "sha256": "e5e1415164236ff99d66ef815b6bc4961d1e6faaa99b643a4649cb59790ec350"
+        },
+        "browser_view": "passed-real-native-VCD-parsed-and-rendered-by-browser-worker"
+      },
+      "saved_wave_roundtrip": {
+        "state": "passed-real-tag-list-load-and-browser-waveform",
+        "archived_vcd": {
+          "path": "build/saved-waves/browser_asserted_run/m0_gate.vcd",
+          "bytes": 499,
+          "sha256": "e5e1415164236ff99d66ef815b6bc4961d1e6faaa99b643a4649cb59790ec350"
+        },
+        "list_request": {
+          "command": "wave",
+          "options": {
+            "modules": [
+              "m0_gate"
+            ],
+            "list_saved": true
+          },
+          "timeout": 300
+        },
+        "load_request": {
+          "command": "wave",
+          "options": {
+            "modules": [
+              "m0_gate"
+            ],
+            "load": "browser_asserted_run"
+          },
+          "timeout": 300
+        }
+      },
+      "duration_seconds": 3.99
+    },
+    "starter_native_verilog": {
+      "state": "passed",
+      "fixture": "verilog_simulation",
+      "selected_controls": {
+        "command": "test",
+        "module": "browser_starter",
+        "test_language": "verilog",
+        "waves": false,
+        "wave_format": "vcd",
+        "gate_level": false,
+        "expected_stale": true
+      },
+      "fixture_extensions": [
+        {
+          "path": "src/browser_starter.v",
+          "sha256": "bbcf9be0c77d937386b2a4f1ad86b8a94c8743f41e43219b7542f91c804af1c1",
+          "purpose": "Copied M0 XOR under a new name without a test, to exercise explicit starter smoke generation."
+        }
+      ],
+      "fixture_change": null,
+      "job": {
+        "command": "test",
+        "status": "passed",
+        "returncode": 0,
+        "stale": true,
+        "source_revision": "b87e8aab1eec035220af5867a67fcab0592d8f05434a7a5047af0170ca33a3ff",
+        "source_revision_after": "83b9d0e21405ba87255244d82f5cef3b8dc52306edb7b35da2895995937166c6"
+      },
+      "browser_request": {
+        "command": "test",
+        "options": {
+          "modules": [
+            "browser_starter"
+          ],
+          "test_language": "verilog",
+          "waves": false,
+          "wave_format": "vcd"
+        },
+        "timeout": 300
+      },
+      "log_sha256": "76aa364da549e9139341112a3b4fb20f9655276dd06d5f47cc2f7aad8e47318c",
+      "log_characters": 1712,
+      "native_inspection": {
+        "passed": false,
+        "note": "Expected actual assertion-test marker M0_VERILOG_PASS.",
+        "artifacts": [],
+        "xml": [],
+        "statuses": [],
+        "original_M0_oracle_applicable": false
+      },
+      "starter": {
+        "state": "passed-created-and-listed-then-fresh-rerun",
+        "first_result_stale": true,
+        "second_result_stale": false,
+        "functional_assertions": "not_supplied-generated-smoke-only",
+        "generated": {
+          "path": "test/test_browser_starter_starter.sv",
+          "bytes": 194,
+          "sha256": "76478efe8d7ceda07bf5f577c9244a611980030887141e11370a78fa3e24cd5b"
+        }
+      },
+      "artifact_acceptance": {
+        "download": "not_applicable-no-primary-output-required"
+      },
+      "duration_seconds": 2.96
+    },
+    "hierarchy_and_test_selection": {
+      "state": "passed",
+      "fixture": "synthesis",
+      "selected_controls": {
+        "command": "list"
+      },
+      "fixture_extensions": [
+        {
+          "path": "src/browser_top.sv",
+          "sha256": "d684f3c419c2c341874e02e93b8db580c596428036712878b132551f1220713b",
+          "purpose": "Explicit discovery-only wrapper/package/interface extension to the unchanged M0 designs."
+        },
+        {
+          "path": "src/browser_pkg.sv",
+          "sha256": "1d305d824d24eaa79bb5905154c4f908469c98dca1301c2f5d84ffddc1b5177a",
+          "purpose": "Explicit discovery-only wrapper/package/interface extension to the unchanged M0 designs."
+        },
+        {
+          "path": "src/browser_if.sv",
+          "sha256": "6149dc67dc49506d6a5f246d352e9f35b57d80f2e342ee3a59a8e0b4a2ba0c33",
+          "purpose": "Explicit discovery-only wrapper/package/interface extension to the unchanged M0 designs."
+        }
+      ],
+      "fixture_change": null,
+      "job": {
+        "command": "list",
+        "status": "passed",
+        "returncode": 0,
+        "stale": false,
+        "source_revision": "7c0d5480f7fa3e3ec90cbe55b8cd387628f18d887ad1907cccacf4bcffab0de3",
+        "source_revision_after": "7c0d5480f7fa3e3ec90cbe55b8cd387628f18d887ad1907cccacf4bcffab0de3"
+      },
+      "browser_request": {
+        "command": "list",
+        "options": {},
+        "timeout": 300
+      },
+      "log_sha256": "08efddc481eb9469fab628b8884db62d4074c462c364ca15e526b2138c02f7d3",
+      "log_characters": 1783,
+      "native_inspection": {
+        "passed": false,
+        "note": "Expected nonempty Yosys netlist modules.",
+        "artifacts": [],
+        "xml": [],
+        "statuses": [],
+        "original_M0_oracle_applicable": false
+      },
+      "hierarchy": {
+        "state": "passed-real-native-catalog-wrapper-child-package-interface-navigation-and-Test-row-selection",
+        "selected_test_request": {
+          "command": "test",
+          "options": {
+            "modules": [
+              "m0_gate"
+            ],
+            "test_language": "verilog",
+            "waves": true,
+            "wave_format": "vcd",
+            "test": "test/test_m0_gate.v",
+            "test_top": "tb_m0_gate"
+          },
+          "timeout": 300
+        }
+      },
+      "artifact_acceptance": {
+        "download": "not_applicable-no-primary-output-required"
+      },
+      "duration_seconds": 3.3
+    }
+  },
+  "permission_grant": "explicit-simulated-Chromium-context-grantPermissions-local-network-access",
+  "hardware_tested": false,
+  "physical_programming": "not_run",
+  "note": "Actual Chromium controls, real temporary Unicode projects, authenticated local companion and native HDL tools. The 14 original M0 workflows use unchanged repository fixture files and the existing probe_toolchain.inspect_result oracle. Additional rows explicitly modify a copied fixture to prove selected-test filtering, real assertion/diagnostic failures and gate-level tests. Every row starts with a fresh project and build directory. No fake tools, substituted job replies, transport faults or physical FPGA programming. Public local-network permission is explicitly simulated through Chromium test APIs, not a manual permission prompt.",
+  "tool_acquisition": {
+    "release": "2026-10-18",
+    "archive": "oss-cad-suite-linux-x64-20261018.tgz",
+    "sha256": "639c8c0366d74dc56201729c9907bf2d8281db7f18bb025abe2e4f3f2ebaa24e",
+    "size_bytes": 748315612,
+    "target": "linux-x64"
+  },
+  "selected_workflows": [
+    "verilog_simulation",
+    "systemverilog_simulation",
+    "waveforms",
+    "cocotb_verilog",
+    "vhdl_simulation",
+    "cocotb_vhdl",
+    "lint",
+    "synthesis",
+    "schematics",
+    "vhdl_synthesis",
+    "formal_proof",
+    "formal_counterexample",
+    "fpga_tangnano9k_build",
+    "fpga_icebreaker_build",
+    "native_verilog_assertion_failure",
+    "native_vhdl_assertion_failure",
+    "cocotb_function_filter",
+    "cocotb_expected_assertion_failure",
+    "lint_source_diagnostic",
+    "gate_level_verilog",
+    "gate_level_cocotb_vhdl",
+    "compile_defines_includes_plusargs",
+    "wave_saved_roundtrip",
+    "starter_native_verilog",
+    "hierarchy_and_test_selection"
+  ],
+  "full_probe_scope": true,
+  "fixture_sha256": {
+    "formal/bad.sby": "22efd573b67bda3f3ca48e219cf8cd037e27cc671b13141d31553ee2662dee34",
+    "formal/bad.sv": "eb307c86c6ae93064f44115f33a586b629e429a52e403fd35cc3faec14907b67",
+    "formal/good.sby": "fc19c2609e5f1b45a03ef7d9a282cd92262ecc2a33a473047fca2c64d8045461",
+    "formal/good.sv": "6ccf9855c885a2991db3e2b53bf4b947d9861aa5e6368f8c34a4808ed612af9a",
+    "src/io.cst": "3226e050934c81563db1242fb2d1bf95066fb9d44cffa0c061866d59111e4878",
+    "src/io.pcf": "97ae9b2c677d62cdfea5486a366535505dce5f2180961330abce1ac4707e124d",
+    "src/m0_fpga.v": "3dee0e1e7fc940e8f05185431c5d4a4d9b9254b3f1043f87eb139f3d66cccc5d",
+    "src/m0_gate.v": "ad3ef15d3236ddd1938216b9342606fffc34ce1fd466c9363f9a383a8d1c9239",
+    "src/m0_sv.sv": "8ea99a4c742652e65c0948980770ebfe0d82b600b5fa9b4818624148e8a4a937",
+    "src/m0_vhdl.vhd": "c4d34c7683974d7092950955567040812f9b5bf17f40b48896a2e17e04b9fe62",
+    "test/__init__.py": "f7436bf802698546bfd6f6d9fc6c5b01540a553b015edecb2e6c010469470627",
+    "test/test_m0_cocotb.py": "9497c26c826c1080ede032d51241023732bbefa3467ace087f609183dcf78fcf",
+    "test/test_m0_gate.v": "841ef9457f6851014fd64589d55f4cb8fd2af520696bc679bdafda1587824ede",
+    "test/test_m0_sv.sv": "11a9d7c487d9dcafcd1c90d9ac0b3631702dcd403a2ad1f7fbd20c0e0807a0e6",
+    "test/test_m0_vhdl.vhd": "439bc82fbf99b6e951a48a4b143131ea1a86be01dfb2e48d69fef14f1e5b2fae"
+  },
+  "oracle_sha256": "0dc0d36ab70f816ca4b2ea90a4a265d4b0c07a5bfebea418037d120ffdc9d26e",
+  "source_sha256": {
+    "vwb.py": "e39e36bafbe57ad43e0718aec1a3f975c77fd834cef95e3858597aeb553dd479",
+    "companion/server.py": "356030df6ef4ca139126259a610acde920fc90928dda9166063a0ea380142fa2",
+    "companion/projects.py": "92fa5d30f405090231504b30413ce13d7a5ab1fbe2e38edfc0763f9992e830d1",
+    "companion/process.py": "500b9a1cfac6aded8028923aa2ba35c14b4efa6677c2d8a81bfdff85cb0c266d",
+    "scripts/probe_hdl_workspace.mjs": "384967c3ded077b2e18f074365be5b98f4b246726a7ab793fd6524fce45628c0"
+  },
+  "browser": "151.0.7922.34",
+  "browser_security_flags": [
+    "--no-sandbox"
+  ],
+  "deployed_manifest": {
+    "schema": "vwb.web-build/1",
+    "status": "development-preview",
+    "base_path": "/verilog-workbench/",
+    "file_count": 20,
+    "loaded_runtime_sha256": {
+      "workspace/index.html": "666b4dc9d4a1a0550d32d94a011f2b6d7cef94c50cfaff97be8eb4e9392acfb1",
+      "workspace/app.mjs": "088957d3e8bfc979a027be89c06ca9c73ad56092c59366ecf9f340f4eb8c7811",
+      "workspace/style.css": "6a96f62de55dde894b894d09fe65096b83471e09e1018275e08d3021d87658c6",
+      "workspace/model.mjs": "56fcd7aee518afdb4cbd44d87604dbfac0fee07af2e8f8f62aca99ad606cad88",
+      "workspace/hdl.mjs": "eeff4b3dec001beeb7fdd7f39e279be431df4ebf36eb66eb0d2894783d6b4a95",
+      "workspace/schematic.mjs": "8c08a1e676f68ae3706e2f64064d6a5498f8701e4556b40f56d4dbbc2a3d5101"
+    }
+  },
+  "screenshot_stage": "actual-failing-formal-property-source-with-real-counterexample-VCD",
+  "original_M0_workflows_passed": true,
+  "all_requested_workflows_passed": true,
+  "script_errors": [],
+  "asset_errors": [],
+  "screenshot_recorded": true
+}

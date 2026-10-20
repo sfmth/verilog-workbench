@@ -1,0 +1,50 @@
+{
+  "schema": "vwb.hdl-runtime-source-evidence/1",
+  "recorded_at": "2026-10-20T03:19:49.377250+00:00",
+  "source_sha256": {
+    "vwb.py": "3db956c3e660a7cab81ced56278cfa23e95f11619699be9a76292827d572dc60",
+    "companion/cocotb_runtime.py": "b8794d6f2b1f3d9008001d165ca32d9c829547a9dffe40d064d08be9a33c4153",
+    "scripts/acquire_toolchain.py": "527d4882d75545db3ce0bb56fdb4a7a2406a1c7376bc6ff7aab16f0b960b8fa7",
+    "scripts/probe_hdl_workspace.mjs": "ed811684e1aaa0c52edf53fd6cacda092f6a2048f42306ae1f0730db4fcde57b",
+    "web/workspace/app.mjs": "767f81afbc874f28e6d45ce0a1c14d309776ff11a2616c7a6255b6871ef56e3d",
+    "web/workspace/index.html": "f008d96b0035ffd0e2974d6215f399b5d5ac56bf7b189e4adc0bfe224f122d90",
+    "tests/test_cocotb_runtime.py": "9c27a5d1af88d9d372ec8e594a99acb836fc1e43c4e77b26a6285d07dba2533c",
+    "tests/test_runtime_compatibility.py": "c2031a8552feba3df53574da3102b7652cdcdea3f68e7f1066e12c8386be21d7",
+    "tests/test_acquire_toolchain.py": "85f0310a9393b08624a42047329137b357304db42da887f038b1213c8db82682",
+    "tests/test_hdl.py": "6af1a1d84fa38bdda8741f342787fde875d83f1249e369d71d9a70c8d54334c4",
+    "examples/test/test_vwb_cocotb_results.py": "68a457016d6437edabae0341ab2335ecf3b1b6a47bcebe575be6e7b94da933ff",
+    "toolchains/fixtures/test/test_m0_cocotb.py": "6eef750e30cb0f1eb6164219b011e4d0d5888f2cca6ac93c90169e56ba0cddcc",
+    ".github/workflows/pages.yml": "d9958c1d0744ed4a5b79f4aa7610c6a7720f1ba2ff912949635d940cb5f48c01"
+  },
+  "local_tests": {
+    "native": {
+      "state": "passed",
+      "total": 264,
+      "skipped": 8,
+      "note": "Five existing optional checks plus three opt-in managed-runtime checks skipped in ordinary discovery."
+    },
+    "cli": {
+      "state": "passed",
+      "total": 171,
+      "skipped": 1
+    },
+    "javascript": {
+      "state": "passed",
+      "total": 116,
+      "skipped": 0
+    },
+    "managed_runtime": {
+      "state": "passed",
+      "total": 9,
+      "skipped": 0,
+      "actual_simulator_controls": 3
+    }
+  },
+  "local_browser": {
+    "state": "passed",
+    "workflows": 26,
+    "runtime_files": 20,
+    "browser": "141.0.7390.37"
+  },
+  "physical_programming": "not_run"
+}

@@ -48,12 +48,14 @@ const sha = value => createHash('sha256').update(value).digest('hex');
 const children = [], contexts = [], scriptErrors = [], assetErrors = [], assetResponses = [];
 const loadedAssets = new Map();
 let browser, page, staticServer, origin, workspaceUrl, endpoint, project, screenshotSaved = false;
+let manifestFingerprint;
+const runtimeAssets = ['workspace/index.html', 'workspace/app.mjs', 'workspace/style.css', 'workspace/model.mjs', 'workspace/hdl.mjs', 'workspace/schematic.mjs'];
 const report = {
   schema: 'vwb.hdl-workspace-browser-probe/1', recorded_at: new Date().toISOString(), state: 'failed',
   target: publicUrl ? 'public-HTTPS-workspace' : 'built-local-project-prefix-workspace',
   pages_prefix: prefix, ...(publicUrl ? {public_url: publicUrl.href} : {}), checks: [], workflows: {},
   permission_grant: 'not_run', hardware_tested: false, physical_programming: 'not_run',
-  note: 'Actual Chromium controls, real temporary Unicode projects, authenticated local companion and native HDL tools. The 14 original M0 workflows use unchanged repository fixture files and the existing probe_toolchain.inspect_result oracle. Additional rows explicitly modify a copied fixture to prove selected-test filtering, real assertion/diagnostic failures and gate-level tests. Every row starts with a fresh project and build directory. No fake tools, substituted job replies, transport faults or physical FPGA programming. Public local-network permission is explicitly simulated through Chromium test APIs, not a manual permission prompt.',
+  note: 'Actual Chromium controls, real temporary Unicode projects, authenticated local companion and native HDL tools. The 14 M0 workflows use repository fixtures, including the documented final queued-write shutdown extension, and the existing probe_toolchain.inspect_result oracle. Additional rows explicitly modify a copied fixture to prove selected-test filtering, real assertion/diagnostic failures, gate-level tests and pending-write shutdown. Every row starts with a fresh project and build directory. No fake tools, substituted job replies, transport faults or physical FPGA programming. Public local-network permission is explicitly simulated through Chromium test APIs, not a manual permission prompt.',
 };
 if (acquisition) report.tool_acquisition = {release: acquisition.archive?.release, archive: acquisition.archive?.archive, sha256: acquisition.archive?.sha256, size_bytes: acquisition.archive?.size_bytes, target: acquisition.target};
 function safe(value, limit = 24000) {
@@ -89,6 +91,7 @@ const extraCases = {
   wave_saved_roundtrip: {base: 'waveforms', wave_tag: 'browser_asserted_run'},
   starter_native_verilog: {base: 'verilog_simulation', starter: true},
   hierarchy_and_test_selection: {base: 'synthesis', hierarchy: true, required_tools: ['iverilog', 'vvp']},
+  cocotb_pending_write_shutdown: {base: 'cocotb_verilog', modify: 'pending-write-shutdown'},
 };
 for (const [name, extra] of Object.entries(extraCases)) definitions[name] = {...definitions[extra.base], ...extra};
 const selected = args['--only'] ? args['--only'].split(',') : Object.keys(definitions);
@@ -253,6 +256,10 @@ async function modifyCopy(kind) {
     relative = 'test/test_m0_cocotb.py'; before = await fs.readFile(path.join(project, relative), 'utf8');
     after = before + '\n\n@cocotb.test()\nasync def unselected_browser_guard(dut):\n    assert False, "BROWSER_UNSELECTED_COCOTB_GUARD"\n';
   }
+  if (kind === 'pending-write-shutdown') {
+    relative = 'test/test_m0_cocotb.py'; before = await fs.readFile(path.join(project, relative), 'utf8');
+    after = before.trimEnd() + '\n    await Timer(1, unit="ns")\n    dut.a.value = 1\n';
+  }
   assert.ok(relative && after !== before); await openFile(relative);
   await page.locator('#editor').fill(after); await page.locator('#save').click();
   await until(async () => await fs.readFile(path.join(project, relative), 'utf8') === after, 'UI save of explicit copied-fixture mutation');
@@ -334,13 +341,14 @@ try {
   for (const file of await walk(fixtures)) report.fixture_sha256[path.relative(fixtures, file).split(path.sep).join('/')] = sha(await fs.readFile(file));
   report.oracle_sha256 = sha(await fs.readFile(path.join(repo, 'scripts/probe_toolchain.py')));
   report.source_sha256 = {};
-  for (const relative of ['vwb.py', 'companion/server.py', 'companion/projects.py', 'companion/process.py', 'scripts/probe_hdl_workspace.mjs']) report.source_sha256[relative] = sha(await fs.readFile(path.join(repo, relative)));
+  for (const relative of ['vwb.py', 'companion/server.py', 'companion/projects.py', 'companion/process.py', 'companion/cocotb_runtime.py', 'scripts/probe_hdl_workspace.mjs']) report.source_sha256[relative] = sha(await fs.readFile(path.join(repo, relative)));
   if (publicUrl) { origin = publicUrl.origin; workspaceUrl = publicUrl.href; } else await serveBuild();
   browser = await chromium.launch({headless: true, executablePath: args['--executable'], args: ['--no-sandbox']});
   report.browser = await browser.version(); report.browser_security_flags = ['--no-sandbox'];
   for (const name of selected) {
     const started = Date.now(), definition = definitions[name], spec = specFor(definition);
     const evidence = report.workflows[name] = {state: 'failed', fixture: definition.base || name, selected_controls: spec};
+    const workflowAssets = new Map();
     let context, native;
     try {
       project = path.join(temporary, name + ' project µ'); await fs.cp(fixtures, project, {recursive: true});
@@ -378,7 +386,7 @@ try {
         const url = new URL(response.url()); if (url.origin !== origin || !url.pathname.startsWith(prefix)) return;
         const relative = decodeURIComponent(url.pathname.slice(prefix.length)), asset = relative.endsWith('/') ? relative + 'index.html' : relative;
         if (asset === 'vwb-web-build.json' || asset.endsWith('favicon.ico')) return;
-        assetResponses.push((async () => { if (response.status() !== 200) assetErrors.push({workflow: name, path: asset, status: response.status()}); else loadedAssets.set(asset, sha(await response.body())); })().catch(error => assetErrors.push({workflow: name, path: asset, error: safe(error.message)})));
+        assetResponses.push((async () => { if (response.status() !== 200) assetErrors.push({workflow: name, path: asset, status: response.status()}); else { const digest = sha(await response.body()); loadedAssets.set(asset, digest); workflowAssets.set(asset, digest); } })().catch(error => assetErrors.push({workflow: name, path: asset, error: safe(error.message)})));
       });
       const navigation = await page.goto(workspaceUrl, {waitUntil: 'networkidle', timeout: 45000}); assert.equal(navigation.status(), 200); await pair(native.ready);
       await page.locator('[data-result="tools"]').click();
@@ -415,6 +423,15 @@ try {
       if (name === 'cocotb_expected_assertion_failure') { assert.match(log, /BROWSER_UNSELECTED_COCOTB_GUARD/); assert.ok(inspected.xml.some(item => item.cases.includes('unselected_browser_guard') && item.failures > 0)); }
       if (definition.gate_level) { assert.match(log, /RTL PASS/); assert.match(log, /GATE PASS/); assert.ok(!log.includes('GATE SKIPPED')); assert.ok(inspected.artifacts.some(item => item.path.endsWith('_gate.v') && item.bytes > 0)); }
       if (name === 'compile_defines_includes_plusargs') { assert.match(log, /BROWSER_COMPILE_OPTIONS_PASS/); assert.match(log, /M0_VERILOG_PASS/); }
+      if (name === 'cocotb_pending_write_shutdown') {
+        const staged = (await walk(path.join(project, 'build'))).filter(file => path.basename(file) === '_vwb_cocotb_runtime.py');
+        if (log.includes('Initialized cocotb v2.1.0.dev0+41564633')) assert.equal(staged.length, 1, 'The affected locked runtime must load the trusted shutdown compatibility module.');
+        evidence.shutdown_regression = {state: 'passed-real-XOR-assertions-and-final-pending-write-with-zero-native-exit', staged_modules: []};
+        for (const file of staged) {
+          const bytes = await fs.readFile(file); assert.equal(sha(bytes), report.source_sha256['companion/cocotb_runtime.py']);
+          evidence.shutdown_regression.staged_modules.push({path: path.relative(project, file).split(path.sep).join('/'), bytes: bytes.length, sha256: sha(bytes)});
+        }
+      }
       if (definition.starter) {
         assert.match(log, /generated starter test:/i); assert.match(log, /RTL PASS/);
         const relative = 'test/test_browser_starter_starter.sv'; const generated = await fs.readFile(path.join(project, relative), 'utf8');
@@ -492,13 +509,19 @@ try {
       evidence.duration_seconds = Math.round((Date.now() - started) / 10) / 100;
       if (page && context) {
         const manifest = await page.evaluate(async url => { const response = await fetch(url, {cache: 'no-store'}); if (!response.ok) throw new Error('Manifest HTTP ' + response.status); return response.json(); }, origin + prefix + 'vwb-web-build.json').catch(() => null);
-        if (manifest) report.deployed_manifest = manifest;
+        await Promise.all(assetResponses);
+        if (manifest) {
+          const fingerprint = sha(JSON.stringify(manifest));
+          if (manifestFingerprint !== undefined) assert.equal(fingerprint, manifestFingerprint, 'The deployed build changed between HDL workflow contexts; rerun one coherent deployment.');
+          manifestFingerprint = fingerprint; evidence.runtime_manifest_sha256 = fingerprint;
+          for (const asset of runtimeAssets) { assert.equal(typeof manifest.files?.[asset], 'string'); assert.equal(workflowAssets.get(asset), manifest.files[asset], 'Each HDL workflow must load the declared runtime asset: ' + asset); }
+          report.deployed_manifest = manifest;
+        }
       }
       await Promise.all(assetResponses); await context?.close().catch(() => {}); if (native) await stop(native.child);
     }
   }
   assert.equal(report.deployed_manifest?.schema, 'vwb.web-build/1'); assert.equal(report.deployed_manifest?.base_path, prefix);
-  const runtimeAssets = ['workspace/index.html', 'workspace/app.mjs', 'workspace/style.css', 'workspace/model.mjs', 'workspace/hdl.mjs', 'workspace/schematic.mjs'];
   for (const asset of runtimeAssets) assert.equal(loadedAssets.get(asset), report.deployed_manifest.files[asset], 'Actually loaded HDL asset must match the build manifest: ' + asset);
   report.deployed_manifest = {schema: report.deployed_manifest.schema, status: report.deployed_manifest.status, base_path: prefix, file_count: Object.keys(report.deployed_manifest.files).length, loaded_runtime_sha256: Object.fromEntries(runtimeAssets.map(asset => [asset, loadedAssets.get(asset)]))};
   report.original_M0_workflows_passed = Object.keys(definitions).filter(name => !definitions[name].base).every(name => report.workflows[name]?.state === 'passed');

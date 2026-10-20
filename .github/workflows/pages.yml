@@ -25,6 +25,8 @@ on:
       - 'tests/test_files.py'
       - 'tests/test_companion_files.py'
       - 'tests/test_hdl.py'
+      - 'tests/test_cocotb_runtime.py'
+      - 'tests/test_runtime_compatibility.py'
       - 'tests/test_acquire_toolchain.py'
       - 'tests/test_acquire_editor_tools.py'
       - 'tests/test_web_build.py'
@@ -53,6 +55,8 @@ on:
       - 'tests/test_files.py'
       - 'tests/test_companion_files.py'
       - 'tests/test_hdl.py'
+      - 'tests/test_cocotb_runtime.py'
+      - 'tests/test_runtime_compatibility.py'
       - 'tests/test_acquire_toolchain.py'
       - 'tests/test_acquire_editor_tools.py'
       - 'tests/test_web_build.py'
@@ -115,6 +119,10 @@ jobs:
         run: node scripts/probe_source_workspace.mjs --playwright-module ../.web-browser/node_modules/playwright --output source-browser-evidence.json --screenshot source-workspace.png
       - name: Acquire pinned complete Linux HDL toolchain for browser acceptance
         run: python scripts/acquire_toolchain.py --target linux-x64 --directory .m0-tools/hdl --output hdl-tool-acquisition.json
+      - name: Verify real Cocotb shutdown and failure controls
+        env:
+          VWB_COCOTB_RUNTIME_TEST_ACQUISITION: hdl-tool-acquisition.json
+        run: python -m unittest discover -s tests -p test_cocotb_runtime.py -v
       - name: Execute complete HDL workflows through the built browser UI
         run: node scripts/probe_hdl_workspace.mjs --acquisition hdl-tool-acquisition.json --playwright-module ../.web-browser/node_modules/playwright --output hdl-browser-evidence.json --screenshot hdl-workspace.png
       - name: Retain browser evidence

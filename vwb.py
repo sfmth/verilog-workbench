@@ -23,6 +23,7 @@ from pathlib import Path
 from typing import Iterable, Sequence, TextIO
 
 from companion.process import run_process
+from companion.cocotb_runtime import automatic_startup, stage_runtime, STARTUP_USERS
 
 
 VERSION = "0.2.0"
@@ -2401,6 +2402,10 @@ class Workbench:
                     libraries.append(libpython)
                 libraries.append(entry)
                 self._cocotb_runtime["GPI_USERS"] = ";".join(libraries)
+                version = self.run([config, "--version"], capture=True)
+                startup = automatic_startup(version.stdout.strip() if version.returncode == 0 else "", os.environ)
+                if startup is not None:
+                    self._cocotb_runtime["PYGPI_USERS"] = startup
 
     def cocotb_library(self) -> tuple[str, str]:
         if self._cocotb_library is None:
@@ -2744,7 +2749,7 @@ class Workbench:
                 tests = int(suite.attrib.get("tests", "0"))
             except ValueError:
                 return False
-            if failures > 0 or errors > 0 or skipped < 0 or tests < 0:
+            if failures != 0 or errors != 0 or skipped < 0 or tests < 0:
                 return False
             if tests > 0 and skipped >= tests:
                 return False
@@ -2756,6 +2761,45 @@ class Workbench:
             )
             for testcase in testcases
         )
+
+    @staticmethod
+    def _results_executed(path: Path) -> bool:
+        """Distinguish test failures from absent or unusable execution evidence."""
+        try:
+            root = ET.parse(path).getroot()
+        except (ET.ParseError, OSError):
+            return False
+        executed = False
+        pending = [(root, False)]
+        while pending:
+            element, blocked = pending.pop()
+            local_name = element.tag.rsplit('}', 1)[-1]
+            if local_name == 'testsuite':
+                try:
+                    counts = {name: int(element.attrib.get(name, '0'))
+                              for name in ('tests', 'failures', 'errors', 'skipped')}
+                except ValueError:
+                    return False
+                if any(value < 0 for value in counts.values()):
+                    return False
+                blocked = blocked or (counts['tests'] > 0 and counts['skipped'] >= counts['tests'])
+            if local_name == 'testcase' and not blocked and not any(
+                    child.tag.rsplit('}', 1)[-1] == 'skipped' for child in element):
+                executed = True
+            pending.extend((child, blocked) for child in element)
+        return executed
+
+    def _check_cocotb_results(self, path: Path, process_passed: bool) -> bool:
+        results_passed = self._results_passed(path)
+        if not results_passed and not self._results_executed(path):
+            issues = getattr(self, '_cocotb_incomplete_results', [])
+            reason = ('no executed Cocotb test results at ' + display_path(path, self.root)
+                      + '; inspect simulator output, matching Python dependencies/imports, '
+                        'Cocotb configuration and simulator startup/crashes')
+            issues.append(reason)
+            self._cocotb_incomplete_results = issues
+            print('warning: ' + reason, file=sys.stderr)
+        return process_passed and results_passed
 
     def _reset_sim_work_dir(self, work_dir: Path) -> None:
         if self.dry_run:
@@ -3076,6 +3120,14 @@ class Workbench:
         python_entries = [str(import_root)]
         if import_root != self.root:
             python_entries.append(str(self.root))
+        if self._cocotb_runtime.get("PYGPI_USERS") == STARTUP_USERS:
+            try:
+                stage_runtime(work_dir)
+            except (OSError, ValueError) as exc:
+                raise VWBError(f"Cannot prepare the trusted Cocotb shutdown startup module: {exc}") from exc
+            # This directory contains one private trusted module; adding the
+            # entire application first would shadow a project's own packages.
+            python_entries.insert(0, str(work_dir))
         if python_path:
             python_entries.append(python_path)
         environment["PYTHONPATH"] = os.pathsep.join(python_entries)
@@ -3175,7 +3227,7 @@ class Workbench:
             return True, wave_path
         passed = result.returncode == 0
         if results_file is not None:
-            passed = passed and self._results_passed(results_file)
+            passed = self._check_cocotb_results(results_file, passed)
         if wave_path is not None and not wave_path.is_file():
             print(f"error: waveform was not produced: {wave_path}", file=sys.stderr)
             passed = False
@@ -3237,7 +3289,7 @@ class Workbench:
             return True, wave_path
         passed = result.returncode == 0
         if results_file is not None:
-            passed = passed and self._results_passed(results_file)
+            passed = self._check_cocotb_results(results_file, passed)
         if args.waves and wave_path is not None and not wave_path.is_file():
             passed = False
             print(f"error: waveform was not produced: {wave_path}", file=sys.stderr)
@@ -3297,7 +3349,7 @@ class Workbench:
             return True
         passed = result.returncode == 0
         if results_file is not None:
-            passed = passed and self._results_passed(results_file)
+            passed = self._check_cocotb_results(results_file, passed)
         return passed
 
     def run_test_spec(self, spec: TestSpec, args: argparse.Namespace) -> tuple[bool, Path | None]:
@@ -3309,7 +3361,10 @@ class Workbench:
             if self.verbose:
                 print(f"  Cocotb seed: {run_args.seed}")
 
+        before_rtl = len(getattr(self, '_cocotb_incomplete_results', []))
         rtl_passed, wave_path = self._run_rtl_test_spec(spec, run_args)
+        if not rtl_passed and len(getattr(self, '_cocotb_incomplete_results', [])) == before_rtl:
+            self._simulation_verified_failure = True
         print(
             "  "
             + self.style(
@@ -3327,6 +3382,7 @@ class Workbench:
             )
             return rtl_passed, wave_path
         try:
+            before_gate = len(getattr(self, '_cocotb_incomplete_results', []))
             netlist = self.gate_netlist(spec.dut, run_args.define, run_args.include)
             gate_passed = self._run_gate_test_spec(spec, run_args, netlist)
         except MissingToolError as exc:
@@ -3342,6 +3398,8 @@ class Workbench:
         except VWBError as exc:
             gate_passed = False
             print(f"error: gate-level simulation: {exc}", file=sys.stderr)
+        if not gate_passed and len(getattr(self, '_cocotb_incomplete_results', [])) == before_gate:
+            self._simulation_verified_failure = True
         print(
             "  "
             + self.style(
@@ -3364,6 +3422,7 @@ class Workbench:
         wave_paths: list[Path] = []
         failures: list[tuple[TestSpec, str]] = []
         setup_blocked: list[tuple[TestSpec, MissingToolError]] = []
+        incomplete_results: list[tuple[TestSpec, list[str]]] = []
         for index, spec in enumerate(specs, start=1):
             print(
                 self.style("==>", Ansi.BOLD, Ansi.CYAN)
@@ -3372,6 +3431,8 @@ class Workbench:
                 + f" ({spec.label})"
             )
             setup_error: MissingToolError | None = None
+            self._cocotb_incomplete_results = []
+            self._simulation_verified_failure = False
             try:
                 passed, wave_path = self.run_test_spec(spec, args)
             except MissingToolError as exc:
@@ -3391,19 +3452,22 @@ class Workbench:
                 print(f"error: {exc}", file=sys.stderr)
             else:
                 reason = "one or more requested simulation stages failed"
+            issues = self._cocotb_incomplete_results
+            if issues:
+                incomplete_results.append((spec, issues))
             if passed:
                 passed_count += 1
             elif setup_error is not None:
                 pass
-            else:
+            elif not issues or self._simulation_verified_failure:
                 failures.append((spec, reason))
             if wave_path is not None:
                 wave_paths.append(wave_path)
-        all_passed = passed_count == len(specs) and not setup_blocked
+        all_passed = passed_count == len(specs) and not setup_blocked and not incomplete_results
         print(self.style("Result:", Ansi.BOLD, Ansi.CYAN))
         if failures:
             code_label, code_color = "FAIL", Ansi.RED
-        elif setup_blocked:
+        elif setup_blocked or incomplete_results:
             code_label, code_color = "NOT FULLY CHECKED", Ansi.YELLOW
         else:
             code_label, code_color = "PASS", Ansi.GREEN
@@ -3414,7 +3478,13 @@ class Workbench:
         )
         setup_skips = getattr(args, "_setup_skips", [])
         setup_issue_count = len(setup_skips) + len(setup_blocked)
-        if setup_issue_count:
+        if incomplete_results:
+            print(f"  Your setup: {self.style('NEEDS ATTENTION', Ansi.YELLOW, Ansi.BOLD)} - "
+                  f"{len(incomplete_results)} test run(s) lack executed Cocotb results; "
+                  "inspect simulator output, Python dependencies/imports and startup/configuration")
+            if setup_issue_count:
+                print(f"  Missing tools also skipped {setup_issue_count} stage(s); run 'vwb doctor'")
+        elif setup_issue_count:
             setup_status = self.style(
                 "TOOLS MISSING", Ansi.YELLOW, Ansi.BOLD
             )
@@ -3432,6 +3502,11 @@ class Workbench:
             print(self.style("Setup-blocked test runs:", Ansi.BOLD, Ansi.YELLOW))
             for spec, error in setup_blocked:
                 print(f"  {spec.dut} ({spec.label}): {error.command} is not installed")
+        if incomplete_results:
+            print(self.style('Test runs without complete Cocotb results:', Ansi.BOLD, Ansi.YELLOW))
+            for spec, issues in incomplete_results:
+                for reason in issues:
+                    print(f'  {spec.dut} ({spec.label}): {reason}')
         return all_passed, wave_paths
 
     def lint_module(

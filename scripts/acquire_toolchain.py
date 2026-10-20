@@ -275,6 +275,31 @@ def acquire_supplement(key: str, candidate: dict, directory: Path) -> tuple[Path
     return executable, record
 
 
+def anchor_ghdl_in_suite(executable: Path, receipt: dict, suite: Path) -> tuple[Path, dict]:
+    """Keep macOS Python's @executable_path dependencies at their suite anchor.
+
+    The Intel mcode binary imports only Apple system libraries. Its standard
+    libraries remain in the independently receipted supplement via GHDL_PREFIX.
+    A real copy is required: a symlink can retain the foreign executable anchor.
+    """
+    expected = receipt['executable_sha256']
+    if hashlib.sha256(executable.read_bytes()).hexdigest() != expected:
+        raise ValueError('GHDL supplement changed before runtime anchoring')
+    destination = suite / 'bin' / 'ghdl'
+    with executable.open('rb') as source, destination.open('xb') as output:
+        shutil.copyfileobj(source, output, length=1024 * 1024)
+        output.flush()
+        os.fsync(output.fileno())
+    destination.chmod(0o755)
+    if hashlib.sha256(destination.read_bytes()).hexdigest() != expected:
+        raise ValueError('GHDL runtime anchor copy differs from the verified payload')
+    record = {**receipt, 'archive_executable': str(executable), 'executable': str(destination),
+              'runtime_anchor': str(suite), 'runtime_anchor_kind': 'exclusive-verified-copy',
+              'runtime_anchor_reason': 'Cocotb loads suite libpython whose dylib dependencies use @executable_path/../lib; the GHDL mcode executable imports only Apple system libraries.'}
+    (Path(record['directory']) / 'vwb-supplement-receipt.json').write_text(json.dumps(record, indent=2) + '\n')
+    return destination, record
+
+
 def prepare_windows_cocotb(candidate: dict, source_python: Path, directory: Path) -> tuple[Path, dict]:
     """Explicit MSVC CPython candidate, never a wheel in the MinGW suite Python."""
     source_python = source_python.resolve(strict=True)
@@ -312,6 +337,7 @@ def supplement_environment(lock: dict, target: str, directory: Path, environment
     prefix = None
     if target == 'darwin-x64':
         binary, receipt = acquire_supplement('ghdl-darwin-x64', candidates['ghdl-darwin-x64'], directory)
+        binary, receipt = anchor_ghdl_in_suite(binary, receipt, Path(environment['VIRTUAL_ENV']))
         directories.append(binary.parent)
         prefix = Path(receipt['directory']) / candidates['ghdl-darwin-x64']['prefix']
         records.append(receipt)

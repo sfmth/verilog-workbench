@@ -23,7 +23,7 @@ class AcquisitionTests(unittest.TestCase):
     def setUp(self):
         self.temporary = tempfile.TemporaryDirectory()
         self.addCleanup(self.temporary.cleanup)
-        self.root = Path(self.temporary.name)
+        self.root = Path(self.temporary.name).resolve()
 
     def require_symlink_permission(self):
         if os.name != "nt":
@@ -258,7 +258,7 @@ class AcquisitionTests(unittest.TestCase):
         lock = {'supplemental_candidates': {}}
         result, records, interpreter = acquire.supplement_environment(lock, 'linux-arm64', self.root / 'supplements', environment,
             external_ghdl=binary, ghdl_prefix=prefix)
-        self.assertEqual(result['GHDL_PREFIX'], str(prefix))
+        self.assertEqual(result['GHDL_PREFIX'], str(prefix.resolve()))
         alias = Path(result['PATH'].split(os.pathsep)[0]) / 'ghdl'
         self.assertEqual(alias.resolve(), binary.resolve())
         self.assertEqual(result['PATH'].split(os.pathsep)[1:], ['suite-first'])
@@ -325,6 +325,34 @@ class AcquisitionTests(unittest.TestCase):
         self.assertFalse(record['compatibility']['verified'])
         self.assertFalse(record['relocatable'])
         self.assertEqual(record['workflow_support'], 'not-tested')
+
+    def test_mac_ghdl_anchor_is_an_exclusive_verified_copy_with_separate_library_prefix(self):
+        supplement = self.root / 'ghdl-supplement'
+        source = supplement / 'bin/ghdl'; source.parent.mkdir(parents=True)
+        source.write_bytes(b'verified Mach-O payload')
+        suite = self.root / 'suite'; (suite / 'bin').mkdir(parents=True)
+        receipt = {'directory': str(supplement), 'executable_sha256': hashlib.sha256(source.read_bytes()).hexdigest(),
+                   'prefix': 'lib/ghdl', 'workflow_support': 'not-tested'}
+        destination, record = acquire.anchor_ghdl_in_suite(source, receipt, suite)
+        self.assertEqual(destination, suite / 'bin/ghdl')
+        self.assertFalse(destination.is_symlink())
+        self.assertEqual(destination.read_bytes(), source.read_bytes())
+        self.assertEqual(record['archive_executable'], str(source))
+        self.assertEqual(record['executable_sha256'], receipt['executable_sha256'])
+        self.assertEqual(record['prefix'], 'lib/ghdl')
+        self.assertEqual(record['runtime_anchor_kind'], 'exclusive-verified-copy')
+        self.assertEqual(json.loads((supplement / 'vwb-supplement-receipt.json').read_text()), record)
+        destination.write_bytes(b'existing user tool')
+        with self.assertRaises(FileExistsError):
+            acquire.anchor_ghdl_in_suite(source, receipt, suite)
+        self.assertEqual(destination.read_bytes(), b'existing user tool')
+
+    def test_mac_ghdl_anchor_rejects_changed_payload_before_writing_suite(self):
+        source = self.root / 'source'; source.write_bytes(b'changed')
+        suite = self.root / 'suite'; (suite / 'bin').mkdir(parents=True)
+        with self.assertRaisesRegex(ValueError, 'changed before'):
+            acquire.anchor_ghdl_in_suite(source, {'executable_sha256': '0' * 64}, suite)
+        self.assertFalse((suite / 'bin/ghdl').exists())
 
 
 if __name__ == "__main__":

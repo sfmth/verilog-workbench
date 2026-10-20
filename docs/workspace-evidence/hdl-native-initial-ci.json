@@ -1,0 +1,3674 @@
+{
+  "head_sha": "b693d6e86629f1692b1389de9c7498e70784a8de",
+  "run_id": 39362079646,
+  "run_url": "https://github.com/sfmth/verilog-workbench/actions/runs/39362079646",
+  "observed_at": "2026-10-20T03:09:08.253399+00:00",
+  "run_status": "completed",
+  "run_conclusion": "failure",
+  "validation_state": "corrective-native-rerun-required",
+  "native_jobs": [
+    {
+      "name": "Native linux-arm64",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/sfmth/verilog-workbench/actions/runs/39362079646/job/118430317728",
+      "job_id": 118430317728,
+      "checks": {
+        "unit": {
+          "status": "completed",
+          "conclusion": "success"
+        },
+        "cli": {
+          "status": "completed",
+          "conclusion": "success"
+        },
+        "browser_protocol": {
+          "status": "completed",
+          "conclusion": "success"
+        },
+        "bundle_build": {
+          "status": "completed",
+          "conclusion": "success"
+        },
+        "bundle_smoke": {
+          "status": "completed",
+          "conclusion": "success"
+        }
+      },
+      "job_log_sha256": "15c826c5884bf261ef32c1f058858d3b8ff366342a9432e699628ffb0d495cfb",
+      "suite_summaries": [
+        "Ran 253 tests in 8.445s",
+        "OK (skipped=9)",
+        "Ran 167 tests in 3.140s",
+        "OK (skipped=8)"
+      ],
+      "failed_tests": []
+    },
+    {
+      "name": "Native linux-x86_64",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/sfmth/verilog-workbench/actions/runs/39362079646/job/118430317870",
+      "job_id": 118430317870,
+      "checks": {
+        "unit": {
+          "status": "completed",
+          "conclusion": "success"
+        },
+        "cli": {
+          "status": "completed",
+          "conclusion": "success"
+        },
+        "browser_protocol": {
+          "status": "completed",
+          "conclusion": "success"
+        },
+        "bundle_build": {
+          "status": "completed",
+          "conclusion": "success"
+        },
+        "bundle_smoke": {
+          "status": "completed",
+          "conclusion": "success"
+        }
+      },
+      "job_log_sha256": "f39343762290c39e9ea678d3bd58f11f80a697732d09b2c5cc91f3794a2580dd",
+      "suite_summaries": [
+        "Ran 253 tests in 11.140s",
+        "OK (skipped=9)",
+        "Ran 167 tests in 4.022s",
+        "OK (skipped=8)"
+      ],
+      "failed_tests": []
+    },
+    {
+      "name": "Native macos-arm64",
+      "status": "completed",
+      "conclusion": "failure",
+      "url": "https://github.com/sfmth/verilog-workbench/actions/runs/39362079646/job/118430317801",
+      "job_id": 118430317801,
+      "checks": {
+        "unit": {
+          "status": "completed",
+          "conclusion": "failure"
+        },
+        "cli": {
+          "status": "completed",
+          "conclusion": "skipped"
+        },
+        "browser_protocol": {
+          "status": "completed",
+          "conclusion": "skipped"
+        },
+        "bundle_build": {
+          "status": "completed",
+          "conclusion": "skipped"
+        },
+        "bundle_smoke": {
+          "status": "completed",
+          "conclusion": "skipped"
+        }
+      },
+      "job_log_sha256": "341b9d9c6014db2d5ecc80fa3d2de1887e234be34137d757c6bdf45141ea968c",
+      "suite_summaries": [
+        "Ran 253 tests in 11.932s",
+        "FAILED (failures=3, skipped=10)"
+      ],
+      "failed_tests": [
+        "FAIL: test_external_arm_ghdl_uses_only_its_alias_and_matching_prefix (test_acquire_toolchain.AcquisitionTests.test_external_arm_ghdl_uses_only_its_alias_and_matching_prefix)",
+        "FAIL: test_explicit_hdl_top_and_all_compilation_consumers (test_hdl.HdlJobTests.test_explicit_hdl_top_and_all_compilation_consumers)",
+        "FAIL: test_simulation_options_map_to_exact_native_cli_flags (test_hdl.HdlJobTests.test_simulation_options_map_to_exact_native_cli_flags)"
+      ],
+      "failure_diagnosis": "New test fixtures compared noncanonical temporary path spellings against canonical grant/runtime paths. macOS /var resolves to /private/var; Windows RUNNER~1 resolves to runneradmin. Runtime behavior was correct; corrective tests canonicalize fixture roots."
+    },
+    {
+      "name": "Native macos-x86_64",
+      "status": "completed",
+      "conclusion": "failure",
+      "url": "https://github.com/sfmth/verilog-workbench/actions/runs/39362079646/job/118430317744",
+      "job_id": 118430317744,
+      "checks": {
+        "unit": {
+          "status": "completed",
+          "conclusion": "failure"
+        },
+        "cli": {
+          "status": "completed",
+          "conclusion": "skipped"
+        },
+        "browser_protocol": {
+          "status": "completed",
+          "conclusion": "skipped"
+        },
+        "bundle_build": {
+          "status": "completed",
+          "conclusion": "skipped"
+        },
+        "bundle_smoke": {
+          "status": "completed",
+          "conclusion": "skipped"
+        }
+      },
+      "job_log_sha256": "535d073f19d8535a9d92b2066b9da640e0f64b68c176f123165aebe9bc944045",
+      "suite_summaries": [
+        "Ran 253 tests in 17.734s",
+        "FAILED (failures=3, skipped=10)"
+      ],
+      "failed_tests": [
+        "FAIL: test_external_arm_ghdl_uses_only_its_alias_and_matching_prefix (test_acquire_toolchain.AcquisitionTests.test_external_arm_ghdl_uses_only_its_alias_and_matching_prefix)",
+        "FAIL: test_explicit_hdl_top_and_all_compilation_consumers (test_hdl.HdlJobTests.test_explicit_hdl_top_and_all_compilation_consumers)",
+        "FAIL: test_simulation_options_map_to_exact_native_cli_flags (test_hdl.HdlJobTests.test_simulation_options_map_to_exact_native_cli_flags)"
+      ],
+      "failure_diagnosis": "New test fixtures compared noncanonical temporary path spellings against canonical grant/runtime paths. macOS /var resolves to /private/var; Windows RUNNER~1 resolves to runneradmin. Runtime behavior was correct; corrective tests canonicalize fixture roots."
+    },
+    {
+      "name": "Native windows-arm64",
+      "status": "completed",
+      "conclusion": "failure",
+      "url": "https://github.com/sfmth/verilog-workbench/actions/runs/39362079646/job/118430317696",
+      "job_id": 118430317696,
+      "checks": {
+        "unit": {
+          "status": "completed",
+          "conclusion": "failure"
+        },
+        "cli": {
+          "status": "completed",
+          "conclusion": "skipped"
+        },
+        "browser_protocol": {
+          "status": "completed",
+          "conclusion": "skipped"
+        },
+        "bundle_build": {
+          "status": "completed",
+          "conclusion": "skipped"
+        },
+        "bundle_smoke": {
+          "status": "completed",
+          "conclusion": "skipped"
+        }
+      },
+      "job_log_sha256": "5774f111742a8648ab566ffe55b96ecc572f7e93572f3ce5b64b2af0e90b8ae4",
+      "suite_summaries": [
+        "Ran 253 tests in 16.784s",
+        "FAILED (failures=3, skipped=18)"
+      ],
+      "failed_tests": [
+        "FAIL: test_external_arm_ghdl_uses_only_its_alias_and_matching_prefix (test_acquire_toolchain.AcquisitionTests.test_external_arm_ghdl_uses_only_its_alias_and_matching_prefix)",
+        "FAIL: test_explicit_hdl_top_and_all_compilation_consumers (test_hdl.HdlJobTests.test_explicit_hdl_top_and_all_compilation_consumers)",
+        "FAIL: test_simulation_options_map_to_exact_native_cli_flags (test_hdl.HdlJobTests.test_simulation_options_map_to_exact_native_cli_flags)"
+      ],
+      "failure_diagnosis": "New test fixtures compared noncanonical temporary path spellings against canonical grant/runtime paths. macOS /var resolves to /private/var; Windows RUNNER~1 resolves to runneradmin. Runtime behavior was correct; corrective tests canonicalize fixture roots."
+    },
+    {
+      "name": "Native windows-x86_64",
+      "status": "completed",
+      "conclusion": "failure",
+      "url": "https://github.com/sfmth/verilog-workbench/actions/runs/39362079646/job/118430317921",
+      "job_id": 118430317921,
+      "checks": {
+        "unit": {
+          "status": "completed",
+          "conclusion": "failure"
+        },
+        "cli": {
+          "status": "completed",
+          "conclusion": "skipped"
+        },
+        "browser_protocol": {
+          "status": "completed",
+          "conclusion": "skipped"
+        },
+        "bundle_build": {
+          "status": "completed",
+          "conclusion": "skipped"
+        },
+        "bundle_smoke": {
+          "status": "completed",
+          "conclusion": "skipped"
+        }
+      },
+      "job_log_sha256": "bd1ed4cb8028357fad833c1ec18760290e02493c8d65885f62a161b8b21a90bf",
+      "suite_summaries": [
+        "Ran 253 tests in 17.740s",
+        "FAILED (failures=3, skipped=18)"
+      ],
+      "failed_tests": [
+        "FAIL: test_external_arm_ghdl_uses_only_its_alias_and_matching_prefix (test_acquire_toolchain.AcquisitionTests.test_external_arm_ghdl_uses_only_its_alias_and_matching_prefix)",
+        "FAIL: test_explicit_hdl_top_and_all_compilation_consumers (test_hdl.HdlJobTests.test_explicit_hdl_top_and_all_compilation_consumers)",
+        "FAIL: test_simulation_options_map_to_exact_native_cli_flags (test_hdl.HdlJobTests.test_simulation_options_map_to_exact_native_cli_flags)"
+      ],
+      "failure_diagnosis": "New test fixtures compared noncanonical temporary path spellings against canonical grant/runtime paths. macOS /var resolves to /private/var; Windows RUNNER~1 resolves to runneradmin. Runtime behavior was correct; corrective tests canonicalize fixture roots."
+    }
+  ],
+  "toolchain_jobs": [
+    {
+      "name": "Arch Linux userspace toolchain feasibility",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/sfmth/verilog-workbench/actions/runs/39362079646/job/118430317441",
+      "job_id": 118430317441,
+      "target": "linux-x64",
+      "platform": {
+        "target": "linux-x64",
+        "system": "linux",
+        "architecture": "x64",
+        "architecture_detection": "platform.machine",
+        "release": "6.17.0-1022-azure",
+        "version": "#22-Ubuntu SMP Mon Jul 27 17:24:03 UTC 2026",
+        "distribution": {
+          "NAME": "Arch Linux",
+          "ID": "arch",
+          "PRETTY_NAME": "Arch Linux",
+          "BUILD_ID": "rolling",
+          "VERSION_ID": "20261018.0.612668",
+          "ANSI_COLOR": "38;2;23;147;209",
+          "HOME_URL": "https://archlinux.org/",
+          "DOCUMENTATION_URL": "https://wiki.archlinux.org/",
+          "SUPPORT_URL": "https://bbs.archlinux.org/",
+          "BUG_REPORT_URL": "https://gitlab.archlinux.org/groups/archlinux/-/issues",
+          "PRIVACY_POLICY_URL": "https://terms.archlinux.org/docs/privacy-policy/",
+          "LOGO": "archlinux-logo"
+        }
+      },
+      "runtime": {
+        "python": "3.11.6 (tags/v3.11.6:8b6ee5ba3bd, Aug  7 2026, 03:34:25) [GCC 15.2.0]",
+        "architecture": "x64",
+        "binary": {
+          "format": "script",
+          "architectures": [],
+          "interpreter": "/usr/bin/env bash"
+        }
+      },
+      "source_sha256": {
+        "vwb.py": "e39e36bafbe57ad43e0718aec1a3f975c77fd834cef95e3858597aeb553dd479",
+        "companion/process.py": "500b9a1cfac6aded8028923aa2ba35c14b4efa6677c2d8a81bfdff85cb0c266d",
+        "companion/toolchains.py": "85a05055679bf019083f5cf49244688b574922bd189dc88307c82a19209b2af8",
+        "scripts/probe_toolchain.py": "0dc0d36ab70f816ca4b2ea90a4a265d4b0c07a5bfebea418037d120ffdc9d26e"
+      },
+      "fixture_sha256": {
+        "formal/bad.sby": "22efd573b67bda3f3ca48e219cf8cd037e27cc671b13141d31553ee2662dee34",
+        "formal/bad.sv": "eb307c86c6ae93064f44115f33a586b629e429a52e403fd35cc3faec14907b67",
+        "formal/good.sby": "fc19c2609e5f1b45a03ef7d9a282cd92262ecc2a33a473047fca2c64d8045461",
+        "formal/good.sv": "6ccf9855c885a2991db3e2b53bf4b947d9861aa5e6368f8c34a4808ed612af9a",
+        "src/io.cst": "3226e050934c81563db1242fb2d1bf95066fb9d44cffa0c061866d59111e4878",
+        "src/io.pcf": "97ae9b2c677d62cdfea5486a366535505dce5f2180961330abce1ac4707e124d",
+        "src/m0_fpga.v": "3dee0e1e7fc940e8f05185431c5d4a4d9b9254b3f1043f87eb139f3d66cccc5d",
+        "src/m0_gate.v": "ad3ef15d3236ddd1938216b9342606fffc34ce1fd466c9363f9a383a8d1c9239",
+        "src/m0_sv.sv": "8ea99a4c742652e65c0948980770ebfe0d82b600b5fa9b4818624148e8a4a937",
+        "src/m0_vhdl.vhd": "c4d34c7683974d7092950955567040812f9b5bf17f40b48896a2e17e04b9fe62",
+        "test/__init__.py": "f7436bf802698546bfd6f6d9fc6c5b01540a553b015edecb2e6c010469470627",
+        "test/test_m0_cocotb.py": "9497c26c826c1080ede032d51241023732bbefa3467ace087f609183dcf78fcf",
+        "test/test_m0_gate.v": "841ef9457f6851014fd64589d55f4cb8fd2af520696bc679bdafda1587824ede",
+        "test/test_m0_sv.sv": "11a9d7c487d9dcafcd1c90d9ac0b3631702dcd403a2ad1f7fbd20c0e0807a0e6",
+        "test/test_m0_vhdl.vhd": "439bc82fbf99b6e951a48a4b143131ea1a86be01dfb2e48d69fef14f1e5b2fae"
+      },
+      "report_sha256": "16d50b90a9048547cfb60bb21a5f71a1eda2d249cdbd32d00b98fb1063cb8cb3",
+      "acquisition_report_sha256": "49f96679ad94a119cc3233d8ac8ef723349548c0d761478bb49d5a0a225e6a39",
+      "workflow_results": {
+        "verilog_simulation": {
+          "state": "passed",
+          "required_tools": [
+            "iverilog",
+            "vvp"
+          ],
+          "missing_tools": [],
+          "returncode": 0,
+          "note": "Actual HDL assertions completed.",
+          "log_sha256": "64ccaf71e08790386de9967cb5689467806b081ef6e19af4c5ec5859768bfedc",
+          "duration_seconds": 0.222
+        },
+        "systemverilog_simulation": {
+          "state": "passed",
+          "required_tools": [
+            "iverilog",
+            "vvp"
+          ],
+          "missing_tools": [],
+          "returncode": 0,
+          "note": "Actual HDL assertions completed.",
+          "log_sha256": "69fd7b60b53c5eb7d032d0b776cc02b128059ff48fe59f543bc4d9ef9594d153",
+          "duration_seconds": 0.223
+        },
+        "waveforms": {
+          "state": "passed",
+          "required_tools": [
+            "iverilog",
+            "vvp"
+          ],
+          "missing_tools": [],
+          "returncode": 0,
+          "note": "Expected VCD declarations and time changes.",
+          "log_sha256": "daedb03b573ee7c45f9f8c2ddbdaffe7fe64e0d5c9994fef478373b346f41c17",
+          "duration_seconds": 0.263
+        },
+        "cocotb_verilog": {
+          "state": "passed",
+          "required_tools": [
+            "iverilog",
+            "vvp",
+            "cocotb-config"
+          ],
+          "missing_tools": [],
+          "returncode": 0,
+          "note": "Cocotb truth-table assertions reported passing test cases.",
+          "log_sha256": "c75ec73f6b2eea9a780fff4c3e66a6f823dc41cb09ab547b11105eb41e6037bc",
+          "duration_seconds": 1.067
+        },
+        "vhdl_simulation": {
+          "state": "passed",
+          "required_tools": [
+            "ghdl"
+          ],
+          "missing_tools": [],
+          "returncode": 0,
+          "note": "Expected VCD declarations and time changes.",
+          "log_sha256": "c1c2ff2ae9314ec57e0829a294ac4b507e6687fc6551ca08af6145ec2cc5b2c4",
+          "duration_seconds": 0.466
+        },
+        "cocotb_vhdl": {
+          "state": "passed",
+          "required_tools": [
+            "ghdl",
+            "cocotb-config"
+          ],
+          "missing_tools": [],
+          "returncode": 0,
+          "note": "Cocotb truth-table assertions reported passing test cases.",
+          "log_sha256": "bb7eae51b1e971faf6f56042cfa22c88b78bc80264a64f47469da480b81d39c0",
+          "duration_seconds": 1.11
+        },
+        "lint": {
+          "state": "passed",
+          "required_tools": [
+            "verilator"
+          ],
+          "missing_tools": [],
+          "returncode": 0,
+          "note": "Actual tool command completed.",
+          "log_sha256": "10ed1f7e9fb309f68ab64499f3b24a5b0e9bb185408312dea1fc9a9009c9b448",
+          "duration_seconds": 0.263
+        },
+        "synthesis": {
+          "state": "passed",
+          "required_tools": [
+            "yosys"
+          ],
+          "missing_tools": [],
+          "returncode": 0,
+          "note": "Yosys netlist contains modules.",
+          "log_sha256": "ce9c39b8c2d20e1c4530feaa56da516f5c593b59d6db05808fca2d2b3a57c6d9",
+          "duration_seconds": 0.183
+        },
+        "schematics": {
+          "state": "passed",
+          "required_tools": [
+            "yosys",
+            "dot"
+          ],
+          "missing_tools": [],
+          "returncode": 0,
+          "note": "SVG parsed successfully.",
+          "log_sha256": "103a46a0e331df4f8b29cb2fc8aeaf6235f44875051b27be51597f7377a98d9f",
+          "duration_seconds": 0.223
+        },
+        "vhdl_synthesis": {
+          "state": "passed",
+          "required_tools": [
+            "ghdl",
+            "yosys"
+          ],
+          "missing_tools": [],
+          "returncode": 0,
+          "note": "Yosys netlist contains modules.",
+          "log_sha256": "accc0c412538f06964b87436a7a5a1e70b31b1478f045992636e8318449b648b",
+          "duration_seconds": 0.446
+        },
+        "formal_proof": {
+          "state": "passed",
+          "required_tools": [
+            "sby",
+            "yosys",
+            "z3"
+          ],
+          "missing_tools": [],
+          "returncode": 0,
+          "note": "Expected SBY PASS status file.",
+          "log_sha256": "bfc00f1eccc23a520d3c10e2508d529b63332267f04f614d4415d8008723e555",
+          "duration_seconds": 0.485
+        },
+        "formal_counterexample": {
+          "state": "passed",
+          "required_tools": [
+            "sby",
+            "yosys",
+            "z3"
+          ],
+          "missing_tools": [],
+          "returncode": 2,
+          "note": "Expected SBY FAIL and nonempty counterexample VCD.",
+          "log_sha256": "84b90bf146fab2c28212b70d0cfb4cb8390570044531f1ab2a785a0c480d6b79",
+          "duration_seconds": 0.466
+        },
+        "fpga_tangnano9k_build": {
+          "state": "passed",
+          "required_tools": [
+            "yosys",
+            "nextpnr-gowin",
+            "gowin_pack"
+          ],
+          "missing_tools": [],
+          "returncode": 0,
+          "note": "Expected nonempty packed bitstream; no USB programming performed.",
+          "log_sha256": "dc7d2d9f2632b23d50674015c6c0c207335097159c7b1340b38217a856143cab",
+          "duration_seconds": 4.409
+        },
+        "fpga_icebreaker_build": {
+          "state": "passed",
+          "required_tools": [
+            "yosys",
+            "nextpnr-ice40",
+            "icepack"
+          ],
+          "missing_tools": [],
+          "returncode": 0,
+          "note": "Expected nonempty packed bitstream; no USB programming performed.",
+          "log_sha256": "047167e342fed4370462a3080394bac42eb68140dc5b4ddddfe1855f44eafce7",
+          "duration_seconds": 1.008
+        }
+      },
+      "passed_workflows": 14,
+      "total_workflows": 14,
+      "tools": {
+        "iverilog": {
+          "state": "available",
+          "version": "Icarus Verilog version 14.0 (devel) (s20260301-596-gad0260be5-dirty)\n\nCopyright (c) 2000-2026 Stephen Williams (steve@icarus.com)\n\n  This program is free software; you can redistribute it and/or modify\n  it under the terms of the GNU General Public License as published by",
+          "binary": {
+            "format": "script",
+            "architectures": [],
+            "interpreter": "/usr/bin/env bash"
+          },
+          "compatibility": {
+            "mechanism": "native",
+            "verified": false,
+            "note": "Header matches host; real workflow probe still required."
+          }
+        },
+        "vvp": {
+          "state": "available",
+          "version": "Icarus Verilog runtime version 14.0 (devel) (s20260301-596-gad0260be5-dirty)\n\nCopyright (c) 2001-2026 Stephen Williams (steve@icarus.com)\n\n  This program is free software; you can redistribute it and/or modify\n  it under the terms of the GNU General Public License as published by",
+          "binary": {
+            "format": "script",
+            "architectures": [],
+            "interpreter": "/usr/bin/env bash"
+          },
+          "compatibility": {
+            "mechanism": "native",
+            "verified": false,
+            "note": "Header matches host; real workflow probe still required."
+          }
+        },
+        "verilator": {
+          "state": "available",
+          "version": "Verilator 5.053 devel rev v5.052-472-g1cfb3b89a (mod)",
+          "binary": {
+            "format": "script",
+            "architectures": [],
+            "interpreter": "/usr/bin/env perl"
+          },
+          "compatibility": {
+            "mechanism": "unknown",
+            "verified": false,
+            "note": "Launcher or binary architecture needs runtime-set validation."
+          }
+        },
+        "ghdl": {
+          "state": "available",
+          "version": "GHDL 7.0.0-dev (6.0.0.r541.ge76fc566c.dirty) [Dunoon edition]\n Compiled with GNAT Version: 14.3.0\n llvm 21.1.8 code generator\nWritten by Tristan Gingold.\n\nCopyright (C) 2003 - 2026 Tristan Gingold.",
+          "binary": {
+            "format": "script",
+            "architectures": [],
+            "interpreter": "/usr/bin/env bash"
+          },
+          "compatibility": {
+            "mechanism": "native",
+            "verified": false,
+            "note": "Header matches host; real workflow probe still required."
+          }
+        },
+        "cocotb-config": {
+          "state": "available",
+          "version": "2.1.0.dev0+41564633",
+          "binary": {
+            "format": "script",
+            "architectures": [],
+            "interpreter": "/usr/bin/env bash"
+          },
+          "compatibility": {
+            "mechanism": "unknown",
+            "verified": false,
+            "note": "Launcher or binary architecture needs runtime-set validation."
+          }
+        },
+        "sv2v": {
+          "state": "missing",
+          "version": null
+        },
+        "yosys": {
+          "state": "available",
+          "version": "Yosys 0.70+157 (git sha1 af9f71e51, Release, Clang /usr/bin/clang++ 21.1.8)",
+          "binary": {
+            "format": "script",
+            "architectures": [],
+            "interpreter": "/usr/bin/env bash"
+          },
+          "compatibility": {
+            "mechanism": "native",
+            "verified": false,
+            "note": "Header matches host; real workflow probe still required."
+          }
+        },
+        "dot": {
+          "state": "available",
+          "version": "dot - graphviz version 2.43.20190912.0211 (20190912.0211)",
+          "binary": {
+            "format": "script",
+            "architectures": [],
+            "interpreter": "/usr/bin/env bash"
+          },
+          "compatibility": {
+            "mechanism": "native",
+            "verified": false,
+            "note": "Header matches host; real workflow probe still required."
+          }
+        },
+        "netlistsvg": {
+          "state": "missing",
+          "version": null
+        },
+        "sby": {
+          "state": "available",
+          "version": "SBY v0.70-9-g79fc9ed",
+          "binary": {
+            "format": "script",
+            "architectures": [],
+            "interpreter": "/usr/bin/env bash"
+          },
+          "compatibility": {
+            "mechanism": "unknown",
+            "verified": false,
+            "note": "Launcher or binary architecture needs runtime-set validation."
+          }
+        },
+        "z3": {
+          "state": "available",
+          "version": "Z3 version 4.15.5 - 64 bit",
+          "binary": {
+            "format": "script",
+            "architectures": [],
+            "interpreter": "/usr/bin/env bash"
+          },
+          "compatibility": {
+            "mechanism": "native",
+            "verified": false,
+            "note": "Header matches host; real workflow probe still required."
+          }
+        },
+        "nextpnr-gowin": {
+          "state": "available",
+          "version": "\"nextpnr-himbaechel\" -- Next Generation Place and Route (Version nextpnr-0.11.1-65-ge677d5c3)",
+          "binary": {
+            "format": "script",
+            "architectures": [],
+            "interpreter": "/usr/bin/env bash"
+          },
+          "compatibility": {
+            "mechanism": "native",
+            "verified": false,
+            "note": "Header matches host; real workflow probe still required."
+          }
+        },
+        "gowin_pack": {
+          "state": "available",
+          "version": "/__w/verilog-workbench/verilog-workbench/.m0-tools/oss-cad-suite-2026-10-18-linux-x64/oss-cad-suite/lib/python3.11/site-packages/apycula/bitmatrix.py:60: UserWarning: Numpy is not available, performance will be degraded.\n  warnings.warn(\"Numpy is not available, performance will be degraded.\")\n/__w/verilog-workbench/verilog-workbench/.m0-tools/oss-cad-suite-2026-10-18-linux-x64/oss-cad-suite/lib/python3.11/site-packages/apycula/chipdb.py:261: UserWarning: Msgspec is not available, performance will be degraded.\n  warnings.warn(\"Msgspec is not available, performance will be degraded.\")\nusage: gowin_pack [-h] [-d DEVICE] [-o OUTPUT] [-c] [-s CST] [--jtag_as_gpio]\n                  [--sspi_as_gpio] [--mspi_as_gpio] [--ready_as_gpio]",
+          "binary": {
+            "format": "script",
+            "architectures": [],
+            "interpreter": "/usr/bin/env bash"
+          },
+          "compatibility": {
+            "mechanism": "unknown",
+            "verified": false,
+            "note": "Launcher or binary architecture needs runtime-set validation."
+          }
+        },
+        "nextpnr-ice40": {
+          "state": "available",
+          "version": "\"nextpnr-ice40\" -- Next Generation Place and Route (Version nextpnr-0.11.1-65-ge677d5c3)",
+          "binary": {
+            "format": "script",
+            "architectures": [],
+            "interpreter": "/usr/bin/env bash"
+          },
+          "compatibility": {
+            "mechanism": "native",
+            "verified": false,
+            "note": "Header matches host; real workflow probe still required."
+          }
+        },
+        "icepack": {
+          "state": "available",
+          "version": "Usage: /__w/verilog-workbench/verilog-workbench/.m0-tools/oss-cad-suite-2026-10-18-linux-x64/oss-cad-suite/libexec/icepack [options] [input-file [output-file]]\n\n    -u\n        unpack mode (implied when called as 'iceunpack')\n\n    -v",
+          "binary": {
+            "format": "script",
+            "architectures": [],
+            "interpreter": "/usr/bin/env bash"
+          },
+          "compatibility": {
+            "mechanism": "native",
+            "verified": false,
+            "note": "Header matches host; real workflow probe still required."
+          }
+        },
+        "openFPGALoader": {
+          "state": "available",
+          "version": "openFPGALoader v1.1.1",
+          "binary": {
+            "format": "script",
+            "architectures": [],
+            "interpreter": "/usr/bin/env bash"
+          },
+          "compatibility": {
+            "mechanism": "native",
+            "verified": false,
+            "note": "Header matches host; real workflow probe still required."
+          }
+        }
+      },
+      "supplemental_packages": [],
+      "suite_archive": {
+        "release": "2026-10-18",
+        "archive": "oss-cad-suite-linux-x64-20261018.tgz",
+        "sha256": "639c8c0366d74dc56201729c9907bf2d8281db7f18bb025abe2e4f3f2ebaa24e",
+        "size_bytes": 748315612,
+        "relocatable": true
+      }
+    },
+    {
+      "name": "Toolchain feasibility darwin-arm64",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/sfmth/verilog-workbench/actions/runs/39362079646/job/118430317775",
+      "job_id": 118430317775,
+      "target": "darwin-arm64",
+      "platform": {
+        "target": "darwin-arm64",
+        "system": "darwin",
+        "architecture": "arm64",
+        "architecture_detection": "platform.machine",
+        "release": "24.6.0",
+        "version": "Darwin Kernel Version 24.6.0: Tue Jul 21 20:51:34 PDT 2026; root:xnu-11417.140.69.711.44~1/RELEASE_ARM64_VMAPPLE",
+        "distribution": {}
+      },
+      "runtime": {
+        "python": "3.11.6 (tags/v3.11.6-dirty:8b6ee5ba3bd, Aug 21 2026, 03:26:36) [Clang 21.1.8 (6ubuntu1)]",
+        "architecture": "arm64",
+        "binary": {
+          "format": "script",
+          "architectures": [],
+          "interpreter": "/usr/bin/env bash"
+        }
+      },
+      "source_sha256": {
+        "vwb.py": "e39e36bafbe57ad43e0718aec1a3f975c77fd834cef95e3858597aeb553dd479",
+        "companion/process.py": "500b9a1cfac6aded8028923aa2ba35c14b4efa6677c2d8a81bfdff85cb0c266d",
+        "companion/toolchains.py": "85a05055679bf019083f5cf49244688b574922bd189dc88307c82a19209b2af8",
+        "scripts/probe_toolchain.py": "0dc0d36ab70f816ca4b2ea90a4a265d4b0c07a5bfebea418037d120ffdc9d26e"
+      },
+      "fixture_sha256": {
+        "formal/bad.sby": "22efd573b67bda3f3ca48e219cf8cd037e27cc671b13141d31553ee2662dee34",
+        "formal/bad.sv": "eb307c86c6ae93064f44115f33a586b629e429a52e403fd35cc3faec14907b67",
+        "formal/good.sby": "fc19c2609e5f1b45a03ef7d9a282cd92262ecc2a33a473047fca2c64d8045461",
+        "formal/good.sv": "6ccf9855c885a2991db3e2b53bf4b947d9861aa5e6368f8c34a4808ed612af9a",
+        "src/io.cst": "3226e050934c81563db1242fb2d1bf95066fb9d44cffa0c061866d59111e4878",
+        "src/io.pcf": "97ae9b2c677d62cdfea5486a366535505dce5f2180961330abce1ac4707e124d",
+        "src/m0_fpga.v": "3dee0e1e7fc940e8f05185431c5d4a4d9b9254b3f1043f87eb139f3d66cccc5d",
+        "src/m0_gate.v": "ad3ef15d3236ddd1938216b9342606fffc34ce1fd466c9363f9a383a8d1c9239",
+        "src/m0_sv.sv": "8ea99a4c742652e65c0948980770ebfe0d82b600b5fa9b4818624148e8a4a937",
+        "src/m0_vhdl.vhd": "c4d34c7683974d7092950955567040812f9b5bf17f40b48896a2e17e04b9fe62",
+        "test/__init__.py": "f7436bf802698546bfd6f6d9fc6c5b01540a553b015edecb2e6c010469470627",
+        "test/test_m0_cocotb.py": "9497c26c826c1080ede032d51241023732bbefa3467ace087f609183dcf78fcf",
+        "test/test_m0_gate.v": "841ef9457f6851014fd64589d55f4cb8fd2af520696bc679bdafda1587824ede",
+        "test/test_m0_sv.sv": "11a9d7c487d9dcafcd1c90d9ac0b3631702dcd403a2ad1f7fbd20c0e0807a0e6",
+        "test/test_m0_vhdl.vhd": "439bc82fbf99b6e951a48a4b143131ea1a86be01dfb2e48d69fef14f1e5b2fae"
+      },
+      "report_sha256": "f864024ebec09268b068e59067fa94fae01eced6284fbc7979f090b0134ea335",
+      "acquisition_report_sha256": "505775e9231582aedb93216430350ea251dc51d88efa835d13a96c73fc3cf17c",
+      "workflow_results": {
+        "verilog_simulation": {
+          "state": "passed",
+          "required_tools": [
+            "iverilog",
+            "vvp"
+          ],
+          "missing_tools": [],
+          "returncode": 0,
+          "note": "Actual HDL assertions completed.",
+          "log_sha256": "cb763baa053b34051ab34e647702d4f207980aae14c0dffad28dadaa80cc69a7",
+          "duration_seconds": 0.302
+        },
+        "systemverilog_simulation": {
+          "state": "passed",
+          "required_tools": [
+            "iverilog",
+            "vvp"
+          ],
+          "missing_tools": [],
+          "returncode": 0,
+          "note": "Actual HDL assertions completed.",
+          "log_sha256": "83779035775a436dc272e331a50882695d210213095630e18b6c6252d1a9d303",
+          "duration_seconds": 0.39
+        },
+        "waveforms": {
+          "state": "passed",
+          "required_tools": [
+            "iverilog",
+            "vvp"
+          ],
+          "missing_tools": [],
+          "returncode": 0,
+          "note": "Expected VCD declarations and time changes.",
+          "log_sha256": "c46c2cbba91fc72abb4e5cb2123e449459257f4849cdc09641aef1b4d98b3464",
+          "duration_seconds": 0.513
+        },
+        "cocotb_verilog": {
+          "state": "passed",
+          "required_tools": [
+            "iverilog",
+            "vvp",
+            "cocotb-config"
+          ],
+          "missing_tools": [],
+          "returncode": 0,
+          "note": "Cocotb truth-table assertions reported passing test cases.",
+          "log_sha256": "f7839ea73028f9a97523dfd788e90f5eb234e216525e86d88a2f16a158e1ba86",
+          "duration_seconds": 1.498
+        },
+        "vhdl_simulation": {
+          "state": "passed",
+          "required_tools": [
+            "ghdl"
+          ],
+          "missing_tools": [],
+          "returncode": 0,
+          "note": "Expected VCD declarations and time changes.",
+          "log_sha256": "b16c39443a056c2ff271e05df414ff9cb5d5419dc348a52e60a91f946859e8b1",
+          "duration_seconds": 0.92
+        },
+        "cocotb_vhdl": {
+          "state": "passed",
+          "required_tools": [
+            "ghdl",
+            "cocotb-config"
+          ],
+          "missing_tools": [],
+          "returncode": 0,
+          "note": "Cocotb truth-table assertions reported passing test cases.",
+          "log_sha256": "60313e7794e1c758be26a256fc3f1113427eae87a5b5f2e057ed75e1e505701c",
+          "duration_seconds": 1.484
+        },
+        "lint": {
+          "state": "passed",
+          "required_tools": [
+            "verilator"
+          ],
+          "missing_tools": [],
+          "returncode": 0,
+          "note": "Actual tool command completed.",
+          "log_sha256": "a24c87d5d08b603197a51afa49be94e89088d3504a2cc531b9e58c5185cccc06",
+          "duration_seconds": 0.27
+        },
+        "synthesis": {
+          "state": "passed",
+          "required_tools": [
+            "yosys"
+          ],
+          "missing_tools": [],
+          "returncode": 0,
+          "note": "Yosys netlist contains modules.",
+          "log_sha256": "2f3fc9ba1b7063506b60f74fb46aae25128c976c4e8a7fb386723e07af057d0c",
+          "duration_seconds": 0.296
+        },
+        "schematics": {
+          "state": "passed",
+          "required_tools": [
+            "yosys",
+            "dot"
+          ],
+          "missing_tools": [],
+          "returncode": 0,
+          "note": "SVG parsed successfully.",
+          "log_sha256": "420108a8be138f05820f6dd0aa86216367a9fcb86f2d62fdfb17fd3b8646aa7e",
+          "duration_seconds": 0.594
+        },
+        "vhdl_synthesis": {
+          "state": "passed",
+          "required_tools": [
+            "ghdl",
+            "yosys"
+          ],
+          "missing_tools": [],
+          "returncode": 0,
+          "note": "Yosys netlist contains modules.",
+          "log_sha256": "6201902812750a7df8811f7c612111bebd590ec700a92534a8e9aa354a0c8f0d",
+          "duration_seconds": 0.765
+        },
+        "formal_proof": {
+          "state": "passed",
+          "required_tools": [
+            "sby",
+            "yosys",
+            "z3"
+          ],
+          "missing_tools": [],
+          "returncode": 0,
+          "note": "Expected SBY PASS status file.",
+          "log_sha256": "1ae01d1f81587448ae5e6e57376a822903ae050c05d309662b5247ae938a46b8",
+          "duration_seconds": 0.807
+        },
+        "formal_counterexample": {
+          "state": "passed",
+          "required_tools": [
+            "sby",
+            "yosys",
+            "z3"
+          ],
+          "missing_tools": [],
+          "returncode": 2,
+          "note": "Expected SBY FAIL and nonempty counterexample VCD.",
+          "log_sha256": "c1e23439b10c03cbfafd20d09d1dacf5f22de2f688eb12bdf5fdd7d4b850e804",
+          "duration_seconds": 0.586
+        },
+        "fpga_tangnano9k_build": {
+          "state": "passed",
+          "required_tools": [
+            "yosys",
+            "nextpnr-gowin",
+            "gowin_pack"
+          ],
+          "missing_tools": [],
+          "returncode": 0,
+          "note": "Expected nonempty packed bitstream; no USB programming performed.",
+          "log_sha256": "3ea8bd484aa7f5db3c9a57c02feb82e76b80ddfe46d35de27d6384993c713dc7",
+          "duration_seconds": 4.578
+        },
+        "fpga_icebreaker_build": {
+          "state": "passed",
+          "required_tools": [
+            "yosys",
+            "nextpnr-ice40",
+            "icepack"
+          ],
+          "missing_tools": [],
+          "returncode": 0,
+          "note": "Expected nonempty packed bitstream; no USB programming performed.",
+          "log_sha256": "5166686aa698c2d02d8cdcd9559f5da9b543b8ede9cac0d09c25630869446512",
+          "duration_seconds": 1.134
+        }
+      },
+      "passed_workflows": 14,
+      "total_workflows": 14,
+      "tools": {
+        "iverilog": {
+          "state": "available",
+          "version": "Icarus Verilog version 14.0 (devel) (s20260301-596-gad0260be5-dirty)\n\nCopyright (c) 2000-2026 Stephen Williams (steve@icarus.com)\n\n  This program is free software; you can redistribute it and/or modify\n  it under the terms of the GNU General Public License as published by",
+          "binary": {
+            "format": "script",
+            "architectures": [],
+            "interpreter": "/usr/bin/env bash"
+          },
+          "compatibility": {
+            "mechanism": "native",
+            "verified": false,
+            "note": "Header matches host; real workflow probe still required."
+          }
+        },
+        "vvp": {
+          "state": "available",
+          "version": "Icarus Verilog runtime version 14.0 (devel) (s20260301-596-gad0260be5-dirty)\n\nCopyright (c) 2001-2026 Stephen Williams (steve@icarus.com)\n\n  This program is free software; you can redistribute it and/or modify\n  it under the terms of the GNU General Public License as published by",
+          "binary": {
+            "format": "script",
+            "architectures": [],
+            "interpreter": "/usr/bin/env bash"
+          },
+          "compatibility": {
+            "mechanism": "native",
+            "verified": false,
+            "note": "Header matches host; real workflow probe still required."
+          }
+        },
+        "verilator": {
+          "state": "available",
+          "version": "Verilator 5.053 devel rev v5.052-472-g1cfb3b89a (mod)",
+          "binary": {
+            "format": "script",
+            "architectures": [],
+            "interpreter": "/usr/bin/env perl"
+          },
+          "compatibility": {
+            "mechanism": "unknown",
+            "verified": false,
+            "note": "Launcher or binary architecture needs runtime-set validation."
+          }
+        },
+        "ghdl": {
+          "state": "available",
+          "version": "GHDL 7.0.0-dev (6.0.0.r504.gdd4f97400) [Dunoon edition]\n Compiled with GNAT Version: 14.2.0\n llvm 23.1.0 code generator\nWritten by Tristan Gingold.\n\nCopyright (C) 2003 - 2026 Tristan Gingold.",
+          "binary": {
+            "format": "script",
+            "architectures": [],
+            "interpreter": "/usr/bin/env bash"
+          },
+          "compatibility": {
+            "mechanism": "native",
+            "verified": false,
+            "note": "Header matches host; real workflow probe still required."
+          }
+        },
+        "cocotb-config": {
+          "state": "available",
+          "version": "2.1.0.dev0+41564633",
+          "binary": {
+            "format": "script",
+            "architectures": [],
+            "interpreter": "/usr/bin/env bash"
+          },
+          "compatibility": {
+            "mechanism": "unknown",
+            "verified": false,
+            "note": "Launcher or binary architecture needs runtime-set validation."
+          }
+        },
+        "sv2v": {
+          "state": "missing",
+          "version": null
+        },
+        "yosys": {
+          "state": "available",
+          "version": "Yosys 0.70+post (git sha1 0c11ea098be065e585a90a06e7b7da49936cf231, Release, AppleClang clang++ 17.0.0.17000604)",
+          "binary": {
+            "format": "mach-o",
+            "architectures": [
+              "arm64"
+            ]
+          },
+          "compatibility": {
+            "mechanism": "native",
+            "verified": false,
+            "note": "Header matches host; real workflow probe still required."
+          }
+        },
+        "dot": {
+          "state": "available",
+          "version": "dot - graphviz version 2.43.20190912.0211 (20190912.0211)",
+          "binary": {
+            "format": "script",
+            "architectures": [],
+            "interpreter": "/usr/bin/env bash"
+          },
+          "compatibility": {
+            "mechanism": "native",
+            "verified": false,
+            "note": "Header matches host; real workflow probe still required."
+          }
+        },
+        "netlistsvg": {
+          "state": "missing",
+          "version": null
+        },
+        "sby": {
+          "state": "available",
+          "version": "SBY v0.70-9-g79fc9ed",
+          "binary": {
+            "format": "script",
+            "architectures": [],
+            "interpreter": "/usr/bin/env bash"
+          },
+          "compatibility": {
+            "mechanism": "unknown",
+            "verified": false,
+            "note": "Launcher or binary architecture needs runtime-set validation."
+          }
+        },
+        "z3": {
+          "state": "available",
+          "version": "Z3 version 4.15.5 - 64 bit",
+          "binary": {
+            "format": "script",
+            "architectures": [],
+            "interpreter": "/usr/bin/env bash"
+          },
+          "compatibility": {
+            "mechanism": "native",
+            "verified": false,
+            "note": "Header matches host; real workflow probe still required."
+          }
+        },
+        "nextpnr-gowin": {
+          "state": "available",
+          "version": "\"nextpnr-himbaechel\" -- Next Generation Place and Route (Version nextpnr-0.11.1-65-ge677d5c3)",
+          "binary": {
+            "format": "script",
+            "architectures": [],
+            "interpreter": "/usr/bin/env bash"
+          },
+          "compatibility": {
+            "mechanism": "native",
+            "verified": false,
+            "note": "Header matches host; real workflow probe still required."
+          }
+        },
+        "gowin_pack": {
+          "state": "available",
+          "version": "/Users/runner/work/verilog-workbench/verilog-workbench/.m0-tools/oss-cad-suite-2026-10-18-darwin-arm64/oss-cad-suite/lib/python3.11/site-packages/apycula/bitmatrix.py:60: UserWarning: Numpy is not available, performance will be degraded.\n  warnings.warn(\"Numpy is not available, performance will be degraded.\")\n/Users/runner/work/verilog-workbench/verilog-workbench/.m0-tools/oss-cad-suite-2026-10-18-darwin-arm64/oss-cad-suite/lib/python3.11/site-packages/apycula/chipdb.py:261: UserWarning: Msgspec is not available, performance will be degraded.\n  warnings.warn(\"Msgspec is not available, performance will be degraded.\")\nusage: gowin_pack [-h] [-d DEVICE] [-o OUTPUT] [-c] [-s CST] [--jtag_as_gpio]\n                  [--sspi_as_gpio] [--mspi_as_gpio] [--ready_as_gpio]",
+          "binary": {
+            "format": "script",
+            "architectures": [],
+            "interpreter": "/usr/bin/env bash"
+          },
+          "compatibility": {
+            "mechanism": "unknown",
+            "verified": false,
+            "note": "Launcher or binary architecture needs runtime-set validation."
+          }
+        },
+        "nextpnr-ice40": {
+          "state": "available",
+          "version": "\"nextpnr-ice40\" -- Next Generation Place and Route (Version nextpnr-0.11.1-65-ge677d5c3)",
+          "binary": {
+            "format": "script",
+            "architectures": [],
+            "interpreter": "/usr/bin/env bash"
+          },
+          "compatibility": {
+            "mechanism": "native",
+            "verified": false,
+            "note": "Header matches host; real workflow probe still required."
+          }
+        },
+        "icepack": {
+          "state": "available",
+          "version": "Usage: /Users/runner/work/verilog-workbench/verilog-workbench/.m0-tools/oss-cad-suite-2026-10-18-darwin-arm64/oss-cad-suite/libexec/icepack [options] [input-file [output-file]]\n\n    -u\n        unpack mode (implied when called as 'iceunpack')\n\n    -v",
+          "binary": {
+            "format": "script",
+            "architectures": [],
+            "interpreter": "/usr/bin/env bash"
+          },
+          "compatibility": {
+            "mechanism": "native",
+            "verified": false,
+            "note": "Header matches host; real workflow probe still required."
+          }
+        },
+        "openFPGALoader": {
+          "state": "available",
+          "version": "openFPGALoader v1.1.1",
+          "binary": {
+            "format": "script",
+            "architectures": [],
+            "interpreter": "/usr/bin/env bash"
+          },
+          "compatibility": {
+            "mechanism": "native",
+            "verified": false,
+            "note": "Header matches host; real workflow probe still required."
+          }
+        }
+      },
+      "supplemental_packages": [],
+      "suite_archive": {
+        "release": "2026-10-18",
+        "archive": "oss-cad-suite-darwin-arm64-20261018.tgz",
+        "sha256": "1a8540c2b74e3f36c1a4c3ae7d67ce36d1e5af710bda61425d72a6bd98cda859",
+        "size_bytes": 526119809,
+        "relocatable": false
+      }
+    },
+    {
+      "name": "Toolchain feasibility darwin-x64",
+      "status": "completed",
+      "conclusion": "failure",
+      "url": "https://github.com/sfmth/verilog-workbench/actions/runs/39362079646/job/118430318228",
+      "job_id": 118430318228,
+      "target": "darwin-x64",
+      "platform": {
+        "target": "darwin-x64",
+        "system": "darwin",
+        "architecture": "x64",
+        "architecture_detection": "platform.machine",
+        "release": "24.6.0",
+        "version": "Darwin Kernel Version 24.6.0: Tue Jul 21 20:50:07 PDT 2026; root:xnu-11417.140.69.711.44~1/RELEASE_X86_64",
+        "distribution": {}
+      },
+      "runtime": {
+        "python": "3.11.6 (tags/v3.11.6-dirty:8b6ee5ba3bd, Jul 28 2026, 14:49:08) [Clang 21.1.8 (6ubuntu1)]",
+        "architecture": "x64",
+        "binary": {
+          "format": "script",
+          "architectures": [],
+          "interpreter": "/usr/bin/env bash"
+        }
+      },
+      "source_sha256": {
+        "vwb.py": "e39e36bafbe57ad43e0718aec1a3f975c77fd834cef95e3858597aeb553dd479",
+        "companion/process.py": "500b9a1cfac6aded8028923aa2ba35c14b4efa6677c2d8a81bfdff85cb0c266d",
+        "companion/toolchains.py": "85a05055679bf019083f5cf49244688b574922bd189dc88307c82a19209b2af8",
+        "scripts/probe_toolchain.py": "0dc0d36ab70f816ca4b2ea90a4a265d4b0c07a5bfebea418037d120ffdc9d26e"
+      },
+      "fixture_sha256": {
+        "formal/bad.sby": "22efd573b67bda3f3ca48e219cf8cd037e27cc671b13141d31553ee2662dee34",
+        "formal/bad.sv": "eb307c86c6ae93064f44115f33a586b629e429a52e403fd35cc3faec14907b67",
+        "formal/good.sby": "fc19c2609e5f1b45a03ef7d9a282cd92262ecc2a33a473047fca2c64d8045461",
+        "formal/good.sv": "6ccf9855c885a2991db3e2b53bf4b947d9861aa5e6368f8c34a4808ed612af9a",
+        "src/io.cst": "3226e050934c81563db1242fb2d1bf95066fb9d44cffa0c061866d59111e4878",
+        "src/io.pcf": "97ae9b2c677d62cdfea5486a366535505dce5f2180961330abce1ac4707e124d",
+        "src/m0_fpga.v": "3dee0e1e7fc940e8f05185431c5d4a4d9b9254b3f1043f87eb139f3d66cccc5d",
+        "src/m0_gate.v": "ad3ef15d3236ddd1938216b9342606fffc34ce1fd466c9363f9a383a8d1c9239",
+        "src/m0_sv.sv": "8ea99a4c742652e65c0948980770ebfe0d82b600b5fa9b4818624148e8a4a937",
+        "src/m0_vhdl.vhd": "c4d34c7683974d7092950955567040812f9b5bf17f40b48896a2e17e04b9fe62",
+        "test/__init__.py": "f7436bf802698546bfd6f6d9fc6c5b01540a553b015edecb2e6c010469470627",
+        "test/test_m0_cocotb.py": "9497c26c826c1080ede032d51241023732bbefa3467ace087f609183dcf78fcf",
+        "test/test_m0_gate.v": "841ef9457f6851014fd64589d55f4cb8fd2af520696bc679bdafda1587824ede",
+        "test/test_m0_sv.sv": "11a9d7c487d9dcafcd1c90d9ac0b3631702dcd403a2ad1f7fbd20c0e0807a0e6",
+        "test/test_m0_vhdl.vhd": "439bc82fbf99b6e951a48a4b143131ea1a86be01dfb2e48d69fef14f1e5b2fae"
+      },
+      "report_sha256": "d06c62862cfb8a2eda8e2d2a9a03cc332597fdb5ddf0eeb6414fb666d2736322",
+      "acquisition_report_sha256": "2067b209696fcad4f6d84c4402ebb0528ed3eb3e11b25e23e33c131c5b717ddf",
+      "workflow_results": {
+        "verilog_simulation": {
+          "state": "passed",
+          "required_tools": [
+            "iverilog",
+            "vvp"
+          ],
+          "missing_tools": [],
+          "returncode": 0,
+          "note": "Actual HDL assertions completed.",
+          "log_sha256": "4bf035193daecff8f8831800d94adcf06ec6f4e6eb948f947b8d0eea0096909a",
+          "duration_seconds": 1.251
+        },
+        "systemverilog_simulation": {
+          "state": "passed",
+          "required_tools": [
+            "iverilog",
+            "vvp"
+          ],
+          "missing_tools": [],
+          "returncode": 0,
+          "note": "Actual HDL assertions completed.",
+          "log_sha256": "188cb94edcb0d007b34102efe890d9f86590665d6360b1641238e8e2219370f9",
+          "duration_seconds": 1.164
+        },
+        "waveforms": {
+          "state": "passed",
+          "required_tools": [
+            "iverilog",
+            "vvp"
+          ],
+          "missing_tools": [],
+          "returncode": 0,
+          "note": "Expected VCD declarations and time changes.",
+          "log_sha256": "a3ec754be5caf87fd68f8269bda73dda45d361fc0f60faa86d0baba060be8d20",
+          "duration_seconds": 1.633
+        },
+        "cocotb_verilog": {
+          "state": "passed",
+          "required_tools": [
+            "iverilog",
+            "vvp",
+            "cocotb-config"
+          ],
+          "missing_tools": [],
+          "returncode": 0,
+          "note": "Cocotb truth-table assertions reported passing test cases.",
+          "log_sha256": "cdda83063f1393fd22a6e078d60396774072330d23ea9a370757eb5c73ac61b2",
+          "duration_seconds": 4.534
+        },
+        "vhdl_simulation": {
+          "state": "passed",
+          "required_tools": [
+            "ghdl"
+          ],
+          "missing_tools": [],
+          "returncode": 0,
+          "note": "Expected VCD declarations and time changes.",
+          "log_sha256": "321b3cebf02653fff0a5359a966a8a1553a4539aa455407189b60706fd0d71d4",
+          "duration_seconds": 1.363
+        },
+        "cocotb_vhdl": {
+          "state": "failed",
+          "required_tools": [
+            "ghdl",
+            "cocotb-config"
+          ],
+          "missing_tools": [],
+          "returncode": 1,
+          "note": "VWB command returned a nonzero status.",
+          "log_sha256": "0e5340dd39f83a91c0bc40b7321ef80f50607e5c83ebe7f3503102bf9b740fa0",
+          "duration_seconds": 3.224
+        },
+        "lint": {
+          "state": "passed",
+          "required_tools": [
+            "verilator"
+          ],
+          "missing_tools": [],
+          "returncode": 0,
+          "note": "Actual tool command completed.",
+          "log_sha256": "feded94974eff505bcf1b434a5ca115e45a07e111139876c9d2c006b075cf016",
+          "duration_seconds": 0.999
+        },
+        "synthesis": {
+          "state": "passed",
+          "required_tools": [
+            "yosys"
+          ],
+          "missing_tools": [],
+          "returncode": 0,
+          "note": "Yosys netlist contains modules.",
+          "log_sha256": "86f49a010fa336c1afd1f1da96d101552d41504c7166bebb6fa60b0a3f830c67",
+          "duration_seconds": 0.836
+        },
+        "schematics": {
+          "state": "passed",
+          "required_tools": [
+            "yosys",
+            "dot"
+          ],
+          "missing_tools": [],
+          "returncode": 0,
+          "note": "SVG parsed successfully.",
+          "log_sha256": "b59038b039d937354d8c6c608c8ddc3f69d15ec86f02deec373f177faafcc103",
+          "duration_seconds": 1.323
+        },
+        "vhdl_synthesis": {
+          "state": "passed",
+          "required_tools": [
+            "ghdl",
+            "yosys"
+          ],
+          "missing_tools": [],
+          "returncode": 0,
+          "note": "Yosys netlist contains modules.",
+          "log_sha256": "9d0c6e1af38e19a05fe0c53683d6f12d95918e9f434018d04ce41b0529ddd877",
+          "duration_seconds": 1.329
+        },
+        "formal_proof": {
+          "state": "passed",
+          "required_tools": [
+            "sby",
+            "yosys",
+            "z3"
+          ],
+          "missing_tools": [],
+          "returncode": 0,
+          "note": "Expected SBY PASS status file.",
+          "log_sha256": "20bba38ede5bbda154482ee68e16aa84fd29b65e43949ccb1232fb53974fd448",
+          "duration_seconds": 2.016
+        },
+        "formal_counterexample": {
+          "state": "passed",
+          "required_tools": [
+            "sby",
+            "yosys",
+            "z3"
+          ],
+          "missing_tools": [],
+          "returncode": 2,
+          "note": "Expected SBY FAIL and nonempty counterexample VCD.",
+          "log_sha256": "80041c2d41c157bd5daa8c0dbb270ccfee74e2683c5f91ed9f7a3ec2789bfab5",
+          "duration_seconds": 1.867
+        },
+        "fpga_tangnano9k_build": {
+          "state": "passed",
+          "required_tools": [
+            "yosys",
+            "nextpnr-gowin",
+            "gowin_pack"
+          ],
+          "missing_tools": [],
+          "returncode": 0,
+          "note": "Expected nonempty packed bitstream; no USB programming performed.",
+          "log_sha256": "07c19ebaf33035ce26bf75598ec242d7958d97eb96cfc8a92bf743f193df122f",
+          "duration_seconds": 17.378
+        },
+        "fpga_icebreaker_build": {
+          "state": "passed",
+          "required_tools": [
+            "yosys",
+            "nextpnr-ice40",
+            "icepack"
+          ],
+          "missing_tools": [],
+          "returncode": 0,
+          "note": "Expected nonempty packed bitstream; no USB programming performed.",
+          "log_sha256": "4a8266b4860b6ff36a0f5791534f42fb6709406e2b218daaedfb3e1738f3b4be",
+          "duration_seconds": 4.229
+        }
+      },
+      "passed_workflows": 13,
+      "total_workflows": 14,
+      "tools": {
+        "iverilog": {
+          "state": "available",
+          "version": "Icarus Verilog version 14.0 (devel) (s20260301-596-gad0260be5-dirty)\n\nCopyright (c) 2000-2026 Stephen Williams (steve@icarus.com)\n\n  This program is free software; you can redistribute it and/or modify\n  it under the terms of the GNU General Public License as published by",
+          "binary": {
+            "format": "script",
+            "architectures": [],
+            "interpreter": "/usr/bin/env bash"
+          },
+          "compatibility": {
+            "mechanism": "native",
+            "verified": false,
+            "note": "Header matches host; real workflow probe still required."
+          }
+        },
+        "vvp": {
+          "state": "available",
+          "version": "Icarus Verilog runtime version 14.0 (devel) (s20260301-596-gad0260be5-dirty)\n\nCopyright (c) 2001-2026 Stephen Williams (steve@icarus.com)\n\n  This program is free software; you can redistribute it and/or modify\n  it under the terms of the GNU General Public License as published by",
+          "binary": {
+            "format": "script",
+            "architectures": [],
+            "interpreter": "/usr/bin/env bash"
+          },
+          "compatibility": {
+            "mechanism": "native",
+            "verified": false,
+            "note": "Header matches host; real workflow probe still required."
+          }
+        },
+        "verilator": {
+          "state": "available",
+          "version": "Verilator 5.053 devel rev v5.052-472-g1cfb3b89a (mod)",
+          "binary": {
+            "format": "script",
+            "architectures": [],
+            "interpreter": "/usr/bin/env perl"
+          },
+          "compatibility": {
+            "mechanism": "unknown",
+            "verified": false,
+            "note": "Launcher or binary architecture needs runtime-set validation."
+          }
+        },
+        "ghdl": {
+          "state": "available",
+          "version": "GHDL 4.1.0 (4.0.0.r39.g7188e92cf) [Dunoon edition]\n Compiled with GNAT Version: Community 2019 (20190517-83)\n static elaboration, mcode JIT code generator\nWritten by Tristan Gingold.\n\nCopyright (C) 2003 - 2024 Tristan Gingold.",
+          "binary": {
+            "format": "mach-o",
+            "architectures": [
+              "x64"
+            ]
+          },
+          "compatibility": {
+            "mechanism": "native",
+            "verified": false,
+            "note": "Header matches host; real workflow probe still required."
+          }
+        },
+        "cocotb-config": {
+          "state": "available",
+          "version": "2.1.0.dev0+41564633",
+          "binary": {
+            "format": "script",
+            "architectures": [],
+            "interpreter": "/usr/bin/env bash"
+          },
+          "compatibility": {
+            "mechanism": "unknown",
+            "verified": false,
+            "note": "Launcher or binary architecture needs runtime-set validation."
+          }
+        },
+        "sv2v": {
+          "state": "missing",
+          "version": null
+        },
+        "yosys": {
+          "state": "available",
+          "version": "Yosys 0.70+157 (git sha1 af9f71e51, Release, Clang /usr/local/osxcross/target/bin/x86_64-apple-darwin25.5-clang++ 21.1.8)",
+          "binary": {
+            "format": "script",
+            "architectures": [],
+            "interpreter": "/usr/bin/env bash"
+          },
+          "compatibility": {
+            "mechanism": "native",
+            "verified": false,
+            "note": "Header matches host; real workflow probe still required."
+          }
+        },
+        "dot": {
+          "state": "available",
+          "version": "dot - graphviz version 2.43.20190912.0211 (20190912.0211)",
+          "binary": {
+            "format": "script",
+            "architectures": [],
+            "interpreter": "/usr/bin/env bash"
+          },
+          "compatibility": {
+            "mechanism": "native",
+            "verified": false,
+            "note": "Header matches host; real workflow probe still required."
+          }
+        },
+        "netlistsvg": {
+          "state": "missing",
+          "version": null
+        },
+        "sby": {
+          "state": "available",
+          "version": "SBY v0.70-9-g79fc9ed",
+          "binary": {
+            "format": "script",
+            "architectures": [],
+            "interpreter": "/usr/bin/env bash"
+          },
+          "compatibility": {
+            "mechanism": "unknown",
+            "verified": false,
+            "note": "Launcher or binary architecture needs runtime-set validation."
+          }
+        },
+        "z3": {
+          "state": "available",
+          "version": "Z3 version 4.15.5 - 64 bit",
+          "binary": {
+            "format": "script",
+            "architectures": [],
+            "interpreter": "/usr/bin/env bash"
+          },
+          "compatibility": {
+            "mechanism": "native",
+            "verified": false,
+            "note": "Header matches host; real workflow probe still required."
+          }
+        },
+        "nextpnr-gowin": {
+          "state": "available",
+          "version": "\"nextpnr-himbaechel\" -- Next Generation Place and Route (Version nextpnr-0.11.1-65-ge677d5c3)",
+          "binary": {
+            "format": "script",
+            "architectures": [],
+            "interpreter": "/usr/bin/env bash"
+          },
+          "compatibility": {
+            "mechanism": "native",
+            "verified": false,
+            "note": "Header matches host; real workflow probe still required."
+          }
+        },
+        "gowin_pack": {
+          "state": "available",
+          "version": "/Users/runner/work/verilog-workbench/verilog-workbench/.m0-tools/oss-cad-suite-2026-10-18-darwin-x64/oss-cad-suite/lib/python3.11/site-packages/apycula/bitmatrix.py:60: UserWarning: Numpy is not available, performance will be degraded.\n  warnings.warn(\"Numpy is not available, performance will be degraded.\")\n/Users/runner/work/verilog-workbench/verilog-workbench/.m0-tools/oss-cad-suite-2026-10-18-darwin-x64/oss-cad-suite/lib/python3.11/site-packages/apycula/chipdb.py:261: UserWarning: Msgspec is not available, performance will be degraded.\n  warnings.warn(\"Msgspec is not available, performance will be degraded.\")\nusage: gowin_pack [-h] [-d DEVICE] [-o OUTPUT] [-c] [-s CST] [--jtag_as_gpio]\n                  [--sspi_as_gpio] [--mspi_as_gpio] [--ready_as_gpio]",
+          "binary": {
+            "format": "script",
+            "architectures": [],
+            "interpreter": "/usr/bin/env bash"
+          },
+          "compatibility": {
+            "mechanism": "unknown",
+            "verified": false,
+            "note": "Launcher or binary architecture needs runtime-set validation."
+          }
+        },
+        "nextpnr-ice40": {
+          "state": "available",
+          "version": "\"nextpnr-ice40\" -- Next Generation Place and Route (Version nextpnr-0.11.1-65-ge677d5c3)",
+          "binary": {
+            "format": "script",
+            "architectures": [],
+            "interpreter": "/usr/bin/env bash"
+          },
+          "compatibility": {
+            "mechanism": "native",
+            "verified": false,
+            "note": "Header matches host; real workflow probe still required."
+          }
+        },
+        "icepack": {
+          "state": "available",
+          "version": "Usage: /Users/runner/work/verilog-workbench/verilog-workbench/.m0-tools/oss-cad-suite-2026-10-18-darwin-x64/oss-cad-suite/libexec/icepack [options] [input-file [output-file]]\n\n    -u\n        unpack mode (implied when called as 'iceunpack')\n\n    -v",
+          "binary": {
+            "format": "script",
+            "architectures": [],
+            "interpreter": "/usr/bin/env bash"
+          },
+          "compatibility": {
+            "mechanism": "native",
+            "verified": false,
+            "note": "Header matches host; real workflow probe still required."
+          }
+        },
+        "openFPGALoader": {
+          "state": "available",
+          "version": "openFPGALoader v1.1.1",
+          "binary": {
+            "format": "script",
+            "architectures": [],
+            "interpreter": "/usr/bin/env bash"
+          },
+          "compatibility": {
+            "mechanism": "native",
+            "verified": false,
+            "note": "Header matches host; real workflow probe still required."
+          }
+        }
+      },
+      "supplemental_packages": [
+        {
+          "repository": "https://github.com/ghdl/ghdl",
+          "release": "v4.1.0",
+          "name": "ghdl-macos-11-mcode.tgz",
+          "size_bytes": 8251376,
+          "sha256": "8521aafad389eb769de25db13ecaaaade8444431447eb5e801dc2fcf981cdeed",
+          "executable_sha256": "225f2b01ffc47e7adbc68c9ee953bf893851e05e0fc83663092c5666cbae0296",
+          "binary": {
+            "format": "mach-o",
+            "architectures": [
+              "x64"
+            ]
+          }
+        }
+      ],
+      "suite_archive": {
+        "release": "2026-10-18",
+        "archive": "oss-cad-suite-darwin-x64-20261018.tgz",
+        "sha256": "f9c700750aa4ba0a86f44b1ecf866c0e9cbdbf23f389a84ce9d298ee3432989f",
+        "size_bytes": 508576679,
+        "relocatable": true
+      },
+      "failure_diagnosis": "Only cocotb_vhdl failed: standalone GHDL loads suite libpython3.11.dylib, whose @executable_path/../lib/libintl.8.dylib dependency resolves under the standalone GHDL tree and is absent. Native VHDL simulation and synthesis passed. A verified GHDL executable copy into suite/bin is awaiting native validation."
+    },
+    {
+      "name": "Toolchain feasibility linux-arm64",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/sfmth/verilog-workbench/actions/runs/39362079646/job/118430317791",
+      "job_id": 118430317791,
+      "target": "linux-arm64",
+      "platform": {
+        "target": "linux-arm64",
+        "system": "linux",
+        "architecture": "arm64",
+        "architecture_detection": "platform.machine",
+        "release": "7.0.0-1017-azure",
+        "version": "#17~24.04.1-Ubuntu SMP PREEMPT Thu Sep 24 19:06:39 UTC 2026",
+        "distribution": {
+          "NAME": "Ubuntu",
+          "ID": "ubuntu",
+          "PRETTY_NAME": "Ubuntu 24.04.5 LTS",
+          "VERSION_ID": "24.04",
+          "VERSION": "24.04.5 LTS (Noble Numbat)",
+          "VERSION_CODENAME": "noble",
+          "ID_LIKE": "debian",
+          "HOME_URL": "https://www.ubuntu.com/",
+          "SUPPORT_URL": "https://help.ubuntu.com/",
+          "BUG_REPORT_URL": "https://bugs.launchpad.net/ubuntu/",
+          "PRIVACY_POLICY_URL": "https://www.ubuntu.com/legal/terms-and-policies/privacy-policy",
+          "UBUNTU_CODENAME": "noble",
+          "LOGO": "ubuntu-logo"
+        }
+      },
+      "runtime": {
+        "python": "3.11.6 (tags/v3.11.6:8b6ee5ba3bd, Jul 28 2026, 15:30:51) [GCC 15.2.0]",
+        "architecture": "arm64",
+        "binary": {
+          "format": "script",
+          "architectures": [],
+          "interpreter": "/usr/bin/env bash"
+        }
+      },
+      "source_sha256": {
+        "vwb.py": "e39e36bafbe57ad43e0718aec1a3f975c77fd834cef95e3858597aeb553dd479",
+        "companion/process.py": "500b9a1cfac6aded8028923aa2ba35c14b4efa6677c2d8a81bfdff85cb0c266d",
+        "companion/toolchains.py": "85a05055679bf019083f5cf49244688b574922bd189dc88307c82a19209b2af8",
+        "scripts/probe_toolchain.py": "0dc0d36ab70f816ca4b2ea90a4a265d4b0c07a5bfebea418037d120ffdc9d26e"
+      },
+      "fixture_sha256": {
+        "formal/bad.sby": "22efd573b67bda3f3ca48e219cf8cd037e27cc671b13141d31553ee2662dee34",
+        "formal/bad.sv": "eb307c86c6ae93064f44115f33a586b629e429a52e403fd35cc3faec14907b67",
+        "formal/good.sby": "fc19c2609e5f1b45a03ef7d9a282cd92262ecc2a33a473047fca2c64d8045461",
+        "formal/good.sv": "6ccf9855c885a2991db3e2b53bf4b947d9861aa5e6368f8c34a4808ed612af9a",
+        "src/io.cst": "3226e050934c81563db1242fb2d1bf95066fb9d44cffa0c061866d59111e4878",
+        "src/io.pcf": "97ae9b2c677d62cdfea5486a366535505dce5f2180961330abce1ac4707e124d",
+        "src/m0_fpga.v": "3dee0e1e7fc940e8f05185431c5d4a4d9b9254b3f1043f87eb139f3d66cccc5d",
+        "src/m0_gate.v": "ad3ef15d3236ddd1938216b9342606fffc34ce1fd466c9363f9a383a8d1c9239",
+        "src/m0_sv.sv": "8ea99a4c742652e65c0948980770ebfe0d82b600b5fa9b4818624148e8a4a937",
+        "src/m0_vhdl.vhd": "c4d34c7683974d7092950955567040812f9b5bf17f40b48896a2e17e04b9fe62",
+        "test/__init__.py": "f7436bf802698546bfd6f6d9fc6c5b01540a553b015edecb2e6c010469470627",
+        "test/test_m0_cocotb.py": "9497c26c826c1080ede032d51241023732bbefa3467ace087f609183dcf78fcf",
+        "test/test_m0_gate.v": "841ef9457f6851014fd64589d55f4cb8fd2af520696bc679bdafda1587824ede",
+        "test/test_m0_sv.sv": "11a9d7c487d9dcafcd1c90d9ac0b3631702dcd403a2ad1f7fbd20c0e0807a0e6",
+        "test/test_m0_vhdl.vhd": "439bc82fbf99b6e951a48a4b143131ea1a86be01dfb2e48d69fef14f1e5b2fae"
+      },
+      "report_sha256": "7a2f65cc65d26ca731d942b3f9fe3df0958464fd45f6ea04129833fe6b259e8f",
+      "acquisition_report_sha256": "c710fb1b06648701e807035f7fc221ca42de5ce0fab72f98daa18182d0cb13cc",
+      "workflow_results": {
+        "verilog_simulation": {
+          "state": "passed",
+          "required_tools": [
+            "iverilog",
+            "vvp"
+          ],
+          "missing_tools": [],
+          "returncode": 0,
+          "note": "Actual HDL assertions completed.",
+          "log_sha256": "158ae62b694403bec3aaf204da9f247516ef7186774ee56e4d1a7ec6c4bb4bd0",
+          "duration_seconds": 0.162
+        },
+        "systemverilog_simulation": {
+          "state": "passed",
+          "required_tools": [
+            "iverilog",
+            "vvp"
+          ],
+          "missing_tools": [],
+          "returncode": 0,
+          "note": "Actual HDL assertions completed.",
+          "log_sha256": "03968f746961ecd7e7fc6b62c142a3f88ec4304ef1e56db33649f0660e3e4e91",
+          "duration_seconds": 0.162
+        },
+        "waveforms": {
+          "state": "passed",
+          "required_tools": [
+            "iverilog",
+            "vvp"
+          ],
+          "missing_tools": [],
+          "returncode": 0,
+          "note": "Expected VCD declarations and time changes.",
+          "log_sha256": "2e39bbddc9a4e131648956204e86fd561f6e400925a9b59c882b5bad36ad25bc",
+          "duration_seconds": 0.183
+        },
+        "cocotb_verilog": {
+          "state": "passed",
+          "required_tools": [
+            "iverilog",
+            "vvp",
+            "cocotb-config"
+          ],
+          "missing_tools": [],
+          "returncode": 0,
+          "note": "Cocotb truth-table assertions reported passing test cases.",
+          "log_sha256": "a10e97117dbbbd9b8aa5720e6d3f30eae515688bab61e24b62920c3c42849d9c",
+          "duration_seconds": 0.845
+        },
+        "vhdl_simulation": {
+          "state": "passed",
+          "required_tools": [
+            "ghdl"
+          ],
+          "missing_tools": [],
+          "returncode": 0,
+          "note": "Expected VCD declarations and time changes.",
+          "log_sha256": "3e3d508cbb519476b8c0a73af694b754aa01ff222b2df4b7b2f2b98af2a23bcc",
+          "duration_seconds": 4.177
+        },
+        "cocotb_vhdl": {
+          "state": "passed",
+          "required_tools": [
+            "ghdl",
+            "cocotb-config"
+          ],
+          "missing_tools": [],
+          "returncode": 0,
+          "note": "Cocotb truth-table assertions reported passing test cases.",
+          "log_sha256": "59f6aa3b28c40c217074979a2a840fefb0539f77bedf5edccd075202e5425c11",
+          "duration_seconds": 0.846
+        },
+        "lint": {
+          "state": "passed",
+          "required_tools": [
+            "verilator"
+          ],
+          "missing_tools": [],
+          "returncode": 0,
+          "note": "Actual tool command completed.",
+          "log_sha256": "c650b73cf2eda126cf9ba1d1bf0c4a0359e1e9bfa7becc021ee0736be98fcb91",
+          "duration_seconds": 0.182
+        },
+        "synthesis": {
+          "state": "passed",
+          "required_tools": [
+            "yosys"
+          ],
+          "missing_tools": [],
+          "returncode": 0,
+          "note": "Yosys netlist contains modules.",
+          "log_sha256": "b74aa4e9b36f2cb2037d7e356399a4ed043a99c431c902eea29911a2966d2553",
+          "duration_seconds": 0.142
+        },
+        "schematics": {
+          "state": "passed",
+          "required_tools": [
+            "yosys",
+            "dot"
+          ],
+          "missing_tools": [],
+          "returncode": 0,
+          "note": "SVG parsed successfully.",
+          "log_sha256": "9c1e83e26094348ea3196419bf551b2be5595191f6f1a8d0fe84f3b00362cc84",
+          "duration_seconds": 0.263
+        },
+        "vhdl_synthesis": {
+          "state": "passed",
+          "required_tools": [
+            "ghdl",
+            "yosys"
+          ],
+          "missing_tools": [],
+          "returncode": 0,
+          "note": "Yosys netlist contains modules.",
+          "log_sha256": "d367d108c3d29db4d6f2d10632c1a155b930790445cae2c6250ae9eb7f12c403",
+          "duration_seconds": 0.304
+        },
+        "formal_proof": {
+          "state": "passed",
+          "required_tools": [
+            "sby",
+            "yosys",
+            "z3"
+          ],
+          "missing_tools": [],
+          "returncode": 0,
+          "note": "Expected SBY PASS status file.",
+          "log_sha256": "511e8273f1a772a2194d2d0738d29f8dfda93ed058f5907b178ef94e9394ae5d",
+          "duration_seconds": 0.384
+        },
+        "formal_counterexample": {
+          "state": "passed",
+          "required_tools": [
+            "sby",
+            "yosys",
+            "z3"
+          ],
+          "missing_tools": [],
+          "returncode": 2,
+          "note": "Expected SBY FAIL and nonempty counterexample VCD.",
+          "log_sha256": "465799b7764419f0fec3c2e8a97ba50a8845f84d1be13da67e0b1056c393669f",
+          "duration_seconds": 0.344
+        },
+        "fpga_tangnano9k_build": {
+          "state": "passed",
+          "required_tools": [
+            "yosys",
+            "nextpnr-gowin",
+            "gowin_pack"
+          ],
+          "missing_tools": [],
+          "returncode": 0,
+          "note": "Expected nonempty packed bitstream; no USB programming performed.",
+          "log_sha256": "62106161ee1c0ff35ad289bfa7cce0ea673a5a072e2646b7d9889a436f67cf5b",
+          "duration_seconds": 2.296
+        },
+        "fpga_icebreaker_build": {
+          "state": "passed",
+          "required_tools": [
+            "yosys",
+            "nextpnr-ice40",
+            "icepack"
+          ],
+          "missing_tools": [],
+          "returncode": 0,
+          "note": "Expected nonempty packed bitstream; no USB programming performed.",
+          "log_sha256": "84472624775e250e010ef7886a61efac174379a097919c3bb950fe97db1a668a",
+          "duration_seconds": 0.705
+        }
+      },
+      "passed_workflows": 14,
+      "total_workflows": 14,
+      "tools": {
+        "iverilog": {
+          "state": "available",
+          "version": "Icarus Verilog version 14.0 (devel) (s20260301-596-gad0260be5-dirty)\n\nCopyright (c) 2000-2026 Stephen Williams (steve@icarus.com)\n\n  This program is free software; you can redistribute it and/or modify\n  it under the terms of the GNU General Public License as published by",
+          "binary": {
+            "format": "script",
+            "architectures": [],
+            "interpreter": "/usr/bin/env bash"
+          },
+          "compatibility": {
+            "mechanism": "native",
+            "verified": false,
+            "note": "Header matches host; real workflow probe still required."
+          }
+        },
+        "vvp": {
+          "state": "available",
+          "version": "Icarus Verilog runtime version 14.0 (devel) (s20260301-596-gad0260be5-dirty)\n\nCopyright (c) 2001-2026 Stephen Williams (steve@icarus.com)\n\n  This program is free software; you can redistribute it and/or modify\n  it under the terms of the GNU General Public License as published by",
+          "binary": {
+            "format": "script",
+            "architectures": [],
+            "interpreter": "/usr/bin/env bash"
+          },
+          "compatibility": {
+            "mechanism": "native",
+            "verified": false,
+            "note": "Header matches host; real workflow probe still required."
+          }
+        },
+        "verilator": {
+          "state": "available",
+          "version": "Verilator 5.053 devel rev v5.052-472-g1cfb3b89a (mod)",
+          "binary": {
+            "format": "script",
+            "architectures": [],
+            "interpreter": "/usr/bin/env perl"
+          },
+          "compatibility": {
+            "mechanism": "unknown",
+            "verified": false,
+            "note": "Launcher or binary architecture needs runtime-set validation."
+          }
+        },
+        "ghdl": {
+          "state": "available",
+          "version": "GHDL 4.1.0 (Ubuntu 4.1.0+dfsg-0ubuntu2) [Dunoon edition]\n Compiled with GNAT Version: 13.2.0\n llvm 18.1.3 code generator\nWritten by Tristan Gingold.\n\nCopyright (C) 2003 - 2024 Tristan Gingold.",
+          "binary": {
+            "format": "elf",
+            "architectures": [
+              "arm64"
+            ]
+          },
+          "compatibility": {
+            "mechanism": "native",
+            "verified": false,
+            "note": "Header matches host; real workflow probe still required."
+          }
+        },
+        "cocotb-config": {
+          "state": "available",
+          "version": "2.1.0.dev0+41564633",
+          "binary": {
+            "format": "script",
+            "architectures": [],
+            "interpreter": "/usr/bin/env bash"
+          },
+          "compatibility": {
+            "mechanism": "unknown",
+            "verified": false,
+            "note": "Launcher or binary architecture needs runtime-set validation."
+          }
+        },
+        "sv2v": {
+          "state": "missing",
+          "version": null
+        },
+        "yosys": {
+          "state": "available",
+          "version": "Yosys 0.70+157 (git sha1 af9f71e51, Release, GNU /usr/bin/aarch64-linux-gnu-g++ 15.2.0)",
+          "binary": {
+            "format": "script",
+            "architectures": [],
+            "interpreter": "/usr/bin/env bash"
+          },
+          "compatibility": {
+            "mechanism": "native",
+            "verified": false,
+            "note": "Header matches host; real workflow probe still required."
+          }
+        },
+        "dot": {
+          "state": "available",
+          "version": "dot - graphviz version 2.43.20190912.0211 (20190912.0211)",
+          "binary": {
+            "format": "script",
+            "architectures": [],
+            "interpreter": "/usr/bin/env bash"
+          },
+          "compatibility": {
+            "mechanism": "native",
+            "verified": false,
+            "note": "Header matches host; real workflow probe still required."
+          }
+        },
+        "netlistsvg": {
+          "state": "missing",
+          "version": null
+        },
+        "sby": {
+          "state": "available",
+          "version": "SBY v0.70-9-g79fc9ed",
+          "binary": {
+            "format": "script",
+            "architectures": [],
+            "interpreter": "/usr/bin/env bash"
+          },
+          "compatibility": {
+            "mechanism": "unknown",
+            "verified": false,
+            "note": "Launcher or binary architecture needs runtime-set validation."
+          }
+        },
+        "z3": {
+          "state": "available",
+          "version": "Z3 version 4.15.5 - 64 bit",
+          "binary": {
+            "format": "script",
+            "architectures": [],
+            "interpreter": "/usr/bin/env bash"
+          },
+          "compatibility": {
+            "mechanism": "native",
+            "verified": false,
+            "note": "Header matches host; real workflow probe still required."
+          }
+        },
+        "nextpnr-gowin": {
+          "state": "available",
+          "version": "\"nextpnr-himbaechel\" -- Next Generation Place and Route (Version nextpnr-0.11.1-65-ge677d5c3)",
+          "binary": {
+            "format": "script",
+            "architectures": [],
+            "interpreter": "/usr/bin/env bash"
+          },
+          "compatibility": {
+            "mechanism": "native",
+            "verified": false,
+            "note": "Header matches host; real workflow probe still required."
+          }
+        },
+        "gowin_pack": {
+          "state": "available",
+          "version": "/home/runner/work/verilog-workbench/verilog-workbench/.m0-tools/oss-cad-suite-2026-10-18-linux-arm64/oss-cad-suite/lib/python3.11/site-packages/apycula/bitmatrix.py:60: UserWarning: Numpy is not available, performance will be degraded.\n  warnings.warn(\"Numpy is not available, performance will be degraded.\")\n/home/runner/work/verilog-workbench/verilog-workbench/.m0-tools/oss-cad-suite-2026-10-18-linux-arm64/oss-cad-suite/lib/python3.11/site-packages/apycula/chipdb.py:261: UserWarning: Msgspec is not available, performance will be degraded.\n  warnings.warn(\"Msgspec is not available, performance will be degraded.\")\nusage: gowin_pack [-h] [-d DEVICE] [-o OUTPUT] [-c] [-s CST] [--jtag_as_gpio]\n                  [--sspi_as_gpio] [--mspi_as_gpio] [--ready_as_gpio]",
+          "binary": {
+            "format": "script",
+            "architectures": [],
+            "interpreter": "/usr/bin/env bash"
+          },
+          "compatibility": {
+            "mechanism": "unknown",
+            "verified": false,
+            "note": "Launcher or binary architecture needs runtime-set validation."
+          }
+        },
+        "nextpnr-ice40": {
+          "state": "available",
+          "version": "\"nextpnr-ice40\" -- Next Generation Place and Route (Version nextpnr-0.11.1-65-ge677d5c3)",
+          "binary": {
+            "format": "script",
+            "architectures": [],
+            "interpreter": "/usr/bin/env bash"
+          },
+          "compatibility": {
+            "mechanism": "native",
+            "verified": false,
+            "note": "Header matches host; real workflow probe still required."
+          }
+        },
+        "icepack": {
+          "state": "available",
+          "version": "Usage: /home/runner/work/verilog-workbench/verilog-workbench/.m0-tools/oss-cad-suite-2026-10-18-linux-arm64/oss-cad-suite/libexec/icepack [options] [input-file [output-file]]\n\n    -u\n        unpack mode (implied when called as 'iceunpack')\n\n    -v",
+          "binary": {
+            "format": "script",
+            "architectures": [],
+            "interpreter": "/usr/bin/env bash"
+          },
+          "compatibility": {
+            "mechanism": "native",
+            "verified": false,
+            "note": "Header matches host; real workflow probe still required."
+          }
+        },
+        "openFPGALoader": {
+          "state": "available",
+          "version": "openFPGALoader v1.1.1",
+          "binary": {
+            "format": "script",
+            "architectures": [],
+            "interpreter": "/usr/bin/env bash"
+          },
+          "compatibility": {
+            "mechanism": "native",
+            "verified": false,
+            "note": "Header matches host; real workflow probe still required."
+          }
+        }
+      },
+      "supplemental_packages": [
+        {
+          "provider": "explicit-external-native-GHDL",
+          "executable_sha256": "619951a8773860791824d7ba399ecaf8e83a7338b144aa7dc89f3bbd8426b9d3",
+          "binary": {
+            "format": "elf",
+            "architectures": [
+              "arm64"
+            ]
+          },
+          "external_prerequisite": true,
+          "relocatable": false
+        }
+      ],
+      "suite_archive": {
+        "release": "2026-10-18",
+        "archive": "oss-cad-suite-linux-arm64-20261018.tgz",
+        "sha256": "7711551b5bc9c602447b799e940660b7c1dd3d2456c6635420229e4fe53fd519",
+        "size_bytes": 686685342,
+        "relocatable": true
+      }
+    },
+    {
+      "name": "Toolchain feasibility linux-x64",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/sfmth/verilog-workbench/actions/runs/39362079646/job/118430317660",
+      "job_id": 118430317660,
+      "target": "linux-x64",
+      "platform": {
+        "target": "linux-x64",
+        "system": "linux",
+        "architecture": "x64",
+        "architecture_detection": "platform.machine",
+        "release": "7.0.0-1017-azure",
+        "version": "#17~24.04.1-Ubuntu SMP PREEMPT Thu Sep 24 18:46:57 UTC 2026",
+        "distribution": {
+          "NAME": "Ubuntu",
+          "ID": "ubuntu",
+          "PRETTY_NAME": "Ubuntu 24.04.5 LTS",
+          "VERSION_ID": "24.04",
+          "VERSION": "24.04.5 LTS (Noble Numbat)",
+          "VERSION_CODENAME": "noble",
+          "ID_LIKE": "debian",
+          "HOME_URL": "https://www.ubuntu.com/",
+          "SUPPORT_URL": "https://help.ubuntu.com/",
+          "BUG_REPORT_URL": "https://bugs.launchpad.net/ubuntu/",
+          "PRIVACY_POLICY_URL": "https://www.ubuntu.com/legal/terms-and-policies/privacy-policy",
+          "UBUNTU_CODENAME": "noble",
+          "LOGO": "ubuntu-logo"
+        }
+      },
+      "runtime": {
+        "python": "3.11.6 (tags/v3.11.6:8b6ee5ba3bd, Aug  7 2026, 03:34:25) [GCC 15.2.0]",
+        "architecture": "x64",
+        "binary": {
+          "format": "script",
+          "architectures": [],
+          "interpreter": "/usr/bin/env bash"
+        }
+      },
+      "source_sha256": {
+        "vwb.py": "e39e36bafbe57ad43e0718aec1a3f975c77fd834cef95e3858597aeb553dd479",
+        "companion/process.py": "500b9a1cfac6aded8028923aa2ba35c14b4efa6677c2d8a81bfdff85cb0c266d",
+        "companion/toolchains.py": "85a05055679bf019083f5cf49244688b574922bd189dc88307c82a19209b2af8",
+        "scripts/probe_toolchain.py": "0dc0d36ab70f816ca4b2ea90a4a265d4b0c07a5bfebea418037d120ffdc9d26e"
+      },
+      "fixture_sha256": {
+        "formal/bad.sby": "22efd573b67bda3f3ca48e219cf8cd037e27cc671b13141d31553ee2662dee34",
+        "formal/bad.sv": "eb307c86c6ae93064f44115f33a586b629e429a52e403fd35cc3faec14907b67",
+        "formal/good.sby": "fc19c2609e5f1b45a03ef7d9a282cd92262ecc2a33a473047fca2c64d8045461",
+        "formal/good.sv": "6ccf9855c885a2991db3e2b53bf4b947d9861aa5e6368f8c34a4808ed612af9a",
+        "src/io.cst": "3226e050934c81563db1242fb2d1bf95066fb9d44cffa0c061866d59111e4878",
+        "src/io.pcf": "97ae9b2c677d62cdfea5486a366535505dce5f2180961330abce1ac4707e124d",
+        "src/m0_fpga.v": "3dee0e1e7fc940e8f05185431c5d4a4d9b9254b3f1043f87eb139f3d66cccc5d",
+        "src/m0_gate.v": "ad3ef15d3236ddd1938216b9342606fffc34ce1fd466c9363f9a383a8d1c9239",
+        "src/m0_sv.sv": "8ea99a4c742652e65c0948980770ebfe0d82b600b5fa9b4818624148e8a4a937",
+        "src/m0_vhdl.vhd": "c4d34c7683974d7092950955567040812f9b5bf17f40b48896a2e17e04b9fe62",
+        "test/__init__.py": "f7436bf802698546bfd6f6d9fc6c5b01540a553b015edecb2e6c010469470627",
+        "test/test_m0_cocotb.py": "9497c26c826c1080ede032d51241023732bbefa3467ace087f609183dcf78fcf",
+        "test/test_m0_gate.v": "841ef9457f6851014fd64589d55f4cb8fd2af520696bc679bdafda1587824ede",
+        "test/test_m0_sv.sv": "11a9d7c487d9dcafcd1c90d9ac0b3631702dcd403a2ad1f7fbd20c0e0807a0e6",
+        "test/test_m0_vhdl.vhd": "439bc82fbf99b6e951a48a4b143131ea1a86be01dfb2e48d69fef14f1e5b2fae"
+      },
+      "report_sha256": "adff59a6bba3e85960026d51c7e7ff828c9f192d65e70cd2564a5b538a270463",
+      "acquisition_report_sha256": "0c7d380a8ae4c2e52dca998ec34c7d44fb62a3a481c7d30bc6e00128261e1863",
+      "workflow_results": {
+        "verilog_simulation": {
+          "state": "passed",
+          "required_tools": [
+            "iverilog",
+            "vvp"
+          ],
+          "missing_tools": [],
+          "returncode": 0,
+          "note": "Actual HDL assertions completed.",
+          "log_sha256": "ed2b1d1f5a99ac5ec00beb863f59c99c687b5636e884dc9c90d84404c0d041f7",
+          "duration_seconds": 0.141
+        },
+        "systemverilog_simulation": {
+          "state": "passed",
+          "required_tools": [
+            "iverilog",
+            "vvp"
+          ],
+          "missing_tools": [],
+          "returncode": 0,
+          "note": "Actual HDL assertions completed.",
+          "log_sha256": "84ac063a27331fc4f3a2101f4f867ba6944a9d50788b692949f23e7099b83333",
+          "duration_seconds": 0.141
+        },
+        "waveforms": {
+          "state": "passed",
+          "required_tools": [
+            "iverilog",
+            "vvp"
+          ],
+          "missing_tools": [],
+          "returncode": 0,
+          "note": "Expected VCD declarations and time changes.",
+          "log_sha256": "0f00e88d9410c104b8315b7ac45fa577e7a3e999d21c5bfc4f58a7e03c58b3d3",
+          "duration_seconds": 0.162
+        },
+        "cocotb_verilog": {
+          "state": "passed",
+          "required_tools": [
+            "iverilog",
+            "vvp",
+            "cocotb-config"
+          ],
+          "missing_tools": [],
+          "returncode": 0,
+          "note": "Cocotb truth-table assertions reported passing test cases.",
+          "log_sha256": "9a96d43d07e190408369152e2ebcfa18eaa963d2e0c7960e2315faf3dacbcf16",
+          "duration_seconds": 0.644
+        },
+        "vhdl_simulation": {
+          "state": "passed",
+          "required_tools": [
+            "ghdl"
+          ],
+          "missing_tools": [],
+          "returncode": 0,
+          "note": "Expected VCD declarations and time changes.",
+          "log_sha256": "95ea2684c4e14903c530750201f3dcb4dfa06698d8c5fd060ce2ab31f4326a5c",
+          "duration_seconds": 0.325
+        },
+        "cocotb_vhdl": {
+          "state": "passed",
+          "required_tools": [
+            "ghdl",
+            "cocotb-config"
+          ],
+          "missing_tools": [],
+          "returncode": 0,
+          "note": "Cocotb truth-table assertions reported passing test cases.",
+          "log_sha256": "bdd6cadb6e3b107ea2ffe4c718d0e6c84c074ad20a5a49d77c471db8806484f5",
+          "duration_seconds": 0.666
+        },
+        "lint": {
+          "state": "passed",
+          "required_tools": [
+            "verilator"
+          ],
+          "missing_tools": [],
+          "returncode": 0,
+          "note": "Actual tool command completed.",
+          "log_sha256": "91c0d76fc8bf61eebb25da8389b9d9221b1f8b5eb9e41d20e05b85c8f5237a9d",
+          "duration_seconds": 0.162
+        },
+        "synthesis": {
+          "state": "passed",
+          "required_tools": [
+            "yosys"
+          ],
+          "missing_tools": [],
+          "returncode": 0,
+          "note": "Yosys netlist contains modules.",
+          "log_sha256": "0394037d1a400d6be1330ae7e8ecb200262e816a5fde8ff22354705f9e76876c",
+          "duration_seconds": 0.122
+        },
+        "schematics": {
+          "state": "passed",
+          "required_tools": [
+            "yosys",
+            "dot"
+          ],
+          "missing_tools": [],
+          "returncode": 0,
+          "note": "SVG parsed successfully.",
+          "log_sha256": "d17674429d27d1a24f579769f9012c125eb67165c538678a9d2a85b9d2675f41",
+          "duration_seconds": 0.182
+        },
+        "vhdl_synthesis": {
+          "state": "passed",
+          "required_tools": [
+            "ghdl",
+            "yosys"
+          ],
+          "missing_tools": [],
+          "returncode": 0,
+          "note": "Yosys netlist contains modules.",
+          "log_sha256": "657eee679a3211a8018434ed27734e2a367d86a4a3ec91e42aabc8c044cddda4",
+          "duration_seconds": 0.284
+        },
+        "formal_proof": {
+          "state": "passed",
+          "required_tools": [
+            "sby",
+            "yosys",
+            "z3"
+          ],
+          "missing_tools": [],
+          "returncode": 0,
+          "note": "Expected SBY PASS status file.",
+          "log_sha256": "bf9ed5a2c848fe76049cfcfcac2ee632b7068b8f2b692f4b0e801b3a2cd4e1fa",
+          "duration_seconds": 0.343
+        },
+        "formal_counterexample": {
+          "state": "passed",
+          "required_tools": [
+            "sby",
+            "yosys",
+            "z3"
+          ],
+          "missing_tools": [],
+          "returncode": 2,
+          "note": "Expected SBY FAIL and nonempty counterexample VCD.",
+          "log_sha256": "5c718f8777047b86e8af8a32967d204fbcbe15e537274898b99f6d00d17c43d0",
+          "duration_seconds": 0.283
+        },
+        "fpga_tangnano9k_build": {
+          "state": "passed",
+          "required_tools": [
+            "yosys",
+            "nextpnr-gowin",
+            "gowin_pack"
+          ],
+          "missing_tools": [],
+          "returncode": 0,
+          "note": "Expected nonempty packed bitstream; no USB programming performed.",
+          "log_sha256": "29ee750d7a4b4299bbad6973b50d39b19dde7d2b94e6e310c08f97efaf652af4",
+          "duration_seconds": 2.633
+        },
+        "fpga_icebreaker_build": {
+          "state": "passed",
+          "required_tools": [
+            "yosys",
+            "nextpnr-ice40",
+            "icepack"
+          ],
+          "missing_tools": [],
+          "returncode": 0,
+          "note": "Expected nonempty packed bitstream; no USB programming performed.",
+          "log_sha256": "ed305d3a1c3e70f9888ac94d7912499db9196c85ab97d5080e44be2cb8a10371",
+          "duration_seconds": 0.725
+        }
+      },
+      "passed_workflows": 14,
+      "total_workflows": 14,
+      "tools": {
+        "iverilog": {
+          "state": "available",
+          "version": "Icarus Verilog version 14.0 (devel) (s20260301-596-gad0260be5-dirty)\n\nCopyright (c) 2000-2026 Stephen Williams (steve@icarus.com)\n\n  This program is free software; you can redistribute it and/or modify\n  it under the terms of the GNU General Public License as published by",
+          "binary": {
+            "format": "script",
+            "architectures": [],
+            "interpreter": "/usr/bin/env bash"
+          },
+          "compatibility": {
+            "mechanism": "native",
+            "verified": false,
+            "note": "Header matches host; real workflow probe still required."
+          }
+        },
+        "vvp": {
+          "state": "available",
+          "version": "Icarus Verilog runtime version 14.0 (devel) (s20260301-596-gad0260be5-dirty)\n\nCopyright (c) 2001-2026 Stephen Williams (steve@icarus.com)\n\n  This program is free software; you can redistribute it and/or modify\n  it under the terms of the GNU General Public License as published by",
+          "binary": {
+            "format": "script",
+            "architectures": [],
+            "interpreter": "/usr/bin/env bash"
+          },
+          "compatibility": {
+            "mechanism": "native",
+            "verified": false,
+            "note": "Header matches host; real workflow probe still required."
+          }
+        },
+        "verilator": {
+          "state": "available",
+          "version": "Verilator 5.053 devel rev v5.052-472-g1cfb3b89a (mod)",
+          "binary": {
+            "format": "script",
+            "architectures": [],
+            "interpreter": "/usr/bin/env perl"
+          },
+          "compatibility": {
+            "mechanism": "unknown",
+            "verified": false,
+            "note": "Launcher or binary architecture needs runtime-set validation."
+          }
+        },
+        "ghdl": {
+          "state": "available",
+          "version": "GHDL 7.0.0-dev (6.0.0.r541.ge76fc566c.dirty) [Dunoon edition]\n Compiled with GNAT Version: 14.3.0\n llvm 21.1.8 code generator\nWritten by Tristan Gingold.\n\nCopyright (C) 2003 - 2026 Tristan Gingold.",
+          "binary": {
+            "format": "script",
+            "architectures": [],
+            "interpreter": "/usr/bin/env bash"
+          },
+          "compatibility": {
+            "mechanism": "native",
+            "verified": false,
+            "note": "Header matches host; real workflow probe still required."
+          }
+        },
+        "cocotb-config": {
+          "state": "available",
+          "version": "2.1.0.dev0+41564633",
+          "binary": {
+            "format": "script",
+            "architectures": [],
+            "interpreter": "/usr/bin/env bash"
+          },
+          "compatibility": {
+            "mechanism": "unknown",
+            "verified": false,
+            "note": "Launcher or binary architecture needs runtime-set validation."
+          }
+        },
+        "sv2v": {
+          "state": "missing",
+          "version": null
+        },
+        "yosys": {
+          "state": "available",
+          "version": "Yosys 0.70+157 (git sha1 af9f71e51, Release, Clang /usr/bin/clang++ 21.1.8)",
+          "binary": {
+            "format": "script",
+            "architectures": [],
+            "interpreter": "/usr/bin/env bash"
+          },
+          "compatibility": {
+            "mechanism": "native",
+            "verified": false,
+            "note": "Header matches host; real workflow probe still required."
+          }
+        },
+        "dot": {
+          "state": "available",
+          "version": "dot - graphviz version 2.43.20190912.0211 (20190912.0211)",
+          "binary": {
+            "format": "script",
+            "architectures": [],
+            "interpreter": "/usr/bin/env bash"
+          },
+          "compatibility": {
+            "mechanism": "native",
+            "verified": false,
+            "note": "Header matches host; real workflow probe still required."
+          }
+        },
+        "netlistsvg": {
+          "state": "missing",
+          "version": null
+        },
+        "sby": {
+          "state": "available",
+          "version": "SBY v0.70-9-g79fc9ed",
+          "binary": {
+            "format": "script",
+            "architectures": [],
+            "interpreter": "/usr/bin/env bash"
+          },
+          "compatibility": {
+            "mechanism": "unknown",
+            "verified": false,
+            "note": "Launcher or binary architecture needs runtime-set validation."
+          }
+        },
+        "z3": {
+          "state": "available",
+          "version": "Z3 version 4.15.5 - 64 bit",
+          "binary": {
+            "format": "script",
+            "architectures": [],
+            "interpreter": "/usr/bin/env bash"
+          },
+          "compatibility": {
+            "mechanism": "native",
+            "verified": false,
+            "note": "Header matches host; real workflow probe still required."
+          }
+        },
+        "nextpnr-gowin": {
+          "state": "available",
+          "version": "\"nextpnr-himbaechel\" -- Next Generation Place and Route (Version nextpnr-0.11.1-65-ge677d5c3)",
+          "binary": {
+            "format": "script",
+            "architectures": [],
+            "interpreter": "/usr/bin/env bash"
+          },
+          "compatibility": {
+            "mechanism": "native",
+            "verified": false,
+            "note": "Header matches host; real workflow probe still required."
+          }
+        },
+        "gowin_pack": {
+          "state": "available",
+          "version": "/home/runner/work/verilog-workbench/verilog-workbench/.m0-tools/oss-cad-suite-2026-10-18-linux-x64/oss-cad-suite/lib/python3.11/site-packages/apycula/bitmatrix.py:60: UserWarning: Numpy is not available, performance will be degraded.\n  warnings.warn(\"Numpy is not available, performance will be degraded.\")\n/home/runner/work/verilog-workbench/verilog-workbench/.m0-tools/oss-cad-suite-2026-10-18-linux-x64/oss-cad-suite/lib/python3.11/site-packages/apycula/chipdb.py:261: UserWarning: Msgspec is not available, performance will be degraded.\n  warnings.warn(\"Msgspec is not available, performance will be degraded.\")\nusage: gowin_pack [-h] [-d DEVICE] [-o OUTPUT] [-c] [-s CST] [--jtag_as_gpio]\n                  [--sspi_as_gpio] [--mspi_as_gpio] [--ready_as_gpio]",
+          "binary": {
+            "format": "script",
+            "architectures": [],
+            "interpreter": "/usr/bin/env bash"
+          },
+          "compatibility": {
+            "mechanism": "unknown",
+            "verified": false,
+            "note": "Launcher or binary architecture needs runtime-set validation."
+          }
+        },
+        "nextpnr-ice40": {
+          "state": "available",
+          "version": "\"nextpnr-ice40\" -- Next Generation Place and Route (Version nextpnr-0.11.1-65-ge677d5c3)",
+          "binary": {
+            "format": "script",
+            "architectures": [],
+            "interpreter": "/usr/bin/env bash"
+          },
+          "compatibility": {
+            "mechanism": "native",
+            "verified": false,
+            "note": "Header matches host; real workflow probe still required."
+          }
+        },
+        "icepack": {
+          "state": "available",
+          "version": "Usage: /home/runner/work/verilog-workbench/verilog-workbench/.m0-tools/oss-cad-suite-2026-10-18-linux-x64/oss-cad-suite/libexec/icepack [options] [input-file [output-file]]\n\n    -u\n        unpack mode (implied when called as 'iceunpack')\n\n    -v",
+          "binary": {
+            "format": "script",
+            "architectures": [],
+            "interpreter": "/usr/bin/env bash"
+          },
+          "compatibility": {
+            "mechanism": "native",
+            "verified": false,
+            "note": "Header matches host; real workflow probe still required."
+          }
+        },
+        "openFPGALoader": {
+          "state": "available",
+          "version": "openFPGALoader v1.1.1",
+          "binary": {
+            "format": "script",
+            "architectures": [],
+            "interpreter": "/usr/bin/env bash"
+          },
+          "compatibility": {
+            "mechanism": "native",
+            "verified": false,
+            "note": "Header matches host; real workflow probe still required."
+          }
+        }
+      },
+      "supplemental_packages": [],
+      "suite_archive": {
+        "release": "2026-10-18",
+        "archive": "oss-cad-suite-linux-x64-20261018.tgz",
+        "sha256": "639c8c0366d74dc56201729c9907bf2d8281db7f18bb025abe2e4f3f2ebaa24e",
+        "size_bytes": 748315612,
+        "relocatable": true
+      }
+    },
+    {
+      "name": "Toolchain feasibility windows-arm64",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/sfmth/verilog-workbench/actions/runs/39362079646/job/118430317787",
+      "job_id": 118430317787,
+      "target": "windows-arm64",
+      "platform": {
+        "target": "windows-arm64",
+        "system": "windows",
+        "architecture": "arm64",
+        "architecture_detection": "IsWow64Process2 native machine",
+        "release": "11",
+        "version": "10.0.26200",
+        "distribution": {}
+      },
+      "runtime": {
+        "python": "3.12.10 (tags/v3.12.10:0cc8128, Apr  8 2025, 12:21:36) [MSC v.1943 64 bit (AMD64)]",
+        "architecture": "arm64",
+        "binary": {
+          "format": "pe",
+          "architectures": [
+            "x64"
+          ]
+        }
+      },
+      "source_sha256": {
+        "vwb.py": "89ab61b9c975c4226527128285102010c0c6e10dc9dd13e2bcecec9ff9fdb8f3",
+        "companion/process.py": "d61e4905168e2e42015ac068e62aada4676baf968566d530d7a855c89333ba8f",
+        "companion/toolchains.py": "4b33da4d0d441de40c6d35c76604b940cdb37180e7bbe4f65637d3603527c6bd",
+        "scripts/probe_toolchain.py": "60d4fba608caa2a1805392bbb1f44b57476481559d46ee8ffa2d546343e38b7e"
+      },
+      "fixture_sha256": {
+        "formal\\bad.sby": "a9f6317907d3d4ffd02b8ea393398f8f607617d03eed9db183902a66633661e3",
+        "formal\\bad.sv": "94607798d3b42e70b0d6a409b7421577cfd5418b0484616b19a0b28e0ca23779",
+        "formal\\good.sby": "2d91d18b8da70f02f73369d82a34c15256c973de59297a149336f359502dd539",
+        "formal\\good.sv": "b33ba77b48448c06f0adb93fb0fc223fe0dfba8d574543e622a558a29ba2b1b5",
+        "src\\io.cst": "359b4559b96a3c477a3aef55f1efad9654eeaa7140018b29a937da56ae8f2c48",
+        "src\\io.pcf": "c6d7f52dcd8845b195040fbf7de6375acb704a1de1c1a8f444f2d473e1a6e826",
+        "src\\m0_fpga.v": "d1e1421aa82f658022ea9a369e52db41d441dd6378b0a02ecf71128b1da237ad",
+        "src\\m0_gate.v": "8bab2889caa12c99b813be48e282d1b05339d71266a284b96247b7a57ca8daa3",
+        "src\\m0_sv.sv": "21e0a14d9f58423285cb15bf49593081e2e0117f89d0370b17551c0ba8792bb1",
+        "src\\m0_vhdl.vhd": "e4183e617cbbd5e41aa450f02af96047f2100a7fa77d1e9960c7c32e76ff6211",
+        "test\\__init__.py": "1b3f3dd0bd4fe73bce1c784f0be9da1f6395e22dbaa922f09abf3e9d7c0f5c09",
+        "test\\test_m0_cocotb.py": "415ca1c30bcce8b8f6ae352291c3187f79b8125736060f453c8c3e5aa9d5808c",
+        "test\\test_m0_gate.v": "efa6faa3fa3f5f4613a3a992fb96d7969698034de9cedcf72ee528392632ce71",
+        "test\\test_m0_sv.sv": "7eedc9d396aa5eed028d455efdcb6fdff4a0aa72e7b3c1b224deb5b86bd2d889",
+        "test\\test_m0_vhdl.vhd": "92b770d46a1f67416692f8e3a041cfe502dcfed12daf642d68199d7a930d596f"
+      },
+      "report_sha256": "6bfecbe38918fc182306069812a2f3dd6e1a5bc0505fcef264b89ca20bcd36ea",
+      "acquisition_report_sha256": "e0fb073295bc2e8ac0609856bca3f3e6d19c6e4fc60266ceef8121fb9c119aa0",
+      "workflow_results": {
+        "verilog_simulation": {
+          "state": "passed",
+          "required_tools": [
+            "iverilog",
+            "vvp"
+          ],
+          "missing_tools": [],
+          "returncode": 0,
+          "note": "Actual HDL assertions completed.",
+          "log_sha256": "cb1ada4216d52cb33eaafc722e4c313cb76e0777e8dbe04d93c7f484175e9964",
+          "duration_seconds": 0.672
+        },
+        "systemverilog_simulation": {
+          "state": "passed",
+          "required_tools": [
+            "iverilog",
+            "vvp"
+          ],
+          "missing_tools": [],
+          "returncode": 0,
+          "note": "Actual HDL assertions completed.",
+          "log_sha256": "04bcb9a388545e9a55d2ac5c6e533a6b1cc99572771d24c78790a7157d09e93a",
+          "duration_seconds": 0.625
+        },
+        "waveforms": {
+          "state": "passed",
+          "required_tools": [
+            "iverilog",
+            "vvp"
+          ],
+          "missing_tools": [],
+          "returncode": 0,
+          "note": "Expected VCD declarations and time changes.",
+          "log_sha256": "e0e9f195970fc9d1e38a2ae89f2613ba9653739d48e94a9c6d53421dbec39c7d",
+          "duration_seconds": 0.766
+        },
+        "cocotb_verilog": {
+          "state": "passed",
+          "required_tools": [
+            "iverilog",
+            "vvp",
+            "cocotb-config"
+          ],
+          "missing_tools": [],
+          "returncode": 0,
+          "note": "Cocotb truth-table assertions reported passing test cases.",
+          "log_sha256": "53c6892bf4e156ad9b33752afec67de221b8e396836f30ca8c92c43c9c907eff",
+          "duration_seconds": 2.938
+        },
+        "vhdl_simulation": {
+          "state": "passed",
+          "required_tools": [
+            "ghdl"
+          ],
+          "missing_tools": [],
+          "returncode": 0,
+          "note": "Expected VCD declarations and time changes.",
+          "log_sha256": "1b9fefe857d9365aca8c3b1a434bf295e4fdd045da41a99c3177ef5dddd775a9",
+          "duration_seconds": 0.954
+        },
+        "cocotb_vhdl": {
+          "state": "passed",
+          "required_tools": [
+            "ghdl",
+            "cocotb-config"
+          ],
+          "missing_tools": [],
+          "returncode": 0,
+          "note": "Cocotb truth-table assertions reported passing test cases.",
+          "log_sha256": "c9f33f69aa5554a0343798a47469113247d23178a46b0a9e9bad22f10f14c01d",
+          "duration_seconds": 2.688
+        },
+        "lint": {
+          "state": "passed",
+          "required_tools": [
+            "verilator"
+          ],
+          "missing_tools": [],
+          "returncode": 0,
+          "note": "Actual tool command completed.",
+          "log_sha256": "381ec94516ae5a5df85770036b01cede0d6de598145431a7d750c14b55110910",
+          "duration_seconds": 0.609
+        },
+        "synthesis": {
+          "state": "passed",
+          "required_tools": [
+            "yosys"
+          ],
+          "missing_tools": [],
+          "returncode": 0,
+          "note": "Yosys netlist contains modules.",
+          "log_sha256": "1bd2788352099b13ab183a4d2693fc40e4e0fc303c574cb37eb7a441f3748fc4",
+          "duration_seconds": 0.609
+        },
+        "schematics": {
+          "state": "passed",
+          "required_tools": [
+            "yosys",
+            "dot"
+          ],
+          "missing_tools": [],
+          "returncode": 0,
+          "note": "SVG parsed successfully.",
+          "log_sha256": "daed0f2ae8352400f75ccab6619e5ffad00a3f4c713581bd0b95d23b448b30f1",
+          "duration_seconds": 6.437
+        },
+        "vhdl_synthesis": {
+          "state": "passed",
+          "required_tools": [
+            "ghdl",
+            "yosys"
+          ],
+          "missing_tools": [],
+          "returncode": 0,
+          "note": "Yosys netlist contains modules.",
+          "log_sha256": "a9ac8ba266c3a466c204c345eb89b2a80892f471fc44b7aad54101cbfb09ca30",
+          "duration_seconds": 0.812
+        },
+        "formal_proof": {
+          "state": "passed",
+          "required_tools": [
+            "sby",
+            "yosys",
+            "z3"
+          ],
+          "missing_tools": [],
+          "returncode": 0,
+          "note": "Expected SBY PASS status file.",
+          "log_sha256": "95bf6a79d124f81d8daf2182eb2de3b6d8eae8d947e46df2ea4ea17515045c0c",
+          "duration_seconds": 1.875
+        },
+        "formal_counterexample": {
+          "state": "passed",
+          "required_tools": [
+            "sby",
+            "yosys",
+            "z3"
+          ],
+          "missing_tools": [],
+          "returncode": 2,
+          "note": "Expected SBY FAIL and nonempty counterexample VCD.",
+          "log_sha256": "bd8aeece013111597bdabb42c5cf62566b79730a29bdaab7b3635c9448716964",
+          "duration_seconds": 1.672
+        },
+        "fpga_tangnano9k_build": {
+          "state": "passed",
+          "required_tools": [
+            "yosys",
+            "nextpnr-gowin",
+            "gowin_pack"
+          ],
+          "missing_tools": [],
+          "returncode": 0,
+          "note": "Expected nonempty packed bitstream; no USB programming performed.",
+          "log_sha256": "819d2366575f49e7026b862bb518bc2b3ca010c2524bbf7a56f8d68b6b66adb9",
+          "duration_seconds": 7.328
+        },
+        "fpga_icebreaker_build": {
+          "state": "passed",
+          "required_tools": [
+            "yosys",
+            "nextpnr-ice40",
+            "icepack"
+          ],
+          "missing_tools": [],
+          "returncode": 0,
+          "note": "Expected nonempty packed bitstream; no USB programming performed.",
+          "log_sha256": "d30b807d01332dbdb8af84404c3fef6a1d69f7bbb8604d6f54d0eb07cf19e239",
+          "duration_seconds": 2.906
+        }
+      },
+      "passed_workflows": 14,
+      "total_workflows": 14,
+      "tools": {
+        "iverilog": {
+          "state": "available",
+          "version": "Icarus Verilog version 14.0 (devel) (s20260301-596-gad0260be5-dirty)\n\nCopyright (c) 2000-2026 Stephen Williams (steve@icarus.com)\n\n  This program is free software; you can redistribute it and/or modify\n  it under the terms of the GNU General Public License as published by",
+          "binary": {
+            "format": "pe",
+            "architectures": [
+              "x64"
+            ]
+          },
+          "compatibility": {
+            "mechanism": "windows-11-x64-emulation",
+            "verified": false,
+            "note": "OS-provided translation candidate; runtime/library and device-driver tests required."
+          }
+        },
+        "vvp": {
+          "state": "available",
+          "version": "Icarus Verilog runtime version 14.0 (devel) (s20260301-596-gad0260be5-dirty)\n\nCopyright (c) 2001-2026 Stephen Williams (steve@icarus.com)\n\n  This program is free software; you can redistribute it and/or modify\n  it under the terms of the GNU General Public License as published by",
+          "binary": {
+            "format": "pe",
+            "architectures": [
+              "x64"
+            ]
+          },
+          "compatibility": {
+            "mechanism": "windows-11-x64-emulation",
+            "verified": false,
+            "note": "OS-provided translation candidate; runtime/library and device-driver tests required."
+          }
+        },
+        "verilator": {
+          "state": "available",
+          "version": "Verilator 5.053 devel rev v5.052-472-g1cfb3b89a (mod)",
+          "binary": {
+            "format": "pe",
+            "architectures": [
+              "x64"
+            ]
+          },
+          "compatibility": {
+            "mechanism": "windows-11-x64-emulation",
+            "verified": false,
+            "note": "OS-provided translation candidate; runtime/library and device-driver tests required."
+          }
+        },
+        "ghdl": {
+          "state": "available",
+          "version": "GHDL 6.0.0 (6.0.0.r0.ge589c698c.dirty) [Dunoon edition]\n Compiled with GNAT Version: 15.2.0\n static elaboration, mcode JIT code generator\nWritten by Tristan Gingold.\n\nCopyright (C) 2003 - 2026 Tristan Gingold.",
+          "binary": {
+            "format": "pe",
+            "architectures": [
+              "x64"
+            ]
+          },
+          "compatibility": {
+            "mechanism": "windows-11-x64-emulation",
+            "verified": false,
+            "note": "OS-provided translation candidate; runtime/library and device-driver tests required."
+          }
+        },
+        "cocotb-config": {
+          "state": "available",
+          "version": "2.1.0",
+          "binary": {
+            "format": "pe",
+            "architectures": [
+              "x64"
+            ]
+          },
+          "compatibility": {
+            "mechanism": "windows-11-x64-emulation",
+            "verified": false,
+            "note": "OS-provided translation candidate; runtime/library and device-driver tests required."
+          }
+        },
+        "sv2v": {
+          "state": "missing",
+          "version": null
+        },
+        "yosys": {
+          "state": "available",
+          "version": "Yosys 0.70+157 (git sha1 af9f71e51, Release, GNU /usr/bin/x86_64-w64-mingw32-g++ 15.2.1)",
+          "binary": {
+            "format": "pe",
+            "architectures": [
+              "x64"
+            ]
+          },
+          "compatibility": {
+            "mechanism": "windows-11-x64-emulation",
+            "verified": false,
+            "note": "OS-provided translation candidate; runtime/library and device-driver tests required."
+          }
+        },
+        "dot": {
+          "state": "available",
+          "version": "dot - graphviz version 14.1.1 (20251213.1925)",
+          "binary": {
+            "format": "pe",
+            "architectures": [
+              "x64"
+            ]
+          },
+          "compatibility": {
+            "mechanism": "windows-11-x64-emulation",
+            "verified": false,
+            "note": "OS-provided translation candidate; runtime/library and device-driver tests required."
+          }
+        },
+        "netlistsvg": {
+          "state": "missing",
+          "version": null
+        },
+        "sby": {
+          "state": "available",
+          "version": "SBY v0.70-9-g79fc9ed",
+          "binary": {
+            "format": "pe",
+            "architectures": [
+              "x64"
+            ]
+          },
+          "compatibility": {
+            "mechanism": "windows-11-x64-emulation",
+            "verified": false,
+            "note": "OS-provided translation candidate; runtime/library and device-driver tests required."
+          }
+        },
+        "z3": {
+          "state": "available",
+          "version": "Z3 version 4.15.5 - 64 bit",
+          "binary": {
+            "format": "pe",
+            "architectures": [
+              "x64"
+            ]
+          },
+          "compatibility": {
+            "mechanism": "windows-11-x64-emulation",
+            "verified": false,
+            "note": "OS-provided translation candidate; runtime/library and device-driver tests required."
+          }
+        },
+        "nextpnr-gowin": {
+          "state": "available",
+          "version": "\"nextpnr-himbaechel\" -- Next Generation Place and Route (Version nextpnr-0.11.1-65-ge677d5c3)",
+          "binary": {
+            "format": "pe",
+            "architectures": [
+              "x64"
+            ]
+          },
+          "compatibility": {
+            "mechanism": "windows-11-x64-emulation",
+            "verified": false,
+            "note": "OS-provided translation candidate; runtime/library and device-driver tests required."
+          }
+        },
+        "gowin_pack": {
+          "state": "available",
+          "version": "C:\\a\\verilog-workbench\\verilog-workbench\\.m0-tools\\oss-cad-suite-2026-10-18-windows-x64\\oss-cad-suite\\lib\\python3.11\\site-packages\\apycula\\bitmatrix.py:60: UserWarning: Numpy is not available, performance will be degraded.\n  warnings.warn(\"Numpy is not available, performance will be degraded.\")\nC:\\a\\verilog-workbench\\verilog-workbench\\.m0-tools\\oss-cad-suite-2026-10-18-windows-x64\\oss-cad-suite\\lib\\python3.11\\site-packages\\apycula\\chipdb.py:261: UserWarning: Msgspec is not available, performance will be degraded.\n  warnings.warn(\"Msgspec is not available, performance will be degraded.\")\nusage: gowin_pack-script.py [-h] [-d DEVICE] [-o OUTPUT] [-c] [-s CST]\n                            [--jtag_as_gpio] [--sspi_as_gpio] [--mspi_as_gpio]",
+          "binary": {
+            "format": "pe",
+            "architectures": [
+              "x64"
+            ]
+          },
+          "compatibility": {
+            "mechanism": "windows-11-x64-emulation",
+            "verified": false,
+            "note": "OS-provided translation candidate; runtime/library and device-driver tests required."
+          }
+        },
+        "nextpnr-ice40": {
+          "state": "available",
+          "version": "\"nextpnr-ice40\" -- Next Generation Place and Route (Version nextpnr-0.11.1-65-ge677d5c3)",
+          "binary": {
+            "format": "pe",
+            "architectures": [
+              "x64"
+            ]
+          },
+          "compatibility": {
+            "mechanism": "windows-11-x64-emulation",
+            "verified": false,
+            "note": "OS-provided translation candidate; runtime/library and device-driver tests required."
+          }
+        },
+        "icepack": {
+          "state": "available",
+          "version": "Usage: C:\\a\\verilog-workbench\\verilog-workbench\\.m0-tools\\oss-cad-suite-2026-10-18-windows-x64\\oss-cad-suite\\bin\\icepack.EXE [options] [input-file [output-file]]\n\n    -u\n        unpack mode (implied when called as 'iceunpack')\n\n    -v",
+          "binary": {
+            "format": "pe",
+            "architectures": [
+              "x64"
+            ]
+          },
+          "compatibility": {
+            "mechanism": "windows-11-x64-emulation",
+            "verified": false,
+            "note": "OS-provided translation candidate; runtime/library and device-driver tests required."
+          }
+        },
+        "openFPGALoader": {
+          "state": "available",
+          "version": "openFPGALoader v1.1.1",
+          "binary": {
+            "format": "pe",
+            "architectures": [
+              "x64"
+            ]
+          },
+          "compatibility": {
+            "mechanism": "windows-11-x64-emulation",
+            "verified": false,
+            "note": "OS-provided translation candidate; runtime/library and device-driver tests required."
+          }
+        }
+      },
+      "supplemental_packages": [
+        {
+          "repository": "https://github.com/ghdl/ghdl",
+          "release": "v6.0.0",
+          "name": "ghdl-mcode-6.0.0-mingw64.zip",
+          "size_bytes": 24053403,
+          "sha256": "c1562b2a4767e34d33159b536b5e36a8a38ebdb6e7672aa9969a4f4ac2cadffe",
+          "executable_sha256": "dc983e37f4a606d9803557f728902b8e2bcb96cd9fb3f117307fb4de129e6a91",
+          "binary": {
+            "format": "pe",
+            "architectures": [
+              "x64"
+            ]
+          }
+        },
+        {
+          "provider": "Graphviz",
+          "version": "14.1.1",
+          "name": "windows_10_cmake_Release_Graphviz-14.1.1-win64.zip",
+          "size_bytes": 9780290,
+          "sha256": "2a9b856a6b73591bdef5409e8b47ec6c90df40551d510709e1cb3e69016c1924",
+          "executable_sha256": "5f35dceffab3251cb59f61f4911e0cfccb0c93d0b623c234cad2879141c7429a",
+          "binary": {
+            "format": "pe",
+            "architectures": [
+              "x64"
+            ]
+          }
+        },
+        {
+          "source_sha256": "4d6f5f81a4bca11191c4c7c6b43632694d0a4ce74e068619d8fdc161d469859a",
+          "binary": {
+            "format": "pe",
+            "architectures": [
+              "x64"
+            ]
+          },
+          "runtime": {
+            "implementation": "CPython",
+            "version": [
+              3,
+              12,
+              10
+            ],
+            "compiler": "MSC v.1943 64 bit (AMD64)"
+          },
+          "packages": [
+            {
+              "package": "cocotb",
+              "version": "2.1.0",
+              "name": "cocotb-2.1.0-cp312-cp312-win_amd64.whl",
+              "url": "https://files.pythonhosted.org/packages/4b/34/139b341b7867e129037b2631edb8702fd8b98ae3e1f21713982182b65b01/cocotb-2.1.0-cp312-cp312-win_amd64.whl",
+              "sha256": "069364019aacd0e3a299185bf5145aacb599b0576a0b0f2d2c96d9f8bf73b842",
+              "size_bytes": 659066
+            },
+            {
+              "package": "find-libpython",
+              "version": "0.5.0",
+              "name": "find_libpython-0.5.0-py3-none-any.whl",
+              "url": "https://files.pythonhosted.org/packages/a7/3f/0eb94bfca99e54404901536ea8c80ddacff4953257514c6b8fb01f9a75a8/find_libpython-0.5.0-py3-none-any.whl",
+              "sha256": "7690dcf6442cdce39c0df191903fd5ecf9af437fa920effb6569fbf2c8ca8ab4",
+              "size_bytes": 9194
+            },
+            {
+              "package": "pytest",
+              "version": "8.4.2",
+              "name": "pytest-8.4.2-py3-none-any.whl",
+              "url": "https://files.pythonhosted.org/packages/a8/a4/20da314d277121d6534b3a980b29035dcd51e6744bd79075a6ce8fa4eb8d/pytest-8.4.2-py3-none-any.whl",
+              "sha256": "872f880de3fc3a5bdc88a11b39c9710c3497a547cfa9320bc3c5e62fbf272e79",
+              "size_bytes": 365750
+            },
+            {
+              "package": "iniconfig",
+              "version": "2.1.0",
+              "name": "iniconfig-2.1.0-py3-none-any.whl",
+              "url": "https://files.pythonhosted.org/packages/2c/e1/e6716421ea10d38022b952c159d5161ca1193197fb744506875fbb87ea7b/iniconfig-2.1.0-py3-none-any.whl",
+              "sha256": "9deba5723312380e77435581c6bf4935c94cbfab9b1ed33ef8d238ea168eb760",
+              "size_bytes": 6050
+            },
+            {
+              "package": "packaging",
+              "version": "25.0",
+              "name": "packaging-25.0-py3-none-any.whl",
+              "url": "https://files.pythonhosted.org/packages/20/12/38679034af332785aac8774540895e234f4d07f7545804097de4b666afd8/packaging-25.0-py3-none-any.whl",
+              "sha256": "29572ef2b1f17581046b3a2227d5c611fb25ec70ca1ba8554b24b0e69331a484",
+              "size_bytes": 66469
+            },
+            {
+              "package": "pluggy",
+              "version": "1.6.0",
+              "name": "pluggy-1.6.0-py3-none-any.whl",
+              "url": "https://files.pythonhosted.org/packages/54/20/4d324d65cc6d9205fabedc306948156824eb9f0ee1633355a8f7ec5c66bf/pluggy-1.6.0-py3-none-any.whl",
+              "sha256": "e920276dd6813095e9377c0bc5566d94c932c33b27a3e3945d8389c374dd4746",
+              "size_bytes": 20538
+            },
+            {
+              "package": "pygments",
+              "version": "2.19.2",
+              "name": "pygments-2.19.2-py3-none-any.whl",
+              "url": "https://files.pythonhosted.org/packages/c7/21/705964c7812476f378728bdf590ca4b771ec72385c533964653c68e86bdc/pygments-2.19.2-py3-none-any.whl",
+              "sha256": "86540386c03d588bb81d44bc3928634ff26449851e99741617ecb9037ee5ec0b",
+              "size_bytes": 1225217
+            },
+            {
+              "package": "colorama",
+              "version": "0.4.6",
+              "name": "colorama-0.4.6-py2.py3-none-any.whl",
+              "url": "https://files.pythonhosted.org/packages/d1/d6/3965ed04c63042e047cb6a3e6ed1a63a35087b6a609aa3a15ed8ac56c221/colorama-0.4.6-py2.py3-none-any.whl",
+              "sha256": "4f1d9991f5acc0ca119f9d443620b77f9d6b33703e51011c16baf57afb285fc6",
+              "size_bytes": 25335
+            }
+          ],
+          "compatibility": {
+            "mechanism": "windows-11-x64-emulation",
+            "verified": false,
+            "note": "OS-provided translation candidate; runtime/library and device-driver tests required."
+          },
+          "external_prerequisite": true,
+          "relocatable": false
+        }
+      ],
+      "suite_archive": {
+        "release": "2026-10-18",
+        "archive": "oss-cad-suite-windows-x64-20261018.tgz",
+        "sha256": "c9e2461fdeeee8e186d46951ef64f88fed8c59668ba5f49b4db74ebb23d9da24",
+        "size_bytes": 604040523,
+        "relocatable": true
+      },
+      "architecture_scope": "The host is native Windows ARM64; the simulator, Graphviz and explicitly selected MSVC CPython runtime are x64 and all 14 workflows actually executed through Windows 11 x64 translation. Driver/USB acceptance is separate. Discovery compatibility.verified remains false because it is header metadata, not this execution result."
+    },
+    {
+      "name": "Toolchain feasibility windows-x64",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/sfmth/verilog-workbench/actions/runs/39362079646/job/118430317643",
+      "job_id": 118430317643,
+      "target": "windows-x64",
+      "platform": {
+        "target": "windows-x64",
+        "system": "windows",
+        "architecture": "x64",
+        "architecture_detection": "IsWow64Process2 native machine",
+        "release": "2025Server",
+        "version": "10.0.26100",
+        "distribution": {}
+      },
+      "runtime": {
+        "python": "3.12.10 (tags/v3.12.10:0cc8128, Apr  8 2025, 12:21:36) [MSC v.1943 64 bit (AMD64)]",
+        "architecture": "x64",
+        "binary": {
+          "format": "pe",
+          "architectures": [
+            "x64"
+          ]
+        }
+      },
+      "source_sha256": {
+        "vwb.py": "89ab61b9c975c4226527128285102010c0c6e10dc9dd13e2bcecec9ff9fdb8f3",
+        "companion/process.py": "d61e4905168e2e42015ac068e62aada4676baf968566d530d7a855c89333ba8f",
+        "companion/toolchains.py": "4b33da4d0d441de40c6d35c76604b940cdb37180e7bbe4f65637d3603527c6bd",
+        "scripts/probe_toolchain.py": "60d4fba608caa2a1805392bbb1f44b57476481559d46ee8ffa2d546343e38b7e"
+      },
+      "fixture_sha256": {
+        "formal\\bad.sby": "a9f6317907d3d4ffd02b8ea393398f8f607617d03eed9db183902a66633661e3",
+        "formal\\bad.sv": "94607798d3b42e70b0d6a409b7421577cfd5418b0484616b19a0b28e0ca23779",
+        "formal\\good.sby": "2d91d18b8da70f02f73369d82a34c15256c973de59297a149336f359502dd539",
+        "formal\\good.sv": "b33ba77b48448c06f0adb93fb0fc223fe0dfba8d574543e622a558a29ba2b1b5",
+        "src\\io.cst": "359b4559b96a3c477a3aef55f1efad9654eeaa7140018b29a937da56ae8f2c48",
+        "src\\io.pcf": "c6d7f52dcd8845b195040fbf7de6375acb704a1de1c1a8f444f2d473e1a6e826",
+        "src\\m0_fpga.v": "d1e1421aa82f658022ea9a369e52db41d441dd6378b0a02ecf71128b1da237ad",
+        "src\\m0_gate.v": "8bab2889caa12c99b813be48e282d1b05339d71266a284b96247b7a57ca8daa3",
+        "src\\m0_sv.sv": "21e0a14d9f58423285cb15bf49593081e2e0117f89d0370b17551c0ba8792bb1",
+        "src\\m0_vhdl.vhd": "e4183e617cbbd5e41aa450f02af96047f2100a7fa77d1e9960c7c32e76ff6211",
+        "test\\__init__.py": "1b3f3dd0bd4fe73bce1c784f0be9da1f6395e22dbaa922f09abf3e9d7c0f5c09",
+        "test\\test_m0_cocotb.py": "415ca1c30bcce8b8f6ae352291c3187f79b8125736060f453c8c3e5aa9d5808c",
+        "test\\test_m0_gate.v": "efa6faa3fa3f5f4613a3a992fb96d7969698034de9cedcf72ee528392632ce71",
+        "test\\test_m0_sv.sv": "7eedc9d396aa5eed028d455efdcb6fdff4a0aa72e7b3c1b224deb5b86bd2d889",
+        "test\\test_m0_vhdl.vhd": "92b770d46a1f67416692f8e3a041cfe502dcfed12daf642d68199d7a930d596f"
+      },
+      "report_sha256": "7477d9b511ccb38413b2a727f9db82127834a62ac009cfa7f1fb4f68faf89659",
+      "acquisition_report_sha256": "e738813f876fbfe2f02f9f89c1f18b41f81bb778d03aca7373ee80a42d132a17",
+      "workflow_results": {
+        "verilog_simulation": {
+          "state": "passed",
+          "required_tools": [
+            "iverilog",
+            "vvp"
+          ],
+          "missing_tools": [],
+          "returncode": 0,
+          "note": "Actual HDL assertions completed.",
+          "log_sha256": "b2597fb012e2ea41b6bae8ce43cf3561e80a39cb40ccc7503b3a52f2e0084672",
+          "duration_seconds": 0.25
+        },
+        "systemverilog_simulation": {
+          "state": "passed",
+          "required_tools": [
+            "iverilog",
+            "vvp"
+          ],
+          "missing_tools": [],
+          "returncode": 0,
+          "note": "Actual HDL assertions completed.",
+          "log_sha256": "1746251309ef49f0d4f10ac11a1a6de4cfb7461643578544035636d4803092ef",
+          "duration_seconds": 0.25
+        },
+        "waveforms": {
+          "state": "passed",
+          "required_tools": [
+            "iverilog",
+            "vvp"
+          ],
+          "missing_tools": [],
+          "returncode": 0,
+          "note": "Expected VCD declarations and time changes.",
+          "log_sha256": "ba05fac94f5e1f352d86f6d83fde53b8d29e4e19d2a278267d3cdaa66f106062",
+          "duration_seconds": 0.297
+        },
+        "cocotb_verilog": {
+          "state": "passed",
+          "required_tools": [
+            "iverilog",
+            "vvp",
+            "cocotb-config"
+          ],
+          "missing_tools": [],
+          "returncode": 0,
+          "note": "Cocotb truth-table assertions reported passing test cases.",
+          "log_sha256": "6844d1dc16b0542ab23be631ab58238c6674bdf998e7c581ac8a865861188e10",
+          "duration_seconds": 1.312
+        },
+        "vhdl_simulation": {
+          "state": "passed",
+          "required_tools": [
+            "ghdl"
+          ],
+          "missing_tools": [],
+          "returncode": 0,
+          "note": "Expected VCD declarations and time changes.",
+          "log_sha256": "283136d75f7b84a6ba7d61a217f563da02799a8670a7896e7c6c553a9b19b7e6",
+          "duration_seconds": 0.344
+        },
+        "cocotb_vhdl": {
+          "state": "passed",
+          "required_tools": [
+            "ghdl",
+            "cocotb-config"
+          ],
+          "missing_tools": [],
+          "returncode": 0,
+          "note": "Cocotb truth-table assertions reported passing test cases.",
+          "log_sha256": "ce5194ae0faee2d1153fc83a805cfb6745230a1d73a8c3f47d85e22a4bbdb5dd",
+          "duration_seconds": 1.141
+        },
+        "lint": {
+          "state": "passed",
+          "required_tools": [
+            "verilator"
+          ],
+          "missing_tools": [],
+          "returncode": 0,
+          "note": "Actual tool command completed.",
+          "log_sha256": "b3ad3a6bdca02c875922bc720aae7a57c490b2b329f1e9ba02d8aeb125595355",
+          "duration_seconds": 0.187
+        },
+        "synthesis": {
+          "state": "passed",
+          "required_tools": [
+            "yosys"
+          ],
+          "missing_tools": [],
+          "returncode": 0,
+          "note": "Yosys netlist contains modules.",
+          "log_sha256": "febd92c9da25f1ae162b9513af1992079d2301aa2b6938cd95b1257cc6417dd0",
+          "duration_seconds": 0.219
+        },
+        "schematics": {
+          "state": "passed",
+          "required_tools": [
+            "yosys",
+            "dot"
+          ],
+          "missing_tools": [],
+          "returncode": 0,
+          "note": "SVG parsed successfully.",
+          "log_sha256": "914dc713507ab97f2125477db22074bbaa36d9cb9462ec3c80ef79ccbb834fd1",
+          "duration_seconds": 6.187
+        },
+        "vhdl_synthesis": {
+          "state": "passed",
+          "required_tools": [
+            "ghdl",
+            "yosys"
+          ],
+          "missing_tools": [],
+          "returncode": 0,
+          "note": "Yosys netlist contains modules.",
+          "log_sha256": "0e731b817fd59d1e025bac42058ab72067c9e36037b1fd5d04fb6b24c3e29684",
+          "duration_seconds": 0.391
+        },
+        "formal_proof": {
+          "state": "passed",
+          "required_tools": [
+            "sby",
+            "yosys",
+            "z3"
+          ],
+          "missing_tools": [],
+          "returncode": 0,
+          "note": "Expected SBY PASS status file.",
+          "log_sha256": "088888d7582c41050e885a2f49b4d2f8b9c58bcb6f1d824683509d2d1bb016ce",
+          "duration_seconds": 1.015
+        },
+        "formal_counterexample": {
+          "state": "passed",
+          "required_tools": [
+            "sby",
+            "yosys",
+            "z3"
+          ],
+          "missing_tools": [],
+          "returncode": 2,
+          "note": "Expected SBY FAIL and nonempty counterexample VCD.",
+          "log_sha256": "2e45465ed619c210193e7588f490fd027bb35301be5b45dbac91db3cef8ab119",
+          "duration_seconds": 0.875
+        },
+        "fpga_tangnano9k_build": {
+          "state": "passed",
+          "required_tools": [
+            "yosys",
+            "nextpnr-gowin",
+            "gowin_pack"
+          ],
+          "missing_tools": [],
+          "returncode": 0,
+          "note": "Expected nonempty packed bitstream; no USB programming performed.",
+          "log_sha256": "85489608d2507951871065800691fa5f3c9c6bab1428596349d3680b488be218",
+          "duration_seconds": 3.484
+        },
+        "fpga_icebreaker_build": {
+          "state": "passed",
+          "required_tools": [
+            "yosys",
+            "nextpnr-ice40",
+            "icepack"
+          ],
+          "missing_tools": [],
+          "returncode": 0,
+          "note": "Expected nonempty packed bitstream; no USB programming performed.",
+          "log_sha256": "2052864cd9eb970f29cd60401409ed7a77973e948acd54e846de92dfc588d6d4",
+          "duration_seconds": 0.969
+        }
+      },
+      "passed_workflows": 14,
+      "total_workflows": 14,
+      "tools": {
+        "iverilog": {
+          "state": "available",
+          "version": "Icarus Verilog version 14.0 (devel) (s20260301-596-gad0260be5-dirty)\n\nCopyright (c) 2000-2026 Stephen Williams (steve@icarus.com)\n\n  This program is free software; you can redistribute it and/or modify\n  it under the terms of the GNU General Public License as published by",
+          "binary": {
+            "format": "pe",
+            "architectures": [
+              "x64"
+            ]
+          },
+          "compatibility": {
+            "mechanism": "native",
+            "verified": false,
+            "note": "Header matches host; real workflow probe still required."
+          }
+        },
+        "vvp": {
+          "state": "available",
+          "version": "Icarus Verilog runtime version 14.0 (devel) (s20260301-596-gad0260be5-dirty)\n\nCopyright (c) 2001-2026 Stephen Williams (steve@icarus.com)\n\n  This program is free software; you can redistribute it and/or modify\n  it under the terms of the GNU General Public License as published by",
+          "binary": {
+            "format": "pe",
+            "architectures": [
+              "x64"
+            ]
+          },
+          "compatibility": {
+            "mechanism": "native",
+            "verified": false,
+            "note": "Header matches host; real workflow probe still required."
+          }
+        },
+        "verilator": {
+          "state": "available",
+          "version": "Verilator 5.053 devel rev v5.052-472-g1cfb3b89a (mod)",
+          "binary": {
+            "format": "pe",
+            "architectures": [
+              "x64"
+            ]
+          },
+          "compatibility": {
+            "mechanism": "native",
+            "verified": false,
+            "note": "Header matches host; real workflow probe still required."
+          }
+        },
+        "ghdl": {
+          "state": "available",
+          "version": "GHDL 6.0.0 (6.0.0.r0.ge589c698c.dirty) [Dunoon edition]\n Compiled with GNAT Version: 15.2.0\n static elaboration, mcode JIT code generator\nWritten by Tristan Gingold.\n\nCopyright (C) 2003 - 2026 Tristan Gingold.",
+          "binary": {
+            "format": "pe",
+            "architectures": [
+              "x64"
+            ]
+          },
+          "compatibility": {
+            "mechanism": "native",
+            "verified": false,
+            "note": "Header matches host; real workflow probe still required."
+          }
+        },
+        "cocotb-config": {
+          "state": "available",
+          "version": "2.1.0",
+          "binary": {
+            "format": "pe",
+            "architectures": [
+              "x64"
+            ]
+          },
+          "compatibility": {
+            "mechanism": "native",
+            "verified": false,
+            "note": "Header matches host; real workflow probe still required."
+          }
+        },
+        "sv2v": {
+          "state": "missing",
+          "version": null
+        },
+        "yosys": {
+          "state": "available",
+          "version": "Yosys 0.70+157 (git sha1 af9f71e51, Release, GNU /usr/bin/x86_64-w64-mingw32-g++ 15.2.1)",
+          "binary": {
+            "format": "pe",
+            "architectures": [
+              "x64"
+            ]
+          },
+          "compatibility": {
+            "mechanism": "native",
+            "verified": false,
+            "note": "Header matches host; real workflow probe still required."
+          }
+        },
+        "dot": {
+          "state": "available",
+          "version": "dot - graphviz version 14.1.1 (20251213.1925)",
+          "binary": {
+            "format": "pe",
+            "architectures": [
+              "x64"
+            ]
+          },
+          "compatibility": {
+            "mechanism": "native",
+            "verified": false,
+            "note": "Header matches host; real workflow probe still required."
+          }
+        },
+        "netlistsvg": {
+          "state": "missing",
+          "version": null
+        },
+        "sby": {
+          "state": "available",
+          "version": "SBY v0.70-9-g79fc9ed",
+          "binary": {
+            "format": "pe",
+            "architectures": [
+              "x64"
+            ]
+          },
+          "compatibility": {
+            "mechanism": "native",
+            "verified": false,
+            "note": "Header matches host; real workflow probe still required."
+          }
+        },
+        "z3": {
+          "state": "available",
+          "version": "Z3 version 4.15.5 - 64 bit",
+          "binary": {
+            "format": "pe",
+            "architectures": [
+              "x64"
+            ]
+          },
+          "compatibility": {
+            "mechanism": "native",
+            "verified": false,
+            "note": "Header matches host; real workflow probe still required."
+          }
+        },
+        "nextpnr-gowin": {
+          "state": "available",
+          "version": "\"nextpnr-himbaechel\" -- Next Generation Place and Route (Version nextpnr-0.11.1-65-ge677d5c3)",
+          "binary": {
+            "format": "pe",
+            "architectures": [
+              "x64"
+            ]
+          },
+          "compatibility": {
+            "mechanism": "native",
+            "verified": false,
+            "note": "Header matches host; real workflow probe still required."
+          }
+        },
+        "gowin_pack": {
+          "state": "available",
+          "version": "D:\\a\\verilog-workbench\\verilog-workbench\\.m0-tools\\oss-cad-suite-2026-10-18-windows-x64\\oss-cad-suite\\lib\\python3.11\\site-packages\\apycula\\bitmatrix.py:60: UserWarning: Numpy is not available, performance will be degraded.\n  warnings.warn(\"Numpy is not available, performance will be degraded.\")\nD:\\a\\verilog-workbench\\verilog-workbench\\.m0-tools\\oss-cad-suite-2026-10-18-windows-x64\\oss-cad-suite\\lib\\python3.11\\site-packages\\apycula\\chipdb.py:261: UserWarning: Msgspec is not available, performance will be degraded.\n  warnings.warn(\"Msgspec is not available, performance will be degraded.\")\nusage: gowin_pack-script.py [-h] [-d DEVICE] [-o OUTPUT] [-c] [-s CST]\n                            [--jtag_as_gpio] [--sspi_as_gpio] [--mspi_as_gpio]",
+          "binary": {
+            "format": "pe",
+            "architectures": [
+              "x64"
+            ]
+          },
+          "compatibility": {
+            "mechanism": "native",
+            "verified": false,
+            "note": "Header matches host; real workflow probe still required."
+          }
+        },
+        "nextpnr-ice40": {
+          "state": "available",
+          "version": "\"nextpnr-ice40\" -- Next Generation Place and Route (Version nextpnr-0.11.1-65-ge677d5c3)",
+          "binary": {
+            "format": "pe",
+            "architectures": [
+              "x64"
+            ]
+          },
+          "compatibility": {
+            "mechanism": "native",
+            "verified": false,
+            "note": "Header matches host; real workflow probe still required."
+          }
+        },
+        "icepack": {
+          "state": "available",
+          "version": "Usage: D:\\a\\verilog-workbench\\verilog-workbench\\.m0-tools\\oss-cad-suite-2026-10-18-windows-x64\\oss-cad-suite\\bin\\icepack.EXE [options] [input-file [output-file]]\n\n    -u\n        unpack mode (implied when called as 'iceunpack')\n\n    -v",
+          "binary": {
+            "format": "pe",
+            "architectures": [
+              "x64"
+            ]
+          },
+          "compatibility": {
+            "mechanism": "native",
+            "verified": false,
+            "note": "Header matches host; real workflow probe still required."
+          }
+        },
+        "openFPGALoader": {
+          "state": "available",
+          "version": "openFPGALoader v1.1.1",
+          "binary": {
+            "format": "pe",
+            "architectures": [
+              "x64"
+            ]
+          },
+          "compatibility": {
+            "mechanism": "native",
+            "verified": false,
+            "note": "Header matches host; real workflow probe still required."
+          }
+        }
+      },
+      "supplemental_packages": [
+        {
+          "repository": "https://github.com/ghdl/ghdl",
+          "release": "v6.0.0",
+          "name": "ghdl-mcode-6.0.0-mingw64.zip",
+          "size_bytes": 24053403,
+          "sha256": "c1562b2a4767e34d33159b536b5e36a8a38ebdb6e7672aa9969a4f4ac2cadffe",
+          "executable_sha256": "dc983e37f4a606d9803557f728902b8e2bcb96cd9fb3f117307fb4de129e6a91",
+          "binary": {
+            "format": "pe",
+            "architectures": [
+              "x64"
+            ]
+          }
+        },
+        {
+          "provider": "Graphviz",
+          "version": "14.1.1",
+          "name": "windows_10_cmake_Release_Graphviz-14.1.1-win64.zip",
+          "size_bytes": 9780290,
+          "sha256": "2a9b856a6b73591bdef5409e8b47ec6c90df40551d510709e1cb3e69016c1924",
+          "executable_sha256": "5f35dceffab3251cb59f61f4911e0cfccb0c93d0b623c234cad2879141c7429a",
+          "binary": {
+            "format": "pe",
+            "architectures": [
+              "x64"
+            ]
+          }
+        },
+        {
+          "source_sha256": "4d6f5f81a4bca11191c4c7c6b43632694d0a4ce74e068619d8fdc161d469859a",
+          "binary": {
+            "format": "pe",
+            "architectures": [
+              "x64"
+            ]
+          },
+          "runtime": {
+            "implementation": "CPython",
+            "version": [
+              3,
+              12,
+              10
+            ],
+            "compiler": "MSC v.1943 64 bit (AMD64)"
+          },
+          "packages": [
+            {
+              "package": "cocotb",
+              "version": "2.1.0",
+              "name": "cocotb-2.1.0-cp312-cp312-win_amd64.whl",
+              "url": "https://files.pythonhosted.org/packages/4b/34/139b341b7867e129037b2631edb8702fd8b98ae3e1f21713982182b65b01/cocotb-2.1.0-cp312-cp312-win_amd64.whl",
+              "sha256": "069364019aacd0e3a299185bf5145aacb599b0576a0b0f2d2c96d9f8bf73b842",
+              "size_bytes": 659066
+            },
+            {
+              "package": "find-libpython",
+              "version": "0.5.0",
+              "name": "find_libpython-0.5.0-py3-none-any.whl",
+              "url": "https://files.pythonhosted.org/packages/a7/3f/0eb94bfca99e54404901536ea8c80ddacff4953257514c6b8fb01f9a75a8/find_libpython-0.5.0-py3-none-any.whl",
+              "sha256": "7690dcf6442cdce39c0df191903fd5ecf9af437fa920effb6569fbf2c8ca8ab4",
+              "size_bytes": 9194
+            },
+            {
+              "package": "pytest",
+              "version": "8.4.2",
+              "name": "pytest-8.4.2-py3-none-any.whl",
+              "url": "https://files.pythonhosted.org/packages/a8/a4/20da314d277121d6534b3a980b29035dcd51e6744bd79075a6ce8fa4eb8d/pytest-8.4.2-py3-none-any.whl",
+              "sha256": "872f880de3fc3a5bdc88a11b39c9710c3497a547cfa9320bc3c5e62fbf272e79",
+              "size_bytes": 365750
+            },
+            {
+              "package": "iniconfig",
+              "version": "2.1.0",
+              "name": "iniconfig-2.1.0-py3-none-any.whl",
+              "url": "https://files.pythonhosted.org/packages/2c/e1/e6716421ea10d38022b952c159d5161ca1193197fb744506875fbb87ea7b/iniconfig-2.1.0-py3-none-any.whl",
+              "sha256": "9deba5723312380e77435581c6bf4935c94cbfab9b1ed33ef8d238ea168eb760",
+              "size_bytes": 6050
+            },
+            {
+              "package": "packaging",
+              "version": "25.0",
+              "name": "packaging-25.0-py3-none-any.whl",
+              "url": "https://files.pythonhosted.org/packages/20/12/38679034af332785aac8774540895e234f4d07f7545804097de4b666afd8/packaging-25.0-py3-none-any.whl",
+              "sha256": "29572ef2b1f17581046b3a2227d5c611fb25ec70ca1ba8554b24b0e69331a484",
+              "size_bytes": 66469
+            },
+            {
+              "package": "pluggy",
+              "version": "1.6.0",
+              "name": "pluggy-1.6.0-py3-none-any.whl",
+              "url": "https://files.pythonhosted.org/packages/54/20/4d324d65cc6d9205fabedc306948156824eb9f0ee1633355a8f7ec5c66bf/pluggy-1.6.0-py3-none-any.whl",
+              "sha256": "e920276dd6813095e9377c0bc5566d94c932c33b27a3e3945d8389c374dd4746",
+              "size_bytes": 20538
+            },
+            {
+              "package": "pygments",
+              "version": "2.19.2",
+              "name": "pygments-2.19.2-py3-none-any.whl",
+              "url": "https://files.pythonhosted.org/packages/c7/21/705964c7812476f378728bdf590ca4b771ec72385c533964653c68e86bdc/pygments-2.19.2-py3-none-any.whl",
+              "sha256": "86540386c03d588bb81d44bc3928634ff26449851e99741617ecb9037ee5ec0b",
+              "size_bytes": 1225217
+            },
+            {
+              "package": "colorama",
+              "version": "0.4.6",
+              "name": "colorama-0.4.6-py2.py3-none-any.whl",
+              "url": "https://files.pythonhosted.org/packages/d1/d6/3965ed04c63042e047cb6a3e6ed1a63a35087b6a609aa3a15ed8ac56c221/colorama-0.4.6-py2.py3-none-any.whl",
+              "sha256": "4f1d9991f5acc0ca119f9d443620b77f9d6b33703e51011c16baf57afb285fc6",
+              "size_bytes": 25335
+            }
+          ],
+          "compatibility": {
+            "mechanism": "native",
+            "verified": false,
+            "note": "Header matches host; real workflow probe still required."
+          },
+          "external_prerequisite": true,
+          "relocatable": false
+        }
+      ],
+      "suite_archive": {
+        "release": "2026-10-18",
+        "archive": "oss-cad-suite-windows-x64-20261018.tgz",
+        "sha256": "c9e2461fdeeee8e186d46951ef64f88fed8c59668ba5f49b4db74ebb23d9da24",
+        "size_bytes": 604040523,
+        "relocatable": true
+      }
+    }
+  ],
+  "all_six_native_jobs_passed": false,
+  "all_six_toolchain_targets_passed_14_of_14": false,
+  "arch_userspace_passed_14_of_14": true,
+  "scope": "Exact-head six-platform companion unit/CLI/protocol/bundle checks and real 14-workflow native toolchain probes, plus Arch userspace. Physical FPGA programming and clean-machine installer acceptance are not exercised. Browser HDL acceptance is retained separately.",
+  "source_hash_note": "The same Git commit is checked out on every host. Source byte hashes are retained per platform; Windows checkout CRLF bytes differ from POSIX LF hashes.",
+  "corrective_changes_pending": [
+    "Canonical temporary-path expectations in new HDL/acquisition unit fixtures.",
+    "Intel macOS GHDL executable anchoring at suite/bin so Cocotb can load the pinned Python dylib dependency closure."
+  ],
+  "result_note": "Five toolchain platform targets plus Arch now passed all 14 workflows, including the new Windows x64/ARM64 and Linux ARM64 supplements. Intel macOS reached 13/14 with one diagnosed Cocotb loader failure. Four native job rows failed only new canonical-path assertions; Linux x64/ARM64 native jobs passed. This report does not claim complete native acceptance."
+}

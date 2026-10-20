@@ -18,7 +18,7 @@ class CocotbStartupTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temporary:
             wb = self.workbench(Path(temporary))
             values = {'--python-bin':'/runtime/python', '--libpython':'/runtime/libpython.so',
-                      '--pygpi-entry-point':'/runtime/libcocotb.so,initialize'}
+                      '--pygpi-entry-point':'/runtime/libcocotb.so,initialize', '--version':'2.1.0'}
             def run(command, **kwargs):
                 return subprocess.CompletedProcess(command, 0, values[command[-1]], '')
             with patch.dict(os.environ, {}, clear=True), patch.object(wb, 'require_tool', return_value='cocotb-config'), patch.object(wb, 'run', side_effect=run):

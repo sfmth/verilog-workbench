@@ -15,7 +15,7 @@ clears incompatible Cocotb function/seed settings. Test and lint actions also
 accept comma-separated module names when no explicit test file is selected.
 
 The compile/test options expose one define/include folder/plusarg per line,
-repeatable Cocotb seeds, waveform array bounds, continue-after-failure, and an
+repeatable Cocotb seeds, waveform array bounds, and an
 explicit synthesized-gate check. Source and test include folders are confined
 to the granted project. Native tool output is retained for passing tests as
 well as failures, including testbench `$display` output. Discovery and saved
@@ -26,6 +26,8 @@ testbenches cannot drive converted Verilog gate netlists, so VWB reports that
 gate check as skipped. Cocotb can drive a converted VHDL design for the gate
 check. The workspace shows skipped/failed checks and does not summarize a
 mixed passing/failing run as a complete pass.
+
+All selected native tests and lint checks run and aggregate their failures.
 
 A selected design without a test may generate a starter smoke test, following
 the CLI. This is visible in Files after the job. Discovery is invalidated when
@@ -82,14 +84,32 @@ compiler, simulator and Tcl argument passthrough remains outside this API.
 `scripts/probe_hdl_workspace.mjs` drives rendered controls and a real companion.
 It uses fresh temporary Unicode projects and builds for each workflow, retains
 source/artifact hashes, verifies downloads against native disk bytes, and
-opens real VCD/SVG artifacts. Its original 14 workflows reuse the unchanged M0
-fixtures and native result oracles: Verilog/SV/VHDL assertions, both Cocotb
+opens real VCD/SVG artifacts. Its core 14 workflows reuse the M0 fixtures and
+native result oracles: Verilog/SV/VHDL assertions, both Cocotb
 simulators, waveform data, lint, synthesis/schematics, VHDL conversion, formal
 proof/counterexample and both packed bitstreams. Additional checks cover actual
 failures, selected-function execution, compile flags, gate tests, saved waves,
 starter smoke tests and hierarchy/test selection. No successful workflow uses
 mock tools or substituted job results. `--only` explicitly reports a subset;
 default acceptance requires the entire selected suite.
+
+The M0 Cocotb fixture retains all four truth-table assertions and now queues
+one final write after them to guard a real shutdown regression. The pinned
+`2.1.0.dev0+41564633` build could invoke that callback after Python finalized,
+crashing Icarus 13 and 14 even after a test passed. A private trusted startup
+module cancels only the pending callback during final shutdown for this exact
+build on Icarus. It never changes live test scheduling, assertions or verdicts;
+explicit user startup configuration and other runtime builds are preserved.
+Real negative controls retain assertion failures and the original crash as
+failures. Missing/invalid/unexecuted Cocotb results also remain failures and
+now report setup/startup attention instead of claiming setup is OK.
+
+Some advanced bundled tests need additional Python packages. The existing
+`setup.sh --full` route includes bitstring, NumPy and Pillow. With another
+simulator Python environment those project test dependencies must be provided
+there too. The isolated larger-design checks used bitstring 4.3.1, bitarray
+3.4.3, NumPy 2.2.6 and Pillow 11.3.0; package imports succeeding does not prove
+an algorithm correct, especially where an example bench has no assertions.
 
 Pages CI requires complete HDL browser acceptance against both built output
 and the deployed HTTPS app, using the integrity-pinned Linux tool suite. Public
@@ -124,3 +144,16 @@ editing and file-lifecycle checks. Both
 [Unicode/space-path](workspace-evidence/hdl-native-unicode-spaces-linux-x64.json)
 native Linux smoke runs pass all 14 workflows. These local passes do not
 substitute for the separate hosted/public and foreign-host results.
+
+The [runtime follow-up browser report](workspace-evidence/hdl-runtime-local-linux-x64.json)
+passes all 26 workflows against one coherent
+[20-file build](workspace-evidence/hdl-runtime-web-build.json). Every fresh
+workflow context verifies its loaded asset hashes. The additional workflow
+executes the pending-write shutdown regression and checks the staged startup
+module against the trusted source. The
+[follow-up source receipt](workspace-evidence/hdl-runtime-source-linux-x64.json)
+records 264 native checks (eight skips), 171 CLI checks (one skip), 116 JavaScript
+checks, and a separate nine-check managed-runtime run with no skips, including
+three real simulator controls. The
+[missing-dependency negative control](workspace-evidence/hdl-cocotb-missing-results-local-linux-x64.json)
+also verifies the actual simulator's nonzero exit and improved setup diagnosis.
