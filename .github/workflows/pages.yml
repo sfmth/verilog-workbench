@@ -10,6 +10,7 @@ on:
       - 'vwb.py'
       - 'scripts/build_web.py'
       - 'scripts/probe_workspace.mjs'
+      - 'scripts/probe_pages.mjs'
       - 'tests/test_web_build.py'
       - 'tests/test_*.mjs'
       - '.github/workflows/pages.yml'
@@ -21,6 +22,7 @@ on:
       - 'vwb.py'
       - 'scripts/build_web.py'
       - 'scripts/probe_workspace.mjs'
+      - 'scripts/probe_pages.mjs'
       - 'tests/test_web_build.py'
       - 'tests/test_*.mjs'
       - '.github/workflows/pages.yml'
@@ -85,7 +87,40 @@ jobs:
       url: ${{ steps.deploy.outputs.page_url }}
     runs-on: ubuntu-24.04
     timeout-minutes: 10
+    outputs:
+      page_url: ${{ steps.deploy.outputs.page_url }}
     steps:
       - uses: actions/configure-pages@v5
       - uses: actions/deploy-pages@v4
         id: deploy
+
+  verify-public:
+    needs: deploy
+    if: github.ref == 'refs/heads/web-port-plan' && github.event_name != 'pull_request'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install pinned browser acceptance harness
+        run: npm install --prefix .web-browser --no-audit --no-fund playwright@1.62.1
+      - name: Install Chromium
+        run: .web-browser/node_modules/.bin/playwright install --with-deps chromium
+      - name: Verify actual HTTPS app with a native loopback companion
+        env:
+          VWB_PUBLIC_WORKSPACE: ${{ format('{0}workspace/', needs.deploy.outputs.page_url) }}
+        run: node scripts/probe_pages.mjs --public-url "$VWB_PUBLIC_WORKSPACE" --playwright-module ../.web-browser/node_modules/playwright --output pages-public-evidence.json --screenshot pages-public-workspace.png
+      - name: Retain public HTTPS evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pages-public-evidence
+          path: |
+            pages-public-evidence.json
+            pages-public-workspace.png
+          if-no-files-found: warn

@@ -2,8 +2,9 @@
 
 The `web-port-plan` branch now includes a static browser workspace at
 `/verilog-workbench/workspace/` and the original connection proof at
-`/verilog-workbench/m0/`. This is an internal development preview, not the M4
-complete release. It uses ordinary local folders through the native companion.
+`/verilog-workbench/m0/`. The [public workspace](https://sfmth.github.io/verilog-workbench/workspace/)
+is deployed as a development preview, not the M4 complete release. It uses
+ordinary local folders through the native companion.
 
 ## Run it locally
 
@@ -80,8 +81,10 @@ Static directories and fragment state need no server-side routing rewrite.
 The Pages workflow runs path/model checks and a Chromium acceptance probe
 against the built output under `/verilog-workbench/`, then uploads only that
 output. Pull requests run the checks; only `web-port-plan` deploys. Site settings
-must independently enable GitHub Actions as the Pages source. Building or passing
-the local probe does not prove that a public deployment succeeded.
+enable GitHub Actions as the Pages source, and the `github-pages` environment
+permits `web-port-plan`. A post-deployment Chromium job verifies the actual HTTPS
+workspace against a real native companion and retains separate public evidence.
+Building or passing the local probe alone does not prove public deployment.
 
 ```sh
 node --test tests/test_*.mjs
@@ -89,6 +92,8 @@ python -m unittest discover -s tests -p test_web_build.py -v
 python -m unittest discover -s tests -p test_companion.py -v
 # Install the CI-pinned Playwright harness in a development directory first.
 node scripts/probe_workspace.mjs --playwright-module ../.web-browser/node_modules/playwright --native-sim true --output pages-browser-evidence.json
+# After publication, verify the real HTTPS app with a temporary local project.
+node scripts/probe_pages.mjs --playwright-module ../.web-browser/node_modules/playwright --output pages-public-evidence.json
 ```
 
 The browser probe uses a real companion and temporary Unicode-path project.
@@ -112,13 +117,36 @@ tool/platform skips in total. JavaScript checks cover 26 buffer/recovery cases,
 nine VCD cases and five protocol cases. This local evidence does not close public
 HTTPS, other-browser/platform or hardware gates.
 
+## Published HTTPS evidence
+
+[Pages run 39345754953](https://github.com/sfmth/verilog-workbench/actions/runs/39345754953)
+built and deployed `ebf8d10`. Its [hosted Chromium evidence](workspace-evidence/pages-ci-linux-x64.json)
+passes all 13 workspace groups with Chromium 151 and Icarus 12, including real
+simulation, failure and cancellation. The actual [public HTTPS probe](workspace-evidence/pages-public-linux-x64.json)
+then passes nine groups with Chromium 141: public app/manifest loading, real
+UI pairing, Unicode multi-file and CRLF saves, revision conflicts, session/file
+recovery after reload, native inventory, fixture artifact download and the public
+VCD worker. Eight delivered document/module/style/worker hashes match the deployed
+manifest. This is public-origin acceptance, distinct from the localhost CI proof.
+
+The public probe explicitly grants local-network permission through Chromium's
+test API. A fresh context without that test grant timed out on loopback health;
+that observation is not proof of a manual deny decision or browser prompt UX.
+The test does not disable mixed-content/CORS security, and credentials are absent
+from reports, URLs and persistent browser storage. Manual permission/reconnect
+and current Firefox/Safari/platform coverage remain open.
+
+The six native runtime/unit/bundle CI rows pass for this code change. Broader
+native toolchain CI continues to expose the documented GHDL/Cocotb/Graphviz
+package gaps on four target rows; publishing the preview does not waive them.
+
 ## Remaining release gates
 
 M1 still requires semantic language-service integration, safe project-wide
 rename/undo, complete folder/file lifecycle operations and broader recovery
 fixtures. M2 needs full language/analysis workflows and large-design acceptance.
 M3 needs complete native tool acquisition/install/repair/uninstall and recorded
-board programming. M4 requires real HTTPS Pages tests in supported Chromium,
-Firefox and Safari combinations and the complete six-platform/board matrix.
-The [M0 evidence gaps](M0_STATUS.md) also remain open. No public deployment,
-physical USB programming or complete release support is asserted by this change.
+board programming. M4 requires the remaining real HTTPS browser/permission
+checks and the complete six-platform/board matrix. The [M0 evidence gaps](M0_STATUS.md)
+also remain open. A published development preview is now verified; physical USB
+programming and complete first-release support remain unverified.

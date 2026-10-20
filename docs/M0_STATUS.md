@@ -7,6 +7,12 @@ rows, actual Pages/browser connectivity, clean installation, and physical board
 programming remain gates. This is a development foundation, not the requested
 complete first usable website release.
 
+Update 2026-10-19: the development workspace is now
+[published and tested from its actual HTTPS Pages origin](WEB_WORKSPACE.md#published-https-evidence).
+The initial publication blocker recorded below is closed for the preview;
+remaining manual permission/browser/platform/install/hardware gates stay open.
+The table and historical observations below retain the original M0 checkpoint.
+
 The local Linux x86-64 toolchain passed **14 real checks in each of three path
 cases: 42 executions** across ordinary paths, spaces, and Unicode/spaces. Native
 runtime packaging and semantic editor probes also have local evidence. Those

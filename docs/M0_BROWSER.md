@@ -12,11 +12,13 @@ without overwriting disk, an actual VWB job, and forgetting the session. A
 second [native bundle proof](m0-evidence/native-linux-x64.json) verifies the
 isolated packaged interpreter, project I/O and native job.
 
-The public `https://sfmth.github.io` test is **blocked**: navigation from this
-environment returned `ERR_EMPTY_RESPONSE`. GitHub Pages was not enabled or
-published during the proof. Neither the local HTTP pass nor the blocked HTTPS
-attempt establishes Pages-to-loopback browser support. Firefox, Safari, other
-OSes, denied permission, revocation/reconnect and the deployed UI remain gates.
+The initial 2026-10-18 public `https://sfmth.github.io` test was **blocked**:
+navigation returned `ERR_EMPTY_RESPONSE`, and Pages was not enabled during that
+proof. On 2026-10-19 the workspace development preview was published and its
+[actual HTTPS acceptance probe passed](WEB_WORKSPACE.md#published-https-evidence),
+including UI pairing, revision saves, a native job and a public waveform worker.
+That test explicitly grants permission through Chromium's test API. Manual
+permission/deny/reconnect UX, Firefox, Safari and other OSes remain gates.
 
 ## Reproduce
 
@@ -42,7 +44,7 @@ is disabled for this development host; the companion API protections remain
 active. The recorded local run used Chromium 153.0.8010.0 from the pinned
 `@sparticuz/chromium@153.0.0` npm package, controlled by Playwright 1.62.1.
 
-After the actual Pages site exists, append:
+For the original M0 public-origin transport proof, append:
 
 ```sh
   --public-url https://sfmth.github.io/verilog-workbench/m0/
@@ -57,16 +59,13 @@ it. A real user permission/retry flow still needs manual browser acceptance.
 
 ## GitHub Pages setup
 
-[`pages.yml`](../.github/workflows/pages.yml) publishes the `web/` static
-directory from `web-port-plan` using GitHub Actions on web-source pushes or
-when dispatched. It does
-not enable Pages administration or alter `master`. Repository Settings → Pages
-must first select **GitHub Actions** as the build source. The connected GitHub
-App exposes repository code operations but no Pages administration operation;
-the browser session available here was signed out. Publication and acceptance
-therefore remain pending. After enabling Pages, rerun the branch's Pages job
-or push a web-source change. The push trigger permits deployment from this
-feature branch without adding the workflow to `master`; manual dispatch UI
+[`pages.yml`](../.github/workflows/pages.yml) validates and builds `web/` into
+`dist/web`, then publishes that output from `web-port-plan` with GitHub Actions.
+Pages is now enabled with the Actions build source, and the deployment
+environment permits this branch. `master` remains unchanged. Branch-scoped
+deployment is followed by real HTTPS acceptance against a temporary local
+companion; its evidence is retained separately from localhost checks. The
+original M0 UI and probes remain available. Manual workflow-dispatch UI
 availability can still depend on a definition on the default branch.
 
 For a local manual proof, serve `web/` with `python -m http.server 8000`, then

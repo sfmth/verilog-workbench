@@ -8,6 +8,7 @@ starting to write Verilog, SystemVerilog, or VHDL.
 The `web-port-plan` branch contains a [browser workspace development preview](docs/WEB_WORKSPACE.md)
 with local file editing, draft recovery, native tool controls and a VCD viewer.
 It builds for GitHub Pages and uses the [native companion](companion/README.md).
+Open the [published workspace preview](https://sfmth.github.io/verilog-workbench/workspace/).
 The [M0 acceptance gaps](docs/M0_STATUS.md) and complete-release gates remain
 open; this preview is not the finished six-platform release.
 
