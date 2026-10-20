@@ -9,6 +9,7 @@ import path from 'node:path';
 import {spawn, spawnSync} from 'node:child_process';
 import {createRequire} from 'node:module';
 import {fileURLToPath} from 'node:url';
+import {captureSiteAssets} from './browser_assets.mjs';
 
 const repo = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const require = createRequire(import.meta.url);
@@ -52,8 +53,9 @@ const secrets = new Set();
 const children = [];
 const staticErrors = [];
 const scriptErrors = [];
+const assetErrors = [];
 const workers = [];
-let browser, staticServer, page;
+let browser, staticServer, page, assetCapture;
 const report = {
   schema: 'vwb.workspace-browser-probe/1', recorded_at: new Date().toISOString(),
   state: 'failed', checks: [], pages_prefix: prefix, native_job: 'not_run',
@@ -208,7 +210,11 @@ try {
   browser = await chromium.launch({headless: true, executablePath: args['--executable'], args: ['--no-sandbox']});
   report.browser = await browser.version();
   const context = await browser.newContext({acceptDownloads: true, viewport: {width: 1512, height: 982}});
+  assetCapture = await captureSiteAssets(context, {origin, prefix,
+    onError: error => assetErrors.push({...error, ...(error.error ? {error: safe(error.error)} : {})}),
+  });
   page = await context.newPage();
+  await assetCapture.attachPage(page);
   page.setDefaultTimeout(15000);
   page.on('pageerror', error => scriptErrors.push(safe(error.message)));
   page.on('worker', worker => workers.push(worker.url()));
@@ -450,7 +456,9 @@ try {
   report.session_isolation = 'passed-distinct-real-projects-with-simulated-delayed-old-tool-success-and-artifact401';
   checked('distinct-project-clears-results-and-ignores-simulated-late-old-session-responses');
   await checkStorage();
+  await assetCapture.drain();
   assert.deepEqual(staticErrors, [], 'Built preview requested missing assets or paths outside the project prefix');
+  assert.deepEqual(assetErrors, [], 'Built preview static responses must remain available and successful');
   assert.deepEqual(scriptErrors, [], 'Unexpected browser script errors');
   report.state = 'passed';
 } catch (error) {
@@ -462,13 +470,18 @@ try {
     if (args['--screenshot']) await page.screenshot({path: args['--screenshot'], fullPage: true}).catch(() => {});
   }
 } finally {
-  report.static_errors = staticErrors.map(safe);
-  report.script_errors = scriptErrors;
-  report.workers = workers;
+  try { await assetCapture?.close(); }
+  catch (error) { assetErrors.push({phase: 'close-static-response-capture', error: safe(error.message)}); }
   await browser?.close();
   for (const child of children) await stop(child);
   if (staticServer) await new Promise(resolve => staticServer.close(resolve));
   await fs.rm(temporary, {recursive: true, force: true});
+  if (assetCapture) report.asset_capture = assetCapture.summary();
+  report.asset_errors = assetErrors;
+  report.static_errors = staticErrors.map(safe);
+  report.script_errors = scriptErrors;
+  report.workers = workers;
+  if (assetCapture?.errors.length || assetErrors.length || scriptErrors.length || staticErrors.length) report.state = 'failed';
 }
 const json = JSON.stringify(report, null, 2) + '\n';
 if (args['--output']) await fs.writeFile(args['--output'], json);

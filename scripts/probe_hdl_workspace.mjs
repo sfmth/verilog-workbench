@@ -11,6 +11,7 @@ import {createRequire} from 'node:module';
 import os from 'node:os';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
+import {captureSiteAssets} from './browser_assets.mjs';
 
 const repo = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const fixtures = path.join(repo, 'toolchains/fixtures');
@@ -341,30 +342,22 @@ try {
   for (const file of await walk(fixtures)) report.fixture_sha256[path.relative(fixtures, file).split(path.sep).join('/')] = sha(await fs.readFile(file));
   report.oracle_sha256 = sha(await fs.readFile(path.join(repo, 'scripts/probe_toolchain.py')));
   report.source_sha256 = {};
-  for (const relative of ['vwb.py', 'companion/server.py', 'companion/projects.py', 'companion/process.py', 'companion/cocotb_runtime.py', 'scripts/probe_hdl_workspace.mjs']) report.source_sha256[relative] = sha(await fs.readFile(path.join(repo, relative)));
+  for (const relative of ['vwb.py', 'companion/server.py', 'companion/projects.py', 'companion/process.py', 'companion/cocotb_runtime.py', 'scripts/probe_hdl_workspace.mjs', 'scripts/browser_assets.mjs']) report.source_sha256[relative] = sha(await fs.readFile(path.join(repo, relative)));
   if (publicUrl) { origin = publicUrl.origin; workspaceUrl = publicUrl.href; } else await serveBuild();
   browser = await chromium.launch({headless: true, executablePath: args['--executable'], args: ['--no-sandbox']});
   report.browser = await browser.version(); report.browser_security_flags = ['--no-sandbox'];
   for (const name of selected) {
     const started = Date.now(), definition = definitions[name], spec = specFor(definition);
     const evidence = report.workflows[name] = {state: 'failed', fixture: definition.base || name, selected_controls: spec};
-    const workflowAssets = new Map(), responseTasks = new Set(), staticRequests = new Set();
-    let context, native, workflowPage, observeStaticResponse, observeJobResponse, observeStaticRequest, forgetStaticRequest;
+    const workflowAssets = new Map(), responseTasks = new Set();
+    let context, native, workflowPage, assetCapture, observeJobResponse;
     const trackResponse = promise => {
       responseTasks.add(promise);
       promise.finally(() => responseTasks.delete(promise));
     };
-    const isStaticRequest = request => {
-      const url = new URL(request.url());
-      return url.origin === origin && url.pathname.startsWith(prefix);
-    };
     const drainResponses = async () => {
-      // Responses can start more module/worker requests while their bodies are
-      // read. A Promise.all(array) snapshot misses those later readers and can
-      // close their browser context underneath response.body(). Track both the
-      // live requests and readers, then detach observers before closing.
-      await until(() => responseTasks.size === 0 && staticRequests.size === 0,
-        'all current workflow static requests and response bodies before context teardown');
+      await assetCapture?.drain();
+      await until(() => responseTasks.size === 0, 'current workflow native job response readers before context teardown');
     };
     try {
       project = path.join(temporary, name + ' project µ'); await fs.cp(fixtures, project, {recursive: true});
@@ -389,28 +382,20 @@ try {
       }
       assert.equal((await fs.readdir(project)).includes('build'), false, 'Every browser native workflow starts without generated output.');
       native = await companion(); context = await browser.newContext({acceptDownloads: true, viewport: {width: 1512, height: 1050}}); contexts.push(context);
+      assetCapture = await captureSiteAssets(context, {origin, prefix,
+        onAsset: ({path: asset, sha256: digest}) => { loadedAssets.set(asset, digest); workflowAssets.set(asset, digest); },
+        onError: error => assetErrors.push({workflow: name, ...error}),
+      });
       if (publicUrl) { await context.grantPermissions(['local-network-access'], {origin}); report.permission_grant = 'explicit-simulated-Chromium-context-grantPermissions-local-network-access'; }
       else report.permission_grant = 'not-required-loopback-HTTP-preview-origin-no-browser-security-bypass';
-      page = workflowPage = await context.newPage(); page.setDefaultTimeout(30000);
+      page = workflowPage = await context.newPage(); await assetCapture.attachPage(page); page.setDefaultTimeout(30000);
       page.on('pageerror', error => scriptErrors.push({workflow: name, message: safe(error.message)})); page.on('dialog', dialog => dialog.accept());
       observeJobResponse = response => {
         if (!response.url().startsWith(native.ready.url + '/v1/jobs/')) return;
         if (response.request().method() !== 'GET') return;
         trackResponse(response.json().then(body => workflowPage.evaluate(({url, body}) => { (window.__vwbHDLResponses ||= []).push({url, body}); }, {url: response.url(), body})).catch(() => {}));
       };
-      observeStaticRequest = request => { if (isStaticRequest(request)) staticRequests.add(request); };
-      forgetStaticRequest = request => staticRequests.delete(request);
-      observeStaticResponse = response => {
-        const url = new URL(response.url()); if (url.origin !== origin || !url.pathname.startsWith(prefix)) return;
-        const relative = decodeURIComponent(url.pathname.slice(prefix.length)), asset = relative.endsWith('/') ? relative + 'index.html' : relative;
-        if (asset === 'vwb-web-build.json' || asset.endsWith('favicon.ico')) return;
-        trackResponse((async () => { if (response.status() !== 200) assetErrors.push({workflow: name, path: asset, status: response.status()}); else { const digest = sha(await response.body()); loadedAssets.set(asset, digest); workflowAssets.set(asset, digest); } })().catch(error => assetErrors.push({workflow: name, path: asset, error: safe(error.message)})));
-      };
       page.on('response', observeJobResponse);
-      context.on('request', observeStaticRequest);
-      context.on('requestfinished', forgetStaticRequest);
-      context.on('requestfailed', forgetStaticRequest);
-      context.on('response', observeStaticResponse);
       const navigation = await page.goto(workspaceUrl, {waitUntil: 'networkidle', timeout: 45000}); assert.equal(navigation.status(), 200); await pair(native.ready);
       await page.locator('[data-result="tools"]').click();
       const [capabilityResponse] = await Promise.all([page.waitForResponse(response => response.url() === endpoint + '/v1/capabilities'), page.locator('#check-tools').click()]);
@@ -539,15 +524,19 @@ try {
           if (manifestFingerprint !== undefined) assert.equal(fingerprint, manifestFingerprint, 'The deployed build changed between HDL workflow contexts; rerun one coherent deployment.');
           manifestFingerprint = fingerprint; evidence.runtime_manifest_sha256 = fingerprint;
           for (const asset of runtimeAssets) { assert.equal(typeof manifest.files?.[asset], 'string'); assert.equal(workflowAssets.get(asset), manifest.files[asset], 'Each HDL workflow must load the declared runtime asset: ' + asset); }
+          for (const [asset, digest] of workflowAssets) assert.equal(digest, manifest.files[asset], 'Every original static response must match its deployed manifest: ' + asset);
+          if (evidence.artifact_acceptance?.browser_view === 'passed-real-native-VCD-parsed-and-rendered-by-browser-worker') {
+            for (const asset of ['workspace/vcd-worker.mjs', 'workspace/vcd.mjs']) assert.equal(workflowAssets.get(asset), manifest.files[asset], 'The real VCD worker and import must be captured before execution: ' + asset);
+            assert.ok(assetCapture.counts.get('workspace/vcd.mjs') >= 2, 'The VCD module must be captured from both the page and its short-lived worker.');
+          }
           report.deployed_manifest = manifest;
         }
       }
       if (context) {
         await drainResponses();
-        evidence.response_collection = {state: 'drained-before-context-close', pending_response_readers: responseTasks.size, pending_static_requests: staticRequests.size};
-        if (observeStaticResponse) context.off('response', observeStaticResponse);
-        if (observeStaticRequest) context.off('request', observeStaticRequest);
-        if (forgetStaticRequest) { context.off('requestfinished', forgetStaticRequest); context.off('requestfailed', forgetStaticRequest); }
+        evidence.response_collection = {state: 'drained-before-context-close', pending_response_readers: responseTasks.size, pending_static_requests: assetCapture?.summary().pending_responses || 0};
+        evidence.asset_capture = assetCapture?.summary();
+        await assetCapture?.close();
         if (observeJobResponse) workflowPage.off('response', observeJobResponse);
       }
       await context?.close().catch(() => {}); if (native) await stop(native.child);

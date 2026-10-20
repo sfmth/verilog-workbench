@@ -10,6 +10,7 @@ import {createRequire} from 'node:module';
 import os from 'node:os';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
+import {captureSiteAssets} from './browser_assets.mjs';
 
 const repo = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const require = createRequire(import.meta.url);
@@ -42,9 +43,9 @@ const originals = {
 };
 const sha = value => createHash('sha256').update(value).digest('hex');
 const secrets = new Set([temporary, project, repo]);
-const children = [], scriptErrors = [], assetErrors = [], assetResponses = [];
+const children = [], scriptErrors = [], assetErrors = [];
 const loadedAssets = new Map();
-let browser, context, page, staticServer, origin, workspaceUrl, endpoint, credential;
+let browser, context, page, staticServer, origin, workspaceUrl, endpoint, credential, assetCapture;
 const report = {
   schema: 'vwb.files-workspace-browser-probe/1', recorded_at: new Date().toISOString(), state: 'failed',
   target: publicUrl ? 'public-HTTPS-workspace' : 'built-local-project-prefix-workspace',
@@ -258,20 +259,14 @@ try {
     await context.grantPermissions(['local-network-access'], {origin});
     report.permission_grant = 'explicit-simulated-Chromium-context-grantPermissions-local-network-access';
   }
+  assetCapture = await captureSiteAssets(context, {origin, prefix,
+    onAsset: ({path, sha256}) => loadedAssets.set(path, sha256),
+    onError: error => assetErrors.push({...error, ...(error.error ? {error: safe(error.error)} : {})}),
+  });
   page = await context.newPage(); page.setDefaultTimeout(20000);
+  await assetCapture.attachPage(page);
   page.on('pageerror', error => scriptErrors.push(safe(error.message)));
   page.on('dialog', dialog => dialog.accept());
-  page.on('response', response => {
-    const url = new URL(response.url());
-    if (url.origin !== origin || !url.pathname.startsWith(prefix)) return;
-    const relative = decodeURIComponent(url.pathname.slice(prefix.length));
-    const asset = relative.endsWith('/') ? relative + 'index.html' : relative;
-    if (asset === 'vwb-web-build.json' || asset.endsWith('favicon.ico')) return;
-    assetResponses.push((async () => {
-      if (response.status() !== 200) assetErrors.push({path: asset, status: response.status()});
-      else loadedAssets.set(asset, sha(await response.body()));
-    })().catch(error => assetErrors.push({path: asset, error: safe(error.message)})));
-  });
   const navigation = await page.goto(workspaceUrl, {waitUntil: 'networkidle', timeout: 30000});
   assert.equal(navigation.status(), 200);
   assert.equal(new URL(page.url()).pathname, new URL(workspaceUrl).pathname);
@@ -517,7 +512,7 @@ try {
     if (!response.ok) throw new Error('Build manifest HTTP ' + response.status);
     return response.json();
   }, origin + prefix + 'vwb-web-build.json');
-  await Promise.all(assetResponses);
+  await assetCapture.drain();
   assert.equal(manifest.schema, 'vwb.web-build/1'); assert.equal(manifest.base_path, prefix);
   for (const asset of ['workspace/index.html', 'workspace/app.mjs', 'workspace/model.mjs', 'workspace/files.mjs']) {
     const expected = typeof manifest.files[asset] === 'string' ? manifest.files[asset] : manifest.files[asset]?.sha256;
@@ -537,11 +532,15 @@ try {
     await screenshot().catch(() => {});
   }
 } finally {
-  report.script_errors = scriptErrors; report.asset_errors = assetErrors;
+  try { await assetCapture?.close(); }
+  catch (error) { assetErrors.push({phase: 'close-static-response-capture', error: safe(error.message)}); }
   await context?.close().catch(() => {}); await browser?.close().catch(() => {});
   for (const child of children) await stop(child);
   if (staticServer) await new Promise(resolve => staticServer.close(resolve));
   await fs.rm(temporary, {recursive: true, force: true});
+  if (assetCapture) report.asset_capture = assetCapture.summary();
+  report.script_errors = scriptErrors; report.asset_errors = assetErrors;
+  if (assetCapture?.errors.length || assetErrors.length || scriptErrors.length) report.state = 'failed';
 }
 const json = safe(JSON.stringify(report, null, 2), 100000) + '\n';
 if (args['--output']) await fs.writeFile(args['--output'], json); else process.stdout.write(json);

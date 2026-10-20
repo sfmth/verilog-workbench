@@ -10,6 +10,7 @@ import {createRequire} from 'node:module';
 import os from 'node:os';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
+import {captureSiteAssets} from './browser_assets.mjs';
 
 const repo = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const require = createRequire(import.meta.url);
@@ -57,7 +58,7 @@ const children = [];
 const contexts = [];
 const scriptErrors = [];
 const assetErrors = [];
-const assetResponses = [];
+const assetCaptures = [];
 const loadedAssets = new Map();
 const workers = [];
 let browser, page;
@@ -127,26 +128,17 @@ async function companion() {
   return {child, ready};
 }
 
-function observe(targetPage, context) {
+async function observe(targetPage, context) {
   targetPage.setDefaultTimeout(15000);
   targetPage.on('pageerror', error => scriptErrors.push(safe(error.message)));
   targetPage.on('worker', worker => workers.push(worker.url()));
   targetPage.on('dialog', dialog => dialog.accept());
-  context.on('response', response => {
-    const url = new URL(response.url());
-    if (url.origin !== origin || !url.pathname.startsWith(prefix)) return;
-    const relative = decodeURIComponent(url.pathname.slice(prefix.length));
-    const asset = relative.endsWith('/') ? relative + 'index.html' : relative;
-    if (asset === 'vwb-web-build.json' || asset.endsWith('favicon.ico')) return;
-    assetResponses.push((async () => {
-      if (response.status() !== 200) {
-        assetErrors.push({path: asset, status: response.status()});
-        return;
-      }
-      const digest = createHash('sha256').update(await response.body()).digest('hex');
-      loadedAssets.set(asset, digest);
-    })().catch(error => assetErrors.push({path: asset, error: safe(error.message)})));
+  const capture = await captureSiteAssets(context, {origin, prefix,
+    onAsset: ({path: asset, sha256: digest}) => loadedAssets.set(asset, digest),
+    onError: error => assetErrors.push(error),
   });
+  assetCaptures.push(capture);
+  await capture.attachPage(targetPage);
 }
 
 async function pair(ready) {
@@ -228,7 +220,7 @@ try {
   await context.grantPermissions(['local-network-access'], {origin});
   report.permission_grant = 'explicit-simulated-Chromium-context-grantPermissions-local-network-access';
   page = await context.newPage();
-  observe(page, context);
+  await observe(page, context);
   const navigation = await page.goto(publicUrl.href + '#view=waveform', {waitUntil: 'networkidle', timeout: 30000});
   assert.equal(navigation.status(), 200, 'The actual HTTPS workspace must load');
   assert.equal(new URL(page.url()).origin, origin, 'The browser must remain at the public Pages origin');
@@ -319,8 +311,8 @@ try {
   checked('exact-companion-viewer-fixture-download-and-public-VCD-worker-render');
   await checkStorage();
 
-  await Promise.all(assetResponses);
-  for (const asset of ['workspace/index.html', 'workspace/app.mjs', 'workspace/style.css', 'workspace/vcd-worker.mjs']) {
+  for (const capture of assetCaptures) await capture.drain();
+  for (const asset of ['workspace/index.html', 'workspace/app.mjs', 'workspace/style.css', 'workspace/vcd-worker.mjs', 'workspace/vcd.mjs']) {
     assert.ok(loadedAssets.has(asset), 'The actual deployed browser did not load ' + asset);
   }
   for (const [asset, digest] of loadedAssets) {
@@ -328,6 +320,8 @@ try {
   }
   assert.deepEqual(assetErrors, [], 'The public app requested missing or unreadable site assets');
   assert.deepEqual(scriptErrors, [], 'Unexpected script errors in the actual public app');
+  assert.ok(assetCaptures.some(capture => capture.counts.get('workspace/vcd.mjs') >= 2), 'Capture the original VCD module response in both the page and its short-lived worker.');
+  report.asset_capture = assetCaptures.map(capture => capture.summary());
   report.verified_deployed_assets = Object.fromEntries([...loadedAssets].sort(([a], [b]) => a.localeCompare(b)));
   checked('deployed-document-styles-modules-and-worker-bytes-match-public-build-manifest');
   checked('no-browser-script-errors-or-stored-credentials');
@@ -344,6 +338,7 @@ try {
     await screenshot().catch(() => {});
   }
 } finally {
+  for (const capture of assetCaptures) await capture.close().catch(error => { report.state = 'failed'; assetErrors.push({phase: 'close-static-response-capture', error: safe(error.message)}); });
   report.script_errors = scriptErrors;
   report.asset_errors = assetErrors;
   report.workers = workers;
@@ -351,6 +346,10 @@ try {
   await browser?.close().catch(() => {});
   for (const child of children) await stop(child);
   await fs.rm(temporary, {recursive: true, force: true});
+}
+if (assetErrors.length || scriptErrors.length) {
+  report.state = 'failed';
+  report.error ||= 'A browser script or original static response capture failed, including during cleanup.';
 }
 const json = safe(JSON.stringify(report, null, 2)) + '\n';
 if (args['--output']) await fs.writeFile(args['--output'], json);

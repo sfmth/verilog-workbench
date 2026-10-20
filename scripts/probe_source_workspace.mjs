@@ -11,6 +11,7 @@ import {createRequire} from 'node:module';
 import os from 'node:os';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
+import {captureSiteAssets} from './browser_assets.mjs';
 
 const repo = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const require = createRequire(import.meta.url);
@@ -49,9 +50,9 @@ originals['src/layout.sv'] = layoutLines.join('\n') + '\n';
 const normalized = value => value.replace(/\r\n?/g, '\n');
 const sha = value => createHash('sha256').update(value).digest('hex');
 const secrets = new Set([temporary, project, repo]);
-const children = [], scriptErrors = [], assetErrors = [], assetResponses = [], workers = [];
+const children = [], scriptErrors = [], assetErrors = [], workers = [];
 const loadedAssets = new Map();
-let browser, context, page, staticServer, origin, workspaceUrl, endpoint, credential, featureScreenshotSaved = false;
+let browser, context, page, staticServer, origin, workspaceUrl, endpoint, credential, assetCapture, featureScreenshotSaved = false;
 const report = {
   schema: 'vwb.source-workspace-browser-probe/1', recorded_at: new Date().toISOString(), state: 'failed',
   target: publicUrl ? 'public-HTTPS-workspace' : 'built-local-project-prefix-workspace',
@@ -179,6 +180,10 @@ try {
     await context.grantPermissions(['local-network-access'], {origin});
     report.permission_grant = 'explicit-simulated-Chromium-context-grantPermissions-local-network-access';
   } else report.permission_grant = 'not-required-loopback-HTTP-preview-origin-no-browser-security-bypass';
+  assetCapture = await captureSiteAssets(context, {origin, prefix,
+    onAsset: ({path, sha256}) => loadedAssets.set(path, sha256),
+    onError: error => assetErrors.push({...error, ...(error.error ? {error: safe(error.error)} : {})}),
+  });
   // Transparent wrapper forwards genuine worker responses. The only controls
   // are an explicit delayed delivery and an explicit injected transport error.
   await context.addInitScript(() => {
@@ -205,20 +210,10 @@ try {
     };
   });
   page = await context.newPage(); page.setDefaultTimeout(20000);
+  await assetCapture.attachPage(page);
   page.on('pageerror', error => scriptErrors.push(safe(error.message)));
   page.on('worker', worker => workers.push(worker.url()));
   page.on('dialog', dialog => dialog.accept());
-  context.on('response', response => {
-    const url = new URL(response.url());
-    if (url.origin !== origin || !url.pathname.startsWith(prefix)) return;
-    const relative = decodeURIComponent(url.pathname.slice(prefix.length));
-    const asset = relative.endsWith('/') ? relative + 'index.html' : relative;
-    if (asset === 'vwb-web-build.json' || asset.endsWith('favicon.ico')) return;
-    assetResponses.push((async () => {
-      if (response.status() !== 200) assetErrors.push({path: asset, status: response.status()});
-      else loadedAssets.set(asset, sha(await response.body()));
-    })().catch(error => assetErrors.push({path: asset, error: safe(error.message)})));
-  });
   const navigation = await page.goto(workspaceUrl, {waitUntil: 'networkidle', timeout: 30000});
   assert.equal(navigation.status(), 200); assert.equal(new URL(page.url()).pathname, new URL(workspaceUrl).pathname);
   await pair(native.ready);
@@ -411,7 +406,7 @@ try {
   checked('real-companion-disconnect-retains-editable-unsaved-source-and-prevents-disk-save');
 
   const manifest = await page.evaluate(async url => { const response = await fetch(url, {cache: 'no-store'}); if (!response.ok) throw new Error('Build manifest HTTP ' + response.status); return response.json(); }, origin + prefix + 'vwb-web-build.json');
-  await Promise.all(assetResponses);
+  await assetCapture.drain();
   assert.equal(manifest.schema, 'vwb.web-build/1'); assert.equal(manifest.base_path, prefix);
   for (const asset of ['workspace/index.html', 'workspace/app.mjs', 'workspace/style.css', 'workspace/syntax.mjs', 'workspace/syntax-view.mjs', 'workspace/syntax-worker.mjs', 'workspace/search.mjs']) {
     assert.equal(loadedAssets.get(asset), manifest.files[asset], 'Actual loaded source asset must match build manifest: ' + asset);
@@ -438,11 +433,15 @@ try {
     await screenshot().catch(() => {});
   }
 } finally {
-  report.script_errors = scriptErrors; report.asset_errors = assetErrors;
+  try { await assetCapture?.close(); }
+  catch (error) { assetErrors.push({phase: 'close-static-response-capture', error: safe(error.message)}); }
   await context?.close().catch(() => {}); await browser?.close().catch(() => {});
   for (const child of children) await stop(child);
   if (staticServer) await new Promise(resolve => staticServer.close(resolve));
   await fs.rm(temporary, {recursive: true, force: true});
+  if (assetCapture) report.asset_capture = assetCapture.summary();
+  report.script_errors = scriptErrors; report.asset_errors = assetErrors;
+  if (assetCapture?.errors.length || assetErrors.length || scriptErrors.length) report.state = 'failed';
 }
 const json = safe(JSON.stringify(report, null, 2), 120000) + '\n';
 if (args['--output']) await fs.writeFile(args['--output'], json); else process.stdout.write(json);

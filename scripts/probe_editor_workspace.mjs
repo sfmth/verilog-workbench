@@ -11,6 +11,7 @@ import {createRequire} from 'node:module';
 import os from 'node:os';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
+import {captureSiteAssets} from './browser_assets.mjs';
 
 const repo = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const require = createRequire(import.meta.url);
@@ -35,7 +36,7 @@ if (publicUrl) {
 const {chromium} = require(args['--playwright-module'] || 'playwright');
 const temporary = await fs.mkdtemp(path.join(os.tmpdir(), 'vwb-editor-browser-'));
 const secrets = new Set([temporary, repo, editorConfig]);
-const children = [], contexts = [], scriptErrors = [], staticErrors = [];
+const children = [], contexts = [], scriptErrors = [], staticErrors = [], assetErrors = [], assetCaptures = [];
 const prefix = publicUrl ? new URL('../', publicUrl).pathname : '/verilog-workbench/';
 let browser, page, staticServer, workspaceUrl, origin;
 const report = {
@@ -315,7 +316,13 @@ try {
     const context = await browser.newContext({viewport: {width: 1512, height: 1050}});
     contexts.push(context);
     if (publicUrl) await context.grantPermissions(['local-network-access'], {origin});
+    const capture = await captureSiteAssets(context, {origin, prefix,
+      onError: error => assetErrors.push({...error, ...(error.error ? {error: safe(error.error, 2000)} : {})}),
+    });
+    const captured = {language, capture, closed: false};
+    assetCaptures.push(captured);
     page = await context.newPage();
+    await capture.attachPage(page);
     page.setDefaultTimeout(20000);
     page.on('pageerror', error => scriptErrors.push(safe(error.message, 2000)));
     page.on('dialog', dialog => dialog.accept());
@@ -453,11 +460,14 @@ try {
     evidence.status = 'passed';
     checked(language + '-real-semantic-editor-UI-and-transaction-acceptance');
     if (language === 'python') await screenshot();
+    await capture.close();
+    captured.closed = true;
     await context.close();
     page = null;
     await stop(native.child);
   }
   assert.deepEqual(staticErrors, [], 'Built project-prefix preview must not request missing assets.');
+  assert.deepEqual(assetErrors, [], 'Static editor assets must load successfully in every fresh context.');
   assert.deepEqual(scriptErrors, [], 'Browser must not report script errors.');
   report.state = 'passed';
 } catch (error) {
@@ -469,12 +479,19 @@ try {
     await screenshot().catch(() => {});
   }
 } finally {
-  report.script_errors = scriptErrors.map(error => safe(error, 2000));
-  report.static_errors = staticErrors;
+  for (const captured of assetCaptures) if (!captured.closed) {
+    try { await captured.capture.close(); }
+    catch (error) { assetErrors.push({language: captured.language, phase: 'close-static-response-capture', error: safe(error.message, 2000)}); }
+  }
   await browser?.close();
   for (const child of children) await stop(child);
   if (staticServer) await new Promise(resolve => staticServer.close(resolve));
   await fs.rm(temporary, {recursive: true, force: true});
+  report.asset_capture = assetCaptures.map(({language, capture}) => ({language, ...capture.summary()}));
+  report.asset_errors = assetErrors;
+  report.script_errors = scriptErrors.map(error => safe(error, 2000));
+  report.static_errors = staticErrors;
+  if (assetCaptures.some(({capture}) => capture.errors.length) || assetErrors.length || scriptErrors.length || staticErrors.length) report.state = 'failed';
 }
 const json = JSON.stringify(report, null, 2) + '\n';
 if (args['--output']) {
