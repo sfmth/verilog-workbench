@@ -30,6 +30,11 @@ preview does not install them.
 
 ## Implemented behavior
 
+- [File and folder management](FILES_WORKSPACE.md) creates UTF-8 files and empty
+  folders, moves entries with revision checks, updates clean open tabs, and
+  retains removed entries in private project trash with explicit restore.
+  Trash survives companion restart and build cleanup. Moves do not rewrite
+  language imports/includes; unsaved buffers and conflicts must be resolved first.
 - Files open as tabs with retained dirty buffers. Ctrl/Cmd+S saves the current
   file; runs save all open changes first. Disk revision conflicts stop the run
   and preserve the draft. Reload reads successfully before discarding old edits.
@@ -174,8 +179,8 @@ passes from the wider toolchain matrix's four existing package-gap failures.
 
 ## Remaining release gates
 
-M1 still requires broader semantic/rename and recovery fixtures, syntax
-highlighting and complete folder/file lifecycle operations. M2 needs full
+M1 still requires broader semantic/rename, project lifecycle and recovery
+fixtures, syntax highlighting and complete folder-selection/watch behavior. M2 needs full
 language/analysis workflows and large-design acceptance.
 M3 needs complete native tool acquisition/install/repair/uninstall and recorded
 board programming. M4 requires the remaining real HTTPS browser/permission

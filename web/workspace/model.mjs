@@ -77,6 +77,27 @@ function bufferFrom(file) {
   };
 }
 
+const containsPath = (parent, path) => path === parent || path.startsWith(parent + '/');
+
+function entryValue(entry, {path = null, kind = null, trash = false} = {}) {
+  if (!entry || typeof entry !== 'object' || Array.isArray(entry)) throw new Error('Invalid companion project entry.');
+  pathValue(entry.path);
+  if (!['file', 'directory'].includes(entry.kind) || entry.revision === null ||
+      !Number.isSafeInteger(entry.file_count) || entry.file_count < 0 ||
+      !Number.isSafeInteger(entry.bytes) || entry.bytes < 0) throw new Error('Invalid companion project entry.');
+  revisionValue(entry.revision);
+  if ((path !== null && entry.path !== path) || (kind !== null && entry.kind !== kind)) {
+    throw new Error('The companion returned a different project entry.');
+  }
+  if (trash) trashIdValue(entry.id);
+  return entry;
+}
+
+function trashIdValue(id) {
+  if (typeof id !== 'string' || !/^[A-Za-z0-9_-]{1,128}$/.test(id)) throw new Error('Invalid project trash ID.');
+  return id;
+}
+
 /** In-memory editor buffers. Only explicit, project-scoped recovery stores source text. */
 export class WorkspaceModel {
   constructor(client, {storage = null, storageKey = null} = {}) {
@@ -87,6 +108,7 @@ export class WorkspaceModel {
     this.client = client;
     this.project = null;
     this.files = [];
+    this.directories = [];
     this.inventory = null;
     this.buffers = new Map();
     this.storage = null;
@@ -95,6 +117,10 @@ export class WorkspaceModel {
     this._recovery = new Map();
     this._opening = new Map();
     this._saving = new Map();
+    this._reading = 0;
+    this._structureBusy = false;
+    this.lastStructureChange = null;
+    this.structureError = null;
     this._disposed = false;
     if (storage) this.setStorage(storage);
   }
@@ -103,18 +129,38 @@ export class WorkspaceModel {
     if (this._disposed) throw new Error('This workspace session has been closed.');
   }
 
-  async connect() {
+  _available() {
     this._active();
+    if (this._structureBusy) throw new Error('Wait for the current project file operation to finish.');
+  }
+
+  get structureBusy() { return this._structureBusy; }
+
+  async _read(action) {
+    this._reading++;
+    try { return await action(); } finally { this._reading--; }
+  }
+
+  async _loadInventory() {
     const inventory = await this.client.request('/v1/project/files');
     this._active();
-    if (!inventory || !Array.isArray(inventory.files)) throw new Error('Invalid companion file inventory.');
+    if (!inventory || !Array.isArray(inventory.files) ||
+        (inventory.directories !== undefined && !Array.isArray(inventory.directories))) {
+      throw new Error('Invalid companion file inventory.');
+    }
     this.files = inventory.files;
+    this.directories = inventory.directories ?? [];
     this.inventory = inventory;
     return inventory;
   }
 
+  async connect() {
+    this._available();
+    return this._read(() => this._loadInventory());
+  }
+
   async open(path) {
-    this._active();
+    this._available();
     pathValue(path);
     if (this.buffers.has(path)) return this.buffers.get(path);
     if (this._opening.has(path)) return this._opening.get(path);
@@ -133,7 +179,7 @@ export class WorkspaceModel {
   }
 
   edit(path, content) {
-    this._active();
+    this._available();
     const buffer = this.buffers.get(path);
     if (!buffer) throw new Error('Open the file before editing it.');
     textBytes(content);
@@ -152,7 +198,7 @@ export class WorkspaceModel {
   }
 
   async reload(path) {
-    this._active();
+    this._available();
     pathValue(path);
     const previous = this.buffers.get(path);
     if (!previous) throw new Error('Open the file before reloading it.');
@@ -162,26 +208,28 @@ export class WorkspaceModel {
     const diskRevision = previous.diskRevision;
     const savedContent = previous._savedContent;
     const recovery = this._recovery.get(path);
-    const file = await this.client.request('/v1/project/file?path=' + encodeURIComponent(path));
-    this._active();
-    if (!file || file.path !== path || file.revision === null) {
-      throw new Error('The companion returned an invalid disk file.');
-    }
-    const next = bufferFrom(file);
-    if (this.buffers.get(path) !== previous || previous._version !== version ||
-        previous.revision !== revision || previous.diskRevision !== diskRevision || previous._savedContent !== savedContent ||
-        previous.saving || this._saving.has(path) || this._recovery.get(path) !== recovery) {
-      throw new Error('The buffer or recovery draft changed while the disk file was being read.');
-    }
-    // Replacing source is deliberate only after a validated, successful read.
-    this.buffers.set(path, next);
-    this._recovery.delete(path);
-    this._persist();
-    return next;
+    return this._read(async () => {
+      const file = await this.client.request('/v1/project/file?path=' + encodeURIComponent(path));
+      this._active();
+      if (!file || file.path !== path || file.revision === null) {
+        throw new Error('The companion returned an invalid disk file.');
+      }
+      const next = bufferFrom(file);
+      if (this.buffers.get(path) !== previous || previous._version !== version ||
+          previous.revision !== revision || previous.diskRevision !== diskRevision || previous._savedContent !== savedContent ||
+          previous.saving || this._saving.has(path) || this._recovery.get(path) !== recovery) {
+        throw new Error('The buffer or recovery draft changed while the disk file was being read.');
+      }
+      // Replacing source is deliberate only after a validated, successful read.
+      this.buffers.set(path, next);
+      this._recovery.delete(path);
+      this._persist();
+      return next;
+    });
   }
 
   close(path) {
-    this._active();
+    this._available();
     pathValue(path);
     if (this.buffers.get(path)?.saving || this._saving.has(path)) {
       throw new Error('Wait for the current save before closing this file.');
@@ -192,7 +240,7 @@ export class WorkspaceModel {
   }
 
   async save(path) {
-    this._active();
+    this._available();
     const buffer = this.buffers.get(path);
     if (!buffer) throw new Error('Open the file before saving it.');
     if (this._saving.has(path)) return this._saving.get(path);
@@ -227,7 +275,7 @@ export class WorkspaceModel {
   }
 
   async saveAll() {
-    this._active();
+    this._available();
     const dirty = [...this.buffers.values()].filter(buffer => buffer.dirty);
     // Continue independent saves after a conflict; report all failures to the caller.
     const results = await Promise.allSettled(dirty.map(buffer => this.save(buffer.path)));
@@ -245,7 +293,7 @@ export class WorkspaceModel {
   }
 
   acceptEditorFiles(files) {
-    this._active();
+    this._available();
     if (!Array.isArray(files) || !files.length || files.length > 32) throw new Error('Invalid editor transaction files.');
     const replacements = new Map();
     for (const file of files) {
@@ -266,6 +314,153 @@ export class WorkspaceModel {
     return files;
   }
 
+  async entry(path) {
+    this._available();
+    pathValue(path);
+    return this._read(async () => {
+      const entry = await this.client.request('/v1/project/entry?path=' + encodeURIComponent(path));
+      this._active();
+      return entryValue(entry, {path});
+    });
+  }
+
+  async trashEntries() {
+    this._available();
+    return this._read(async () => {
+      const result = await this.client.request('/v1/project/trash');
+      this._active();
+      if (!result || !Array.isArray(result.entries) || result.entries.length > MAX_FILES) throw new Error('Invalid companion project trash inventory.');
+      const seen = new Set();
+      for (const entry of result.entries) {
+        if (entry?.state === 'invalid') {
+          // Unverified native entries intentionally have no trusted source path
+          // or revision. Keep them visible beside healthy restore candidates;
+          // their opaque display ID must never become a restore authorization.
+          if (entry.restorable !== false || typeof entry.id !== 'string' || !entry.id || entry.id.length > 1024 ||
+              typeof entry.error !== 'string' || entry.error.length > 4096) {
+            throw new Error('Invalid companion project trash warning.');
+          }
+        } else entryValue(entry, {trash: true});
+        if (seen.has(entry.id)) throw new Error('Duplicate companion project trash ID.');
+        seen.add(entry.id);
+      }
+      return result.entries;
+    });
+  }
+
+  _structureReady() {
+    this._available();
+    if (this._opening.size || this._reading || this._saving.size || [...this.buffers.values()].some(buffer => buffer.saving)) {
+      throw new Error('Wait for pending file reads and saves before changing project files.');
+    }
+    if (this._recovery.size || [...this.buffers.values()].some(buffer => buffer.dirty || buffer.conflict)) {
+      throw new Error('Save all buffers and resolve recovery drafts before changing project files.');
+    }
+  }
+
+  _structureDocuments(path) {
+    const documents = [...this.buffers.values()].filter(buffer => containsPath(path, buffer.path))
+      .map(buffer => ({path: buffer.path, revision: buffer.revision}));
+    if (documents.length > 64) throw new Error('Close some affected files before changing a subtree with more than 64 open buffers.');
+    if (documents.some(file => file.revision === null)) throw new Error('Reload the affected files from disk before changing their paths.');
+    return documents;
+  }
+
+  async _changeStructure(operation, body, validate, install) {
+    this._structureReady();
+    this._structureBusy = true;
+    this.structureError = null;
+    try {
+      const result = validate(await this.client.request('/v1/project/' + operation, {method: 'POST', body}));
+      this._active();
+      // The disk operation has committed. Install the matching buffer paths before
+      // attempting any fallible inventory refresh, and never retry its POST.
+      install(result);
+      this.lastStructureChange = {operation, entry: result};
+      if (body.path) this.lastStructureChange.previous_path = body.path;
+      this._persist();
+      try {
+        await this._loadInventory();
+      } catch (error) {
+        error.applied = true;
+        error.result = result;
+        error.operation = operation;
+        throw error;
+      }
+      return result;
+    } catch (error) {
+      this.structureError = error;
+      throw error;
+    } finally {
+      this._structureBusy = false;
+    }
+  }
+
+  async createEntry(path, kind, content = '') {
+    this._structureReady();
+    pathValue(path);
+    if (!['file', 'directory'].includes(kind)) throw new Error('Choose a file or directory.');
+    textBytes(content);
+    if (kind === 'directory' && content !== '') throw new Error('A new directory cannot have file content.');
+    const body = kind === 'file' ? {path, kind, content} : {path, kind};
+    return this._changeStructure('create', body, result => entryValue(result, {path, kind}), () => {
+      // A clean buffer whose previous disk file disappeared must not hide newly
+      // created bytes. The next explicit open will read the new file.
+      this.buffers.delete(path);
+    });
+  }
+
+  async moveEntry(path, destination, revision) {
+    this._structureReady();
+    pathValue(path); pathValue(destination);
+    if (revision === null) throw new Error('Review the current project entry before moving it.');
+    revisionValue(revision);
+    if (containsPath(path, destination) || containsPath(destination, path)) {
+      throw new Error('Choose a separate destination outside the source subtree.');
+    }
+    if ([...this.buffers.keys()].some(open => containsPath(destination, open))) {
+      throw new Error('Close files already open at the destination before moving this entry.');
+    }
+    const documents = this._structureDocuments(path);
+    return this._changeStructure('move', {path, destination, revision, documents}, result => {
+      entryValue(result, {path: destination});
+      if (result.previous_path !== undefined && result.previous_path !== path) throw new Error('The companion returned a different source path.');
+      return result;
+    }, () => {
+      const next = new Map();
+      for (const [open, buffer] of this.buffers) {
+        if (containsPath(path, open)) {
+          const moved = destination + open.slice(path.length);
+          buffer.path = moved;
+          buffer._version++;
+          next.set(moved, buffer);
+        } else next.set(open, buffer);
+      }
+      this.buffers = next;
+    });
+  }
+
+  async trashEntry(path, revision) {
+    this._structureReady();
+    pathValue(path);
+    if (revision === null) throw new Error('Review the current project entry before moving it to trash.');
+    revisionValue(revision);
+    const documents = this._structureDocuments(path);
+    return this._changeStructure('trash', {path, revision, documents}, result => entryValue(result, {path, trash: true}), () => {
+      for (const open of this.buffers.keys()) if (containsPath(path, open)) this.buffers.delete(open);
+    });
+  }
+
+  async restoreEntry(id) {
+    this._structureReady();
+    trashIdValue(id);
+    return this._changeStructure('restore', {id}, result => entryValue(result), result => {
+      // Restore returns the original path. Drop any clean, externally deleted
+      // buffer at that path so its next open reads the restored disk bytes.
+      for (const open of this.buffers.keys()) if (containsPath(result.path, open)) this.buffers.delete(open);
+    });
+  }
+
   get recoverable() {
     return [...this._recovery.values()].map(file => ({...file}));
   }
@@ -283,7 +478,7 @@ export class WorkspaceModel {
   }
 
   importDrafts(data) {
-    this._active();
+    this._available();
     const files = validateDrafts(data);
     if (files.some(file => this.buffers.get(file.path)?.dirty)) {
       throw new Error('Save or export the existing unsaved buffer before importing a draft for the same file.');
@@ -303,44 +498,46 @@ export class WorkspaceModel {
   }
 
   async recover(path) {
-    this._active();
+    this._available();
     const draft = this._recovery.get(path);
     if (!draft) throw new Error('No recovery draft exists for this file.');
     if (this.buffers.get(path)?.dirty) throw new Error('Save or export the current buffer before restoring another draft.');
-    let disk;
-    try {
-      disk = await this.client.request('/v1/project/file?path=' + encodeURIComponent(path));
-    } catch (error) {
-      if (error.status !== 404) throw error;
-      disk = {path, content: '', revision: null};
-    }
-    this._active();
-    if (disk.path !== path) throw new Error('The companion returned a different file path.');
-    // Another action may have edited or replaced this draft while the disk read ran.
-    if (this._recovery.get(path) !== draft || this.buffers.get(path)?.dirty) {
-      throw new Error('The buffer or recovery draft changed while the disk file was being read.');
-    }
-    const buffer = bufferFrom(disk);
-    buffer.content = normalized(draft.content);
-    buffer._exactContent = draft.content;
-    buffer.revision = draft.revision;
-    buffer.newline = draft.newline;
-    buffer.dirty = draft.content !== disk.content || draft.revision !== disk.revision;
-    buffer.conflict = draft.revision !== disk.revision;
-    this.buffers.set(path, buffer);
-    this._recovery.delete(path);
-    this._persist();
-    return buffer;
+    return this._read(async () => {
+      let disk;
+      try {
+        disk = await this.client.request('/v1/project/file?path=' + encodeURIComponent(path));
+      } catch (error) {
+        if (error.status !== 404) throw error;
+        disk = {path, content: '', revision: null};
+      }
+      this._active();
+      if (disk.path !== path) throw new Error('The companion returned a different file path.');
+      // Another action may have edited or replaced this draft while the disk read ran.
+      if (this._recovery.get(path) !== draft || this.buffers.get(path)?.dirty) {
+        throw new Error('The buffer or recovery draft changed while the disk file was being read.');
+      }
+      const buffer = bufferFrom(disk);
+      buffer.content = normalized(draft.content);
+      buffer._exactContent = draft.content;
+      buffer.revision = draft.revision;
+      buffer.newline = draft.newline;
+      buffer.dirty = draft.content !== disk.content || draft.revision !== disk.revision;
+      buffer.conflict = draft.revision !== disk.revision;
+      this.buffers.set(path, buffer);
+      this._recovery.delete(path);
+      this._persist();
+      return buffer;
+    });
   }
 
   discardRecovery(path) {
-    this._active();
+    this._available();
     this._recovery.delete(path);
     this._persist();
   }
 
   setStorage(storage) {
-    this._active();
+    this._available();
     if (storage && !this.storageKey) throw new Error('Recovery requires an explicit project-scoped storage key.');
     const previous = this.storage;
     if (!storage) {

@@ -115,6 +115,20 @@ button:disabled kbd { border-color: var(--muted); }
 .sidebar .section-heading { padding: 0 4px; }
 .sidebar .section-heading button { color: var(--muted); background: transparent; border-color: transparent; }
 .explorer-tabs { display: flex; gap: 15px; margin: 14px 0 13px; border-bottom: 1px solid var(--line); }
+.file-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin: 9px 0 2px; }
+.file-actions button { font-size: 10px; padding: 5px; min-height: 28px; }
+.folder-button { display: block; width: 100%; text-align: left; white-space: normal; overflow-wrap: anywhere; background: transparent; border-color: transparent; }
+#files-dialog { width: min(700px, calc(100vw - 32px)); max-height: calc(100dvh - 40px); overflow: auto; }
+#files-dialog > .section-heading { margin-bottom: 10px; }
+.files-section { display: grid; gap: 10px; padding-top: 15px; margin-top: 15px; border-top: 1px solid var(--line); }
+.files-section h3 { color: var(--accent); }
+.files-section p { margin: 0; }
+.files-section form { display: grid; gap: 10px; }
+.files-section > button { justify-self: start; }
+.files-trash-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 7px 0; }
+.files-trash-row > span { flex: 1; overflow-wrap: anywhere; font-family: ui-monospace, monospace; }
+.files-trash-row > p { width: 100%; }
+button.danger { color: var(--danger); }
 .explorer-tabs button { position: relative; border: 0; border-radius: 0; background: transparent; padding: 7px 3px 10px; color: var(--muted); font-size: 11px; }
 .explorer-tabs button[aria-pressed="true"] { color: var(--text); }
 .explorer-tabs button[aria-pressed="true"]::after { position: absolute; content: ""; height: 2px; background: var(--accent); bottom: -1px; left: 0; right: 0; }

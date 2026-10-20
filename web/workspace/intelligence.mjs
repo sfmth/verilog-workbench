@@ -120,7 +120,7 @@ function sameSession(snapshot, context) {
 }
 
 export function isContextCurrent(snapshot, context) {
-  if (!sameSession(snapshot, context) || snapshot.path !== context.path || snapshot.editor !== context.editor ||
+  if (context.workspaceBusy || context.model?.structureBusy || !sameSession(snapshot, context) || snapshot.path !== context.path || snapshot.editor !== context.editor ||
       snapshot.content !== context.editor?.value || snapshot.start !== context.editor?.selectionStart ||
       snapshot.end !== context.editor?.selectionEnd) return false;
   const documents = buildDocuments(context.model);
@@ -205,6 +205,7 @@ export function mountIntelligence(container, {getContext, onNavigate = () => {},
   }
   function reasonFor(operation, context) {
     if (!context.online || !context.client || !context.model) return 'Connect the companion first.';
+    if (context.workspaceBusy || context.model.structureBusy) return 'Wait for the project file operation.';
     if (!context.path || !context.editor || !context.model.buffers.has(context.path)) return 'Open a source file first.';
     if (busy) return 'Wait for the current editor request.';
     if (!capabilities) return capabilityError || 'Checking language service capabilities…';
@@ -239,13 +240,13 @@ export function mountIntelligence(container, {getContext, onNavigate = () => {},
     retryButton.disabled = !context.online || !context.client || capabilityLoading || busy;
     undoButton.hidden = !undo;
     const recoveryRequired = !!capabilities?.transactions?.recovery_required;
-    undoButton.disabled = !context.online || busy || anyDirty(context.model) || hasRecoveryDrafts(context.model) || !!context.jobRunning || recoveryRequired;
+    undoButton.disabled = !context.online || busy || context.workspaceBusy || anyDirty(context.model) || hasRecoveryDrafts(context.model) || !!context.jobRunning || recoveryRequired;
     undoButton.title = anyDirty(context.model) ? 'Save all files before undoing a rename.' : hasRecoveryDrafts(context.model) ? 'Restore or discard recovery drafts before undoing a rename.' : context.jobRunning ? 'Wait for the running job before undoing a rename.' : recoveryRequired ? 'Recover the interrupted rename first.' : 'Restore the last rename using revision checks.';
     recoverButton.hidden = !recoveryRequired;
-    recoverButton.disabled = !context.online || busy || anyDirty(context.model) || hasRecoveryDrafts(context.model) || !!context.jobRunning;
+    recoverButton.disabled = !context.online || busy || context.workspaceBusy || anyDirty(context.model) || hasRecoveryDrafts(context.model) || !!context.jobRunning;
     recoverButton.title = anyDirty(context.model) ? 'Save all files before recovering a rename.' : hasRecoveryDrafts(context.model) ? 'Restore or discard recovery drafts before recovering a rename.' : context.jobRunning ? 'Wait for the running job before recovering a rename.' : 'Restore the file revisions recorded before the interrupted transaction.';
     if (pendingPlan) {
-      pendingPlan.button.disabled = !context.online || busy || anyDirty(context.model) || hasRecoveryDrafts(context.model) || !!context.jobRunning || recoveryRequired;
+      pendingPlan.button.disabled = !context.online || busy || context.workspaceBusy || anyDirty(context.model) || hasRecoveryDrafts(context.model) || !!context.jobRunning || recoveryRequired;
       pendingPlan.button.title = anyDirty(context.model) ? 'Save all files before applying the rename.' : hasRecoveryDrafts(context.model) ? 'Restore or discard recovery drafts before applying the rename.' : context.jobRunning ? 'Wait for the running job before applying the rename.' : recoveryRequired ? 'Recover the interrupted rename first.' : 'Apply the previewed rename to local files.';
     }
   }
@@ -399,6 +400,7 @@ export function mountIntelligence(container, {getContext, onNavigate = () => {},
   }
   async function mutate(operation) {
     const context = getContext();
+    if (context.workspaceBusy || context.model?.structureBusy) return;
     const item = operation === 'apply' ? pendingPlan : operation === 'undo' ? undo :
       capabilities?.transactions?.recovery_required ? {snapshot: captureContext(context)} : null;
     if (disposed || !item || busy) return;

@@ -85,6 +85,337 @@ function memoryStorage() {
     setItem: (key, value) => values.set(key, value), removeItem: key => values.delete(key)};
 }
 
+function lifecycleSetup(contents = {'src/design/top.sv': '\uFEFFmodule top;\r\nendmodule\r\n', 'src/other.py': 'other = 1\n'}) {
+  const state = setup(contents);
+  const directories = new Set(['src', 'src/empty']);
+  for (const path of state.disk.keys()) {
+    const parts = path.split('/');
+    for (let end = 1; end < parts.length; end++) directories.add(parts.slice(0, end).join('/'));
+  }
+  const trash = new Map();
+  const within = (parent, path) => parent === path || path.startsWith(parent + '/');
+  const conflict = message => Object.assign(new Error(message), {status: 409});
+  const entry = path => {
+    const files = [...state.disk].filter(([file]) => within(path, file));
+    const dirs = [...directories].filter(directory => within(path, directory)).sort();
+    if (!state.disk.has(path) && !directories.has(path)) throw Object.assign(new Error('entry not found'), {status: 404});
+    return {path, kind: state.disk.has(path) ? 'file' : 'directory',
+      revision: state.disk.has(path) ? hash(state.disk.get(path)) : hash(JSON.stringify({files, dirs})),
+      file_count: files.length, bytes: files.reduce((sum, [, content]) => sum + Buffer.byteLength(content), 0)};
+  };
+  const original = state.client.request.bind(state.client);
+  state.client.request = async (url, options = {}) => {
+    if (url === '/v1/project/files') {
+      const inventory = await original(url, options);
+      return {...inventory, directories: [...directories].sort().map(path => ({path}))};
+    }
+    if (url.startsWith('/v1/project/entry?')) {
+      state.calls.push({path: url, options});
+      return entry(new URL(url, 'http://localhost').searchParams.get('path'));
+    }
+    if (url === '/v1/project/trash' && !options.method) {
+      state.calls.push({path: url, options});
+      return {entries: [...trash.values()].map(record => record.entry)};
+    }
+    const operation = url.match(/^\/v1\/project\/(create|move|trash|restore)$/)?.[1];
+    if (!operation) return original(url, options);
+    state.calls.push({path: url, options});
+    const body = options.body;
+    if (operation === 'create') {
+      if (state.disk.has(body.path) || directories.has(body.path)) throw conflict('destination exists');
+      if (body.kind === 'file') state.disk.set(body.path, body.content);
+      else directories.add(body.path);
+      return entry(body.path);
+    }
+    if (operation === 'restore') {
+      const record = trash.get(body.id);
+      if (!record) throw conflict('trash entry missing');
+      if (state.disk.has(record.entry.path) || directories.has(record.entry.path)) throw conflict('destination exists');
+      for (const [path, content] of record.files) state.disk.set(path, content);
+      for (const path of record.dirs) directories.add(path);
+      trash.delete(body.id);
+      return entry(record.entry.path);
+    }
+    const current = entry(body.path);
+    if (current.revision !== body.revision) throw conflict('reviewed entry changed');
+    for (const document of body.documents ?? []) {
+      if (!state.disk.has(document.path) || hash(state.disk.get(document.path)) !== document.revision) {
+        throw conflict('open buffer changed on disk');
+      }
+    }
+    const files = [...state.disk].filter(([path]) => within(body.path, path));
+    const dirs = [...directories].filter(path => within(body.path, path));
+    if (operation === 'move' && (state.disk.has(body.destination) || directories.has(body.destination))) throw conflict('destination exists');
+    for (const [path] of files) state.disk.delete(path);
+    for (const path of dirs) directories.delete(path);
+    if (operation === 'trash') {
+      const id = 'trash_' + String(trash.size + 1);
+      const result = {...current, id};
+      trash.set(id, {entry: result, files, dirs});
+      return result;
+    }
+    for (const [path, content] of files) state.disk.set(body.destination + path.slice(body.path.length), content);
+    for (const path of dirs) directories.add(body.destination + path.slice(body.path.length));
+    return {...entry(body.destination), previous_path: body.path};
+  };
+  return {...state, directories, trash, entry};
+}
+
+test('directory inventories tolerate old companions and include empty directories when available', async () => {
+  const legacy = new WorkspaceModel(setup().client);
+  await legacy.connect();
+  assert.deepEqual(legacy.directories, []);
+  const model = new WorkspaceModel(lifecycleSetup().client);
+  await model.connect();
+  assert.ok(model.directories.some(entry => entry.path === 'src/empty'));
+});
+
+test('file and directory creation refresh inventory once and leave file contents unopened', async () => {
+  const {client, calls, disk} = lifecycleSetup();
+  const model = new WorkspaceModel(client);
+  const content = '\uFEFFnew source\r\n';
+  const created = await model.createEntry('src/new.sv', 'file', content);
+  assert.equal(created.revision, hash(content));
+  assert.equal(disk.get(created.path), content);
+  assert.equal(model.buffers.has(created.path), false);
+  assert.deepEqual(calls.map(call => call.path), ['/v1/project/create', '/v1/project/files']);
+  await model.createEntry('src/new-folder', 'directory');
+  assert.ok(model.directories.some(entry => entry.path === 'src/new-folder'));
+  assert.equal(model.structureBusy, false);
+  assert.equal(model.lastStructureChange.operation, 'create');
+});
+
+test('a directory move remaps clean buffers atomically with exact bytes and revision preserved', async () => {
+  const {client, calls, disk} = lifecycleSetup();
+  const model = new WorkspaceModel(client);
+  const original = await model.open('src/design/top.sv');
+  const other = await model.open('src/other.py');
+  const before = model.editorDocuments().find(file => file.path === original.path);
+  const source = await model.entry('src/design');
+  calls.length = 0;
+  const result = await model.moveEntry(source.path, 'src/renamed', source.revision);
+  assert.equal(result.path, 'src/renamed');
+  assert.equal(model.buffers.get('src/renamed/top.sv'), original);
+  assert.equal(original.path, 'src/renamed/top.sv');
+  assert.equal(original.dirty, false);
+  assert.equal(original.newline, '\r\n');
+  assert.equal(original.revision, before.revision);
+  assert.equal(model.buffers.has('src/design/top.sv'), false);
+  assert.equal(model.buffers.get(other.path), other);
+  assert.deepEqual(model.editorDocuments().find(file => file.path === original.path), {...before, path: original.path, version: before.version + 1});
+  assert.equal(disk.get(original.path), before.content);
+  assert.deepEqual(calls.map(call => call.path), ['/v1/project/move', '/v1/project/files']);
+  assert.deepEqual(calls[0].options.body.documents, [{path: 'src/design/top.sv', revision: before.revision}]);
+});
+
+test('trash closes only the affected subtree and explicit restore preserves exact source on disk', async () => {
+  const {client, disk} = lifecycleSetup();
+  const model = new WorkspaceModel(client);
+  const buffer = await model.open('src/design/top.sv');
+  const content = buffer._exactContent;
+  const other = await model.open('src/other.py');
+  const source = await model.entry('src/design');
+  const trashed = await model.trashEntry(source.path, source.revision);
+  assert.equal(model.buffers.has(buffer.path), false);
+  assert.equal(model.buffers.get(other.path), other);
+  assert.equal(disk.has(buffer.path), false);
+  assert.deepEqual(await model.trashEntries(), [trashed]);
+  const restored = await model.restoreEntry(trashed.id);
+  assert.equal(restored.path, source.path);
+  assert.equal(disk.get(buffer.path), content);
+  assert.equal(model.buffers.has(buffer.path), false);
+  assert.deepEqual(await model.trashEntries(), []);
+});
+
+test('invalid native trash records stay visible without hiding healthy restore candidates', async () => {
+  const {client} = lifecycleSetup();
+  const model = new WorkspaceModel(client);
+  const source = await model.entry('src/design');
+  const trashed = await model.trashEntry(source.path, source.revision);
+  const request = client.request.bind(client);
+  const invalid = {id: '.metadata-leftover.tmp', state: 'invalid', restorable: false,
+    error: 'trash entry cannot be verified; retained for native inspection'};
+  client.request = async (...args) => args[0] === '/v1/project/trash' && !args[1]?.method
+    ? {entries: [invalid, trashed]} : request(...args);
+  assert.deepEqual(await model.trashEntries(), [invalid, trashed]);
+  await assert.rejects(model.restoreEntry(invalid.id), /Invalid project trash ID/);
+  client.request = async (...args) => args[0] === '/v1/project/trash' && !args[1]?.method
+    ? {entries: [{...invalid, restorable: true}]} : request(...args);
+  await assert.rejects(model.trashEntries(), /Invalid companion project trash warning/);
+});
+
+test('stale reviewed entry revisions fail without refreshing or remapping buffers', async () => {
+  const {client, calls, disk} = lifecycleSetup();
+  const model = new WorkspaceModel(client);
+  const buffer = await model.open('src/design/top.sv');
+  const source = await model.entry('src/design');
+  disk.set(buffer.path, 'external source\n');
+  calls.length = 0;
+  await assert.rejects(model.moveEntry(source.path, 'src/changed', source.revision), error => error.status === 409);
+  assert.equal(model.buffers.get(buffer.path), buffer);
+  assert.equal(buffer.path, 'src/design/top.sv');
+  assert.deepEqual(calls.map(call => call.path), ['/v1/project/move']);
+  assert.equal(model.lastStructureChange, null);
+});
+
+test('a fresh subtree review still protects an older clean open buffer from external edits', async () => {
+  const {client, calls, disk} = lifecycleSetup();
+  const model = new WorkspaceModel(client);
+  const buffer = await model.open('src/design/top.sv');
+  disk.set(buffer.path, 'external source\n');
+  const source = await model.entry('src/design');
+  calls.length = 0;
+  await assert.rejects(model.trashEntry(source.path, source.revision), /open buffer changed/);
+  assert.equal(buffer.content, '\uFEFFmodule top;\nendmodule\n');
+  assert.equal(disk.get(buffer.path), 'external source\n');
+  assert.equal(model.buffers.get(buffer.path), buffer);
+  assert.equal(calls.length, 1);
+});
+
+test('structure changes require all buffers clean and all recovery drafts resolved', async () => {
+  const {client, calls} = lifecycleSetup();
+  const model = new WorkspaceModel(client);
+  const buffer = await model.open('src/other.py');
+  model.edit(buffer.path, 'draft\n');
+  let before = calls.length;
+  await assert.rejects(model.createEntry('src/new', 'directory'), /Save all buffers/);
+  assert.equal(calls.length, before);
+  model.edit(buffer.path, 'other = 1\n');
+  model.importDrafts(exportOf(draft('src/recovered.py', 'recovery\n', null)));
+  before = calls.length;
+  await assert.rejects(model.createEntry('src/new', 'directory'), /recovery drafts/);
+  assert.equal(calls.length, before);
+  assert.equal(model.recoverable.length, 1);
+});
+
+test('pending reads block structural mutations before they can remove an opening path', async () => {
+  for (const action of ['open', 'reload', 'recover', 'connect', 'entry', 'trashEntries']) {
+    const {client, calls} = lifecycleSetup();
+    const model = new WorkspaceModel(client);
+    if (['reload', 'recover'].includes(action)) await model.open('src/design/top.sv');
+    if (action === 'recover') model.importDrafts(exportOf(draft('src/design/top.sv', 'old', hash('old'))));
+    const request = client.request.bind(client);
+    let release;
+    client.request = async (...args) => { await new Promise(resolve => { release = resolve; }); return request(...args); };
+    const pending = action === 'connect' || action === 'trashEntries' ? model[action]() : model[action]('src/design/top.sv');
+    await assert.rejects(model.createEntry('src/new', 'directory'), /pending file reads/);
+    assert.equal(calls.some(call => call.options.method === 'POST'), false, action);
+    release();
+    await pending;
+    assert.equal(model.structureBusy, false);
+  }
+});
+
+test('in-flight saves block structural changes until the saved revision is authoritative', async () => {
+  const {client, calls} = lifecycleSetup();
+  const model = new WorkspaceModel(client);
+  const buffer = await model.open('src/other.py');
+  model.edit(buffer.path, 'changed = 1\n');
+  const request = client.request.bind(client);
+  let release;
+  client.request = async (...args) => {
+    if (args[1]?.method === 'PUT') await new Promise(resolve => { release = resolve; });
+    return request(...args);
+  };
+  const saving = model.save(buffer.path);
+  await assert.rejects(model.createEntry('src/new', 'directory'), /pending file reads and saves/);
+  assert.equal(calls.some(call => call.options.method === 'POST'), false);
+  release();
+  await saving;
+  const source = await model.entry(buffer.path);
+  await model.moveEntry(source.path, 'src/moved.py', source.revision);
+  assert.equal(model.buffers.get('src/moved.py'), buffer);
+  assert.equal(buffer.revision, hash('changed = 1\n'));
+});
+
+test('moving more than 64 affected open buffers requires closing some before a mutation', async () => {
+  const contents = Object.fromEntries(Array.from({length: 65}, (_, index) => ['src/design/file' + index + '.py', 'value = 1\n']));
+  const {client, calls} = lifecycleSetup(contents);
+  const model = new WorkspaceModel(client);
+  await Promise.all(Object.keys(contents).map(path => model.open(path)));
+  const source = await model.entry('src/design');
+  const before = calls.length;
+  await assert.rejects(model.moveEntry(source.path, 'src/renamed', source.revision), /more than 64 open buffers/);
+  assert.equal(calls.length, before);
+  assert.equal(model.buffers.size, 65);
+});
+
+test('a structural mutation freezes competing editor and lifecycle actions through inventory refresh', async () => {
+  const {client} = lifecycleSetup();
+  const model = new WorkspaceModel(client);
+  const buffer = await model.open('src/design/top.sv');
+  const request = client.request.bind(client);
+  let release;
+  client.request = async (...args) => {
+    if (args[0] === '/v1/project/files') await new Promise(resolve => { release = resolve; });
+    return request(...args);
+  };
+  const pending = model.createEntry('src/new', 'directory');
+  assert.equal(model.structureBusy, true);
+  await assert.rejects(model.open(buffer.path), /current project file operation/);
+  await assert.rejects(model.reload(buffer.path), /current project file operation/);
+  await assert.rejects(model.save(buffer.path), /current project file operation/);
+  await assert.rejects(model.saveAll(), /current project file operation/);
+  await assert.rejects(model.recover(buffer.path), /current project file operation/);
+  await assert.rejects(model.connect(), /current project file operation/);
+  await assert.rejects(model.createEntry('src/competing', 'directory'), /current project file operation/);
+  for (const action of [() => model.edit(buffer.path, 'draft'), () => model.close(buffer.path),
+    () => model.importDrafts(exportOf()), () => model.discardRecovery(buffer.path),
+    () => model.setStorage(null), () => model.acceptEditorFiles([])]) {
+    assert.throws(action, /current project file operation/);
+  }
+  assert.equal(model.editorDocuments()[0].path, buffer.path); // Read-only status rendering remains available.
+  release();
+  await pending;
+  assert.equal(model.structureBusy, false);
+  model.edit(buffer.path, 'draft after operation');
+  assert.equal(buffer.dirty, true);
+});
+
+test('a committed move stays mapped if its inventory refresh fails and is never posted twice', async () => {
+  const {client, calls, disk} = lifecycleSetup();
+  const model = new WorkspaceModel(client);
+  const buffer = await model.open('src/design/top.sv');
+  const source = await model.entry(buffer.path);
+  const request = client.request.bind(client);
+  client.request = async (...args) => {
+    if (args[0] === '/v1/project/files') throw new Error('inventory connection lost');
+    return request(...args);
+  };
+  await assert.rejects(model.moveEntry(source.path, 'src/moved.sv', source.revision), error => {
+    assert.equal(error.applied, true);
+    assert.equal(error.result.path, 'src/moved.sv');
+    assert.equal(error.operation, 'move');
+    return /inventory connection lost/.test(error.message);
+  });
+  assert.equal(model.buffers.get('src/moved.sv'), buffer);
+  assert.equal(buffer.path, 'src/moved.sv');
+  assert.equal(model.buffers.has(source.path), false);
+  assert.equal(disk.has(source.path), false);
+  assert.equal(calls.filter(call => call.path === '/v1/project/move').length, 1);
+  assert.equal(model.lastStructureChange.entry.path, buffer.path);
+  assert.equal(model.structureBusy, false);
+  client.request = request;
+  await model.connect();
+  assert.ok(model.files.some(file => file.path === buffer.path));
+  assert.equal(calls.filter(call => call.path === '/v1/project/move').length, 1);
+});
+
+test('malformed lifecycle arguments and destination buffers fail before filesystem mutation', async () => {
+  const {client, calls} = lifecycleSetup();
+  const model = new WorkspaceModel(client);
+  for (const action of [() => model.createEntry('../escape', 'file'), () => model.createEntry('src/new', 'link'),
+    () => model.createEntry('src/new', 'directory', 'source'), () => model.moveEntry('src/design', 'src/design/nested', hash('base')),
+    () => model.moveEntry('src/design', 'src/new', null), () => model.trashEntry('src/design', 'invalid'),
+    () => model.restoreEntry('../escape')]) await assert.rejects(action());
+  assert.equal(calls.length, 0);
+  await model.open('src/other.py');
+  const source = await model.entry('src/design');
+  const before = calls.length;
+  await assert.rejects(model.moveEntry(source.path, 'src/other.py', source.revision), /already open/);
+  assert.equal(calls.length, before);
+});
+
 test('workspace inventories files and retains independent dirty buffers while switching', async () => {
   const {client, disk, calls} = setup({'src/a.sv': 'a\n', 'src/b.sv': 'b\n'});
   const model = new WorkspaceModel(client);

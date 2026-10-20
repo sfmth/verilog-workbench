@@ -616,12 +616,20 @@ class SavedWave:
         }
 
 
+def project_files(directory: Path):
+    """Discover ordinary project input without reviving privately trashed files."""
+    for folder, directories, names in os.walk(directory, followlinks=False):
+        directories[:] = [name for name in directories if name.casefold() != '.vwb-trash']
+        for name in names:
+            yield Path(folder) / name
+
+
 def find_hdl_files(directory: Path) -> list[Path]:
     if not directory.is_dir():
         return []
     return sorted(
         path.resolve()
-        for path in directory.rglob("*")
+        for path in project_files(directory)
         if path.is_file() and path.suffix.lower() in HDL_SUFFIXES
     )
 
@@ -1892,8 +1900,8 @@ class Workbench:
             )
         }
         tests: list[TestSpec] = []
-        for path in sorted(self.test_dir.rglob("*.py")):
-            if not path.is_file() or not is_cocotb_test(path):
+        for path in sorted(project_files(self.test_dir)):
+            if path.suffix != '.py' or not path.is_file() or not is_cocotb_test(path):
                 continue
             dut = module_from_test_stem(path.stem, module_names, vhdl_names)
             if dut:
@@ -1926,10 +1934,10 @@ class Workbench:
 
     def include_dirs(self, extra: Sequence[str] = ()) -> list[Path]:
         directories = {self.src_dir, self.test_dir}
-        for path in self.src_dir.rglob("*"):
+        for path in project_files(self.src_dir):
             if path.is_file() and path.suffix.lower() in HDL_SUFFIXES | HEADER_SUFFIXES:
                 directories.add(path.parent.resolve())
-        for path in self.test_dir.rglob("*"):
+        for path in project_files(self.test_dir):
             if path.is_file() and path.suffix.lower() in HDL_SUFFIXES | HEADER_SUFFIXES:
                 directories.add(path.parent.resolve())
         directories.update(project_path(self.root, item) for item in extra)
@@ -4329,8 +4337,8 @@ class Workbench:
         else:
             configs = sorted(
                 path.resolve()
-                for path in self.root.rglob("*.sby")
-                if self.build_dir not in path.parents and ".git" not in path.parts
+                for path in project_files(self.root)
+                if path.suffix == '.sby' and self.build_dir not in path.parents and ".git" not in path.parts
             )
             if len(configs) != 1:
                 choices = ", ".join(display_path(path, self.root) for path in configs)

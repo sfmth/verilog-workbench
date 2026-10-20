@@ -16,6 +16,11 @@ language-service queries and reviewed cross-file rename Apply/Undo/recovery.
 Broader semantic fixtures, remaining platform/tool installation, browser/permission
 acceptance and physical board evidence remain open.
 
+The next workspace increment adds [file/folder lifecycle operations](FILES_WORKSPACE.md):
+creation, reviewed revision-checked moves, clean-tab remapping, persistent private
+trash and conflict-safe restoration. This closes the initial browser file-action
+gap while broader project/platform acceptance remains required.
+
 Started: 2026-10-17 (America/Los_Angeles).
 Latest owner decisions: 2026-10-18 (America/Los_Angeles).
 

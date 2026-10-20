@@ -188,7 +188,7 @@ class EditorService:
     def _capture(self, documents, deadline=None):
         """Capture real source context; no invented file lists or project changes."""
         snapshots, total, count = {}, 0, 0
-        excluded = {".git", ".m0-tools", ".venv", "venv", "node_modules", "__pycache__",
+        excluded = {".git", ".vwb-trash", ".m0-tools", ".venv", "venv", "node_modules", "__pycache__",
                     ".pytest_cache", ".tox", ".mypy_cache", ".ruff_cache"}
         for directory, dirs, names in os.walk(self.project.root, followlinks=False):
             dirs[:] = sorted(name for name in dirs if name.casefold() not in excluded

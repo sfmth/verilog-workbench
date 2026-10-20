@@ -40,7 +40,11 @@ def process_running(pid):
         return False
     stat = Path(f"/proc/{pid}/stat")
     if stat.exists():
-        return stat.read_text().rsplit(")", 1)[1].split()[0] != "Z"
+        try:
+            return stat.read_text().rsplit(")", 1)[1].split()[0] != "Z"
+        except FileNotFoundError:
+            # The child can finish between the existence check and this read.
+            return False
     state = subprocess.run(
         ["ps", "-o", "stat=", "-p", str(pid)], capture_output=True, text=True
     )

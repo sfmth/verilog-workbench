@@ -55,8 +55,10 @@ class CompanionState:
         self.runner = runner
         from .editor import EditorService
         from .edits import EditTransactions
+        from .files import FileOperations
         self.editor = EditorService(project, editor_config)
         self.edits = EditTransactions(project)
+        self.files = FileOperations(project)
         self.editor_busy = False
         self.editor_plans = {}
         self.editor_undos = {}
@@ -65,6 +67,15 @@ class CompanionState:
         result = self.editor.capabilities()
         result['transactions'] = self.edits.status()
         return result
+
+    def file_operation(self, operation, payload):
+        with self.lock, self.project.lock:
+            self._editor_idle()
+            result = getattr(self.files, operation)(payload)
+            # A path change invalidates service previews and inverse edit IDs.
+            self.editor_plans.clear()
+            self.editor_undos.clear()
+            return result
 
     def editor_query(self, payload):
         if not isinstance(payload, dict):
@@ -446,6 +457,13 @@ class Handler(BaseHTTPRequestHandler):
         if len(self.headers.get_all("Authorization", [])) != 1:
             raise ProjectError(401, "one bearer session token required")
         self.state.authorize(self.headers.get("Authorization"))
+        if self.command == 'GET' and path == '/v1/project/entry':
+            return 200, self.state.files.entry(self._path_parameter(parsed.query))
+        if self.command == 'GET' and path == '/v1/project/trash' and not parsed.query:
+            return 200, self.state.files.trash_list()
+        if self.command == 'POST' and path in {
+                '/v1/project/create', '/v1/project/move', '/v1/project/trash', '/v1/project/restore'} and not parsed.query:
+            return 200, self.state.file_operation(path.rsplit('/', 1)[1], self._body())
         if self.command == 'GET' and path == '/v1/editor/capabilities' and not parsed.query:
             return 200, self.state.editor_capabilities()
         if self.command == 'POST' and path == '/v1/editor/query' and not parsed.query:

@@ -12,11 +12,14 @@ on:
       - 'scripts/probe_workspace.mjs'
       - 'scripts/probe_pages.mjs'
       - 'scripts/probe_editor_workspace.mjs'
+      - 'scripts/probe_files_workspace.mjs'
       - 'scripts/acquire_editor_tools.py'
       - 'editor-fixtures/**'
       - 'tests/test_editor.py'
       - 'tests/test_edits.py'
       - 'tests/test_companion_editor.py'
+      - 'tests/test_files.py'
+      - 'tests/test_companion_files.py'
       - 'tests/test_acquire_editor_tools.py'
       - 'tests/test_web_build.py'
       - 'tests/test_*.mjs'
@@ -31,11 +34,14 @@ on:
       - 'scripts/probe_workspace.mjs'
       - 'scripts/probe_pages.mjs'
       - 'scripts/probe_editor_workspace.mjs'
+      - 'scripts/probe_files_workspace.mjs'
       - 'scripts/acquire_editor_tools.py'
       - 'editor-fixtures/**'
       - 'tests/test_editor.py'
       - 'tests/test_edits.py'
       - 'tests/test_companion_editor.py'
+      - 'tests/test_files.py'
+      - 'tests/test_companion_files.py'
       - 'tests/test_acquire_editor_tools.py'
       - 'tests/test_web_build.py'
       - 'tests/test_*.mjs'
@@ -71,6 +77,8 @@ jobs:
           python -m unittest discover -s tests -p test_edits.py -v
           python -m unittest discover -s tests -p test_companion_editor.py -v
           python -m unittest discover -s tests -p test_acquire_editor_tools.py -v
+          python -m unittest discover -s tests -p test_files.py -v
+          python -m unittest discover -s tests -p test_companion_files.py -v
       - name: Build validated development preview
         run: python scripts/build_web.py --output dist/web --base-path /verilog-workbench/
       - name: Install pinned browser acceptance harness
@@ -87,6 +95,8 @@ jobs:
         run: node scripts/probe_editor_workspace.mjs --editor-config .m0-tools/editor/editor-config.json --playwright-module ../.web-browser/node_modules/playwright --output editor-browser-evidence.json --screenshot editor-workspace.png
       - name: Exercise built Pages paths with the real native companion
         run: node scripts/probe_workspace.mjs --playwright-module ../.web-browser/node_modules/playwright --native-sim true --output pages-browser-evidence.json --screenshot pages-workspace.png
+      - name: Exercise file and folder management through the built browser UI
+        run: node scripts/probe_files_workspace.mjs --playwright-module ../.web-browser/node_modules/playwright --output files-browser-evidence.json --screenshot files-workspace.png
       - name: Retain browser evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -97,6 +107,8 @@ jobs:
             pages-workspace.png
             editor-browser-evidence.json
             editor-workspace.png
+            files-browser-evidence.json
+            files-workspace.png
           if-no-files-found: warn
       - uses: actions/upload-pages-artifact@v3
         with:
@@ -147,6 +159,10 @@ jobs:
         env:
           VWB_PUBLIC_WORKSPACE: ${{ format('{0}workspace/', needs.deploy.outputs.page_url) }}
         run: node scripts/probe_editor_workspace.mjs --public-url "$VWB_PUBLIC_WORKSPACE" --editor-config .m0-tools/editor/editor-config.json --playwright-module ../.web-browser/node_modules/playwright --output editor-public-evidence.json --screenshot editor-public-workspace.png
+      - name: Verify file lifecycle from the actual HTTPS app
+        env:
+          VWB_PUBLIC_WORKSPACE: ${{ format('{0}workspace/', needs.deploy.outputs.page_url) }}
+        run: node scripts/probe_files_workspace.mjs --public-url "$VWB_PUBLIC_WORKSPACE" --playwright-module ../.web-browser/node_modules/playwright --output files-public-evidence.json --screenshot files-public-workspace.png
       - name: Retain public HTTPS evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -157,4 +173,6 @@ jobs:
             pages-public-workspace.png
             editor-public-evidence.json
             editor-public-workspace.png
+            files-public-evidence.json
+            files-public-workspace.png
           if-no-files-found: warn

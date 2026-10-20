@@ -12,6 +12,11 @@ The [semantic editor extension](EDITOR_WORKSPACE.md) adds authenticated
 Its bounded document snapshots and server-issued edit IDs remain protocol 1;
 it does not expose arbitrary LSP RPC or browser-selected native commands.
 
+The [file/folder extension](FILES_WORKSPACE.md) adds authenticated project entry,
+create, move, trash/list and restore routes, plus directory inventory. Reviewed
+entry revisions and affected open-file heads protect path mutations; private
+trash contents are excluded from ordinary file/artifact and semantic APIs.
+
 The protocol version is the JSON number **`1`**. It is not a string or a named
 version token. Native tool discovery has a separate nested schema identifier,
 `"vwb.toolchains/1"`, which does not change the HTTP protocol version.

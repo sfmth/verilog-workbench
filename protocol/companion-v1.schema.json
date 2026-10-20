@@ -109,7 +109,8 @@
             "properties": {"path": {"$ref": "#/$defs/path"}, "size": {"type": "integer", "minimum": 0}}
           }
         },
-        "truncated": {"type": "boolean", "description": "True when the inventory limit was reached; no complete-inventory claim is made."}
+        "directories": {"type": "array", "maxItems": 10000, "items": {"type": "object", "additionalProperties": false, "required": ["path"], "properties": {"path": {"$ref": "#/$defs/path"}}}},
+        "truncated": {"type": "boolean", "description": "True when the combined file/directory inventory limit was reached; no complete-inventory claim is made."}
       },
       "description": "Shared shape for project files and generated artifacts. Artifact paths remain relative to the project and include the build-directory prefix."
     },
@@ -203,6 +204,150 @@
         "stale": {"type": "boolean", "description": "A changed or unreadable final source snapshot marks a finished native result stale; this does not freeze input while running."},
         "stdout_truncated": {"type": "boolean"}, "stderr_truncated": {"type": "boolean"},
         "source_snapshot_error": {"type": "string"}
+      }
+    },
+    "projectEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "kind",
+        "revision",
+        "file_count",
+        "bytes"
+      ],
+      "properties": {
+        "path": {
+          "$ref": "#/$defs/path"
+        },
+        "kind": {
+          "enum": [
+            "file",
+            "directory"
+          ]
+        },
+        "revision": {
+          "$ref": "#/$defs/revision"
+        },
+        "file_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "projectCreate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "kind"
+      ],
+      "properties": {
+        "path": {
+          "$ref": "#/$defs/path"
+        },
+        "kind": {
+          "enum": [
+            "file",
+            "directory"
+          ]
+        },
+        "content": {
+          "type": "string"
+        }
+      }
+    },
+    "projectMove": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "destination",
+        "revision"
+      ],
+      "properties": {
+        "path": {
+          "$ref": "#/$defs/path"
+        },
+        "destination": {
+          "$ref": "#/$defs/path"
+        },
+        "revision": {
+          "$ref": "#/$defs/revision"
+        },
+        "documents": {
+          "type": "array",
+          "maxItems": 64,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "path",
+              "revision"
+            ],
+            "properties": {
+              "path": {
+                "$ref": "#/$defs/path"
+              },
+              "revision": {
+                "$ref": "#/$defs/revision"
+              }
+            }
+          }
+        }
+      }
+    },
+    "projectTrash": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "revision"
+      ],
+      "properties": {
+        "path": {
+          "$ref": "#/$defs/path"
+        },
+        "revision": {
+          "$ref": "#/$defs/revision"
+        },
+        "documents": {
+          "type": "array",
+          "maxItems": 64,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "path",
+              "revision"
+            ],
+            "properties": {
+              "path": {
+                "$ref": "#/$defs/path"
+              },
+              "revision": {
+                "$ref": "#/$defs/revision"
+              }
+            }
+          }
+        }
+      }
+    },
+    "projectRestore": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{32}$"
+        }
       }
     },
     "editorPosition": {

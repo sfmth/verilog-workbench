@@ -8,6 +8,8 @@ The [workspace development preview](../docs/WEB_WORKSPACE.md) uses this same
 bridge for multi-file editing, recovery, native jobs and artifact/VCD viewing.
 The [semantic editor extension](../docs/EDITOR_WORKSPACE.md) adds locally
 configured language services and reviewed cross-file rename transactions.
+The [file lifecycle extension](../docs/FILES_WORKSPACE.md) adds revision-checked
+creation/moves and private persistent trash/restore within the granted project.
 The M0 proof remains available for focused connection checks.
 
 From a source checkout with Python 3.10 or newer:

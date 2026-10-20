@@ -76,12 +76,18 @@ class ProjectGrant:
         return {"id": identity, "name": self.root.name, "src_dir": self.src_dir,
                 "test_dir": self.test_dir, "build_dir": self.build_dir}
 
-    def path(self, value, *, allow_root=False):
+    def path(self, value, *, allow_root=False, private=False):
         if not isinstance(value, str) or not value or len(value) > 1024:
             raise ProjectError(400, "path must be a nonempty project-relative string")
+        try:
+            value.encode('utf-8')
+        except UnicodeError as exc:
+            raise ProjectError(400, 'path must be valid UTF-8') from exc
         if "\\" in value or ":" in value or any(ord(c) < 32 for c in value):
             raise ProjectError(400, "unsupported path spelling")
         pure = PurePosixPath(value)
+        if any(part.casefold() == '.vwb-trash' for part in pure.parts) and not private:
+            raise ProjectError(403, 'project trash is private; use the restore operation')
         if pure.is_absolute() or any(part in ("..", "") for part in pure.parts):
             raise ProjectError(403, "path must stay inside the granted project")
         reserved = {"CON", "PRN", "AUX", "NUL", *(f"COM{i}" for i in range(1, 10)),
@@ -176,15 +182,20 @@ class ProjectGrant:
 
     def inventory(self, *, artifacts=False):
         base = self.build_path if artifacts else self.root
-        files = []
+        files, directories = [], []
         if not base.exists():
-            return {"files": files, "truncated": False}
+            return {"files": files, "directories": directories, "truncated": False}
         self.path(base.relative_to(self.root).as_posix(), allow_root=True)
         for directory, dirs, names in os.walk(base, followlinks=False):
             dirs[:] = sorted(d for d in dirs if d.casefold() != ".git"
+                             and d.casefold() != '.vwb-trash'
                              and not is_link(Path(directory) / d)
                              and not self.private_editor_path(Path(directory) / d)
                              and (artifacts or Path(directory) / d != self.build_path))
+            for name in dirs:
+                directories.append({'path': (Path(directory) / name).relative_to(self.root).as_posix()})
+                if len(files) + len(directories) >= MAX_FILES:
+                    return {'files': files, 'directories': directories, 'truncated': True}
             for name in sorted(names):
                 path = Path(directory) / name
                 if name.casefold() == ".git" or name.startswith(".vwb-save-") or is_link(path):
@@ -196,9 +207,9 @@ class ProjectGrant:
                     files.append({"path": path.relative_to(self.root).as_posix(), "size": info.st_size})
                 except OSError:
                     continue
-                if len(files) >= MAX_FILES:
-                    return {"files": files, "truncated": True}
-        return {"files": files, "truncated": False}
+                if len(files) + len(directories) >= MAX_FILES:
+                    return {"files": files, "directories": directories, "truncated": True}
+        return {"files": files, "directories": directories, "truncated": False}
 
     def source_revision(self):
         """Hash source/test names and bytes, with a bounded cost for the proof.
@@ -220,6 +231,7 @@ class ProjectGrant:
                     raise ProjectError(400, "source and test paths must be directories")
                 for directory, dirs, names in os.walk(base, followlinks=False):
                     dirs[:] = sorted(d for d in dirs if d.casefold() != ".git"
+                                     and d.casefold() != '.vwb-trash'
                                      and Path(directory) / d != self.build_path)
                     for name in dirs:
                         if is_link(Path(directory) / name):

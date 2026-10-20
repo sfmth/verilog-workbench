@@ -71,7 +71,7 @@ function context() {
     editor: {value: file.content, selectionStart: 8, selectionEnd: 8}, online: true, sessionId: 1, jobRunning: false};
 }
 
-test('query snapshots reject edits, caret changes, reopened tabs, background buffers, sessions and disconnects', () => {
+test('query snapshots reject edits, caret changes, reopened tabs, background buffers, sessions, disconnects and file operations', () => {
   const changes = [
     value => { value.editor.value += ' '; },
     value => { value.editor.selectionStart++; },
@@ -83,6 +83,8 @@ test('query snapshots reject edits, caret changes, reopened tabs, background buf
     value => { value.path = 'test.py'; },
     value => { value.online = false; },
     value => { value.client = {request() {}}; },
+    value => { value.workspaceBusy = true; },
+    value => { value.model.structureBusy = true; },
   ];
   for (const change of changes) {
     const current = context(), captured = captureContext(current);
@@ -198,6 +200,50 @@ test('stale query responses and completions cannot affect the editor or next wor
   next.resolve(response('hover', {text: 'OLD SESSION SECRET'}));
   await request;
   assert.equal(other.container.textContent.includes('OLD SESSION SECRET'), false);
+
+  for (const owner of ['workspace', 'model']) {
+    const setBusy = (state, value) => {
+      if (owner === 'workspace') state.current.workspaceBusy = value;
+      else state.current.model.structureBusy = value;
+    };
+    const pendingCompletion = deferred();
+    const completion = fixture({request: () => pendingCompletion.promise});
+    await flush();
+    const original = completion.current.editor.value;
+    const inFlight = completion.api.query('completion');
+    setBusy(completion, true);
+    completion.api.refresh();
+    pendingCompletion.resolve(response('completion', {items: [{label: 'new_top', range: range(0, 7, 10)}]}));
+    await inFlight;
+    assert.equal(completion.find('button', 'new_top'), undefined, owner);
+    assert.equal(completion.current.editor.value, original);
+    assert.equal(completion.current.model.buffers.get(completion.current.path).dirty, false);
+
+    setBusy(completion, false);
+    completion.api.refresh();
+    await completion.api.query('completion');
+    const offered = completion.find('button', 'new_top');
+    assert.ok(offered);
+    // Exercise the handler guard before rendering has disabled or removed an
+    // already offered completion when the filesystem mutation begins.
+    setBusy(completion, true);
+    offered.click();
+    assert.equal(completion.current.editor.value, original);
+    assert.equal(completion.current.model.buffers.get(completion.current.path).dirty, false);
+
+    const pendingRename = deferred();
+    const rename = fixture({request: () => pendingRename.promise});
+    const renaming = rename.rename();
+    await flush();
+    assert.equal(rename.requests.filter(item => item.path.endsWith('/query')).length, 1);
+    setBusy(rename, true);
+    rename.api.refresh();
+    pendingRename.resolve(response('rename', {}, {plan}));
+    await renaming;
+    assert.equal(rename.find('button', 'Apply rename to local files'), undefined, owner);
+    assert.equal(rename.requests.some(item => item.path.endsWith('/apply')), false);
+    assert.equal(rename.callbacks.length, 0);
+  }
 });
 
 test('multiline completion normalizes service newlines before placing the textarea caret', async () => {
@@ -229,6 +275,26 @@ test('rename requires a preview, clean buffers and no running jobs; Apply and Un
   assert.equal(apply.disabled, true);
   state.current.jobRunning = false;
   state.api.refresh();
+  for (const owner of ['workspace', 'model']) {
+    if (owner === 'workspace') state.current.workspaceBusy = true;
+    else state.current.model.structureBusy = true;
+    state.api.refresh();
+    for (const label of ['Complete', 'Hover', 'Definition', 'References', 'Rename']) {
+      assert.equal(state.find('button', label).disabled, true, owner + ': ' + label);
+      assert.match(state.find('button', label).title, /project file operation/);
+    }
+    const before = state.requests.length;
+    await state.api.query('completion');
+    await state.api.query('rename');
+    apply.click();
+    await flush();
+    assert.equal(state.requests.length, before, owner);
+    assert.equal(state.callbacks.length, 0);
+    assert.equal(file.dirty, false);
+    if (owner === 'workspace') state.current.workspaceBusy = false;
+    else state.current.model.structureBusy = false;
+    state.api.refresh();
+  }
   apply.click();
   await flush();
   assert.deepEqual(state.busy, [true, false]);

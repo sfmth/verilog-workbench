@@ -2,6 +2,7 @@ import {CompanionClient} from '../m0/client.mjs';
 import {WorkspaceModel, MAX_DRAFT_IMPORT_BYTES} from './model.mjs';
 import {mountWaveform} from './waveform.mjs';
 import {mountIntelligence, offsetAt} from './intelligence.mjs';
+import {mountFileManager} from './files.mjs';
 
 const $ = id => document.getElementById(id);
 const all = selector => [...document.querySelectorAll(selector)];
@@ -14,6 +15,7 @@ let editVersion = 0, lastJobEditVersion = 0;
 let pairing = false;
 const dirty = () => [...(model?.buffers.values() || [])].some(buffer => buffer.dirty);
 let intelligence;
+let fileManager;
 
 function node(tag, text, className) {
   const value = document.createElement(tag);
@@ -64,6 +66,7 @@ function renderControls() {
   $('persist-drafts').disabled = !model?.storageKey;
   $('forget').disabled = preparing;
   $('connect-toggle').disabled = preparing;
+  for (const id of ['new-file', 'new-folder', 'manage-files', 'open-trash']) $(id).disabled = !online || preparing || !!activeJob;
   $('connection-indicator').textContent = online ? 'Companion connected' : 'Disconnected';
   $('connection-indicator').classList.toggle('connected', online);
   $('connect-toggle').textContent = online ? 'Connection' : 'Connect companion';
@@ -71,6 +74,7 @@ function renderControls() {
   $('forget').hidden = !client?.token;
   $('resume-job').hidden = !activeJob;
   intelligence?.refresh();
+  fileManager?.refresh();
 }
 function renderFileStatus() {
   const file = model?.buffers.get(activePath);
@@ -91,9 +95,11 @@ function renderTabs() {
     tab.classList.toggle('active', file.path === activePath);
     const choose = button((file.dirty ? '● ' : '') + file.path.split('/').at(-1), () => openFile(file.path));
     choose.title = file.path;
+    choose.disabled = preparing;
     choose.setAttribute('aria-pressed', String(file.path === activePath));
     const close = button('×', () => closeFile(file.path), 'close-tab');
     close.setAttribute('aria-label', 'Close ' + file.path);
+    close.disabled = preparing;
     tab.append(choose, close);
     $('file-tabs').append(tab);
   }
@@ -107,7 +113,7 @@ function renderEditor() {
   renderTabs(); renderControls(); renderFileStatus(); renderExplorer();
 }
 async function openFile(path, line) {
-  if (!model) return;
+  if (!model || preparing) return;
   const generation = ++openGeneration, workspace = model;
   await workspace.open(path);
   if (generation !== openGeneration || workspace !== model) return;
@@ -123,6 +129,7 @@ async function openFile(path, line) {
   updateHash();
 }
 function closeFile(path) {
+  if (preparing) return;
   const file = model.buffers.get(path);
   if (file?.dirty && !confirm('Discard unsaved edits to ' + path + '? Export drafts first to keep a copy.')) return;
   model.close(path);
@@ -135,14 +142,25 @@ function renderExplorer() {
   container.replaceChildren();
   const needle = $('filter').value.toLowerCase();
   const files = model.files.filter(file => file.path.toLowerCase().includes(needle));
+  $('file-actions').hidden = explorerView !== 'files';
   if (explorerView === 'files') {
-    let group;
+    const folders = new Set((model.directories || []).map(entry => entry.path));
+    for (const file of model.files) {
+      const parts = file.path.split('/');
+      for (let index = 1; index < parts.length; index++) folders.add(parts.slice(0, index).join('/'));
+    }
+    for (const path of [...folders].sort()) {
+      if (needle && !path.toLowerCase().includes(needle) && !files.some(file => file.path.startsWith(path + '/'))) continue;
+      const folder = button(path + '/', () => fileManager.open('manage', path), 'folder-label folder-button');
+      folder.setAttribute('aria-label', 'Manage folder ' + path);
+      folder.disabled = preparing;
+      container.append(folder);
+    }
     for (const file of [...files].sort((a, b) => a.path.localeCompare(b.path))) {
-      const folder = file.path.includes('/') ? file.path.slice(0, file.path.lastIndexOf('/')) : 'PROJECT';
-      if (folder !== group) { container.append(node('p', folder, 'folder-label')); group = folder; }
       const item = button(file.path, () => openFile(file.path), 'file-row');
       item.dataset.path = file.path;
       item.classList.toggle('active', file.path === activePath);
+      item.disabled = preparing;
       container.append(item);
     }
   } else if (!discovery) {
@@ -176,9 +194,12 @@ function renderRecovery() {
       if (lastJob) renderJob(lastJob);
     });
     restore.dataset.path = file.path;
-    row.append(node('span', file.path), restore, button('Discard', () => {
+    restore.disabled = preparing;
+    const discard = button('Discard', () => {
       if (confirm('Discard recovery draft for ' + file.path + '?')) model.discardRecovery(file.path);
-    }));
+    });
+    discard.disabled = preparing;
+    row.append(node('span', file.path), restore, discard);
     $('recovery-list').append(row);
   }
 }
@@ -366,9 +387,8 @@ async function capabilities() {
 }
 async function refresh() {
   const workspace = model, sessionEpoch = epoch;
-  const inventory = await client.request('/v1/project/files');
+  await workspace.connect();
   if (sessionEpoch !== epoch || workspace !== model) return;
-  workspace.files = inventory.files; workspace.inventory = inventory;
   renderExplorer(); renderRecovery();
 }
 function resetResults() {
@@ -442,6 +462,10 @@ $('forget').addEventListener('click', () => {
   renderControls();
 });
 $('refresh').addEventListener('click', () => perform(refresh));
+$('new-file').addEventListener('click', () => fileManager.open('file'));
+$('new-folder').addEventListener('click', () => fileManager.open('folder'));
+$('manage-files').addEventListener('click', () => fileManager.open('manage'));
+$('open-trash').addEventListener('click', () => fileManager.open('trash'));
 $('filter').addEventListener('input', renderExplorer);
 for (const item of all('[data-explorer]')) item.addEventListener('click', () => {
   explorerView = item.dataset.explorer;
@@ -524,22 +548,50 @@ const acceptEdits = result => {
   model.acceptEditorFiles(result.files); editVersion++;
   renderEditor(); if (lastJob) renderJob(lastJob);
 };
-intelligence = mountIntelligence($('intelligence-view'), {
-  getContext: () => ({client, model, path: activePath, editor: $('editor'), online, sessionId: epoch, jobRunning: !!activeJob || preparing}),
-  onNavigate: async (path, range) => {
-    const workspace = model, navigationEpoch = epoch;
-    const opening = openFile(path, range?.start?.line + 1), navigationGeneration = openGeneration;
-    await opening;
-    if (range && workspace === model && navigationEpoch === epoch &&
-        navigationGeneration === openGeneration && activePath === path) {
-      const editor = $('editor');
-      editor.setSelectionRange(offsetAt(editor.value, range.start), offsetAt(editor.value, range.end));
-      editor.focus();
+function resetIntelligence() {
+  intelligence?.dispose();
+  intelligence = mountIntelligence($('intelligence-view'), {
+    getContext: () => ({client, model, path: activePath, editor: $('editor'), online, sessionId: epoch, jobRunning: !!activeJob || preparing, workspaceBusy: preparing || !!model?.structureBusy}),
+    onNavigate: async (path, range) => {
+      const workspace = model, navigationEpoch = epoch;
+      const opening = openFile(path, range?.start?.line + 1), navigationGeneration = openGeneration;
+      await opening;
+      if (range && workspace === model && navigationEpoch === epoch &&
+          navigationGeneration === openGeneration && activePath === path) {
+        const editor = $('editor');
+        editor.setSelectionRange(offsetAt(editor.value, range.start), offsetAt(editor.value, range.end));
+        editor.focus();
+      }
+    },
+    onApply: acceptEdits, onUndo: acceptEdits,
+    onRecover: result => { if (result.files?.length) acceptEdits(result); },
+    onBusy: value => { preparing = value; renderControls(); },
+    onStatus: (message, error = false, cause) => {
+      if (cause?.status === 401 || cause?.name === 'AbortError' || cause instanceof TypeError) {
+        online = false;
+        say('Disconnected. Retry the connection to retain this session, or pair a restarted companion.', 'connection-status', true);
+        renderControls();
+      }
+      say(message, 'global-status', error);
+    },
+  });
+}
+resetIntelligence();
+fileManager = mountFileManager($('files-dialog'), {
+  getContext: () => ({client, model, path: activePath, online, sessionId: epoch, jobRunning: !!activeJob || preparing}),
+  onBusy: value => { preparing = value; renderControls(); renderTabs(); renderExplorer(); renderRecovery(); },
+  onChanged: async ({operation, entry}) => {
+    if (operation === 'move' && activePath && (activePath === entry.previous_path || activePath.startsWith(entry.previous_path + '/'))) {
+      activePath = entry.path + activePath.slice(entry.previous_path.length);
+    } else if (operation === 'trash' && activePath && (activePath === entry.path || activePath.startsWith(entry.path + '/'))) {
+      activePath = model.buffers.keys().next().value;
     }
+    if (activePath && !model.buffers.has(activePath)) activePath = model.buffers.keys().next().value;
+    discovery = null; editVersion++; openGeneration++;
+    resetIntelligence(); renderEditor(); updateHash();
+    if (lastJob) renderJob(lastJob);
+    if (operation === 'create' && entry.kind === 'file') await openFile(entry.path);
   },
-  onApply: acceptEdits, onUndo: acceptEdits,
-  onRecover: result => { if (result.files?.length) acceptEdits(result); },
-  onBusy: value => { preparing = value; renderControls(); },
   onStatus: (message, error = false, cause) => {
     if (cause?.status === 401 || cause?.name === 'AbortError' || cause instanceof TypeError) {
       online = false;
@@ -550,4 +602,5 @@ intelligence = mountIntelligence($('intelligence-view'), {
   },
 });
 window.addEventListener('pagehide', () => intelligence.dispose());
+window.addEventListener('pagehide', () => fileManager.dispose());
 commandChanged(); renderControls(); perform(readHash);

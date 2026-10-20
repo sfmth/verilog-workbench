@@ -1,0 +1,25 @@
+{
+  "schema": "vwb.file-lifecycle-source-evidence/1",
+  "recorded_at": "2026-10-20T01:50:22.768396+00:00",
+  "scope": "Local real Chromium lifecycle acceptance. 237 Python checks (5 skips), 162 CLI checks (1 skip), 75 JavaScript checks passed separately. Native six-platform and public HTTPS CI recorded after deployment.",
+  "source_sha256": {
+    "companion/files.py": "927013fc095c16f12afa0cabb8dbb89890eec16fa7729543908bcf53b69dddbf",
+    "companion/projects.py": "92fa5d30f405090231504b30413ce13d7a5ab1fbe2e38edfc0763f9992e830d1",
+    "companion/server.py": "1fb4071fe984cca557da99a0dee5b700303c00028bec31561ea0c3a095d5bdcb",
+    "companion/editor.py": "7793033695184d646c574ba236cd7cf6f21853ec38a427520fd52004f86ff530",
+    "vwb.py": "83d6ae2f753010179050603a547735ac262587f2982ce1de78b1c4e412135e7f",
+    "web/workspace/files.mjs": "dec64e371c20342bbcc7b740f21964064a1d0b3e7d24088b175532ba291c9b9c",
+    "web/workspace/model.mjs": "56fcd7aee518afdb4cbd44d87604dbfac0fee07af2e8f8f62aca99ad606cad88",
+    "web/workspace/app.mjs": "f217521f0bfd67a59a9618e0e649bbb53f60725bac7c4d5a8186a531e5a23bd2",
+    "web/workspace/intelligence.mjs": "737a179def2088dba8e4d45f7c1ef02f971484d890ad9f9f95c851296ca6d556",
+    "scripts/probe_files_workspace.mjs": "f4665afdaa5fb654de63d6692238b35197776f02b422387af05e5d13beb447ee"
+  },
+  "local_browser_checks": 15,
+  "browser": "141.0.7390.37",
+  "limits": {
+    "trash_entries": 32,
+    "subtree_and_cumulative_trash_bytes": 67108864,
+    "subtree_and_cumulative_trash_filesystem_entries": 10000,
+    "affected_open_documents": 64
+  }
+}
