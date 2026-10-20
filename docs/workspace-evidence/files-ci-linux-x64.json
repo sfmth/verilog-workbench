@@ -1,0 +1,50 @@
+{
+  "schema": "vwb.files-workspace-browser-probe/1",
+  "recorded_at": "2026-10-20T01:51:37.805Z",
+  "state": "passed",
+  "target": "built-local-project-prefix-workspace",
+  "pages_prefix": "/verilog-workbench/",
+  "checks": [
+    "real-workspace-project-prefix-and-companion-UI-pairing",
+    "UI-Enter-creates-Unicode-folder-and-button-creates-empty-file-then-edits-and-saves",
+    "delayed-entry-response-after-deselection-cannot-stick-loading-or-enable-stale-mutation",
+    "post-create-open-transport-failure-keeps-committed-file-reports-applied-error-and-never-retries-POST",
+    "multi-file-folder-move-preserves-exact-bytes-remaps-clean-tabs-hash-and-save-target",
+    "dirty-buffer-blocks-lifecycle-without-disk-changes",
+    "unresolved-recovery-draft-blocks-lifecycle",
+    "stale-entry-revision-conflict-preserves-external-bytes-and-path",
+    "existing-destination-conflict-never-overwrites-either-file",
+    "UI-folder-trash-closes-remapped-tabs-retains-private-undownloadable-data",
+    "trash-survives-real-native-clean-companion-restart-and-new-UI-session",
+    "UI-restore-refuses-external-replacement-then-restores-original-four-language-tree",
+    "authenticated-HTTP-rejects-configured-roots-config-build-Git-traversal-and-private-trash",
+    "restored-project-runs-real-native-discovery-through-UI",
+    "loaded-assets-match-manifest-and-browser-storage-keeps-credentials-and-unopted-drafts-out"
+  ],
+  "permission_grant": "not_run",
+  "native_job": "passed-real-vwb-list-through-browser-after-restored-folder",
+  "hardware_tested": false,
+  "transport_fault_injection": [
+    "delayed-real-native-entry-response-followed-by-placeholder-selection",
+    "aborted-browser-file-GET-after-real-native-create-POST"
+  ],
+  "note": "Real Chromium controls, native companion and temporary Unicode project. Successful create, move, trash and restore actions use the browser UI; direct authenticated HTTP calls only check access boundaries. Two explicit browser transport faults delay a real entry response and abort the post-create file read; native mutation responses remain real. Native inventory is real; no HDL simulation, language-service or FPGA result is implied. Public runs grant local-network access with the Chromium test API, not a manual permission prompt.",
+  "browser": "151.0.7922.34",
+  "browser_security_flags": [
+    "--no-sandbox"
+  ],
+  "deployed_manifest": {
+    "schema": "vwb.web-build/1",
+    "status": "development-preview",
+    "base_path": "/verilog-workbench/",
+    "file_count": 14
+  },
+  "fixture_sha256": {
+    "top.sv": "b7aa49a0c138cfee084bfae1a50ca17d62eeefba4f82e4e882fa83f703bcfc24",
+    "side.v": "3e401e460801a3ff52f8679ace09fff675dadfb8883f3405f2343ca24a0c40e3",
+    "helper.vhd": "5b6bdc089480d25a51a1f810abc62acf182fd57dcf4c8ec3831716c974dc424f",
+    "model.py": "d45fab155724c77198750f8191a1f3ae69e0fd78e799403175af04aa0f826293"
+  },
+  "script_errors": [],
+  "asset_errors": []
+}

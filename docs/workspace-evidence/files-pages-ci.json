@@ -1,0 +1,60 @@
+{
+  "schema": "vwb.files-pages-ci-evidence/1",
+  "recorded_at": "2026-10-20T01:55:01.350355+00:00",
+  "head_sha": "0a4141819fbd81b1cbf248f1a942d8cceb3a155d",
+  "run_url": "https://github.com/sfmth/verilog-workbench/actions/runs/39355643644",
+  "status": "completed",
+  "conclusion": "success",
+  "jobs": [
+    {
+      "name": "build",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/sfmth/verilog-workbench/actions/runs/39355643644/job/118409661597"
+    },
+    {
+      "name": "deploy",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/sfmth/verilog-workbench/actions/runs/39355643644/job/118410059700"
+    },
+    {
+      "name": "verify-public",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/sfmth/verilog-workbench/actions/runs/39355643644/job/118410127894"
+    }
+  ],
+  "reports": {
+    "built_lifecycle": {
+      "state": "passed",
+      "browser": "151.0.7922.34",
+      "check_groups": 15
+    },
+    "built_semantic": {
+      "state": "passed",
+      "browser": "151.0.7922.34",
+      "check_groups": 3
+    },
+    "built_workspace": {
+      "state": "passed",
+      "browser": "151.0.7922.34",
+      "check_groups": 13
+    },
+    "public_lifecycle": {
+      "state": "passed",
+      "browser": "151.0.7922.34",
+      "check_groups": 15
+    },
+    "public_semantic": {
+      "state": "passed",
+      "browser": "151.0.7922.34",
+      "check_groups": 3
+    },
+    "public_workspace": {
+      "state": "passed",
+      "browser": "151.0.7922.34",
+      "check_groups": 9
+    }
+  }
+}

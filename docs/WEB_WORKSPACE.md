@@ -179,6 +179,13 @@ passes from the wider toolchain matrix's four existing package-gap failures.
 
 ## Remaining release gates
 
+The [file/folder lifecycle increment](FILES_WORKSPACE.md#http-and-acceptance)
+is now deployed from `0a41418`. Its built-output and actual HTTPS Chromium probes
+pass 15 groups, including keyboard creation, clean-tab remapping, revision and
+destination conflicts, private persistent trash, build-clean/restart survival,
+restore, delayed entry reads and failure after a committed create. All six native
+unit/CLI/bundle/smoke jobs pass; the four existing toolchain package gaps remain.
+
 M1 still requires broader semantic/rename, project lifecycle and recovery
 fixtures, syntax highlighting and complete folder-selection/watch behavior. M2 needs full
 language/analysis workflows and large-design acceptance.

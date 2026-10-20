@@ -1901,7 +1901,7 @@ class Workbench:
         }
         tests: list[TestSpec] = []
         for path in sorted(project_files(self.test_dir)):
-            if path.suffix != '.py' or not path.is_file() or not is_cocotb_test(path):
+            if not path.match('*.py') or not path.is_file() or not is_cocotb_test(path):
                 continue
             dut = module_from_test_stem(path.stem, module_names, vhdl_names)
             if dut:
@@ -4338,7 +4338,7 @@ class Workbench:
             configs = sorted(
                 path.resolve()
                 for path in project_files(self.root)
-                if path.suffix == '.sby' and self.build_dir not in path.parents and ".git" not in path.parts
+                if path.match('*.sby') and self.build_dir not in path.parents and ".git" not in path.parts
             )
             if len(configs) != 1:
                 choices = ", ".join(display_path(path, self.root) for path in configs)

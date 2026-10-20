@@ -1,0 +1,363 @@
+{
+  "head_sha": "0a4141819fbd81b1cbf248f1a942d8cceb3a155d",
+  "run_id": 39355643657,
+  "run_url": "https://github.com/sfmth/verilog-workbench/actions/runs/39355643657",
+  "observed_at": "2026-10-20T01:54:13.675768+00:00",
+  "run_status": "completed",
+  "run_conclusion": "failure",
+  "native_jobs": [
+    {
+      "name": "Native macos-arm64",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/sfmth/verilog-workbench/actions/runs/39355643657/job/118409662280",
+      "job_id": 118409662280,
+      "checks": {
+        "unit": {
+          "conclusion": "success",
+          "status": "completed"
+        },
+        "cli": {
+          "conclusion": "success",
+          "status": "completed"
+        },
+        "browser_protocol": {
+          "conclusion": "success",
+          "status": "completed"
+        },
+        "bundle_build": {
+          "conclusion": "success",
+          "status": "completed"
+        },
+        "bundle_smoke": {
+          "conclusion": "success",
+          "status": "completed"
+        }
+      },
+      "file_operations_tests": {
+        "total": 40,
+        "passed": 39,
+        "skipped": [
+          "test_long_original_descendants_are_rejected_before_private_prefix_relocation (test_files.FileOperationTests.test_long_original_descendants_are_rejected_before_private_prefix_relocation) ... skipped 'host does not support this long-path fixture'"
+        ]
+      },
+      "suite_summaries": [
+        "Ran 237 tests in 12.325s",
+        "Ran 162 tests in 3.495s"
+      ]
+    },
+    {
+      "name": "Native macos-x86_64",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/sfmth/verilog-workbench/actions/runs/39355643657/job/118409662339",
+      "job_id": 118409662339,
+      "checks": {
+        "unit": {
+          "conclusion": "success",
+          "status": "completed"
+        },
+        "cli": {
+          "conclusion": "success",
+          "status": "completed"
+        },
+        "browser_protocol": {
+          "conclusion": "success",
+          "status": "completed"
+        },
+        "bundle_build": {
+          "conclusion": "success",
+          "status": "completed"
+        },
+        "bundle_smoke": {
+          "conclusion": "success",
+          "status": "completed"
+        }
+      },
+      "file_operations_tests": {
+        "total": 40,
+        "passed": 39,
+        "skipped": [
+          "test_long_original_descendants_are_rejected_before_private_prefix_relocation (test_files.FileOperationTests.test_long_original_descendants_are_rejected_before_private_prefix_relocation) ... skipped 'host does not support this long-path fixture'"
+        ]
+      },
+      "suite_summaries": [
+        "Ran 237 tests in 25.025s",
+        "Ran 162 tests in 11.858s"
+      ]
+    },
+    {
+      "name": "Native windows-arm64",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/sfmth/verilog-workbench/actions/runs/39355643657/job/118409662349",
+      "job_id": 118409662349,
+      "checks": {
+        "unit": {
+          "conclusion": "success",
+          "status": "completed"
+        },
+        "cli": {
+          "conclusion": "success",
+          "status": "completed"
+        },
+        "browser_protocol": {
+          "conclusion": "success",
+          "status": "completed"
+        },
+        "bundle_build": {
+          "conclusion": "success",
+          "status": "completed"
+        },
+        "bundle_smoke": {
+          "conclusion": "success",
+          "status": "completed"
+        }
+      },
+      "file_operations_tests": {
+        "total": 40,
+        "passed": 36,
+        "skipped": [
+          "test_native_path_byte_expansion_rejected_before_rename (test_files.FileOperationTests.test_native_path_byte_expansion_rejected_before_rename) ... skipped 'POSIX native path limits only'",
+          "test_special_files_are_rejected_without_reading (test_files.FileOperationTests.test_special_files_are_rejected_without_reading) ... skipped 'POSIX named pipes only'",
+          "test_trash_store_and_metadata_are_private (test_files.FileOperationTests.test_trash_store_and_metadata_are_private) ... skipped 'POSIX permissions only'",
+          "test_unsupported_exclusive_rename_fails_closed (test_files.FileOperationTests.test_unsupported_exclusive_rename_fails_closed) ... skipped 'Windows os.rename is already exclusive'"
+        ]
+      },
+      "suite_summaries": [
+        "Ran 237 tests in 15.398s",
+        "Ran 162 tests in 5.565s"
+      ]
+    },
+    {
+      "name": "Native linux-arm64",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/sfmth/verilog-workbench/actions/runs/39355643657/job/118409662387",
+      "job_id": 118409662387,
+      "checks": {
+        "unit": {
+          "conclusion": "success",
+          "status": "completed"
+        },
+        "cli": {
+          "conclusion": "success",
+          "status": "completed"
+        },
+        "browser_protocol": {
+          "conclusion": "success",
+          "status": "completed"
+        },
+        "bundle_build": {
+          "conclusion": "success",
+          "status": "completed"
+        },
+        "bundle_smoke": {
+          "conclusion": "success",
+          "status": "completed"
+        }
+      },
+      "file_operations_tests": {
+        "total": 40,
+        "passed": 40,
+        "skipped": []
+      },
+      "suite_summaries": [
+        "Ran 237 tests in 9.061s",
+        "Ran 162 tests in 3.139s"
+      ]
+    },
+    {
+      "name": "Native linux-x86_64",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/sfmth/verilog-workbench/actions/runs/39355643657/job/118409662403",
+      "job_id": 118409662403,
+      "checks": {
+        "unit": {
+          "conclusion": "success",
+          "status": "completed"
+        },
+        "cli": {
+          "conclusion": "success",
+          "status": "completed"
+        },
+        "browser_protocol": {
+          "conclusion": "success",
+          "status": "completed"
+        },
+        "bundle_build": {
+          "conclusion": "success",
+          "status": "completed"
+        },
+        "bundle_smoke": {
+          "conclusion": "success",
+          "status": "completed"
+        }
+      },
+      "file_operations_tests": {
+        "total": 40,
+        "passed": 40,
+        "skipped": []
+      },
+      "suite_summaries": [
+        "Ran 237 tests in 9.262s",
+        "Ran 162 tests in 3.917s"
+      ]
+    },
+    {
+      "name": "Native windows-x86_64",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/sfmth/verilog-workbench/actions/runs/39355643657/job/118409662412",
+      "job_id": 118409662412,
+      "checks": {
+        "unit": {
+          "conclusion": "success",
+          "status": "completed"
+        },
+        "cli": {
+          "conclusion": "success",
+          "status": "completed"
+        },
+        "browser_protocol": {
+          "conclusion": "success",
+          "status": "completed"
+        },
+        "bundle_build": {
+          "conclusion": "success",
+          "status": "completed"
+        },
+        "bundle_smoke": {
+          "conclusion": "success",
+          "status": "completed"
+        }
+      },
+      "file_operations_tests": {
+        "total": 40,
+        "passed": 36,
+        "skipped": [
+          "test_native_path_byte_expansion_rejected_before_rename (test_files.FileOperationTests.test_native_path_byte_expansion_rejected_before_rename) ... skipped 'POSIX native path limits only'",
+          "test_special_files_are_rejected_without_reading (test_files.FileOperationTests.test_special_files_are_rejected_without_reading) ... skipped 'POSIX named pipes only'",
+          "test_trash_store_and_metadata_are_private (test_files.FileOperationTests.test_trash_store_and_metadata_are_private) ... skipped 'POSIX permissions only'",
+          "test_unsupported_exclusive_rename_fails_closed (test_files.FileOperationTests.test_unsupported_exclusive_rename_fails_closed) ... skipped 'Windows os.rename is already exclusive'"
+        ]
+      },
+      "suite_summaries": [
+        "Ran 237 tests in 17.777s",
+        "Ran 162 tests in 6.534s"
+      ]
+    }
+  ],
+  "toolchain_jobs": [
+    {
+      "name": "Arch Linux userspace toolchain feasibility",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/sfmth/verilog-workbench/actions/runs/39355643657/job/118409661903",
+      "job_id": 118409661903,
+      "workflow_summaries": [
+        "Native workflows linux-x64: 14/14 passed"
+      ],
+      "blocked_workflows": [],
+      "baseline_gaps_confirmed": false
+    },
+    {
+      "name": "Toolchain feasibility linux-x64",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/sfmth/verilog-workbench/actions/runs/39355643657/job/118409662205",
+      "job_id": 118409662205,
+      "workflow_summaries": [
+        "Native workflows linux-x64: 14/14 passed"
+      ],
+      "blocked_workflows": [],
+      "baseline_gaps_confirmed": false
+    },
+    {
+      "name": "Toolchain feasibility darwin-x64",
+      "status": "completed",
+      "conclusion": "failure",
+      "url": "https://github.com/sfmth/verilog-workbench/actions/runs/39355643657/job/118409662231",
+      "job_id": 118409662231,
+      "workflow_summaries": [
+        "Native workflows darwin-x64: 11/14 passed"
+      ],
+      "blocked_workflows": [
+        "vhdl_simulation: blocked; missing tools: ghdl",
+        "cocotb_vhdl: blocked; missing tools: ghdl",
+        "vhdl_synthesis: blocked; missing tools: ghdl"
+      ],
+      "baseline_gaps_confirmed": true
+    },
+    {
+      "name": "Toolchain feasibility darwin-arm64",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/sfmth/verilog-workbench/actions/runs/39355643657/job/118409662265",
+      "job_id": 118409662265,
+      "workflow_summaries": [
+        "Native workflows darwin-arm64: 14/14 passed"
+      ],
+      "blocked_workflows": [],
+      "baseline_gaps_confirmed": false
+    },
+    {
+      "name": "Toolchain feasibility linux-arm64",
+      "status": "completed",
+      "conclusion": "failure",
+      "url": "https://github.com/sfmth/verilog-workbench/actions/runs/39355643657/job/118409662317",
+      "job_id": 118409662317,
+      "workflow_summaries": [
+        "Native workflows linux-arm64: 11/14 passed"
+      ],
+      "blocked_workflows": [
+        "vhdl_simulation: blocked; missing tools: ghdl",
+        "cocotb_vhdl: blocked; missing tools: ghdl",
+        "vhdl_synthesis: blocked; missing tools: ghdl"
+      ],
+      "baseline_gaps_confirmed": true
+    },
+    {
+      "name": "Toolchain feasibility windows-arm64",
+      "status": "completed",
+      "conclusion": "failure",
+      "url": "https://github.com/sfmth/verilog-workbench/actions/runs/39355643657/job/118409662364",
+      "job_id": 118409662364,
+      "workflow_summaries": [
+        "Native workflows windows-arm64: 9/14 passed"
+      ],
+      "blocked_workflows": [
+        "cocotb_verilog: blocked; missing tools: cocotb-config",
+        "vhdl_simulation: blocked; missing tools: ghdl",
+        "cocotb_vhdl: blocked; missing tools: ghdl, cocotb-config",
+        "schematics: blocked; missing tools: dot",
+        "vhdl_synthesis: blocked; missing tools: ghdl"
+      ],
+      "baseline_gaps_confirmed": true
+    },
+    {
+      "name": "Toolchain feasibility windows-x64",
+      "status": "completed",
+      "conclusion": "failure",
+      "url": "https://github.com/sfmth/verilog-workbench/actions/runs/39355643657/job/118409662433",
+      "job_id": 118409662433,
+      "workflow_summaries": [
+        "Native workflows windows-x64: 9/14 passed"
+      ],
+      "blocked_workflows": [
+        "cocotb_verilog: blocked; missing tools: cocotb-config",
+        "vhdl_simulation: blocked; missing tools: ghdl",
+        "cocotb_vhdl: blocked; missing tools: ghdl, cocotb-config",
+        "schematics: blocked; missing tools: dot",
+        "vhdl_synthesis: blocked; missing tools: ghdl"
+      ],
+      "baseline_gaps_confirmed": true
+    }
+  ],
+  "scope": "Native companion/unit, CLI, browser protocol, frozen bundle build and local-project bundled companion smoke. Toolchain feasibility jobs are reported separately.",
+  "all_six_native_jobs_passed": true,
+  "backend_or_test_fixes_required": false,
+  "known_toolchain_gaps": "Linux ARM64 and Intel macOS: GHDL (11/14). Windows ARM64/x64: GHDL, Cocotb and Graphviz (9/14). Existing release gates remain open.",
+  "overall_failure_due_to_confirmed_existing_toolchain_gaps": true
+}

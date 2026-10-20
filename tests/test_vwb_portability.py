@@ -35,6 +35,33 @@ class VwbPortabilityTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         return result
 
+    def test_uppercase_cocotb_and_formal_suffixes_keep_native_glob_case_semantics(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / 'src').mkdir()
+            (root / 'test').mkdir()
+            (root / 'src/top.sv').write_text('module top; endmodule\n', encoding='utf-8')
+            python_test = root / 'test/test_top.PY'
+            python_test.write_text('import cocotb\n@cocotb.test()\nasync def test_top(dut):\n    pass\n', encoding='utf-8')
+            config = root / 'proof.SBY'
+            config.write_text('[options]\nmode prove\n', encoding='utf-8')
+            workbench = vwb.Workbench(root, root / 'src', root / 'test', root / 'build', dry_run=True)
+            # Existing Path.rglob patterns use Windows' case-insensitive path
+            # matching and POSIX's case-sensitive matching, independent of the
+            # directory walk now used to prune private trash.
+            if os.name == 'nt':
+                self.assertEqual([(test.dut, test.kind, test.path) for test in workbench.tests],
+                                 [('top', 'cocotb', python_test.resolve())])
+                with (mock.patch.object(workbench, 'require_tool'),
+                      mock.patch.object(workbench, 'run', return_value=subprocess.CompletedProcess([], 0, '', '')) as run):
+                    self.assertEqual(workbench.run_formal(None, False), root / 'build/formal/proof')
+                self.assertEqual(run.call_args.args[0][-1], 'proof.SBY')
+            else:
+                self.assertEqual(workbench.tests, [])
+                with mock.patch.object(workbench, 'require_tool'):
+                    with self.assertRaisesRegex(vwb.VWBError, 'none found'):
+                        workbench.run_formal(None, False)
+
     def test_dump_module_uses_basename_in_real_simulation_directory(self):
         with tempfile.TemporaryDirectory() as directory:
             root = self.copy_project(directory, "project with spaces µ")

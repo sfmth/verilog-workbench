@@ -135,3 +135,22 @@ companion. The [web manifest](workspace-evidence/files-web-build.json) and
 bytes. Separate native runs passed 237 Python checks (five skips), 162 CLI checks
 (one skip) and 75 JavaScript checks. Public HTTPS and six-host results are recorded
 separately after CI rather than inferred from this local proof.
+
+[Pages run 39355643644](https://github.com/sfmth/verilog-workbench/actions/runs/39355643644)
+deployed `0a41418` and passed build, deploy and all public checks. The retained
+[hosted lifecycle report](workspace-evidence/files-ci-linux-x64.json) and
+[actual HTTPS lifecycle report](workspace-evidence/files-public-ci-linux-x64.json)
+each pass all 15 groups in Chromium 151. The
+[Pages summary](workspace-evidence/files-pages-ci.json) also records the existing
+13 built/nine public workspace groups and three semantic language groups passing.
+Public local-network access is explicitly granted through Chromium's test API.
+
+All six native unit, CLI, bundle build and bundled-companion smoke jobs pass in
+[run 39355643657](https://github.com/sfmth/verilog-workbench/actions/runs/39355643657),
+with [retained native evidence](workspace-evidence/files-native-ci.json).
+The 40 filesystem checks execute on each target with explicit platform skips:
+one long-host-path fixture on Apple Silicon and four POSIX-only cases on Windows.
+That is native filesystem/API evidence; full browser/platform and crash-durability
+acceptance are separate. The four wider toolchain failures still match the
+documented missing GHDL/Cocotb/Graphviz package routes. Linux x86-64, Arch userspace
+and Apple Silicon pass all 14 toolchain smoke checks.
