@@ -1,0 +1,457 @@
+{
+  "schema": "vwb.editor-workspace-browser-probe/1",
+  "recorded_at": "2026-10-20T01:05:20.525Z",
+  "state": "passed",
+  "target": "built-local-project-prefix-workspace",
+  "pages_prefix": "/verilog-workbench/",
+  "permission_grant": "not-required-loopback-HTTP-preview-origin-no-browser-security-bypass",
+  "hardware_tested": false,
+  "languages": {
+    "systemverilog": {
+      "status": "passed",
+      "checks": [
+        "real-companion-pairing-language-capabilities-and-code-intelligence-tab",
+        "real-hover-definition-navigation-exact-references-and-completion-insertion",
+        "dirty-buffer-blocks-rename-without-disk-writes",
+        "semantic-cross-file-rename-preview-explicit-apply-exact-bytes-and-undo",
+        "external-cross-file-change-rejects-apply-without-partial-writes",
+        "credentials-and-source-not-persisted-without-opt-in"
+      ],
+      "native_post_edit": {
+        "tool": "iverilog",
+        "scope": "Isolated post-edit HDL compilation or Python syntax/helper behavior; not hardware/full Cocotb.",
+        "status": "passed",
+        "returncode": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "server": "slang-server",
+      "hover": {
+        "status": "passed",
+        "text_characters": 218
+      },
+      "definition": {
+        "status": "passed",
+        "path": "helpers.sv",
+        "range": {
+          "start": {
+            "line": 2,
+            "character": 29
+          },
+          "end": {
+            "line": 2,
+            "character": 33
+          }
+        },
+        "source_navigation": "passed"
+      },
+      "references": {
+        "status": "passed",
+        "count": 3,
+        "locations": [
+          {
+            "path": "helpers.sv",
+            "range": {
+              "start": {
+                "line": 2,
+                "character": 29
+              },
+              "end": {
+                "line": 2,
+                "character": 33
+              }
+            }
+          },
+          {
+            "path": "other.sv",
+            "range": {
+              "start": {
+                "line": 7,
+                "character": 28
+              },
+              "end": {
+                "line": 7,
+                "character": 32
+              }
+            }
+          },
+          {
+            "path": "top.sv",
+            "range": {
+              "start": {
+                "line": 2,
+                "character": 28
+              },
+              "end": {
+                "line": 2,
+                "character": 32
+              }
+            }
+          }
+        ],
+        "includes_declaration": true,
+        "unrelated_symbols_excluded": true
+      },
+      "completion": {
+        "status": "passed",
+        "label": "step",
+        "range": {
+          "start": {
+            "line": 2,
+            "character": 28
+          },
+          "end": {
+            "line": 2,
+            "character": 32
+          }
+        },
+        "mid_symbol_caret": 2,
+        "suffix_not_duplicated": true,
+        "disk_unchanged": true
+      },
+      "rename": {
+        "status": "passed",
+        "edit_count": 3,
+        "file_count": 3,
+        "exact_preview_and_applied_bytes": true,
+        "preserved_unrelated_comments_and_shadows": true,
+        "undo_exact_original_bytes": true,
+        "before_sha256": {
+          "helpers.sv": "e19f1ac4d9e3ee059bbcba4111bc9e8276a714b0fe9eee50985f34a2657a06b7",
+          "top.sv": "ab06d3a604588b822569bf2dbec8fe891f61356f5e6a2cfe2521562286b203db",
+          "other.sv": "cef697cb303efa1b93b4b5536bed8bb386e1da4c7ed84a4c1f87ee8e1a548631"
+        },
+        "after_sha256": {
+          "helpers.sv": "a01b9289a3de3c19a1eab722f3c315a085241083e73c9f87b37976f4f64da4c8",
+          "top.sv": "e4ca3d8c5fa1ff19aab69a3b6903f4346137dcd02b33dc9423bde1108cc7410e",
+          "other.sv": "96df9cc9cbfec0d292836c8991673a85476c8e82c1fd03c9af40497462c258b3"
+        }
+      },
+      "conflict": {
+        "status": "passed",
+        "http_status": 409,
+        "externally_changed_path": "helpers.sv",
+        "no_partial_writes": true
+      }
+    },
+    "vhdl": {
+      "status": "passed",
+      "checks": [
+        "real-companion-pairing-language-capabilities-and-code-intelligence-tab",
+        "real-hover-definition-navigation-exact-references-and-completion-insertion",
+        "dirty-buffer-blocks-rename-without-disk-writes",
+        "semantic-cross-file-rename-preview-explicit-apply-exact-bytes-and-undo",
+        "external-cross-file-change-rejects-apply-without-partial-writes",
+        "credentials-and-source-not-persisted-without-opt-in"
+      ],
+      "native_post_edit": {
+        "tool": "ghdl",
+        "scope": "Isolated post-edit HDL compilation or Python syntax/helper behavior; not hardware/full Cocotb.",
+        "status": "passed",
+        "returncode": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "server": "vhdl_ls",
+      "hover": {
+        "status": "passed",
+        "text_characters": 58
+      },
+      "definition": {
+        "status": "passed",
+        "path": "helpers.vhd",
+        "range": {
+          "start": {
+            "line": 6,
+            "character": 11
+          },
+          "end": {
+            "line": 6,
+            "character": 15
+          }
+        },
+        "source_navigation": "passed"
+      },
+      "references": {
+        "status": "passed",
+        "count": 4,
+        "locations": [
+          {
+            "path": "helpers.vhd",
+            "range": {
+              "start": {
+                "line": 2,
+                "character": 11
+              },
+              "end": {
+                "line": 2,
+                "character": 15
+              }
+            }
+          },
+          {
+            "path": "helpers.vhd",
+            "range": {
+              "start": {
+                "line": 6,
+                "character": 11
+              },
+              "end": {
+                "line": 6,
+                "character": 15
+              }
+            }
+          },
+          {
+            "path": "other.vhd",
+            "range": {
+              "start": {
+                "line": 14,
+                "character": 31
+              },
+              "end": {
+                "line": 14,
+                "character": 35
+              }
+            }
+          },
+          {
+            "path": "top.vhd",
+            "range": {
+              "start": {
+                "line": 4,
+                "character": 31
+              },
+              "end": {
+                "line": 4,
+                "character": 35
+              }
+            }
+          }
+        ],
+        "includes_declaration": true,
+        "unrelated_symbols_excluded": true
+      },
+      "completion": {
+        "status": "passed",
+        "label": "step",
+        "range": {
+          "start": {
+            "line": 4,
+            "character": 31
+          },
+          "end": {
+            "line": 4,
+            "character": 35
+          }
+        },
+        "mid_symbol_caret": 2,
+        "suffix_not_duplicated": true,
+        "disk_unchanged": true
+      },
+      "rename": {
+        "status": "passed",
+        "edit_count": 4,
+        "file_count": 3,
+        "exact_preview_and_applied_bytes": true,
+        "preserved_unrelated_comments_and_shadows": true,
+        "undo_exact_original_bytes": true,
+        "before_sha256": {
+          "helpers.vhd": "50be4d6e778ca931d52e3cf304a2f267b61289ff890c13193b1901e4f3b31f60",
+          "top.vhd": "e82a6900d7997026cf4ded81ade724c6ea0809a0007cff7267b4c350f7b113b8",
+          "other.vhd": "a7056579699c8a1d608f284ff5950d272cfe0c9e8432d4dcfc356d592b893be3"
+        },
+        "after_sha256": {
+          "helpers.vhd": "39324a419c33e141b1e8b7dc546914c2be8b2e2f855a3db265b125ba24dba4c3",
+          "top.vhd": "a6319904e709777cc963e0cd27ac20e8bd140cff1b1ce5be276b38060180b6a6",
+          "other.vhd": "e20bb7475123e2b64328394c318e42049068c2ce21488320e21cae8a773d5c90"
+        }
+      },
+      "conflict": {
+        "status": "passed",
+        "http_status": 409,
+        "externally_changed_path": "helpers.vhd",
+        "no_partial_writes": true
+      }
+    },
+    "python": {
+      "status": "passed",
+      "checks": [
+        "real-companion-pairing-language-capabilities-and-code-intelligence-tab",
+        "real-hover-definition-navigation-exact-references-and-completion-insertion",
+        "dirty-buffer-blocks-rename-without-disk-writes",
+        "semantic-cross-file-rename-preview-explicit-apply-exact-bytes-and-undo",
+        "external-cross-file-change-rejects-apply-without-partial-writes",
+        "credentials-and-source-not-persisted-without-opt-in",
+        "actual-native-disconnect-refreshes-global-controls-and-retains-dirty-drafts"
+      ],
+      "native_post_edit": {
+        "tool": "python3",
+        "scope": "Isolated post-edit HDL compilation or Python syntax/helper behavior; not hardware/full Cocotb.",
+        "status": "passed",
+        "returncode": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "server": "node",
+      "hover": {
+        "status": "passed",
+        "text_characters": 38
+      },
+      "definition": {
+        "status": "passed",
+        "path": "model.py",
+        "range": {
+          "start": {
+            "line": 1,
+            "character": 4
+          },
+          "end": {
+            "line": 1,
+            "character": 8
+          }
+        },
+        "source_navigation": "passed"
+      },
+      "references": {
+        "status": "passed",
+        "count": 4,
+        "locations": [
+          {
+            "path": "cocotb_case.py",
+            "range": {
+              "start": {
+                "line": 6,
+                "character": 15
+              },
+              "end": {
+                "line": 6,
+                "character": 19
+              }
+            }
+          },
+          {
+            "path": "cocotb_case.py",
+            "range": {
+              "start": {
+                "line": 1,
+                "character": 18
+              },
+              "end": {
+                "line": 1,
+                "character": 22
+              }
+            }
+          },
+          {
+            "path": "model.py",
+            "range": {
+              "start": {
+                "line": 1,
+                "character": 4
+              },
+              "end": {
+                "line": 1,
+                "character": 8
+              }
+            }
+          },
+          {
+            "path": "other.py",
+            "range": {
+              "start": {
+                "line": 7,
+                "character": 15
+              },
+              "end": {
+                "line": 7,
+                "character": 19
+              }
+            }
+          }
+        ],
+        "includes_declaration": true,
+        "unrelated_symbols_excluded": true
+      },
+      "completion": {
+        "status": "passed",
+        "label": "tick",
+        "range": {
+          "start": {
+            "line": 7,
+            "character": 15
+          },
+          "end": {
+            "line": 7,
+            "character": 19
+          }
+        },
+        "mid_symbol_caret": 2,
+        "suffix_not_duplicated": true,
+        "disk_unchanged": true
+      },
+      "rename": {
+        "status": "passed",
+        "edit_count": 4,
+        "file_count": 3,
+        "exact_preview_and_applied_bytes": true,
+        "preserved_unrelated_comments_and_shadows": true,
+        "undo_exact_original_bytes": true,
+        "before_sha256": {
+          "model.py": "6a48bfe83b49b4e7a0acc163c39278a6d4e2de334a052268e14c268c45b77703",
+          "cocotb_case.py": "15a8893e60e2b3c97e1a097c699f2a5fd8837b09495d114dd5df39ecf4f0f3f4",
+          "other.py": "188a13c99e7b28128a521b2b4e1d92051216b2eda6b7e8b76f53bb5199e00ce8"
+        },
+        "after_sha256": {
+          "model.py": "50c0d25a2617c77c9a0f890032f532afae9227629a07ca0c13071c9ca5db5abe",
+          "cocotb_case.py": "4d1066036ab838d7855787b6f3563f6964da7e200d234ab4b1ae3feb5c9c6461",
+          "other.py": "121e136808afce24300a941cd0bc136e7edbaeee5a819db2eefee7004ee60cdb"
+        }
+      },
+      "conflict": {
+        "status": "passed",
+        "http_status": 409,
+        "externally_changed_path": "model.py",
+        "no_partial_writes": true
+      },
+      "disconnect": {
+        "status": "passed",
+        "actual_owned_companion_stopped": true,
+        "disconnected_header": true,
+        "run_and_save_disabled": true,
+        "unsaved_draft_retained_and_editable": true,
+        "disk_unchanged": true
+      }
+    }
+  },
+  "checks": [
+    "systemverilog-real-semantic-editor-UI-and-transaction-acceptance",
+    "vhdl-real-semantic-editor-UI-and-transaction-acceptance",
+    "python-real-semantic-editor-UI-and-transaction-acceptance"
+  ],
+  "note": "Real Chromium UI, local companion and configured language servers. Exact fixture oracles verify semantic references and rename bytes, including unrelated shadows/comments. Native post-edit checks are isolated compilation/helper behavior, not FPGA or full Cocotb execution. No mocked semantic responses.",
+  "editor_config_sha256": "ca61f2626139cd4d401a7f0146e0c02bb5ec1cb789fb99d64f220c7b83128e73",
+  "configured_servers": {
+    "systemverilog": [
+      "slang-server"
+    ],
+    "sv_refactor": [
+      "verible-verilog-ls",
+      "--lsp_enable_hover"
+    ],
+    "vhdl": [
+      "vhdl_ls"
+    ],
+    "python": [
+      "node",
+      "pyright-langserver.js",
+      "--stdio"
+    ]
+  },
+  "browser": "151.0.7922.34",
+  "browser_security_flags": [
+    "--no-sandbox"
+  ],
+  "script_errors": [],
+  "static_errors": []
+}

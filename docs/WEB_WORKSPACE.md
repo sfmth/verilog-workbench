@@ -153,6 +153,17 @@ The six native runtime/unit/bundle CI rows
 native toolchain CI continues to expose the documented GHDL/Cocotb/Graphviz
 package gaps on four target rows; publishing the preview does not waive them.
 
+The [semantic editor extension](EDITOR_WORKSPACE.md#evidence-and-remaining-work)
+was deployed and verified by
+[Pages run 39351382515](https://github.com/sfmth/verilog-workbench/actions/runs/39351382515).
+Both built-output and actual HTTPS Chromium checks pass SystemVerilog, VHDL and
+Python completion, navigation, references and reviewed rename Apply/Undo. The
+hosted build also passes all three post-edit native checks, including GHDL.
+The existing 13 local and nine public workspace groups remain green. Local
+regression runs completed 188 companion/platform/build checks (five skips),
+162 CLI checks (one skip), and 61 JavaScript checks. These observations advance
+the preview while preserving the remaining release gates below.
+
 ## Remaining release gates
 
 M1 still requires broader semantic/rename and recovery fixtures, syntax

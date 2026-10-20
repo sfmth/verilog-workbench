@@ -17,7 +17,9 @@ from companion.projects import MAX_FILE_BYTES, ProjectError, ProjectGrant, revis
 class EditTransactionTests(unittest.TestCase):
     def setUp(self):
         self.directory = tempfile.TemporaryDirectory()
-        self.root = Path(self.directory.name)
+        # Match ProjectGrant canonical paths: macOS /var aliases and Windows
+        # 8.3 temporary directory names must compare to the same real folder.
+        self.root = Path(self.directory.name).resolve(strict=True)
         (self.root / "src").mkdir()
         (self.root / "test").mkdir()
         (self.root / "src/a.sv").write_bytes(b"module old;\r\nendmodule\r\n")

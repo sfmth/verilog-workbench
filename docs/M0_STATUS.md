@@ -13,6 +13,13 @@ The initial publication blocker recorded below is closed for the preview;
 remaining manual permission/browser/platform/install/hardware gates stay open.
 The table and historical observations below retain the original M0 checkpoint.
 
+The [workspace semantic editor extension](EDITOR_WORKSPACE.md) now integrates
+the proven language-service route into the browser/HTTP companion, with dirty
+document snapshots, reviewed cross-file rename, Apply/Undo and interrupted-write
+recovery. Real local Chromium checks pass the SystemVerilog, VHDL and Python
+fixtures. Broader constructs, managed service installation and other-platform
+semantic/durability acceptance remain open; the original M0 table is unchanged.
+
 The local Linux x86-64 toolchain passed **14 real checks in each of three path
 cases: 42 executions** across ordinary paths, spaces, and Unicode/spaces. Native
 runtime packaging and semantic editor probes also have local evidence. Those

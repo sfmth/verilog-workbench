@@ -142,7 +142,19 @@ Python syntax/helper validation passed; local GHDL was unavailable. The existing
 also passed with real simulation, failure and cancellation. The
 [web build manifest](workspace-evidence/editor-web-build.json) and
 [companion/service hashes](workspace-evidence/editor-source-linux-x64.json)
-identify tested bytes. Public HTTPS results are recorded separately after deploy.
+identify tested bytes.
+
+[Pages run 39351382515](https://github.com/sfmth/verilog-workbench/actions/runs/39351382515)
+deployed `08baa96` and passed build, deploy and post-deployment verification.
+Its [hosted semantic browser report](workspace-evidence/editor-ci-linux-x64.json)
+passes all three languages in Chromium 151, including Icarus, GHDL and Python
+post-edit validation. The separate [actual public HTTPS report](workspace-evidence/editor-public-ci-linux-x64.json)
+passes all three semantic workflows and the stopped-companion check. That job
+has no HDL compilers, so its HDL post-edit checks are explicitly `not_run`;
+Python validation passes. The [public workspace regression](workspace-evidence/editor-workspace-public-ci-linux-x64.json)
+also passes all nine existing groups. These public probes explicitly grant
+Chromium local-network permission through its test API; manual permission UX
+and other-browser acceptance remain open.
 
 Broader construct/configuration fixtures, diagnostic accuracy, interactive
 snippets, syntax highlighting, file/folder lifecycle, managed service/runtime
