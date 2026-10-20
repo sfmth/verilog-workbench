@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+from collections import deque
 import hashlib
 import json
 import os
@@ -86,6 +87,40 @@ def internal_link(member: tarfile.TarInfo, name: str) -> str:
     return str(PurePosixPath(*parts))
 
 
+def validate_link_chain(name: str, members: dict[str, tarfile.TarInfo]) -> None:
+    """Resolve archive symlinks with portable POSIX semantics before writing.
+
+    In particular, expand an intervening symlink before interpreting a later
+    '..'. Windows Path.resolve may normalize that '..' earlier, so a native
+    filesystem check alone cannot enforce the same archive policy on all hosts.
+    """
+    pending = deque(PurePosixPath(name).parts)
+    resolved = []
+    expansions = steps = 0
+    while pending:
+        steps += 1
+        if steps > 10000:
+            raise ValueError('archive symlink chain exceeds the resolution bound')
+        part = pending.popleft()
+        if part == '..':
+            if len(resolved) <= 1:
+                raise ValueError('archive symlink chain escapes suite root')
+            resolved.pop()
+            continue
+        if part == '.':
+            continue
+        resolved.append(part)
+        member = members.get(str(PurePosixPath(*resolved)))
+        if member is not None and member.issym():
+            expansions += 1
+            if expansions > 40:
+                raise ValueError('archive symlink chain loops or exceeds the resolution bound')
+            resolved.pop()
+            pending.extendleft(reversed(PurePosixPath(member.linkname).parts))
+    if not resolved or resolved[0] != 'oss-cad-suite':
+        raise ValueError('archive symlink chain escapes suite root')
+
+
 def extract_archive(archive: Path, directory: Path, *, max_members: int = MAX_MEMBERS, max_bytes: int = MAX_UNPACKED_BYTES) -> None:
     """Extract into a fresh staging directory, with links installed last.
 
@@ -124,6 +159,9 @@ def extract_archive(archive: Path, directory: Path, *, max_members: int = MAX_ME
                     target = members.get(links[name])
                     if target is None or not target.isfile():
                         raise ValueError("hardlink target is not an archived regular file")
+            for name, member in members.items():
+                if member.issym():
+                    validate_link_chain(name, members)
             for name, member in members.items():
                 target = directory.joinpath(*PurePosixPath(name).parts)
                 if member.isdir():

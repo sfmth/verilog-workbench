@@ -104,6 +104,28 @@ class AcquisitionTests(unittest.TestCase):
             acquire.extract_archive(archive, self.root / "output")
         self.assertFalse((self.root / "output").exists())
 
+    def test_portable_link_graph_expands_before_dotdot_without_host_symlinks(self):
+        directory = tarfile.TarInfo('oss-cad-suite/c'); directory.type = tarfile.DIRTYPE
+        first = tarfile.TarInfo('oss-cad-suite/c/b'); first.type = tarfile.SYMTYPE; first.linkname = '..'
+        second = tarfile.TarInfo('oss-cad-suite/a'); second.type = tarfile.SYMTYPE; second.linkname = 'c/b/../outside'
+        members = {item.name: item for item in (directory, first, second)}
+        with self.assertRaisesRegex(ValueError, 'chain escapes'):
+            acquire.validate_link_chain(second.name, members)
+        # A host's Path.resolve is deliberately irrelevant to this check.
+        with mock.patch.object(Path, 'resolve', return_value=self.root):
+            with self.assertRaisesRegex(ValueError, 'chain escapes'):
+                acquire.validate_link_chain(second.name, members)
+
+    def test_portable_link_graph_accepts_internal_chains_and_rejects_cycles(self):
+        target = tarfile.TarInfo('oss-cad-suite/bin/engine')
+        first = tarfile.TarInfo('oss-cad-suite/bin/first'); first.type = tarfile.SYMTYPE; first.linkname = 'engine'
+        second = tarfile.TarInfo('oss-cad-suite/second'); second.type = tarfile.SYMTYPE; second.linkname = 'bin/first'
+        members = {item.name: item for item in (target, first, second)}
+        acquire.validate_link_chain(second.name, members)
+        first.linkname = '../second'
+        with self.assertRaisesRegex(ValueError, 'chain loops'):
+            acquire.validate_link_chain(second.name, members)
+
     def test_archive_limits_are_enforced(self):
         archive = self.archive([("oss-cad-suite/a", b"abcd", "file"), ("oss-cad-suite/b", b"e", "file")])
         with self.assertRaisesRegex(ValueError, "size"):
