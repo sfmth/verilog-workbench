@@ -1,0 +1,1567 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-10-20T07:31:26.621476+00:00",
+  "state": "passed",
+  "scope": "hosted-original-upstream-testbenches-with-supplemental-and-browser-controls",
+  "source_commit": "cfc4a4c0b236845a495884e227c389ed97695a1c",
+  "workflow": {
+    "url": "https://github.com/sfmth/verilog-workbench/actions/runs/39384709536",
+    "run_id": 39384709536,
+    "head_sha": "cfc4a4c0b236845a495884e227c389ed97695a1c",
+    "status": "completed",
+    "conclusion": "success",
+    "upstream_job": {
+      "name": "upstream-hdl / Original testbenches for 29 pinned designs",
+      "databaseId": 118501684052,
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/sfmth/verilog-workbench/actions/runs/39384709536/job/118501684052",
+      "startedAt": "2026-10-20T07:09:39Z",
+      "completedAt": "2026-10-20T07:26:24Z"
+    }
+  },
+  "artifact": {
+    "id": 12247263269,
+    "name": "upstream-hdl-39384709536-acceptance",
+    "size_in_bytes": 3729752,
+    "url": "https://api.github.com/repos/sfmth/verilog-workbench/actions/artifacts/12247263269",
+    "digest": "sha256:d697a8b9872cd68279b5db10d27b45dd19381dd684e4b6d0c5e5eaa8878895b0",
+    "created_at": "2026-10-20T07:26:21Z",
+    "expires_at": "2026-11-03T07:26:18Z"
+  },
+  "artifact_sha256_independently_verified": true,
+  "report_sha256": {
+    "upstream-native-results.json": "996cc1a4d52e940f8d20fa57b4cf813598b67e5c6ba96c1ff388ce0c4ed207b8",
+    "upstream-axis-verilator.json": "7c0c22ec50899a527d9236098a151454398cf2abab3d6ccd61f5f9316b6038f2",
+    "upstream-native-browser.json": "8f1e0b29ac40b56af4faa1c97c68d217af0684fa4b445b3aa347d7c07d0a0848",
+    "upstream-results.json": "48b73d25b4df50c0708df120275d28d3ec8c1e5f5742f9d1593e590d516194e9",
+    "upstream-acquisition.json": "716bfdd0d820d42b429f42ad614d4597a2627555ff404a63fc2587b46c008d87",
+    "upstream-tool-acquisition.json": "84eb9984238249c81825c2799b91c020fb02315d3c488c46b07ad64423c1c634",
+    "upstream-test-tools.json": "be448d552bc74ccdb888b9c6b9f5c3bffa3eae8780811bc45a265a1e54cf65ee",
+    "upstream-riscv-acquisition.json": "796afac790d47d09ae0608b2b6142ad84511f2474864ffbca8ab3b6ed25d0231",
+    "upstream-axis-project.json": "26e7408e7c0f360e80a7177c84e40bcf136784be04c8e039759f679f11646b3c",
+    "upstream-browser-project.json": "7f6f55c6de88646939cf5c9ba22e23d1ed0f0cc066d97ddf8849792be55e5bab"
+  },
+  "extracted_artifacts_verified": {
+    "positive_and_negative_logs": 68,
+    "junit_result_files": 27
+  },
+  "original_upstream": {
+    "scope": "complete_required_upstream_flows",
+    "required_flows": 30,
+    "required_distinct_designs": 29,
+    "executed_flows": 30,
+    "executed_distinct_designs": 29,
+    "passed": true,
+    "complete_required_flows_passed": true,
+    "junit_cases": 300,
+    "result_identities_valid": true,
+    "identity_errors": []
+  },
+  "source_sha256": {
+    "vwb.py": "638396f3102e6730f16811c176825fcc907fc116d92ed371e55ee685e5fde090",
+    "companion/flows.py": "da03fc038a4fe57eeb9e16fc061d1eab80877be30282c1d37e3ffeea9b77459b",
+    "scripts/probe_upstream_testbenches.py": "1c1cb4d2b6193dba1ff94f1a84ff0f9ce0fc7d0cd46d058c392dfa2c219f71a2",
+    "toolchains/upstream-python-lock.json": "7fca9bd27a7b9dcdbe4eb3465d54627f030b7b6d6833b1b1264d05b8a4ab1b47"
+  },
+  "registry_sha256": {
+    "stream-serial.json": "d14152ef38ff1f2977325b8db35e85fb26a30369c8aaf0fff7743bc8465a6e7c",
+    "core-flows.json": "3dc557203137e294423e3adf1b1443b7bee3c710e29aa21499ff183f5bcecf93",
+    "nvdla-flows.json": "307ee7f7a1a1d868cedf91f58e8127da4b733254c2d78ef67093add8ae4b292e"
+  },
+  "source_hashes_verified_against_commit": true,
+  "flows": [
+    {
+      "id": "upstream-axi-ram",
+      "project": "verilog-axi",
+      "design_top": "axi_ram",
+      "entrypoint": "tb/axi_ram/Makefile",
+      "driver": "make",
+      "simulator": "icarus",
+      "state": "passed",
+      "repository": "https://github.com/alexforencich/verilog-axi",
+      "revision": "516bd5dadc3365b7f9e225d2af8fe0b8d804fe53",
+      "archive_sha256": "4aaed32673e91a2174ec8e29ee11cc5ef48e00bf01e959b040615f89839e095d",
+      "upstream_tree_sha256": "ad898e4df7e23bf668d5e59b3a2b79e4a9e065c87dfc142c80e08139b3d1795e",
+      "original_file_count": 182,
+      "original_files_sha256": "7ef36271a3211d5256a9571820b36fd14ff0e4ea6bc0846b80285045044b8013",
+      "original_files_changed": [],
+      "manifest_sha256": "ce16f8c3de68264033f5e6b1971c0206b427ff40e5f2e3f2f22ecb8cb47e9732",
+      "log_sha256": "1182487a151fd944878602cd80df12e44e166a054c7a5b75f03dfbd9f4f9204a",
+      "duration_seconds": 94.506,
+      "verdict": {
+        "passed": true,
+        "kind": "junit",
+        "tests": 25,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "artifacts": [
+          {
+            "path": "tb/axi_ram/results.xml",
+            "bytes": 7792,
+            "sha256": "734817f22c249ed99af9952ec2c4ac7b1849e2a367e4c8e064ea2f3a8d212014"
+          }
+        ]
+      }
+    },
+    {
+      "id": "upstream-axi-register",
+      "project": "verilog-axi",
+      "design_top": "axi_register",
+      "entrypoint": "tb/axi_register/Makefile",
+      "driver": "make",
+      "simulator": "icarus",
+      "state": "passed",
+      "repository": "https://github.com/alexforencich/verilog-axi",
+      "revision": "516bd5dadc3365b7f9e225d2af8fe0b8d804fe53",
+      "archive_sha256": "4aaed32673e91a2174ec8e29ee11cc5ef48e00bf01e959b040615f89839e095d",
+      "upstream_tree_sha256": "ad898e4df7e23bf668d5e59b3a2b79e4a9e065c87dfc142c80e08139b3d1795e",
+      "original_file_count": 182,
+      "original_files_sha256": "7ef36271a3211d5256a9571820b36fd14ff0e4ea6bc0846b80285045044b8013",
+      "original_files_changed": [],
+      "manifest_sha256": "fc66c6d39a0b3ad2a0965b08e12f83486ab741a51cbe601542bf06cac9782399",
+      "log_sha256": "aff2e63ee8b62354147c131530b1814d3d210c2769b28c9237901e02bcd7c914",
+      "duration_seconds": 94.016,
+      "verdict": {
+        "passed": true,
+        "kind": "junit",
+        "tests": 25,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "artifacts": [
+          {
+            "path": "tb/axi_register/results.xml",
+            "bytes": 7934,
+            "sha256": "bd4b9779d8fbec9aa5b371c26b958c1d0fd4bb8bf445d06621c02409403dc6a1"
+          }
+        ]
+      }
+    },
+    {
+      "id": "upstream-axil-ram",
+      "project": "verilog-axi",
+      "design_top": "axil_ram",
+      "entrypoint": "tb/axil_ram/Makefile",
+      "driver": "make",
+      "simulator": "icarus",
+      "state": "passed",
+      "repository": "https://github.com/alexforencich/verilog-axi",
+      "revision": "516bd5dadc3365b7f9e225d2af8fe0b8d804fe53",
+      "archive_sha256": "4aaed32673e91a2174ec8e29ee11cc5ef48e00bf01e959b040615f89839e095d",
+      "upstream_tree_sha256": "ad898e4df7e23bf668d5e59b3a2b79e4a9e065c87dfc142c80e08139b3d1795e",
+      "original_file_count": 182,
+      "original_files_sha256": "7ef36271a3211d5256a9571820b36fd14ff0e4ea6bc0846b80285045044b8013",
+      "original_files_changed": [],
+      "manifest_sha256": "9179b887710bb9b544f7a34f5f3851b64e8c7a1fc5d0ffb0a211813ab002b733",
+      "log_sha256": "bb701ed16936977493d9535b3f5a7ff560a8d8b2c9a1a0c8bf9b1fbbb04cad75",
+      "duration_seconds": 5.091,
+      "verdict": {
+        "passed": true,
+        "kind": "junit",
+        "tests": 9,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "artifacts": [
+          {
+            "path": "tb/axil_ram/results.xml",
+            "bytes": 2894,
+            "sha256": "4f3b4c9d5b17bca1a4192ea6912ca58d3c73c441bc3779dac837bbc90aee75ae"
+          }
+        ]
+      }
+    },
+    {
+      "id": "upstream-axil-register",
+      "project": "verilog-axi",
+      "design_top": "axil_register",
+      "entrypoint": "tb/axil_register/Makefile",
+      "driver": "make",
+      "simulator": "icarus",
+      "state": "passed",
+      "repository": "https://github.com/alexforencich/verilog-axi",
+      "revision": "516bd5dadc3365b7f9e225d2af8fe0b8d804fe53",
+      "archive_sha256": "4aaed32673e91a2174ec8e29ee11cc5ef48e00bf01e959b040615f89839e095d",
+      "upstream_tree_sha256": "ad898e4df7e23bf668d5e59b3a2b79e4a9e065c87dfc142c80e08139b3d1795e",
+      "original_file_count": 182,
+      "original_files_sha256": "7ef36271a3211d5256a9571820b36fd14ff0e4ea6bc0846b80285045044b8013",
+      "original_files_changed": [],
+      "manifest_sha256": "43cba4e09b5b691c888cc33b2e4992693dc8f5566f2ffd09a906967c7aaf6d8c",
+      "log_sha256": "f4de8364045aa6900043bd97f66ef674cdc9a2c0702b3af7b933e65761ccd7ec",
+      "duration_seconds": 5.393,
+      "verdict": {
+        "passed": true,
+        "kind": "junit",
+        "tests": 9,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "artifacts": [
+          {
+            "path": "tb/axil_register/results.xml",
+            "bytes": 2925,
+            "sha256": "f14f57f50e0a02ecc838218914858ce2a299a8f0919674afdd9d63c8afb4fd70"
+          }
+        ]
+      }
+    },
+    {
+      "id": "upstream-axis-adapter",
+      "project": "verilog-axis",
+      "design_top": "axis_adapter",
+      "entrypoint": "tb/axis_adapter/Makefile",
+      "driver": "make",
+      "simulator": "icarus",
+      "state": "passed",
+      "repository": "https://github.com/alexforencich/verilog-axis",
+      "revision": "48ff7a7e2ef782cf778d47910cf85835c64b1bce",
+      "archive_sha256": "92d714f9a4711491375c3794d5916860cffc776d91fb4b8c548f4cbd4c562aff",
+      "upstream_tree_sha256": "26c27b9eaa8f3a9bdbc3ee49402ca57c0eb053cb0d99e5237162afb907a30cf1",
+      "original_file_count": 215,
+      "original_files_sha256": "ce98a9fcab3b02597b3d3f5f27c31961d54b42aa8812c09a90d7eaf78edc9b48",
+      "original_files_changed": [],
+      "manifest_sha256": "790a7f4f7a3cd351d9bd8761af5b0ffabf89febd9a94b19149d514ab83cf0af2",
+      "log_sha256": "9ae8f1e955cdabb5bd49c8b9d81b4319942a846b456cf0159d06caf0570ee45b",
+      "duration_seconds": 6.296,
+      "verdict": {
+        "passed": true,
+        "kind": "junit",
+        "tests": 9,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "artifacts": [
+          {
+            "path": "tb/axis_adapter/results.xml",
+            "bytes": 2936,
+            "sha256": "5464b7b5d4776dfdc7fcdc1f77b30ebb98848354c9bd23f9245bd41177e11480"
+          }
+        ]
+      }
+    },
+    {
+      "id": "upstream-axis-arb-mux",
+      "project": "verilog-axis",
+      "design_top": "axis_arb_mux",
+      "entrypoint": "tb/axis_arb_mux/Makefile",
+      "driver": "make",
+      "simulator": "icarus",
+      "state": "passed",
+      "repository": "https://github.com/alexforencich/verilog-axis",
+      "revision": "48ff7a7e2ef782cf778d47910cf85835c64b1bce",
+      "archive_sha256": "92d714f9a4711491375c3794d5916860cffc776d91fb4b8c548f4cbd4c562aff",
+      "upstream_tree_sha256": "26c27b9eaa8f3a9bdbc3ee49402ca57c0eb053cb0d99e5237162afb907a30cf1",
+      "original_file_count": 215,
+      "original_files_sha256": "ce98a9fcab3b02597b3d3f5f27c31961d54b42aa8812c09a90d7eaf78edc9b48",
+      "original_files_changed": [],
+      "manifest_sha256": "81a61668bfef32473b5d8ad8a3396b44830945567c88befd18039fb66f079655",
+      "log_sha256": "9c13caff34d6f923a7bc7dd99231cbf9aced72d820306c15c8580483d26aa311",
+      "duration_seconds": 17.858,
+      "verdict": {
+        "passed": true,
+        "kind": "junit",
+        "tests": 25,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "artifacts": [
+          {
+            "path": "tb/axis_arb_mux/results.xml",
+            "bytes": 7876,
+            "sha256": "a2b9481b580008d44d8485c56226c8c9094de4b3abe850f5c8d0d66cdd0000df"
+          }
+        ]
+      }
+    },
+    {
+      "id": "upstream-axis-async-fifo",
+      "project": "verilog-axis",
+      "design_top": "axis_async_fifo",
+      "entrypoint": "tb/axis_async_fifo/Makefile",
+      "driver": "make",
+      "simulator": "icarus",
+      "state": "passed",
+      "repository": "https://github.com/alexforencich/verilog-axis",
+      "revision": "48ff7a7e2ef782cf778d47910cf85835c64b1bce",
+      "archive_sha256": "92d714f9a4711491375c3794d5916860cffc776d91fb4b8c548f4cbd4c562aff",
+      "upstream_tree_sha256": "26c27b9eaa8f3a9bdbc3ee49402ca57c0eb053cb0d99e5237162afb907a30cf1",
+      "original_file_count": 215,
+      "original_files_sha256": "ce98a9fcab3b02597b3d3f5f27c31961d54b42aa8812c09a90d7eaf78edc9b48",
+      "original_files_changed": [],
+      "manifest_sha256": "6ac6d8e89c5b7acf68f3663117bd62c73a751edbd00e3034bcd66a352a087954",
+      "log_sha256": "23d1ece63d2ee952ebfbefdc191a43a1078091431f813783b612ce11aa6321d9",
+      "duration_seconds": 22.023,
+      "verdict": {
+        "passed": true,
+        "kind": "junit",
+        "tests": 20,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "artifacts": [
+          {
+            "path": "tb/axis_async_fifo/results.xml",
+            "bytes": 6569,
+            "sha256": "694883e074b7d68a9f24d817aac666d20e6a0f2852a89036dedba914d9e2e0b4"
+          }
+        ]
+      }
+    },
+    {
+      "id": "upstream-axis-async-fifo-adapter",
+      "project": "verilog-axis",
+      "design_top": "axis_async_fifo_adapter",
+      "entrypoint": "tb/axis_async_fifo_adapter/Makefile",
+      "driver": "make",
+      "simulator": "icarus",
+      "state": "passed",
+      "repository": "https://github.com/alexforencich/verilog-axis",
+      "revision": "48ff7a7e2ef782cf778d47910cf85835c64b1bce",
+      "archive_sha256": "92d714f9a4711491375c3794d5916860cffc776d91fb4b8c548f4cbd4c562aff",
+      "upstream_tree_sha256": "26c27b9eaa8f3a9bdbc3ee49402ca57c0eb053cb0d99e5237162afb907a30cf1",
+      "original_file_count": 215,
+      "original_files_sha256": "ce98a9fcab3b02597b3d3f5f27c31961d54b42aa8812c09a90d7eaf78edc9b48",
+      "original_files_changed": [],
+      "manifest_sha256": "fe46ef565b5ec7423a6fab6a96c1c944ebf88302cff95343fea60e2d446da211",
+      "log_sha256": "20a1097c3095723be3cf2b79cecad212c6949d98b0281c986d2dfcaca374e636",
+      "duration_seconds": 21.76,
+      "verdict": {
+        "passed": true,
+        "kind": "junit",
+        "tests": 20,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "artifacts": [
+          {
+            "path": "tb/axis_async_fifo_adapter/results.xml",
+            "bytes": 6740,
+            "sha256": "dc5ac4a85488ce5fd21866325b315ece51b6ab95f08357ff1fc6f61847e3e7ac"
+          }
+        ]
+      }
+    },
+    {
+      "id": "upstream-axis-broadcast",
+      "project": "verilog-axis",
+      "design_top": "axis_broadcast",
+      "entrypoint": "tb/axis_broadcast/Makefile",
+      "driver": "make",
+      "simulator": "icarus",
+      "state": "passed",
+      "repository": "https://github.com/alexforencich/verilog-axis",
+      "revision": "48ff7a7e2ef782cf778d47910cf85835c64b1bce",
+      "archive_sha256": "92d714f9a4711491375c3794d5916860cffc776d91fb4b8c548f4cbd4c562aff",
+      "upstream_tree_sha256": "26c27b9eaa8f3a9bdbc3ee49402ca57c0eb053cb0d99e5237162afb907a30cf1",
+      "original_file_count": 215,
+      "original_files_sha256": "ce98a9fcab3b02597b3d3f5f27c31961d54b42aa8812c09a90d7eaf78edc9b48",
+      "original_files_changed": [],
+      "manifest_sha256": "1dfd935ff1846de23669681ec4e049a4561ead717d032d6a00d960f5b10ca584",
+      "log_sha256": "c6d80d9d2f5cbe0860e5a7e43fccab4b35ce499e4d47716c9f826bdc66ec038b",
+      "duration_seconds": 4.867,
+      "verdict": {
+        "passed": true,
+        "kind": "junit",
+        "tests": 4,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "artifacts": [
+          {
+            "path": "tb/axis_broadcast/results.xml",
+            "bytes": 1369,
+            "sha256": "7dce79483daf4e34c5794161f0efca8320f8c2d63c02a38a26c43485bc964c36"
+          }
+        ]
+      }
+    },
+    {
+      "id": "upstream-axis-cobs-decode",
+      "project": "verilog-axis",
+      "design_top": "axis_cobs_decode",
+      "entrypoint": "tb/axis_cobs_decode/Makefile",
+      "driver": "make",
+      "simulator": "icarus",
+      "state": "passed",
+      "repository": "https://github.com/alexforencich/verilog-axis",
+      "revision": "48ff7a7e2ef782cf778d47910cf85835c64b1bce",
+      "archive_sha256": "92d714f9a4711491375c3794d5916860cffc776d91fb4b8c548f4cbd4c562aff",
+      "upstream_tree_sha256": "26c27b9eaa8f3a9bdbc3ee49402ca57c0eb053cb0d99e5237162afb907a30cf1",
+      "original_file_count": 215,
+      "original_files_sha256": "ce98a9fcab3b02597b3d3f5f27c31961d54b42aa8812c09a90d7eaf78edc9b48",
+      "original_files_changed": [],
+      "manifest_sha256": "afca51003e54c5023be351209f5e413d8c3e06c96c3db63123f6b676d8b25fca",
+      "log_sha256": "9262645c09750019fa5f0e2bea245998160c77d7099ca8baf63bc87c8387b298",
+      "duration_seconds": 22.449,
+      "verdict": {
+        "passed": true,
+        "kind": "junit",
+        "tests": 16,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "artifacts": [
+          {
+            "path": "tb/axis_cobs_decode/results.xml",
+            "bytes": 5108,
+            "sha256": "807be9056943cf48e614a00e74b6181b7eda532b9300945b57b79ed43099bcd2"
+          }
+        ]
+      }
+    },
+    {
+      "id": "upstream-axis-cobs-encode",
+      "project": "verilog-axis",
+      "design_top": "axis_cobs_encode",
+      "entrypoint": "tb/axis_cobs_encode/Makefile",
+      "driver": "make",
+      "simulator": "icarus",
+      "state": "passed",
+      "repository": "https://github.com/alexforencich/verilog-axis",
+      "revision": "48ff7a7e2ef782cf778d47910cf85835c64b1bce",
+      "archive_sha256": "92d714f9a4711491375c3794d5916860cffc776d91fb4b8c548f4cbd4c562aff",
+      "upstream_tree_sha256": "26c27b9eaa8f3a9bdbc3ee49402ca57c0eb053cb0d99e5237162afb907a30cf1",
+      "original_file_count": 215,
+      "original_files_sha256": "ce98a9fcab3b02597b3d3f5f27c31961d54b42aa8812c09a90d7eaf78edc9b48",
+      "original_files_changed": [],
+      "manifest_sha256": "acd62686c894dcc48d4ece623c7680ff0ac2823da920e0be6acb5cad5b3103ff",
+      "log_sha256": "111c18e619ae8af0a8abc85486b735498bacb0a5b8f272dc3da7be2736a36401",
+      "duration_seconds": 24.487,
+      "verdict": {
+        "passed": true,
+        "kind": "junit",
+        "tests": 16,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "artifacts": [
+          {
+            "path": "tb/axis_cobs_encode/results.xml",
+            "bytes": 5099,
+            "sha256": "2c6e41bb85b47edffc4b91ff845b78d28e2d47e49f4db971d95e221ed7d51f73"
+          }
+        ]
+      }
+    },
+    {
+      "id": "upstream-axis-demux",
+      "project": "verilog-axis",
+      "design_top": "axis_demux",
+      "entrypoint": "tb/axis_demux/Makefile",
+      "driver": "make",
+      "simulator": "icarus",
+      "state": "passed",
+      "repository": "https://github.com/alexforencich/verilog-axis",
+      "revision": "48ff7a7e2ef782cf778d47910cf85835c64b1bce",
+      "archive_sha256": "92d714f9a4711491375c3794d5916860cffc776d91fb4b8c548f4cbd4c562aff",
+      "upstream_tree_sha256": "26c27b9eaa8f3a9bdbc3ee49402ca57c0eb053cb0d99e5237162afb907a30cf1",
+      "original_file_count": 215,
+      "original_files_sha256": "ce98a9fcab3b02597b3d3f5f27c31961d54b42aa8812c09a90d7eaf78edc9b48",
+      "original_files_changed": [],
+      "manifest_sha256": "5823a58adedaa0cf9389816866f45b242fb9b84f094c696807a0af4d50ee934d",
+      "log_sha256": "4d4b212bc36043340ff069fd035a300d2840c22ce0c0350f369903b81295f7e4",
+      "duration_seconds": 8.832,
+      "verdict": {
+        "passed": true,
+        "kind": "junit",
+        "tests": 16,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "artifacts": [
+          {
+            "path": "tb/axis_demux/results.xml",
+            "bytes": 4988,
+            "sha256": "fa55cedd3675717c2ff49098873a9580f0a6c3bbd36106338eb52da80fe5d841"
+          }
+        ]
+      }
+    },
+    {
+      "id": "upstream-axis-fifo",
+      "project": "verilog-axis",
+      "design_top": "axis_fifo",
+      "entrypoint": "tb/axis_fifo/Makefile",
+      "driver": "make",
+      "simulator": "icarus",
+      "state": "passed",
+      "repository": "https://github.com/alexforencich/verilog-axis",
+      "revision": "48ff7a7e2ef782cf778d47910cf85835c64b1bce",
+      "archive_sha256": "92d714f9a4711491375c3794d5916860cffc776d91fb4b8c548f4cbd4c562aff",
+      "upstream_tree_sha256": "26c27b9eaa8f3a9bdbc3ee49402ca57c0eb053cb0d99e5237162afb907a30cf1",
+      "original_file_count": 215,
+      "original_files_sha256": "ce98a9fcab3b02597b3d3f5f27c31961d54b42aa8812c09a90d7eaf78edc9b48",
+      "original_files_changed": [],
+      "manifest_sha256": "7cadeebcebfa8819ae7484b6179a2b42f30f27e8b4d0d648e8b1116713f09d70",
+      "log_sha256": "52059b99414508fb1d98a7a431e67dee87fd6a9b07bdee18762b8ee66a336726",
+      "duration_seconds": 14.1,
+      "verdict": {
+        "passed": true,
+        "kind": "junit",
+        "tests": 14,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "artifacts": [
+          {
+            "path": "tb/axis_fifo/results.xml",
+            "bytes": 4486,
+            "sha256": "2c5f028b41fe1b9b62fb00b90a2695dd82317e48a16ffdd72b8e137ca52f0990"
+          }
+        ]
+      }
+    },
+    {
+      "id": "upstream-axis-fifo-adapter",
+      "project": "verilog-axis",
+      "design_top": "axis_fifo_adapter",
+      "entrypoint": "tb/axis_fifo_adapter/Makefile",
+      "driver": "make",
+      "simulator": "icarus",
+      "state": "passed",
+      "repository": "https://github.com/alexforencich/verilog-axis",
+      "revision": "48ff7a7e2ef782cf778d47910cf85835c64b1bce",
+      "archive_sha256": "92d714f9a4711491375c3794d5916860cffc776d91fb4b8c548f4cbd4c562aff",
+      "upstream_tree_sha256": "26c27b9eaa8f3a9bdbc3ee49402ca57c0eb053cb0d99e5237162afb907a30cf1",
+      "original_file_count": 215,
+      "original_files_sha256": "ce98a9fcab3b02597b3d3f5f27c31961d54b42aa8812c09a90d7eaf78edc9b48",
+      "original_files_changed": [],
+      "manifest_sha256": "94604a3e0c2d3b88670fcf2073711e9bd6551396acbd340374f7178a9a2237fc",
+      "log_sha256": "d59f52ef48290f769632806be229ce8b48ba12537042c8cb46db34697cb36849",
+      "duration_seconds": 14.387,
+      "verdict": {
+        "passed": true,
+        "kind": "junit",
+        "tests": 14,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "artifacts": [
+          {
+            "path": "tb/axis_fifo_adapter/results.xml",
+            "bytes": 4594,
+            "sha256": "ad66c559b5758e36ab0e169b8c008e71ea403c195230cad0e2fd7193f14cb490"
+          }
+        ]
+      }
+    },
+    {
+      "id": "upstream-axis-mux",
+      "project": "verilog-axis",
+      "design_top": "axis_mux",
+      "entrypoint": "tb/axis_mux/Makefile",
+      "driver": "make",
+      "simulator": "icarus",
+      "state": "passed",
+      "repository": "https://github.com/alexforencich/verilog-axis",
+      "revision": "48ff7a7e2ef782cf778d47910cf85835c64b1bce",
+      "archive_sha256": "92d714f9a4711491375c3794d5916860cffc776d91fb4b8c548f4cbd4c562aff",
+      "upstream_tree_sha256": "26c27b9eaa8f3a9bdbc3ee49402ca57c0eb053cb0d99e5237162afb907a30cf1",
+      "original_file_count": 215,
+      "original_files_sha256": "ce98a9fcab3b02597b3d3f5f27c31961d54b42aa8812c09a90d7eaf78edc9b48",
+      "original_files_changed": [],
+      "manifest_sha256": "1d01094e91e8120cdf9b7bc728eab4fb39f40d1ced3bfcc1f8684eba14bcac21",
+      "log_sha256": "dbcd1591f3574847a241ee644a704000e45317fc2286ff5d0ffda27cfda7d042",
+      "duration_seconds": 8.334,
+      "verdict": {
+        "passed": true,
+        "kind": "junit",
+        "tests": 20,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "artifacts": [
+          {
+            "path": "tb/axis_mux/results.xml",
+            "bytes": 6232,
+            "sha256": "6df439785ef6004ad4b73e3d3c63a977af0271d6f45321f8356ca9d5a0c5592a"
+          }
+        ]
+      }
+    },
+    {
+      "id": "upstream-axis-pipeline-fifo",
+      "project": "verilog-axis",
+      "design_top": "axis_pipeline_fifo",
+      "entrypoint": "tb/axis_pipeline_fifo/Makefile",
+      "driver": "make",
+      "simulator": "icarus",
+      "state": "passed",
+      "repository": "https://github.com/alexforencich/verilog-axis",
+      "revision": "48ff7a7e2ef782cf778d47910cf85835c64b1bce",
+      "archive_sha256": "92d714f9a4711491375c3794d5916860cffc776d91fb4b8c548f4cbd4c562aff",
+      "upstream_tree_sha256": "26c27b9eaa8f3a9bdbc3ee49402ca57c0eb053cb0d99e5237162afb907a30cf1",
+      "original_file_count": 215,
+      "original_files_sha256": "ce98a9fcab3b02597b3d3f5f27c31961d54b42aa8812c09a90d7eaf78edc9b48",
+      "original_files_changed": [],
+      "manifest_sha256": "d59842dd7f43c0ff670855101007982d0d223b4e22a0d67cefb9363006cb20ea",
+      "log_sha256": "c80d93acba12333feee6365f6293ec8419cfb3a570fb1b82f6a1e1a6fe15faf1",
+      "duration_seconds": 7.124,
+      "verdict": {
+        "passed": true,
+        "kind": "junit",
+        "tests": 12,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "artifacts": [
+          {
+            "path": "tb/axis_pipeline_fifo/results.xml",
+            "bytes": 3982,
+            "sha256": "19cc6d2c3497c7f099a46bbae2ec39784fa31a7fdaa3d3bb755b31a7cc2630bd"
+          }
+        ]
+      }
+    },
+    {
+      "id": "upstream-axis-pipeline-register",
+      "project": "verilog-axis",
+      "design_top": "axis_pipeline_register",
+      "entrypoint": "tb/axis_pipeline_register/Makefile",
+      "driver": "make",
+      "simulator": "icarus",
+      "state": "passed",
+      "repository": "https://github.com/alexforencich/verilog-axis",
+      "revision": "48ff7a7e2ef782cf778d47910cf85835c64b1bce",
+      "archive_sha256": "92d714f9a4711491375c3794d5916860cffc776d91fb4b8c548f4cbd4c562aff",
+      "upstream_tree_sha256": "26c27b9eaa8f3a9bdbc3ee49402ca57c0eb053cb0d99e5237162afb907a30cf1",
+      "original_file_count": 215,
+      "original_files_sha256": "ce98a9fcab3b02597b3d3f5f27c31961d54b42aa8812c09a90d7eaf78edc9b48",
+      "original_files_changed": [],
+      "manifest_sha256": "f8e0d52cb35c46cafcf08fdfa15774a4ff15bb5a37fd9e589030782139475bd6",
+      "log_sha256": "157fa56c8d2f851c64397cd2a3581c6cec0fd9eac5f2f0116db57ef967358bbb",
+      "duration_seconds": 6.726,
+      "verdict": {
+        "passed": true,
+        "kind": "junit",
+        "tests": 9,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "artifacts": [
+          {
+            "path": "tb/axis_pipeline_register/results.xml",
+            "bytes": 3027,
+            "sha256": "e966055432af39dafd9c92120491b434d0d63ac1cea2163fd9496192a865ec17"
+          }
+        ]
+      }
+    },
+    {
+      "id": "upstream-axis-register",
+      "project": "verilog-axis",
+      "design_top": "axis_register",
+      "entrypoint": "tb/axis_register/Makefile",
+      "driver": "make",
+      "simulator": "icarus",
+      "state": "passed",
+      "repository": "https://github.com/alexforencich/verilog-axis",
+      "revision": "48ff7a7e2ef782cf778d47910cf85835c64b1bce",
+      "archive_sha256": "92d714f9a4711491375c3794d5916860cffc776d91fb4b8c548f4cbd4c562aff",
+      "upstream_tree_sha256": "26c27b9eaa8f3a9bdbc3ee49402ca57c0eb053cb0d99e5237162afb907a30cf1",
+      "original_file_count": 215,
+      "original_files_sha256": "ce98a9fcab3b02597b3d3f5f27c31961d54b42aa8812c09a90d7eaf78edc9b48",
+      "original_files_changed": [],
+      "manifest_sha256": "f4425030479a4ea6c0f04de9311aae919ab076b32df325fe0c0a31b22d0aa1ec",
+      "log_sha256": "379e10d76b1944e07a3632b29f54fef9e77faa7f45bb412c13b96754f792eee9",
+      "duration_seconds": 6.641,
+      "verdict": {
+        "passed": true,
+        "kind": "junit",
+        "tests": 9,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "artifacts": [
+          {
+            "path": "tb/axis_register/results.xml",
+            "bytes": 2947,
+            "sha256": "24bebc3e54ad144a3b51a0515dee119d428ca8108d16916aa7afb6d48d3b2490"
+          }
+        ]
+      }
+    },
+    {
+      "id": "upstream-axis-srl-fifo",
+      "project": "verilog-axis",
+      "design_top": "axis_srl_fifo",
+      "entrypoint": "tb/axis_srl_fifo/Makefile",
+      "driver": "make",
+      "simulator": "icarus",
+      "state": "passed",
+      "repository": "https://github.com/alexforencich/verilog-axis",
+      "revision": "48ff7a7e2ef782cf778d47910cf85835c64b1bce",
+      "archive_sha256": "92d714f9a4711491375c3794d5916860cffc776d91fb4b8c548f4cbd4c562aff",
+      "upstream_tree_sha256": "26c27b9eaa8f3a9bdbc3ee49402ca57c0eb053cb0d99e5237162afb907a30cf1",
+      "original_file_count": 215,
+      "original_files_sha256": "ce98a9fcab3b02597b3d3f5f27c31961d54b42aa8812c09a90d7eaf78edc9b48",
+      "original_files_changed": [],
+      "manifest_sha256": "85217033a805299a5737021aea26eafcfbf0c56ca4aefd616238c455bdf314bd",
+      "log_sha256": "c605f3047ae4a52642366af955114f33badeadbbe242a66f255b64470d072d36",
+      "duration_seconds": 12.482,
+      "verdict": {
+        "passed": true,
+        "kind": "junit",
+        "tests": 12,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "artifacts": [
+          {
+            "path": "tb/axis_srl_fifo/results.xml",
+            "bytes": 3921,
+            "sha256": "2812e6163cc109532c322b5c87264b9273ac1aa5ba133834d1ed751ede9ef94d"
+          }
+        ]
+      }
+    },
+    {
+      "id": "upstream-axis-srl-register",
+      "project": "verilog-axis",
+      "design_top": "axis_srl_register",
+      "entrypoint": "tb/axis_srl_register/Makefile",
+      "driver": "make",
+      "simulator": "icarus",
+      "state": "passed",
+      "repository": "https://github.com/alexforencich/verilog-axis",
+      "revision": "48ff7a7e2ef782cf778d47910cf85835c64b1bce",
+      "archive_sha256": "92d714f9a4711491375c3794d5916860cffc776d91fb4b8c548f4cbd4c562aff",
+      "upstream_tree_sha256": "26c27b9eaa8f3a9bdbc3ee49402ca57c0eb053cb0d99e5237162afb907a30cf1",
+      "original_file_count": 215,
+      "original_files_sha256": "ce98a9fcab3b02597b3d3f5f27c31961d54b42aa8812c09a90d7eaf78edc9b48",
+      "original_files_changed": [],
+      "manifest_sha256": "edd0b1ffbf26cf6a5b29217a237af3633dc4a35fd620b69723c9a75e985693db",
+      "log_sha256": "ae9e52437c5183a15b50cce8aeab705831ed4e3652ada44642441500ec76da4f",
+      "duration_seconds": 6.559,
+      "verdict": {
+        "passed": true,
+        "kind": "junit",
+        "tests": 9,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "artifacts": [
+          {
+            "path": "tb/axis_srl_register/results.xml",
+            "bytes": 2981,
+            "sha256": "c90de1fcc3ab29d897cefb1fed1476f7645039ebf3c729488c1519844732b88d"
+          }
+        ]
+      }
+    },
+    {
+      "id": "upstream-i2c-master",
+      "project": "verilog-i2c",
+      "design_top": "i2c_master",
+      "entrypoint": "tb/test_i2c_master.py",
+      "driver": "pytest",
+      "simulator": "icarus",
+      "state": "passed",
+      "repository": "https://github.com/alexforencich/verilog-i2c",
+      "revision": "a65be4045e898a52e791c6ee71f8f79a7cd2e129",
+      "archive_sha256": "f69f402e5136a4f8d86b4ea2ea80f276dcfb3374e3a8b91ca99917a645903fe6",
+      "upstream_tree_sha256": "85fdeeac6c11c946c4188600ecb472f07f2c081faef5fa4189057cca6860e01e",
+      "original_file_count": 37,
+      "original_files_sha256": "cb7315432f5cff65b5d2d9dca6d222629e38f506bb0af6c2b4273d26f4edddf3",
+      "original_files_changed": [],
+      "manifest_sha256": "0e1fc2a985e32f293102d72be090891f27b710480f26f6100ea12867c77d0ea0",
+      "log_sha256": "0b627b995e7b971acb5069cdfd986ebd63cd5fe97a094e1d5a77d005bc43a118",
+      "duration_seconds": 2.053,
+      "verdict": {
+        "passed": true,
+        "kind": "junit",
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "artifacts": [
+          {
+            "path": "tb/results_i2c_master.xml",
+            "bytes": 368,
+            "sha256": "cfba7d0761e6f6c5f3ddb5b773ad202ece970206fd50f9ff9f1000dfff47d38a"
+          }
+        ]
+      }
+    },
+    {
+      "id": "upstream-i2c-master-axil",
+      "project": "verilog-i2c",
+      "design_top": "i2c_master_axil",
+      "entrypoint": "tb/test_i2c_master_axil.py",
+      "driver": "pytest",
+      "simulator": "icarus",
+      "state": "passed",
+      "repository": "https://github.com/alexforencich/verilog-i2c",
+      "revision": "a65be4045e898a52e791c6ee71f8f79a7cd2e129",
+      "archive_sha256": "f69f402e5136a4f8d86b4ea2ea80f276dcfb3374e3a8b91ca99917a645903fe6",
+      "upstream_tree_sha256": "85fdeeac6c11c946c4188600ecb472f07f2c081faef5fa4189057cca6860e01e",
+      "original_file_count": 37,
+      "original_files_sha256": "cb7315432f5cff65b5d2d9dca6d222629e38f506bb0af6c2b4273d26f4edddf3",
+      "original_files_changed": [],
+      "manifest_sha256": "eecc02e0cc417ef5ac8462c8fad8911f9268e61904f31f5fb38b49d29afbdb23",
+      "log_sha256": "226e23b74f1d61567cdeead52c87d946e6ba94e0ed23a93a76578a0e352954f7",
+      "duration_seconds": 2.173,
+      "verdict": {
+        "passed": true,
+        "kind": "junit",
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "artifacts": [
+          {
+            "path": "tb/results_i2c_master_axil.xml",
+            "bytes": 378,
+            "sha256": "e7e4492fc865c8d8a4a12b1b8dd035943c3ce77328d708b8b805dbc24652fa2a"
+          }
+        ]
+      }
+    },
+    {
+      "id": "upstream-i2c-slave",
+      "project": "verilog-i2c",
+      "design_top": "i2c_slave",
+      "entrypoint": "tb/test_i2c_slave.py",
+      "driver": "pytest",
+      "simulator": "icarus",
+      "state": "passed",
+      "repository": "https://github.com/alexforencich/verilog-i2c",
+      "revision": "a65be4045e898a52e791c6ee71f8f79a7cd2e129",
+      "archive_sha256": "f69f402e5136a4f8d86b4ea2ea80f276dcfb3374e3a8b91ca99917a645903fe6",
+      "upstream_tree_sha256": "85fdeeac6c11c946c4188600ecb472f07f2c081faef5fa4189057cca6860e01e",
+      "original_file_count": 37,
+      "original_files_sha256": "cb7315432f5cff65b5d2d9dca6d222629e38f506bb0af6c2b4273d26f4edddf3",
+      "original_files_changed": [],
+      "manifest_sha256": "39c818b148c8b3f55cda8ba9237fe08b605fd8417672ac097c790a4839bffc52",
+      "log_sha256": "b6470fd1994af3d22b6f5b6b024efe6794ded63a1794ef606c70635e3bb46a82",
+      "duration_seconds": 2.133,
+      "verdict": {
+        "passed": true,
+        "kind": "junit",
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "artifacts": [
+          {
+            "path": "tb/results_i2c_slave.xml",
+            "bytes": 366,
+            "sha256": "06d2b3778c62e3cd7d325517ce01bf81b6c7e0d0abb328250d1cf36f562566a6"
+          }
+        ]
+      }
+    },
+    {
+      "id": "upstream-uart-rx",
+      "project": "verilog-uart",
+      "design_top": "uart_rx",
+      "entrypoint": "tb/uart_rx/Makefile",
+      "driver": "make",
+      "simulator": "icarus",
+      "state": "passed",
+      "repository": "https://github.com/alexforencich/verilog-uart",
+      "revision": "1b867e53af738e4a8bc7c839ca2f1c07f40382dc",
+      "archive_sha256": "a8d3432f4a921cf204bbc8a034c1fb00faf173ad56047568995b39d1b50f5727",
+      "upstream_tree_sha256": "0fc2f6b9ff0349af796b15a0472a4540144d4709ddc5b865d7bbc041af80851f",
+      "original_file_count": 70,
+      "original_files_sha256": "db89481f02955d98678871fc2c091153d838a84e14963d58e9e7680fae7eea65",
+      "original_files_changed": [],
+      "manifest_sha256": "645052cfc65a6eae455afd0dd287b225e05e286f9085c1c83b786f383223ba78",
+      "log_sha256": "53c7f1064230469f34b6f7d40295c4b3827656b6bc6f145e0ea7e84877a1fbf8",
+      "duration_seconds": 15.215,
+      "verdict": {
+        "passed": true,
+        "kind": "junit",
+        "tests": 2,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "artifacts": [
+          {
+            "path": "tb/uart_rx/results.xml",
+            "bytes": 739,
+            "sha256": "da83a5f6df69dc7f8db2c7ce44e5bede798dfafec6981e3d37a51a478e2faadf"
+          }
+        ]
+      }
+    },
+    {
+      "id": "upstream-uart-tx",
+      "project": "verilog-uart",
+      "design_top": "uart_tx",
+      "entrypoint": "tb/uart_tx/Makefile",
+      "driver": "make",
+      "simulator": "icarus",
+      "state": "passed",
+      "repository": "https://github.com/alexforencich/verilog-uart",
+      "revision": "1b867e53af738e4a8bc7c839ca2f1c07f40382dc",
+      "archive_sha256": "a8d3432f4a921cf204bbc8a034c1fb00faf173ad56047568995b39d1b50f5727",
+      "upstream_tree_sha256": "0fc2f6b9ff0349af796b15a0472a4540144d4709ddc5b865d7bbc041af80851f",
+      "original_file_count": 70,
+      "original_files_sha256": "db89481f02955d98678871fc2c091153d838a84e14963d58e9e7680fae7eea65",
+      "original_files_changed": [],
+      "manifest_sha256": "1c59566192d7afc0c1b84ff1c50638e99e2126e80fc726e549ca2e4332a0a2fd",
+      "log_sha256": "5db918ea43933053d1943e90aea9e0575b6add827e6bc709760d791f606e6a85",
+      "duration_seconds": 18.232,
+      "verdict": {
+        "passed": true,
+        "kind": "junit",
+        "tests": 2,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "artifacts": [
+          {
+            "path": "tb/uart_tx/results.xml",
+            "bytes": 739,
+            "sha256": "8b69063cfaf582c16d68f694b117a1e913f0497508b9fa35a86f5ca5004cbe4e"
+          }
+        ]
+      }
+    },
+    {
+      "id": "picorv32-upstream-regression",
+      "project": "picorv32",
+      "design_top": "picorv32",
+      "entrypoint": "Makefile",
+      "driver": "make",
+      "simulator": "icarus",
+      "state": "passed",
+      "repository": "https://github.com/YosysHQ/picorv32",
+      "revision": "ef203c2b0a3fb793280f5114941416c425c5b461",
+      "archive_sha256": "3fb600ef770abefe2cb16f57efe1a7c3ed9c21d1ce9a2dcacedf4683acad5f6a",
+      "upstream_tree_sha256": "97e1c469f261a45a100058d70ec83a200426c80573a361b9fccad0bf550bd28f",
+      "original_file_count": 248,
+      "original_files_sha256": "6c425b61f55399b6d1e0d9ec904021b4df339cf366ea443db5180f620b701f4c",
+      "original_files_changed": [],
+      "manifest_sha256": "0866f74db3d08f0e2b3a27a9bbf4f85928f165550a0eb62a2318d4b4b1c70948",
+      "log_sha256": "f6a2868882b2024e0fb3707f43888de74793b0ed71592f19087620b527736213",
+      "duration_seconds": 21.753,
+      "verdict": {
+        "passed": true,
+        "missing_patterns": [],
+        "kind": "log",
+        "artifacts": []
+      }
+    },
+    {
+      "id": "picorv32-upstream-verilator",
+      "project": "picorv32",
+      "design_top": "picorv32",
+      "entrypoint": "Makefile",
+      "driver": "make",
+      "simulator": "verilator",
+      "state": "passed",
+      "repository": "https://github.com/YosysHQ/picorv32",
+      "revision": "ef203c2b0a3fb793280f5114941416c425c5b461",
+      "archive_sha256": "3fb600ef770abefe2cb16f57efe1a7c3ed9c21d1ce9a2dcacedf4683acad5f6a",
+      "upstream_tree_sha256": "97e1c469f261a45a100058d70ec83a200426c80573a361b9fccad0bf550bd28f",
+      "original_file_count": 248,
+      "original_files_sha256": "6c425b61f55399b6d1e0d9ec904021b4df339cf366ea443db5180f620b701f4c",
+      "original_files_changed": [],
+      "manifest_sha256": "bc4e96f14c19dd80a5e1751ec0469a7b6b11a7d5c7268290aae6dcd233fbeb08",
+      "log_sha256": "4011c9aec58b55014ac18059febb8a3e2efa39abc85280c9cd15448e839ea27a",
+      "duration_seconds": 12.341,
+      "verdict": {
+        "passed": true,
+        "missing_patterns": [],
+        "kind": "log",
+        "artifacts": []
+      }
+    },
+    {
+      "id": "serv-upstream-zephyr",
+      "project": "serv",
+      "design_top": "servant_sim",
+      "entrypoint": "servant.core",
+      "driver": "fusesoc",
+      "simulator": "verilator",
+      "state": "passed",
+      "repository": "https://github.com/olofk/serv",
+      "revision": "f200eb2ed7b69ac1c6b8eddd47654522aeee5ce8",
+      "archive_sha256": "43d99e7032dc936e5a9cd106be0a46a7d411c2c80e5c0310536f51c905cac3f2",
+      "upstream_tree_sha256": "740a9ac1b0989c2b2eda9db6a0d4d29af3562a092599c78276eca0432ee067e6",
+      "original_file_count": 242,
+      "original_files_sha256": "b0455036ba2971835ff66ad4c2cf1b6484f06564b56987d45d0be9864817dc2f",
+      "original_files_changed": [],
+      "manifest_sha256": "62eb59f4edd717ebc4feddab2d5386dcff61c25fc8a8975cee4597ae42fa68ec",
+      "log_sha256": "103d5c68dd542e1a1154553598fc9fdcc7f830f9affa1c85220a6248526acb31",
+      "duration_seconds": 12.219,
+      "verdict": {
+        "passed": true,
+        "missing_patterns": [],
+        "kind": "log",
+        "artifacts": []
+      }
+    },
+    {
+      "id": "ibex-upstream-simple-system",
+      "project": "ibex",
+      "design_top": "ibex_simple_system",
+      "entrypoint": "examples/simple_system/ibex_simple_system.core",
+      "driver": "fusesoc",
+      "simulator": "verilator",
+      "state": "passed",
+      "repository": "https://github.com/lowRISC/ibex",
+      "revision": "1b29dae8866e6c0f0a3cd9dead53a77b4f45e357",
+      "archive_sha256": "e3e6741a4f11f4cdea7775c063246b3d98f213f2e21e0b1469cdc6d6f0089007",
+      "upstream_tree_sha256": "c120c298f2609b2308428d837287cc7da527cb1b8e48176eda05d44afedad875",
+      "original_file_count": 3702,
+      "original_files_sha256": "3b24e8b7455b0909679e437940a1dc8d473624fd9279dd66ba93b7500616c7e6",
+      "original_files_changed": [],
+      "manifest_sha256": "696290284af990ca5a17d101c53e7cd8e7d43d02fe1329c1346238b96c118237",
+      "log_sha256": "2b8d16e8c3c146bb1385064badb76f28362041262685dd65f9b6b39e4e30fb45",
+      "duration_seconds": 48.671,
+      "verdict": {
+        "passed": true,
+        "missing_patterns": [],
+        "kind": "log",
+        "artifacts": [
+          {
+            "path": "ibex_simple_system.log",
+            "bytes": 68,
+            "sha256": "9aca3202732ed354316824b3122b91b60f0ea8c3c5be019fe576b1c7b54eb207"
+          }
+        ]
+      }
+    },
+    {
+      "id": "nvdla-upstream-nv-small-trace",
+      "project": "nvdla",
+      "design_top": "NV_nvdla",
+      "entrypoint": "verif/verilator/Makefile + verif/verilator/nvdla.cpp",
+      "driver": "make",
+      "simulator": "verilator",
+      "state": "passed",
+      "repository": "https://github.com/nvdla/hw",
+      "revision": "1a65f1f5b48268accaa47c95f95c2601918be095",
+      "archive_sha256": "aea2f7ebe2c8862be30ab214b94376547d354f019fb5449684b738e757d1bb13",
+      "upstream_tree_sha256": "1ed53450af0581f1868a2f7ddceef22f89b6ce6fb1d7c0fdc1d52ee6920ccad9",
+      "original_file_count": 2583,
+      "original_files_sha256": "d90516a34403a0aef288edd367c964d37e9c6b21034625bc1701158c2dffeb87",
+      "original_files_changed": [],
+      "manifest_sha256": "8b8617cb216ac1e348818a14fb751b40e621ce466fdbdc4d2f7f3b7ea421cd99",
+      "log_sha256": "6445877b1cd3af595c0a5bc459b2c749d38ebc3fecb8942da3742199fbf55fc1",
+      "duration_seconds": 166.009,
+      "verdict": {
+        "passed": true,
+        "missing_patterns": [],
+        "kind": "log",
+        "artifacts": []
+      }
+    }
+  ],
+  "external_requirements": [
+    {
+      "id": "cv32e40p-upstream-questa",
+      "project": "cv32e40p",
+      "design_top": "tb_top",
+      "simulator": "questa",
+      "status": "external_required",
+      "execution_state": "not_run_external_requirements"
+    },
+    {
+      "id": "ibex-upstream-uvm-xcelium",
+      "project": "ibex",
+      "design_top": "core_ibex_tb_top",
+      "simulator": "xcelium",
+      "status": "external_required",
+      "execution_state": "not_run_external_requirements"
+    },
+    {
+      "id": "vexriscv-upstream-regression",
+      "project": "vexriscv",
+      "design_top": "VexRiscv",
+      "simulator": "verilator",
+      "status": "external_required",
+      "execution_state": "not_run_external_requirements"
+    },
+    {
+      "id": "nvdla-upstream-uvm-cross-check",
+      "project": "nvdla",
+      "design_top": "nvdla_tb_top",
+      "simulator": "vcs",
+      "status": "external_required",
+      "execution_state": "not_run_external_requirements"
+    }
+  ],
+  "additional_original_verilator_preset": {
+    "id": "upstream-axis-adapter",
+    "simulator": "verilator",
+    "state": "passed",
+    "driver": "make",
+    "driver_argv": [
+      [
+        "make",
+        "WAVES=0",
+        "SIM=verilator"
+      ]
+    ],
+    "verdict": {
+      "passed": true,
+      "kind": "junit",
+      "tests": 9,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "artifacts": [
+        {
+          "path": "tb/axis_adapter/results.xml",
+          "bytes": 2933,
+          "sha256": "d4c6426aab1db7b615e0dfc278d82f9867c5c808c732e8c4e953d4e8b4415022"
+        }
+      ]
+    }
+  },
+  "original_upstream_browser": {
+    "schema": "vwb.original-upstream-workspace-probe/1",
+    "recorded_at": "2026-10-20T07:25:51.043Z",
+    "state": "passed",
+    "target": "built-local-project-prefix-workspace",
+    "project": "picorv32",
+    "flow": "picorv32-upstream-regression",
+    "simulator": "icarus",
+    "checks": [
+      "authenticated-browser-pairing",
+      "original-upstream-flow-discovery-and-chooser",
+      "invalid-flow-name-blocked-before-native-request",
+      "original-Makefile-testbench-and-GCC-firmware-pass-through-browser",
+      "native-verdict-and-original-test-log-downloaded-with-exact-file-hashes",
+      "original-source-testbench-and-driver-files-unchanged",
+      "original-static-response-bytes-match-built-manifest"
+    ],
+    "original_file_count": 248,
+    "original_files_sha256": "4a0f2047d05de6e394381df1b813796f7f5d86e899f6d1bc8b191b1297f8a9c5",
+    "project_manifest_sha256": "a78e2ad33eb6d7ae5a9c7ae40fc3b94a57181bf675e0b26ecee7ab8f84b9e76f",
+    "browser": "151.0.7922.34",
+    "permission_grant": "not-required-loopback-HTTP-origin",
+    "upstream_source": {
+      "repository": "https://github.com/YosysHQ/picorv32",
+      "revision": "ef203c2b0a3fb793280f5114941416c425c5b461",
+      "archive_sha256": "3fb600ef770abefe2cb16f57efe1a7c3ed9c21d1ce9a2dcacedf4683acad5f6a",
+      "acquisition": "Project staged by probe_upstream_testbenches.py from its integrity-verified source acquisition."
+    },
+    "source_sha256": {
+      "scripts/probe_upstream_workspace.mjs": "77afaa04a63237c37ed0548a149ea25e8b0c2b495fc6e89fddc04c18f6a1d686",
+      "scripts/probe_upstream_testbenches.py": "1c1cb4d2b6193dba1ff94f1a84ff0f9ce0fc7d0cd46d058c392dfa2c219f71a2",
+      "scripts/browser_assets.mjs": "4ce3366c5a2efa23f5197a5df5479be9eb5bf06441bd6ad1eaa0d829df1232eb",
+      "web/workspace/hdl.mjs": "ff3e156c141e7c88db3a6feb0988157285a207cac243877af78e4d45e2c30b3e",
+      "web/workspace/app.mjs": "39b6dddf331cc927fdf7eb4a643c279310f79b1ffcd43863a74bb37dc98e58d6",
+      "companion/flows.py": "da03fc038a4fe57eeb9e16fc061d1eab80877be30282c1d37e3ffeea9b77459b",
+      "companion/server.py": "4334ee7927b876b992396e70d8b76b661c648b264b7577e60018abbc439b792f",
+      "companion/projects.py": "5f54fc7cb64c794cca3a5b187a82be32022966b65333d07ce4c1dfb00420471b",
+      "vwb.py": "638396f3102e6730f16811c176825fcc907fc116d92ed371e55ee685e5fde090",
+      "upstream/benchmarks/core-flows.json": "3dc557203137e294423e3adf1b1443b7bee3c710e29aa21499ff183f5bcecf93",
+      "toolchains/upstream-hdl-lock.json": "c772b94b13ec7b3070d89f083fe0a2d2dbbc762b8e2504dfb73c6ac714d1359a"
+    },
+    "execution": {
+      "request": {
+        "command": "flow",
+        "options": {
+          "flow": "picorv32-upstream-regression"
+        },
+        "timeout": 300
+      },
+      "status": "passed",
+      "returncode": 0,
+      "stale": false,
+      "native_state": "passed",
+      "simulator": "icarus",
+      "verdict": {
+        "passed": true,
+        "missing_patterns": [],
+        "kind": "log",
+        "artifacts": []
+      },
+      "original_driver_argv": [
+        "make",
+        "test",
+        "TOOLCHAIN_PREFIX=riscv-none-elf-"
+      ],
+      "log_sha256": "0e06b01e60251555298b09c03ab501f9869feeea8f4ef0d8d828eff7c915fd39",
+      "duration_seconds": 21.955
+    },
+    "artifacts": [
+      {
+        "path": ".vwb/flows/picorv32-upstream-regression/report.json",
+        "bytes": 16979,
+        "sha256": "aa9f9b045ea9bf14d876677b1a155106d7bea2f669f37c7cc5fdf9c751340ae1",
+        "browser_download": "exact-native-file-bytes"
+      },
+      {
+        "path": ".vwb/flows/picorv32-upstream-regression/run.log",
+        "bytes": 15831,
+        "sha256": "f6a2868882b2024e0fb3707f43888de74793b0ed71592f19087620b527736213",
+        "browser_download": "exact-native-file-bytes"
+      }
+    ],
+    "original_files_changed": [],
+    "loaded_runtime_sha256": {
+      "workspace/index.html": "860c10bd2a0b2a0e0bac779aed08c5c6635fb99c28807f7a951ec8c4bd682f4d",
+      "workspace/style.css": "6a96f62de55dde894b894d09fe65096b83471e09e1018275e08d3021d87658c6",
+      "workspace/app.mjs": "39b6dddf331cc927fdf7eb4a643c279310f79b1ffcd43863a74bb37dc98e58d6",
+      "m0/client.mjs": "b00b1560eb55a8da374c59c0903b9281727d44132e3227f7da3063944167f9f4",
+      "workspace/model.mjs": "56fcd7aee518afdb4cbd44d87604dbfac0fee07af2e8f8f62aca99ad606cad88",
+      "workspace/waveform.mjs": "cfd91d2a7f5ae378f8253b7ade5ca047dd90e721af77be9285e22941ece907fd",
+      "workspace/syntax-view.mjs": "2762ad1daf4bdadcd03a0e10856f6e276da35f767253fc06b8b095f221af97ed",
+      "workspace/search.mjs": "a5cf5b25d679a70a6a911dcabd694b0e9247abf265b8f617d4c03fba0ce14e24",
+      "workspace/intelligence.mjs": "737a179def2088dba8e4d45f7c1ef02f971484d890ad9f9f95c851296ca6d556",
+      "workspace/files.mjs": "35aab4320e716da536bcc2f4228af47c54c8ae4eee324b7c8c57e8e30028e438",
+      "workspace/hdl.mjs": "ff3e156c141e7c88db3a6feb0988157285a207cac243877af78e4d45e2c30b3e",
+      "workspace/schematic.mjs": "8c08a1e676f68ae3706e2f64064d6a5498f8701e4556b40f56d4dbbc2a3d5101",
+      "workspace/vcd.mjs": "ba8509f15d38d0e1824e41101c0d9bb30c00b4a2aade00f57575f27d8f66f7f7",
+      "workspace/syntax.mjs": "7ff937c236481cfa97aa8867cfd14aa25cf40bedf351a4103b1d0471704faf95"
+    }
+  },
+  "supplemental": {
+    "required_designs": 23,
+    "executed_designs": 23,
+    "coverage_counts": {
+      "functional_simulation": 15,
+      "lint_elaboration": 8
+    },
+    "complete_corpus_passed": true,
+    "expected_failure_controls": 15,
+    "all_expected_failure_controls_rejected": true,
+    "manifest_sha256": "da4622ff5ad56d315280879a9064f52b6029e90438a88bcca924485cafd16806",
+    "recipe_sha256": {
+      "toolchains/upstream-core-designs.json": "835327ecd8ce7c612531edf25b67fd46024391d102fcbf8ffa92532e26df01b7",
+      "upstream/fixtures/nvdla/designs.json": "d7c12d2d7138d32a8a030212b018ad0d2e698dce253aa43c77e007a5b969dabe",
+      "upstream/fixtures/picorv32/designs.json": "bff010f539d97fe2e10aaa31dfad16686ed8a8ae1d80e71fb7b2be2d72e2a0fe",
+      "upstream/fixtures/serial/designs.json": "5eae724e33a4fbf0906c711d8e369402811dbb82f69e7c1af3794f1b262f45b2"
+    },
+    "designs": [
+      {
+        "id": "axis-fifo",
+        "project": "verilog-axis",
+        "top": "axis_fifo",
+        "kind": "functional_simulation",
+        "state": "passed",
+        "log_sha256": "e82ceb193fa57c50a11966596812d61e090dd27b50bacc0ef36fc1b720cdb4a3",
+        "negative_control": {
+          "passed": true,
+          "returncode": 1,
+          "log_sha256": "f7bfd41f3a7f05cf7a701d080c22bd713bf338831e6c36c1ab0637805045526e"
+        }
+      },
+      {
+        "id": "axis-register",
+        "project": "verilog-axis",
+        "top": "axis_register",
+        "kind": "functional_simulation",
+        "state": "passed",
+        "log_sha256": "d9318155b10376cffd2a9f5028c011bccb5fcd076addf8349615c26a377a9816",
+        "negative_control": {
+          "passed": true,
+          "returncode": 1,
+          "log_sha256": "63267e788a8f2d65ff4b2783d07fb25a8d0122510724770fb332b8c3b8628229"
+        }
+      },
+      {
+        "id": "axis-pipeline-fifo",
+        "project": "verilog-axis",
+        "top": "axis_pipeline_fifo",
+        "kind": "functional_simulation",
+        "state": "passed",
+        "log_sha256": "657e85911cae3d78e93db3666c0f1a5108ffc5772daae8b9a6edb9b516c2b75c",
+        "negative_control": {
+          "passed": true,
+          "returncode": 1,
+          "log_sha256": "dd8fd6e5319dbc27f52bd199e878e4ccbe4631927578c77e6317f63f6951c8ca"
+        }
+      },
+      {
+        "id": "axis-adapter",
+        "project": "verilog-axis",
+        "top": "axis_adapter",
+        "kind": "functional_simulation",
+        "state": "passed",
+        "log_sha256": "fb95ea78e7dd1e54b668b8d8f66b6492933ad19560a6f811f6119d929bf88ea1",
+        "negative_control": {
+          "passed": true,
+          "returncode": 1,
+          "log_sha256": "84076b9677a7d78cc43a805e1574457934657e4241abe37762b9900f0ade810c"
+        }
+      },
+      {
+        "id": "axis-async-fifo",
+        "project": "verilog-axis",
+        "top": "axis_async_fifo",
+        "kind": "functional_simulation",
+        "state": "passed",
+        "log_sha256": "766458a8d2aaaa24aff686487960ccb8d92ab0f04da57af698947e9944a89176",
+        "negative_control": {
+          "passed": true,
+          "returncode": 1,
+          "log_sha256": "80a427535998395faa938ae49fd862e38bd74a3294e6863318dad2da29ae261b"
+        }
+      },
+      {
+        "id": "axis-arb-mux",
+        "project": "verilog-axis",
+        "top": "axis_arb_mux",
+        "kind": "lint_elaboration",
+        "state": "passed",
+        "log_sha256": "c1e291c5cadce929cd3786b0013d4d93a9288c1995ca926e702fc0fb0ecc0ebc",
+        "negative_control": null
+      },
+      {
+        "id": "axi-ram",
+        "project": "verilog-axi",
+        "top": "axi_ram",
+        "kind": "lint_elaboration",
+        "state": "passed",
+        "log_sha256": "f9d54ea7636784356128be4b437652942562bdcb03df786d233bb3176c71981c",
+        "negative_control": null
+      },
+      {
+        "id": "axil-register",
+        "project": "verilog-axi",
+        "top": "axil_register",
+        "kind": "lint_elaboration",
+        "state": "passed",
+        "log_sha256": "e873575460f1cc6836ada8ae51b96e5912fab758b1ac9386e74bc46de0e207be",
+        "negative_control": null
+      },
+      {
+        "id": "i2c-master",
+        "project": "verilog-i2c",
+        "top": "i2c_master",
+        "kind": "lint_elaboration",
+        "state": "passed",
+        "log_sha256": "3f5df80a45a0654b8edce4568267d47636bc4ab325bc8b42c8bc26459444a16d",
+        "negative_control": null
+      },
+      {
+        "id": "i2c-slave",
+        "project": "verilog-i2c",
+        "top": "i2c_slave",
+        "kind": "lint_elaboration",
+        "state": "passed",
+        "log_sha256": "eca136a2efd5bc9b0795ecce366a0921dd6b12cbcfa4ac3d3c2f7956f777d70c",
+        "negative_control": null
+      },
+      {
+        "id": "ibex-core",
+        "project": "ibex",
+        "top": "ibex_core",
+        "kind": "lint_elaboration",
+        "state": "passed",
+        "log_sha256": "d305d739a9154fb0328af28a121cf8fdfed673f36e07d1994dd6af79be8c9388",
+        "negative_control": null
+      },
+      {
+        "id": "cv32e40p-core",
+        "project": "cv32e40p",
+        "top": "cv32e40p_core",
+        "kind": "lint_elaboration",
+        "state": "passed",
+        "log_sha256": "8c40eb91936dc6f6794feeb01cedcc590ba44b58035626674f2ce3134ca9aaaa",
+        "negative_control": null
+      },
+      {
+        "id": "serv-core",
+        "project": "serv",
+        "top": "serv_top",
+        "kind": "lint_elaboration",
+        "state": "passed",
+        "log_sha256": "8c2de9000989ff7c348a213b54a634980a6a39fc3d3f6478b2372aa1ebcc4b5c",
+        "negative_control": null
+      },
+      {
+        "id": "nvdla-apb2csb",
+        "project": "nvdla",
+        "top": "NV_NVDLA_apb2csb",
+        "kind": "functional_simulation",
+        "state": "passed",
+        "log_sha256": "6f557f360183dd23e3ea8d87097e21e4817bf93c14dbe08e03e0d65e24454d9e",
+        "negative_control": {
+          "passed": true,
+          "returncode": 1,
+          "log_sha256": "ba1765cc62a39972f172bfec61d36dbc547039f1183a7cc0cf72be40c19ef8ba"
+        }
+      },
+      {
+        "id": "nvdla-cacc-int8",
+        "project": "nvdla",
+        "top": "NV_NVDLA_CACC_CALC_int8",
+        "kind": "functional_simulation",
+        "state": "passed",
+        "log_sha256": "f222c8c2d38e020b20bec49b50916bef347620879508262f3b2d6a16e73b6a64",
+        "negative_control": {
+          "passed": true,
+          "returncode": 1,
+          "log_sha256": "ee2edd2ca8d553cdc9573ebd301009ddf0136e35dd6b502af5b5ee9ab6509194"
+        }
+      },
+      {
+        "id": "nvdla-sdp-alu",
+        "project": "nvdla",
+        "top": "NV_NVDLA_SDP_HLS_X_int_alu",
+        "kind": "functional_simulation",
+        "state": "passed",
+        "log_sha256": "e6977e82f9026812b848c5002bf32d6cb8de7fd0e38b2db22a2433e32574753d",
+        "negative_control": {
+          "passed": true,
+          "returncode": 1,
+          "log_sha256": "0e0fddc4bc3241261b05b2a9ad916e2bfd7b1aa2b6c03c6c0d7b9e7c2a1c3cec"
+        }
+      },
+      {
+        "id": "nvdla-sdp-mul",
+        "project": "nvdla",
+        "top": "NV_NVDLA_SDP_HLS_X_int_mul",
+        "kind": "functional_simulation",
+        "state": "passed",
+        "log_sha256": "f049bc6884f311f1c2611b7300c8750b3e3a16674de8d55bb0845300e29fb845",
+        "negative_control": {
+          "passed": true,
+          "returncode": 1,
+          "log_sha256": "b66ac55e2b1330e03397c6a337a05325a4b314165c888995d64895118b535056"
+        }
+      },
+      {
+        "id": "picorv32-cpu",
+        "project": "picorv32",
+        "top": "picorv32",
+        "kind": "functional_simulation",
+        "state": "passed",
+        "log_sha256": "ada3a795d9fed64288b2af0851a6547447aaa1a08331e336deffd5c5047a632e",
+        "negative_control": {
+          "passed": true,
+          "returncode": 1,
+          "log_sha256": "f671b50eebc0c7b3c5a6bd09755412d805144ed8ca81cc85e2b801b5322b7cc0"
+        }
+      },
+      {
+        "id": "picorv32-mul",
+        "project": "picorv32",
+        "top": "picorv32_pcpi_mul",
+        "kind": "functional_simulation",
+        "state": "passed",
+        "log_sha256": "a0c71b1eae32a2d7f1c200501c7675d48fd591293be8fb1e67d28d60634b993a",
+        "negative_control": {
+          "passed": true,
+          "returncode": 1,
+          "log_sha256": "8dbbb4b2805c4a06db16bbdd0c7f8818d75ec717aa3068f6f3ada43ab1ae0fa9"
+        }
+      },
+      {
+        "id": "picorv32-fast-mul",
+        "project": "picorv32",
+        "top": "picorv32_pcpi_fast_mul",
+        "kind": "functional_simulation",
+        "state": "passed",
+        "log_sha256": "6476b65748b843522123c01c3720adb944b746170b4567fd0e3158b57d8ecbdd",
+        "negative_control": {
+          "passed": true,
+          "returncode": 1,
+          "log_sha256": "5451f2494ace902d3154d162b88467102a4a9858c8ea84f4cfc95d50e1eeb08f"
+        }
+      },
+      {
+        "id": "picorv32-div",
+        "project": "picorv32",
+        "top": "picorv32_pcpi_div",
+        "kind": "functional_simulation",
+        "state": "passed",
+        "log_sha256": "3db5b68725a972cd03861a4119a4ba579bdf0d9062ea545361ae20959d5e96ab",
+        "negative_control": {
+          "passed": true,
+          "returncode": 1,
+          "log_sha256": "dd1af5ee2919de6acb6f8f40af89e96fb30fa4c7959ff7c6eabad7922f4c7f63"
+        }
+      },
+      {
+        "id": "uart-loopback",
+        "project": "verilog-uart",
+        "top": "uart",
+        "kind": "functional_simulation",
+        "state": "passed",
+        "log_sha256": "79c3215f6a73dea2b2f534460a2d7d063648f4e24f1c6b2e4afc26717a428c5e",
+        "negative_control": {
+          "passed": true,
+          "returncode": 1,
+          "log_sha256": "cc7025add3529bfe68b0dafade8ba6115206c21fa953ee4158ef760cdf364828"
+        }
+      },
+      {
+        "id": "axil-ram",
+        "project": "verilog-axi",
+        "top": "axil_ram",
+        "kind": "functional_simulation",
+        "state": "passed",
+        "log_sha256": "a56a099d3641a59a3fc9c13b131b1c255b707f3f527091a4331ecb45e61daf0e",
+        "negative_control": {
+          "passed": true,
+          "returncode": 1,
+          "log_sha256": "6f7b41578088fe97a05083b34d72542cd18a59e262f66ba318523fc7f741975f"
+        }
+      }
+    ]
+  },
+  "toolchain_archive": {
+    "release": "2026-10-18",
+    "archive": "oss-cad-suite-linux-x64-20261018.tgz",
+    "sha256": "639c8c0366d74dc56201729c9907bf2d8281db7f18bb025abe2e4f3f2ebaa24e",
+    "size_bytes": 748315612,
+    "external_tool_overlays": [],
+    "relocatable": true
+  },
+  "python_profiles": {
+    "cocotb1": {
+      "setuptools": "80.9.0",
+      "wheel": "0.41.2",
+      "cocotb": "1.9.2",
+      "cocotb-bus": "0.3.0",
+      "cocotb-test": "0.2.6",
+      "cocotbext-axi": "0.1.24",
+      "cocotbext-uart": "0.1.4",
+      "find-libpython": "0.5.1",
+      "iniconfig": "2.3.1",
+      "myhdl": "0.11.51",
+      "packaging": "26.3",
+      "pluggy": "1.7.0",
+      "pytest": "8.3.5",
+      "scapy": "2.8.0"
+    },
+    "fusesoc": {
+      "argcomplete": "3.7.2",
+      "attrs": "26.1.0",
+      "edalize": "0.6.8",
+      "fastjsonschema": "2.22.2",
+      "fusesoc": "2.4.6",
+      "jinja2": "3.1.6",
+      "markupsafe": "3.0.4",
+      "okonomiyaki": "3.0.0",
+      "pyparsing": "3.3.3",
+      "pyyaml": "6.0.3",
+      "simplesat": "0.9.2",
+      "six": "1.17.0"
+    }
+  },
+  "riscv_compiler": {
+    "version": "14.2.0-3",
+    "archive": {
+      "url": "https://github.com/xpack-dev-tools/riscv-none-elf-gcc-xpack/releases/download/v14.2.0-3/xpack-riscv-none-elf-gcc-14.2.0-3-linux-x64.tar.gz",
+      "size": 344375405,
+      "sha256": "f574415b63f12b09bdd3475223ab492a465d23810646c90c13a4c3b676c83503",
+      "root": "xpack-riscv-none-elf-gcc-14.2.0-3"
+    }
+  },
+  "limits": [
+    "One upstream default parameter configuration is selected for each peripheral bench; this is not the entire upstream parameter matrix.",
+    "PicoRV32 runs through two original simulator entrypoints and counts as one physical design.",
+    "SERV and Ibex Simple System are directed firmware/system smoke checks; they do not establish exhaustive ISA or UVM coverage.",
+    "The complete nv_small top runs four original golden-CRC traces; the separate SystemC/UVM C-model cross-check remains external and unverified.",
+    "The isolated upstream dependency profiles are tested on Linux x64; unrelated platform tool discovery does not establish original bench execution."
+  ],
+  "prior_dependency_failure": {
+    "workflow_url": "https://github.com/sfmth/verilog-workbench/actions/runs/39384176595",
+    "source_commit": "791cb510cbf5cf9a91f6097acf68eecc98f2dbac",
+    "stage": "Install native upstream driver and generator prerequisites",
+    "cause": "The runner image Microsoft APT feed returned 403 before any original bench ran. The repaired job disables only that unused feed and retains Ubuntu signature checks."
+  }
+}

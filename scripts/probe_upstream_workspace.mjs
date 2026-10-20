@@ -170,7 +170,7 @@ try {
   report.upstream_source = {repository: sourcePin.repository, revision: sourcePin.revision, archive_sha256: sourcePin.archive.sha256,
     acquisition: 'Project staged by probe_upstream_testbenches.py from its integrity-verified source acquisition.'};
   const head = spawnSync('git', ['rev-parse', 'HEAD'], {cwd: repo, encoding: 'utf8'});
-  if (head.status === 0) report.checkout = {head: head.stdout.trim(), source_state: 'Local working-tree acceptance before commit; source_sha256 identifies the tested files. This is not a claim that HEAD contains these changes.'};
+  if (head.status === 0) report.checkout = {head: head.stdout.trim(), source_state: 'HEAD and exact source hashes identify this checkout; source_sha256 is authoritative if local edits exist.'};
   report.source_sha256 = {};
   for (const relative of ['scripts/probe_upstream_workspace.mjs', 'scripts/probe_upstream_testbenches.py', 'scripts/browser_assets.mjs', 'web/workspace/hdl.mjs', 'web/workspace/app.mjs', 'companion/flows.py', 'companion/server.py', 'companion/projects.py', 'vwb.py', 'upstream/benchmarks/core-flows.json', 'toolchains/upstream-hdl-lock.json']) report.source_sha256[relative] = digest(await fs.readFile(path.join(repo, relative)));
   if (publicURL) { origin = publicURL.origin; workspaceURL = publicURL.href; } else await serveBuild();

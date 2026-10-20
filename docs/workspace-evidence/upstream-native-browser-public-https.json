@@ -1,0 +1,142 @@
+{
+  "schema": "vwb.original-upstream-workspace-probe/1",
+  "recorded_at": "2026-10-20T07:27:54.119Z",
+  "state": "passed",
+  "target": "public-HTTPS-workspace",
+  "project": "picorv32",
+  "flow": "picorv32-upstream-regression",
+  "simulator": "icarus",
+  "checks": [
+    "authenticated-browser-pairing",
+    "original-upstream-flow-discovery-and-chooser",
+    "invalid-flow-name-blocked-before-native-request",
+    "original-Makefile-testbench-and-GCC-firmware-pass-through-browser",
+    "native-verdict-and-original-test-log-downloaded-with-exact-file-hashes",
+    "original-source-testbench-and-driver-files-unchanged",
+    "original-static-response-bytes-match-built-manifest"
+  ],
+  "note": "Real browser controls run the original upstream Makefile, testbench and GCC-built firmware through an authenticated companion. No fake tool, replacement testbench or substituted native response is used. PicoRV32 firmware/ISA regression coverage is determined by the pinned upstream bench.",
+  "original_file_count": 248,
+  "original_files_sha256": "4a0f2047d05de6e394381df1b813796f7f5d86e899f6d1bc8b191b1297f8a9c5",
+  "project_manifest_sha256": "3c9732e3a5265059f4851365b75831f58168c0f6591488232f0802b39ef62140",
+  "upstream_source": {
+    "repository": "https://github.com/YosysHQ/picorv32",
+    "revision": "ef203c2b0a3fb793280f5114941416c425c5b461",
+    "archive_sha256": "3fb600ef770abefe2cb16f57efe1a7c3ed9c21d1ce9a2dcacedf4683acad5f6a",
+    "acquisition": "Project staged by probe_upstream_testbenches.py from its integrity-verified source acquisition."
+  },
+  "checkout": {
+    "head": "cfc4a4c0b236845a495884e227c389ed97695a1c",
+    "source_state": "Post-deployment HTTPS acceptance from a clean checkout. All recorded collector/backend source hashes and all captured public runtime asset hashes match tested_commit; the recorded collector hash predates the later metadata-label correction."
+  },
+  "source_sha256": {
+    "scripts/probe_upstream_workspace.mjs": "77afaa04a63237c37ed0548a149ea25e8b0c2b495fc6e89fddc04c18f6a1d686",
+    "scripts/probe_upstream_testbenches.py": "1c1cb4d2b6193dba1ff94f1a84ff0f9ce0fc7d0cd46d058c392dfa2c219f71a2",
+    "scripts/browser_assets.mjs": "4ce3366c5a2efa23f5197a5df5479be9eb5bf06441bd6ad1eaa0d829df1232eb",
+    "web/workspace/hdl.mjs": "ff3e156c141e7c88db3a6feb0988157285a207cac243877af78e4d45e2c30b3e",
+    "web/workspace/app.mjs": "39b6dddf331cc927fdf7eb4a643c279310f79b1ffcd43863a74bb37dc98e58d6",
+    "companion/flows.py": "da03fc038a4fe57eeb9e16fc061d1eab80877be30282c1d37e3ffeea9b77459b",
+    "companion/server.py": "4334ee7927b876b992396e70d8b76b661c648b264b7577e60018abbc439b792f",
+    "companion/projects.py": "5f54fc7cb64c794cca3a5b187a82be32022966b65333d07ce4c1dfb00420471b",
+    "vwb.py": "638396f3102e6730f16811c176825fcc907fc116d92ed371e55ee685e5fde090",
+    "upstream/benchmarks/core-flows.json": "3dc557203137e294423e3adf1b1443b7bee3c710e29aa21499ff183f5bcecf93",
+    "toolchains/upstream-hdl-lock.json": "c772b94b13ec7b3070d89f083fe0a2d2dbbc762b8e2504dfb73c6ac714d1359a"
+  },
+  "browser": "141.0.7390.37",
+  "permission_grant": "explicit-simulated-Chromium-local-network-access",
+  "discovery": {
+    "request": {
+      "command": "flow",
+      "options": {
+        "list": true
+      },
+      "timeout": 300
+    },
+    "flow_ids": [
+      "picorv32-upstream-regression",
+      "picorv32-upstream-verilator"
+    ]
+  },
+  "execution": {
+    "request": {
+      "command": "flow",
+      "options": {
+        "flow": "picorv32-upstream-regression"
+      },
+      "timeout": 300
+    },
+    "status": "passed",
+    "returncode": 0,
+    "stale": false,
+    "native_state": "passed",
+    "simulator": "icarus",
+    "verdict": {
+      "passed": true,
+      "missing_patterns": [],
+      "kind": "log",
+      "artifacts": []
+    },
+    "original_driver_argv": [
+      "make",
+      "test",
+      "TOOLCHAIN_PREFIX=riscv-none-elf-"
+    ],
+    "log_sha256": "500c43cac34e0626789a93784e2a8e9689f40db3e8b81f7e3194af49db4a33ac",
+    "duration_seconds": 11.866
+  },
+  "artifacts": [
+    {
+      "path": ".vwb/flows/picorv32-upstream-regression/report.json",
+      "bytes": 16969,
+      "sha256": "3532e3c9d7a187a5d5a6da1f1a6bf71ce13ee0bfc5b913ec0e3f60b57de4ed90",
+      "browser_download": "exact-native-file-bytes"
+    },
+    {
+      "path": ".vwb/flows/picorv32-upstream-regression/run.log",
+      "bytes": 15821,
+      "sha256": "e3f087bc9955b2345ad9c19c4ba3c8dacff9af655099269f10b4e3455efb1f06",
+      "browser_download": "exact-native-file-bytes"
+    }
+  ],
+  "original_files_changed": [],
+  "loaded_runtime_sha256": {
+    "workspace/index.html": "860c10bd2a0b2a0e0bac779aed08c5c6635fb99c28807f7a951ec8c4bd682f4d",
+    "workspace/style.css": "6a96f62de55dde894b894d09fe65096b83471e09e1018275e08d3021d87658c6",
+    "workspace/app.mjs": "39b6dddf331cc927fdf7eb4a643c279310f79b1ffcd43863a74bb37dc98e58d6",
+    "workspace/search.mjs": "a5cf5b25d679a70a6a911dcabd694b0e9247abf265b8f617d4c03fba0ce14e24",
+    "workspace/schematic.mjs": "8c08a1e676f68ae3706e2f64064d6a5498f8701e4556b40f56d4dbbc2a3d5101",
+    "workspace/syntax-view.mjs": "2762ad1daf4bdadcd03a0e10856f6e276da35f767253fc06b8b095f221af97ed",
+    "workspace/files.mjs": "35aab4320e716da536bcc2f4228af47c54c8ae4eee324b7c8c57e8e30028e438",
+    "workspace/waveform.mjs": "cfd91d2a7f5ae378f8253b7ade5ca047dd90e721af77be9285e22941ece907fd",
+    "workspace/intelligence.mjs": "737a179def2088dba8e4d45f7c1ef02f971484d890ad9f9f95c851296ca6d556",
+    "workspace/model.mjs": "56fcd7aee518afdb4cbd44d87604dbfac0fee07af2e8f8f62aca99ad606cad88",
+    "m0/client.mjs": "b00b1560eb55a8da374c59c0903b9281727d44132e3227f7da3063944167f9f4",
+    "workspace/hdl.mjs": "ff3e156c141e7c88db3a6feb0988157285a207cac243877af78e4d45e2c30b3e",
+    "workspace/vcd.mjs": "ba8509f15d38d0e1824e41101c0d9bb30c00b4a2aade00f57575f27d8f66f7f7",
+    "workspace/syntax.mjs": "7ff937c236481cfa97aa8867cfd14aa25cf40bedf351a4103b1d0471704faf95"
+  },
+  "asset_capture": {
+    "method": "original-browser-network-entity-bytes-paused-before-unchanged-CDP-continueResponse",
+    "source_sha256": "4ce3366c5a2efa23f5197a5df5479be9eb5bf06441bd6ad1eaa0d829df1232eb",
+    "browser_http_cache": "harness-does-not-change-cache-settings",
+    "protocol_scope": "https://sfmth.github.io/verilog-workbench/*",
+    "protocol_stage": "Response",
+    "original_network_responses": true,
+    "request_refetches": 0,
+    "response_overrides": 0,
+    "delivered_responses": 15,
+    "delivered_entity_bytes": 225427,
+    "pending_responses": 0
+  },
+  "script_errors": [],
+  "asset_errors": [],
+  "tested_commit": "cfc4a4c0b236845a495884e227c389ed97695a1c",
+  "deployed_runtime_verification": {
+    "commit": "cfc4a4c0b236845a495884e227c389ed97695a1c",
+    "method": "Every captured public runtime asset SHA-256 matches its web/ Git blob at this commit. The build manifest does not embed a commit field.",
+    "pages_run": "https://github.com/sfmth/verilog-workbench/actions/runs/39384709536",
+    "captured_assets": 14
+  },
+  "raw_collector_receipt_sha256": "3d46752200f27ee7f9ad9d5b4caa0816442b6650139b6c1eda7da7d631d6aedb",
+  "receipt_annotation": "Checkout/deployment context added after verifying commit hashes; native verdict, source hashes, public runtime hashes and downloaded artifact hashes are unchanged."
+}

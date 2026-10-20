@@ -205,6 +205,24 @@ records all 30 flows passing across 29 distinct designs, with 300 executed JUnit
 cases and unchanged original inputs. Receipts identify their tested source
 hashes and distinguish local execution from hosted CI.
 
+The [hosted original-bench receipt](workspace-evidence/upstream-native-ci-linux-x64.json)
+records all 30 flows passing across 29 distinct designs at
+`cfc4a4c0b236845a495884e227c389ed97695a1c`: 300 executed JUnit cases with zero
+failures, errors or skips, unchanged original inputs, nine additional AXIS
+adapter cases using its original Verilator preset and seven rendered-browser
+checks. The same job passes all 23 supplemental designs and rejects all 15
+deliberately corrupted expected values. The receipt retains report, log, JUnit,
+source and artifact hashes verified against the downloaded CI artifact.
+
+[Pages CI](https://github.com/sfmth/verilog-workbench/actions/runs/39384709536)
+passes build, the required upstream gate, deployment and public verification.
+[Native CI](https://github.com/sfmth/verilog-workbench/actions/runs/39384709436)
+passes all 14 jobs at the same commit. The
+[public HTTPS original-bench receipt](workspace-evidence/upstream-native-browser-public-https.json)
+separately records seven passing checks against the deployed workspace,
+including the original PicoRV32 firmware regression, unchanged source inputs,
+exact archived report/log downloads and matching loaded runtime hashes.
+
 ## Earlier supplemental acceptance evidence
 
 The [hosted corpus report](workspace-evidence/upstream-corpus-ci-linux-x64.json)
