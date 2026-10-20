@@ -19,6 +19,14 @@ jobs:
           python-version: '3.12'
       - name: Install native upstream driver and generator prerequisites
         run: |
+          # This job uses Ubuntu packages only. An unrelated runner-image feed
+          # can return 403 and otherwise prevent all native prerequisites.
+          sudo python3 - <<'PY'
+          from pathlib import Path
+          for source in Path('/etc/apt/sources.list.d').iterdir():
+              if source.suffix in {'.list', '.sources'} and 'packages.microsoft.com' in source.read_text():
+                  source.rename(source.with_name(source.name + '.disabled'))
+          PY
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
             gcc g++ make clang default-jre-headless perl \

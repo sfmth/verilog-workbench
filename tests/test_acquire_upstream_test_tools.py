@@ -19,7 +19,7 @@ class VerificationToolAcquisitionTests(unittest.TestCase):
     def setUp(self):
         temporary = tempfile.TemporaryDirectory(prefix="vwb dependency checks ")
         self.addCleanup(temporary.cleanup)
-        self.root = Path(temporary.name)
+        self.root = Path(temporary.name).resolve()
         self.cache = self.root / "cache"
         self.cache.mkdir()
         self.content = b"pinned package bytes"
@@ -37,10 +37,22 @@ class VerificationToolAcquisitionTests(unittest.TestCase):
         }
         self.environment = {"PATH": os.environ.get("PATH", os.defpath)}
         self.lock_hash = "a" * 64
+        if os.name == "nt":
+            # These tests exercise portable acquisition/integrity contracts;
+            # actual launcher execution belongs to the Linux-only installer.
+            shim = patch.object(acquire, "python_shims", side_effect=self.fake_python_shims)
+            shim.start()
+            self.addCleanup(shim.stop)
 
-    def install(self, definition=None):
+    def install(self, definition=None, directory=None):
         return acquire.install_profile("bench", definition or self.definition, self.packages,
-            self.root, self.cache, sys.executable, self.environment, self.lock_hash, True)
+            directory or self.root, self.cache, sys.executable, self.environment, self.lock_hash, True)
+
+    def fake_python_shims(self, directory, python):
+        directory.mkdir(parents=True, exist_ok=True)
+        for alias in ("python", "python3"):
+            (directory / alias).write_text("Mock launcher for " + python)
+        return directory
 
     def fake_pip(self, argv, **kwargs):
         site = Path(argv[argv.index("--target") + 1])
@@ -125,9 +137,14 @@ class VerificationToolAcquisitionTests(unittest.TestCase):
         definition["native_builds"] = [{"cwd": "site", "argv": ["make"], "tools": [], "outputs": ["missing.vpi"]}]
         def fake(argv, **kwargs):
             if "--target" in argv: self.fake_pip(argv, **kwargs)
+        # Reproduce alias spellings on every OS, including macOS's /var ->
+        # /private/var case, without requiring symlink privileges on Windows.
+        alias_parent = self.root / "alias-parent"
+        alias_parent.mkdir()
+        directory = alias_parent / ".."
         with patch.object(acquire, "download", return_value=self.archive), patch.object(acquire.subprocess, "run", side_effect=fake):
             with self.assertRaisesRegex(ValueError, "plugin was not built"):
-                self.install(definition)
+                self.install(definition, directory=directory)
         self.assertFalse((self.root / "profiles/bench-aaaaaaaaaaaaaaaa").exists())
 
     def test_profile_names_cannot_escape_install_directory(self):

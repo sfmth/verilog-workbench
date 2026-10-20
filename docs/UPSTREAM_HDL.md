@@ -200,6 +200,11 @@ source inputs and exact result/log downloads. The NVDLA receipt above separately
 records four passing complete-top golden-CRC traces and a deliberately corrupted
 CRC that the original bench rejects.
 
+The [local original-bench receipt](workspace-evidence/upstream-native-local-linux-x64.json)
+records all 30 flows passing across 29 distinct designs, with 300 executed JUnit
+cases and unchanged original inputs. Receipts identify their tested source
+hashes and distinguish local execution from hosted CI.
+
 ## Earlier supplemental acceptance evidence
 
 The [hosted corpus report](workspace-evidence/upstream-corpus-ci-linux-x64.json)

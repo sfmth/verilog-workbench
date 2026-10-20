@@ -99,6 +99,9 @@ def python_shims(directory, python):
 def install_profile(name, definition, packages, directory, cache, python, base_env, lock_hash, offline):
     if not PROFILE_NAME.fullmatch(name) or not re.fullmatch(r'[0-9a-f]{64}', lock_hash):
         raise ValueError('Invalid verification profile name or lock digest')
+    # Compare the resolved native-build cwd with the same canonical root. On
+    # macOS /var is an alias for /private/var; callers can also use `a/..`.
+    directory = Path(directory).resolve()
     target = directory / 'profiles' / (name + '-' + lock_hash[:16])
     if target.parent.is_symlink(): raise ValueError('Verification profile parent cannot be a symbolic link')
     receipt_path = target / '.vwb-profile.json'

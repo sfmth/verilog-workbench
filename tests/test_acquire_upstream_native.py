@@ -3,6 +3,7 @@ import hashlib
 import importlib.util
 import io
 import json
+import os
 from pathlib import Path
 import sys
 import tarfile
@@ -54,7 +55,7 @@ class NativeDependencyIntegrityTests(unittest.TestCase):
     def test_offline_acquisition_produces_explicit_perl_environment(self):
         result = self.acquire()
         self.assertEqual(set(result['artifacts']), set(native.ALLOWED))
-        self.assertEqual(len(result['environment']['PERL5LIB'].split(':')), 2)
+        self.assertEqual(len(result['environment']['PERL5LIB'].split(os.pathsep)), 2)
         self.assertEqual(self.acquire(), result)
 
     def test_modified_extracted_library_is_rejected_on_reuse(self):
