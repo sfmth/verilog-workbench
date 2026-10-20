@@ -1,0 +1,599 @@
+{
+  "schema_version": 1,
+  "description": "Exact dependencies for running original pinned upstream verification entrypoints. The profiles are separate from the default VWB toolchain Python environment.",
+  "platform": "linux-x86_64",
+  "python": "CPython 3.11 supplied by the pinned OSS CAD Suite",
+  "profiles": {
+    "cocotb1": {
+      "description": "Original upstream Cocotb 1.x and MyHDL benches",
+      "python": {
+        "implementation": "cpython",
+        "version": "3.11",
+        "abi": "cp311",
+        "platform": "linux-x86_64"
+      },
+      "packages": [
+        "cocotb",
+        "cocotb-bus",
+        "cocotb-test",
+        "cocotbext-axi",
+        "cocotbext-uart",
+        "find-libpython",
+        "iniconfig",
+        "myhdl",
+        "packaging",
+        "pluggy",
+        "pytest",
+        "scapy"
+      ],
+      "build_packages": [
+        "setuptools",
+        "wheel"
+      ],
+      "native_builds": [
+        {
+          "id": "myhdl-icarus-vpi",
+          "cwd": "site/share/myhdl/cosimulation/icarus",
+          "argv": [
+            "make"
+          ],
+          "outputs": [
+            "myhdl.vpi"
+          ],
+          "tools": [
+            "make",
+            "iverilog-vpi",
+            "gcc"
+          ],
+          "environment": {
+            "IVERILOG_VPI_MODULE_PATH": "${profile}/site/share/myhdl/cosimulation/icarus"
+          }
+        }
+      ]
+    },
+    "fusesoc": {
+      "description": "Original FuseSoC/Edalize project targets",
+      "python": {
+        "implementation": "cpython",
+        "version": "3.11",
+        "abi": "cp311",
+        "platform": "linux-x86_64"
+      },
+      "packages": [
+        "argcomplete",
+        "attrs",
+        "edalize",
+        "fastjsonschema",
+        "fusesoc",
+        "jinja2",
+        "markupsafe",
+        "okonomiyaki",
+        "pyparsing",
+        "pyyaml",
+        "simplesat",
+        "six"
+      ]
+    }
+  },
+  "packages": {
+    "cocotb": {
+      "name": "cocotb",
+      "version": "1.9.2",
+      "metadata_url": "https://pypi.org/pypi/cocotb/1.9.2/json",
+      "artifact": {
+        "filename": "cocotb-1.9.2-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl",
+        "url": "https://files.pythonhosted.org/packages/2d/49/591bbe8961cfb540b3b17fda8e07b19d7e0203a2e272706c71aba37426c0/cocotb-1.9.2-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl",
+        "sha256": "57fb05bc1bf79f92964d3a633153056bd885538dac9c2f5d3a724e83cdc65d51",
+        "size": 4211516,
+        "type": "bdist_wheel"
+      },
+      "license": "BSD",
+      "requires_dist": [
+        "find-libpython",
+        "cocotb-bus; extra == \"bus\""
+      ]
+    },
+    "cocotb-bus": {
+      "name": "cocotb-bus",
+      "version": "0.3.0",
+      "metadata_url": "https://pypi.org/pypi/cocotb-bus/0.3.0/json",
+      "artifact": {
+        "filename": "cocotb_bus-0.3.0-py3-none-any.whl",
+        "url": "https://files.pythonhosted.org/packages/ea/43/8b3f96cf401c2a7f6e907ccc86d3b73433eeaf5525df90b630d8c112474b/cocotb_bus-0.3.0-py3-none-any.whl",
+        "sha256": "b4f06cce2462a8f9487b42c46b0ff3afd253f0fa4f67a0c382ebe0ba614229eb",
+        "size": 36206,
+        "type": "bdist_wheel"
+      },
+      "license": "See retained distribution license files",
+      "requires_dist": [
+        "cocotb>=1.6.0",
+        "scapy"
+      ]
+    },
+    "cocotb-test": {
+      "name": "cocotb-test",
+      "version": "0.2.6",
+      "metadata_url": "https://pypi.org/pypi/cocotb-test/0.2.6/json",
+      "artifact": {
+        "filename": "cocotb_test-0.2.6.tar.gz",
+        "url": "https://files.pythonhosted.org/packages/cd/49/2d00e3518fcff0abc4c15207b1d14745420c6b4b4c7ece60d5c35717842e/cocotb_test-0.2.6.tar.gz",
+        "sha256": "a4661948ca145eee6bccaf832174b5efb9f6d3420677157c04ade72bb2160692",
+        "size": 21254,
+        "type": "sdist"
+      },
+      "license": "BSD",
+      "requires_dist": [
+        "cocotb>=1.5",
+        "pytest",
+        "find_libpython"
+      ]
+    },
+    "cocotbext-axi": {
+      "name": "cocotbext-axi",
+      "version": "0.1.24",
+      "metadata_url": "https://pypi.org/pypi/cocotbext-axi/0.1.24/json",
+      "artifact": {
+        "filename": "cocotbext_axi-0.1.24-py3-none-any.whl",
+        "url": "https://files.pythonhosted.org/packages/e8/31/7bc5f68f634d5e4e0f302ac073d38ae795242b9c27dd7104593a75d260de/cocotbext_axi-0.1.24-py3-none-any.whl",
+        "sha256": "533ba6c7503c6302bdb9ef86e43a549ad5da876eafb1adce23d39751c54cced4",
+        "size": 51491,
+        "type": "bdist_wheel"
+      },
+      "license": "MIT",
+      "requires_dist": [
+        "cocotb (>=1.6.0)",
+        "cocotb-bus",
+        "pytest ; extra == 'test'",
+        "cocotb-test ; extra == 'test'"
+      ]
+    },
+    "cocotbext-uart": {
+      "name": "cocotbext-uart",
+      "version": "0.1.4",
+      "metadata_url": "https://pypi.org/pypi/cocotbext-uart/0.1.4/json",
+      "artifact": {
+        "filename": "cocotbext_uart-0.1.4-py3-none-any.whl",
+        "url": "https://files.pythonhosted.org/packages/24/32/351045b5ac3feb65c3b54153a20ffb882a5445297572d67752ac755791c9/cocotbext_uart-0.1.4-py3-none-any.whl",
+        "sha256": "be78f266449765a1cb7877a733f796bbfdbe492e7205051c4cc413e2e0c4727f",
+        "size": 6627,
+        "type": "bdist_wheel"
+      },
+      "license": "MIT",
+      "requires_dist": [
+        "cocotb",
+        "pytest; extra == \"test\"",
+        "cocotb-test; extra == \"test\""
+      ]
+    },
+    "find-libpython": {
+      "name": "find_libpython",
+      "version": "0.5.1",
+      "metadata_url": "https://pypi.org/pypi/find_libpython/0.5.1/json",
+      "artifact": {
+        "filename": "find_libpython-0.5.1-py3-none-any.whl",
+        "url": "https://files.pythonhosted.org/packages/34/1f/1d6079f4f0540aaa368aa20d89d98eda42f081c397a822c547340e32d1e3/find_libpython-0.5.1-py3-none-any.whl",
+        "sha256": "723a8cfe6fed255a1f58b53c62ed556fb340ec0d456e9863ebc01a5cc047607d",
+        "size": 9201,
+        "type": "bdist_wheel"
+      },
+      "license": "MIT",
+      "requires_dist": []
+    },
+    "iniconfig": {
+      "name": "iniconfig",
+      "version": "2.3.1",
+      "metadata_url": "https://pypi.org/pypi/iniconfig/2.3.1/json",
+      "artifact": {
+        "filename": "iniconfig-2.3.1-py3-none-any.whl",
+        "url": "https://files.pythonhosted.org/packages/56/43/4ca9e49d27a1fcf6bece6f6aec0ea46bb9112489b93d4b688fb415457bdb/iniconfig-2.3.1-py3-none-any.whl",
+        "sha256": "9121e2c1fdb355232495be3194c8dfe87ccc2d5dee45947b78e68f499790d7a7",
+        "size": 7552,
+        "type": "bdist_wheel"
+      },
+      "license": "MIT",
+      "requires_dist": []
+    },
+    "myhdl": {
+      "name": "myhdl",
+      "version": "0.11.51",
+      "metadata_url": "https://pypi.org/pypi/myhdl/0.11.51/json",
+      "artifact": {
+        "filename": "myhdl-0.11.51-py3-none-any.whl",
+        "url": "https://files.pythonhosted.org/packages/84/73/b1220377c78358185909c61e3ea48ca4f79e3230dfac61624273618911ab/myhdl-0.11.51-py3-none-any.whl",
+        "sha256": "1e2aa6059bd992cd2c2b83af81dde4c4d897f94fd99bda61a4e79cb7aaa519d0",
+        "size": 163993,
+        "type": "bdist_wheel"
+      },
+      "license": "LGPL",
+      "requires_dist": []
+    },
+    "packaging": {
+      "name": "packaging",
+      "version": "26.3",
+      "metadata_url": "https://pypi.org/pypi/packaging/26.3/json",
+      "artifact": {
+        "filename": "packaging-26.3-py3-none-any.whl",
+        "url": "https://files.pythonhosted.org/packages/63/34/ba1c580383c9eada3711951fef0795c80b829a078d72188184bcab9dd527/packaging-26.3-py3-none-any.whl",
+        "sha256": "d7193f7c8e4e93f444fde0262bf90af30e16fa0ad0ad44cb553c87339b23cd1c",
+        "size": 129956,
+        "type": "bdist_wheel"
+      },
+      "license": "Apache-2.0 OR BSD-2-Clause",
+      "requires_dist": []
+    },
+    "pluggy": {
+      "name": "pluggy",
+      "version": "1.7.0",
+      "metadata_url": "https://pypi.org/pypi/pluggy/1.7.0/json",
+      "artifact": {
+        "filename": "pluggy-1.7.0-py3-none-any.whl",
+        "url": "https://files.pythonhosted.org/packages/40/9e/2b38731e0fc536806f16490e1a12d7f0dc2a1235aa8cc07bcc75416a7daa/pluggy-1.7.0-py3-none-any.whl",
+        "sha256": "7dd7b0d8832ba3cb632c306926ded123429211b83641b35dc5c41ad2d34f9bec",
+        "size": 27082,
+        "type": "bdist_wheel"
+      },
+      "license": "MIT",
+      "requires_dist": []
+    },
+    "pytest": {
+      "name": "pytest",
+      "version": "8.3.5",
+      "metadata_url": "https://pypi.org/pypi/pytest/8.3.5/json",
+      "artifact": {
+        "filename": "pytest-8.3.5-py3-none-any.whl",
+        "url": "https://files.pythonhosted.org/packages/30/3d/64ad57c803f1fa1e963a7946b6e0fea4a70df53c1a7fed304586539c2bac/pytest-8.3.5-py3-none-any.whl",
+        "sha256": "c69214aa47deac29fad6c2a4f590b9c4a9fdb16a403176fe154b79c0b4d4d820",
+        "size": 343634,
+        "type": "bdist_wheel"
+      },
+      "license": "MIT",
+      "requires_dist": [
+        "colorama; sys_platform == \"win32\"",
+        "exceptiongroup>=1.0.0rc8; python_version < \"3.11\"",
+        "iniconfig",
+        "packaging",
+        "pluggy<2,>=1.5",
+        "tomli>=1; python_version < \"3.11\"",
+        "argcomplete; extra == \"dev\"",
+        "attrs>=19.2; extra == \"dev\"",
+        "hypothesis>=3.56; extra == \"dev\"",
+        "mock; extra == \"dev\"",
+        "pygments>=2.7.2; extra == \"dev\"",
+        "requests; extra == \"dev\"",
+        "setuptools; extra == \"dev\"",
+        "xmlschema; extra == \"dev\""
+      ]
+    },
+    "scapy": {
+      "name": "scapy",
+      "version": "2.8.0",
+      "metadata_url": "https://pypi.org/pypi/scapy/2.8.0/json",
+      "artifact": {
+        "filename": "scapy-2.8.0-py3-none-any.whl",
+        "url": "https://files.pythonhosted.org/packages/b9/1e/f07107ed79e69a659f1ab65ee7894d71fc1cf15108cf475782d3979a480d/scapy-2.8.0-py3-none-any.whl",
+        "sha256": "abf855145ee829a42b2eb28983cd6a0a52b12a31d3f861cb7be36791195ed9aa",
+        "size": 2762122,
+        "type": "bdist_wheel"
+      },
+      "license": "GPL-2.0-only",
+      "requires_dist": [
+        "ipython; extra == \"cli\"",
+        "ipython; extra == \"all\"",
+        "pyx; extra == \"all\"",
+        "cryptography>=2.0; extra == \"all\"",
+        "matplotlib; extra == \"all\"",
+        "cryptography>=2.0; extra == \"doc\"",
+        "sphinx>=7.0.0; extra == \"doc\"",
+        "sphinx_rtd_theme>=1.3.0; extra == \"doc\"",
+        "tox>=3.0.0; extra == \"doc\""
+      ]
+    },
+    "argcomplete": {
+      "name": "argcomplete",
+      "version": "3.7.2",
+      "metadata_url": "https://pypi.org/pypi/argcomplete/3.7.2/json",
+      "artifact": {
+        "filename": "argcomplete-3.7.2-py3-none-any.whl",
+        "url": "https://files.pythonhosted.org/packages/46/bd/551ee6af426af84ca33e02622be722925c196608e9127d731ef17c47f06e/argcomplete-3.7.2-py3-none-any.whl",
+        "sha256": "6029205678bdd9c1c728a155f5f9ecf5812393f969eef58807641a2bc2aa5b19",
+        "size": 43294,
+        "type": "bdist_wheel"
+      },
+      "license": "Apache Software License",
+      "requires_dist": [
+        "coverage; extra == \"test\"",
+        "mypy; extra == \"test\"",
+        "pexpect; extra == \"test\"",
+        "ruff; extra == \"test\"",
+        "wheel; extra == \"test\""
+      ]
+    },
+    "attrs": {
+      "name": "attrs",
+      "version": "26.1.0",
+      "metadata_url": "https://pypi.org/pypi/attrs/26.1.0/json",
+      "artifact": {
+        "filename": "attrs-26.1.0-py3-none-any.whl",
+        "url": "https://files.pythonhosted.org/packages/64/b4/17d4b0b2a2dc85a6df63d1157e028ed19f90d4cd97c36717afef2bc2f395/attrs-26.1.0-py3-none-any.whl",
+        "sha256": "c647aa4a12dfbad9333ca4e71fe62ddc36f4e63b2d260a37a8b83d2f043ac309",
+        "size": 67548,
+        "type": "bdist_wheel"
+      },
+      "license": "MIT",
+      "requires_dist": []
+    },
+    "edalize": {
+      "name": "edalize",
+      "version": "0.6.8",
+      "metadata_url": "https://pypi.org/pypi/edalize/0.6.8/json",
+      "artifact": {
+        "filename": "edalize-0.6.8-py3-none-any.whl",
+        "url": "https://files.pythonhosted.org/packages/33/35/dc7aeba94c4514394ecd8528e271a6dcdf92c41106b4bc03c84b0f7f9dd9/edalize-0.6.8-py3-none-any.whl",
+        "sha256": "e8d8287358dac914fa68d388c468dd62eb39f7d1402c95bdb89f85a73593c0ba",
+        "size": 179483,
+        "type": "bdist_wheel"
+      },
+      "license": "See retained distribution license files",
+      "requires_dist": [
+        "Jinja2>=3",
+        "importlib_metadata>=1.4; python_version < \"3.10\"",
+        "pandas; extra == \"reporting\"",
+        "pyparsing; extra == \"reporting\""
+      ]
+    },
+    "fastjsonschema": {
+      "name": "fastjsonschema",
+      "version": "2.22.2",
+      "metadata_url": "https://pypi.org/pypi/fastjsonschema/2.22.2/json",
+      "artifact": {
+        "filename": "fastjsonschema-2.22.2-py3-none-any.whl",
+        "url": "https://files.pythonhosted.org/packages/49/82/2755c7c982086f00d4dab85bc120ec35045a9fc2191893a6ce79afe94443/fastjsonschema-2.22.2-py3-none-any.whl",
+        "sha256": "0fb3915616adac85ccfdd737d26be1089845d2019819505b42d39888458f74d4",
+        "size": 27413,
+        "type": "bdist_wheel"
+      },
+      "license": "BSD-3-Clause",
+      "requires_dist": [
+        "colorama; extra == \"devel\"",
+        "jsonschema; extra == \"devel\"",
+        "json-spec; extra == \"devel\"",
+        "pylint; extra == \"devel\"",
+        "pytest; extra == \"devel\"",
+        "pytest-benchmark; extra == \"devel\"",
+        "pytest-cache; extra == \"devel\"",
+        "validictory; extra == \"devel\""
+      ]
+    },
+    "fusesoc": {
+      "name": "fusesoc",
+      "version": "2.4.6",
+      "metadata_url": "https://pypi.org/pypi/fusesoc/2.4.6/json",
+      "artifact": {
+        "filename": "fusesoc-2.4.6-py3-none-any.whl",
+        "url": "https://files.pythonhosted.org/packages/c3/34/9fac8ca00e59cac6e00a0adf13a9942b69f6c77676ff5ff617943bbb917b/fusesoc-2.4.6-py3-none-any.whl",
+        "sha256": "68228c4e935d274ffcb126a8d3cb42cf644fbb829be67fd1178f218f7ebd4c2e",
+        "size": 67585,
+        "type": "bdist_wheel"
+      },
+      "license": "See retained distribution license files",
+      "requires_dist": [
+        "edalize>=0.4.1",
+        "pyparsing>=2.3.1",
+        "pyyaml>=6.0",
+        "simplesat>=0.9.1",
+        "fastjsonschema",
+        "argcomplete"
+      ]
+    },
+    "jinja2": {
+      "name": "Jinja2",
+      "version": "3.1.6",
+      "metadata_url": "https://pypi.org/pypi/Jinja2/3.1.6/json",
+      "artifact": {
+        "filename": "jinja2-3.1.6-py3-none-any.whl",
+        "url": "https://files.pythonhosted.org/packages/62/a1/3d680cbfd5f4b8f15abc1d571870c5fc3e594bb582bc3b64ea099db13e56/jinja2-3.1.6-py3-none-any.whl",
+        "sha256": "85ece4451f492d0c13c5dd7c13a64681a86afae63a5f347908daf103ce6d2f67",
+        "size": 134899,
+        "type": "bdist_wheel"
+      },
+      "license": "See retained distribution license files",
+      "requires_dist": [
+        "MarkupSafe>=2.0",
+        "Babel>=2.7; extra == \"i18n\""
+      ]
+    },
+    "markupsafe": {
+      "name": "MarkupSafe",
+      "version": "3.0.4",
+      "metadata_url": "https://pypi.org/pypi/MarkupSafe/3.0.4/json",
+      "artifact": {
+        "filename": "markupsafe-3.0.4-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl",
+        "url": "https://files.pythonhosted.org/packages/81/a5/a513b76c139a3915b43404324e55c0b7979ae4f0d39eb6f075b0282e90a8/markupsafe-3.0.4-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl",
+        "sha256": "6da83a088f8ef93b2d483a8232a4dbf4d69d3d8496b568a03c56becac43e1808",
+        "size": 22961,
+        "type": "bdist_wheel"
+      },
+      "license": "BSD-3-Clause",
+      "requires_dist": []
+    },
+    "okonomiyaki": {
+      "name": "okonomiyaki",
+      "version": "3.0.0",
+      "metadata_url": "https://pypi.org/pypi/okonomiyaki/3.0.0/json",
+      "artifact": {
+        "filename": "okonomiyaki-3.0.0-py2.py3-none-any.whl",
+        "url": "https://files.pythonhosted.org/packages/6e/d2/c7e021fb8e591fa586a8aa8fd8728ffded2f80deebf6198cd1bd92c68447/okonomiyaki-3.0.0-py2.py3-none-any.whl",
+        "sha256": "a5193286e9db0ded2d3ae80d7c3ebb9923bca89e94ba03d612bb9c2c0948cd77",
+        "size": 8372945,
+        "type": "bdist_wheel"
+      },
+      "license": "BSD-3-Clause",
+      "requires_dist": [
+        "attrs>=16.1.0; extra == \"all\"",
+        "zipfile2>=0.0.12; extra == \"all\"",
+        "jsonschema>=2.5.1; extra == \"all\"",
+        "distro; sys_platform == \"linux\" and extra == \"all\"",
+        "distro; sys_platform == \"linux2\" and extra == \"all\"",
+        "zipfile2>=0.0.12; extra == \"formats\"",
+        "jsonschema>=2.5.1; extra == \"formats\"",
+        "attrs>=16.1.0; extra == \"formats\"",
+        "distro; sys_platform == \"linux\" and extra == \"formats\"",
+        "distro; sys_platform == \"linux2\" and extra == \"formats\"",
+        "attrs>=16.1.0; extra == \"platforms\"",
+        "distro; sys_platform == \"linux\" and extra == \"platforms\"",
+        "distro; sys_platform == \"linux2\" and extra == \"platforms\"",
+        "haas; extra == \"test\"",
+        "distro; extra == \"test\"",
+        "parameterized; extra == \"test\"",
+        "testfixtures; extra == \"test\"",
+        "packaging>=20.0; extra == \"test\""
+      ]
+    },
+    "pyparsing": {
+      "name": "pyparsing",
+      "version": "3.3.3",
+      "metadata_url": "https://pypi.org/pypi/pyparsing/3.3.3/json",
+      "artifact": {
+        "filename": "pyparsing-3.3.3-py3-none-any.whl",
+        "url": "https://files.pythonhosted.org/packages/38/bb/d215ee7c73b61497b28a5503f9f53523f294fcc936762b7caf90e0c1c2b5/pyparsing-3.3.3-py3-none-any.whl",
+        "sha256": "ece8c00a69cf01b45d0b1dedabb469c90d8caf996d4fda40f147627a122849a4",
+        "size": 126420,
+        "type": "bdist_wheel"
+      },
+      "license": "MIT",
+      "requires_dist": [
+        "railroad-diagrams; extra == \"diagrams\"",
+        "jinja2; extra == \"diagrams\""
+      ]
+    },
+    "pyyaml": {
+      "name": "PyYAML",
+      "version": "6.0.3",
+      "metadata_url": "https://pypi.org/pypi/PyYAML/6.0.3/json",
+      "artifact": {
+        "filename": "pyyaml-6.0.3-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl",
+        "url": "https://files.pythonhosted.org/packages/71/60/917329f640924b18ff085ab889a11c763e0b573da888e8404ff486657602/pyyaml-6.0.3-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl",
+        "sha256": "b8bb0864c5a28024fac8a632c443c87c5aa6f215c0b126c449ae1a150412f31d",
+        "size": 806638,
+        "type": "bdist_wheel"
+      },
+      "license": "MIT",
+      "requires_dist": []
+    },
+    "simplesat": {
+      "name": "simplesat",
+      "version": "0.9.2",
+      "metadata_url": "https://pypi.org/pypi/simplesat/0.9.2/json",
+      "artifact": {
+        "filename": "simplesat-0.9.2-py3-none-any.whl",
+        "url": "https://files.pythonhosted.org/packages/43/62/1fed9c4c0a4c31a8aaaffe68da566fc6c18fb3dcd7991256264e12669354/simplesat-0.9.2-py3-none-any.whl",
+        "sha256": "dde724538ccc5bddfdf57aa366cfb0cec0e3cae8c5d1ebc56f4cfb47948a8f97",
+        "size": 249125,
+        "type": "bdist_wheel"
+      },
+      "license": "BSD-3-Clause",
+      "requires_dist": [
+        "attrs>=17.4.0",
+        "okonomiyaki>=0.16.6",
+        "six>=1.10.0"
+      ]
+    },
+    "six": {
+      "name": "six",
+      "version": "1.17.0",
+      "metadata_url": "https://pypi.org/pypi/six/1.17.0/json",
+      "artifact": {
+        "filename": "six-1.17.0-py2.py3-none-any.whl",
+        "url": "https://files.pythonhosted.org/packages/b7/ce/149a00dd41f10bc29e5921b496af8b574d8413afcd5e30dfa0ed46c2cc5e/six-1.17.0-py2.py3-none-any.whl",
+        "sha256": "4721f391ed90541fddacab5acf947aa0d3dc7d27b2e1e8eda2be8970586c3274",
+        "size": 11050,
+        "type": "bdist_wheel"
+      },
+      "license": "MIT",
+      "requires_dist": []
+    },
+    "setuptools": {
+      "name": "setuptools",
+      "version": "80.9.0",
+      "metadata_url": "https://pypi.org/pypi/setuptools/80.9.0/json",
+      "artifact": {
+        "filename": "setuptools-80.9.0-py3-none-any.whl",
+        "url": "https://files.pythonhosted.org/packages/a3/dc/17031897dae0efacfea57dfd3a82fdd2a2aeb58e0ff71b77b87e44edc772/setuptools-80.9.0-py3-none-any.whl",
+        "sha256": "062d34222ad13e0cc312a4c02d73f059e86a4acbfbdea8f8f76b28c99f306922",
+        "size": 1201486,
+        "type": "bdist_wheel"
+      },
+      "license": "MIT",
+      "requires_dist": [
+        "pytest!=8.1.*,>=6; extra == \"test\"",
+        "virtualenv>=13.0.0; extra == \"test\"",
+        "wheel>=0.44.0; extra == \"test\"",
+        "pip>=19.1; extra == \"test\"",
+        "packaging>=24.2; extra == \"test\"",
+        "jaraco.envs>=2.2; extra == \"test\"",
+        "pytest-xdist>=3; extra == \"test\"",
+        "jaraco.path>=3.7.2; extra == \"test\"",
+        "build[virtualenv]>=1.0.3; extra == \"test\"",
+        "filelock>=3.4.0; extra == \"test\"",
+        "ini2toml[lite]>=0.14; extra == \"test\"",
+        "tomli-w>=1.0.0; extra == \"test\"",
+        "pytest-timeout; extra == \"test\"",
+        "pytest-perf; sys_platform != \"cygwin\" and extra == \"test\"",
+        "jaraco.develop>=7.21; (python_version >= \"3.9\" and sys_platform != \"cygwin\") and extra == \"test\"",
+        "pytest-home>=0.5; extra == \"test\"",
+        "pytest-subprocess; extra == \"test\"",
+        "pyproject-hooks!=1.1; extra == \"test\"",
+        "jaraco.test>=5.5; extra == \"test\"",
+        "sphinx>=3.5; extra == \"doc\"",
+        "jaraco.packaging>=9.3; extra == \"doc\"",
+        "rst.linker>=1.9; extra == \"doc\"",
+        "furo; extra == \"doc\"",
+        "sphinx-lint; extra == \"doc\"",
+        "jaraco.tidelift>=1.4; extra == \"doc\"",
+        "pygments-github-lexers==0.0.5; extra == \"doc\"",
+        "sphinx-favicon; extra == \"doc\"",
+        "sphinx-inline-tabs; extra == \"doc\"",
+        "sphinx-reredirects; extra == \"doc\"",
+        "sphinxcontrib-towncrier; extra == \"doc\"",
+        "sphinx-notfound-page<2,>=1; extra == \"doc\"",
+        "pyproject-hooks!=1.1; extra == \"doc\"",
+        "towncrier<24.7; extra == \"doc\"",
+        "packaging>=24.2; extra == \"core\"",
+        "more_itertools>=8.8; extra == \"core\"",
+        "jaraco.text>=3.7; extra == \"core\"",
+        "importlib_metadata>=6; python_version < \"3.10\" and extra == \"core\"",
+        "tomli>=2.0.1; python_version < \"3.11\" and extra == \"core\"",
+        "wheel>=0.43.0; extra == \"core\"",
+        "platformdirs>=4.2.2; extra == \"core\"",
+        "jaraco.functools>=4; extra == \"core\"",
+        "more_itertools; extra == \"core\"",
+        "pytest-checkdocs>=2.4; extra == \"check\"",
+        "pytest-ruff>=0.2.1; sys_platform != \"cygwin\" and extra == \"check\"",
+        "ruff>=0.8.0; sys_platform != \"cygwin\" and extra == \"check\"",
+        "pytest-cov; extra == \"cover\"",
+        "pytest-enabler>=2.2; extra == \"enabler\"",
+        "pytest-mypy; extra == \"type\"",
+        "mypy==1.14.*; extra == \"type\"",
+        "importlib_metadata>=7.0.2; python_version < \"3.10\" and extra == \"type\"",
+        "jaraco.develop>=7.21; sys_platform != \"cygwin\" and extra == \"type\""
+      ]
+    },
+    "wheel": {
+      "name": "wheel",
+      "version": "0.41.2",
+      "metadata_url": "https://pypi.org/pypi/wheel/0.41.2/json",
+      "artifact": {
+        "filename": "wheel-0.41.2-py3-none-any.whl",
+        "url": "https://files.pythonhosted.org/packages/b8/8b/31273bf66016be6ad22bb7345c37ff350276cfd46e389a0c2ac5da9d9073/wheel-0.41.2-py3-none-any.whl",
+        "sha256": "75909db2664838d015e3d9139004ee16711748a52c8f336b52882266540215d8",
+        "size": 64848,
+        "type": "bdist_wheel"
+      },
+      "license": "See retained distribution license files",
+      "requires_dist": [
+        "pytest >= 6.0.0 ; extra == \"test\"",
+        "setuptools >= 65 ; extra == \"test\""
+      ]
+    }
+  }
+}

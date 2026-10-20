@@ -1,0 +1,1214 @@
+{
+  "schema_version": 1,
+  "description": "Original upstream functional testbenches. Each flow names one distinct DUT top. Makefile defaults cover one upstream parameter configuration and execute every generated test for that configuration; this is not the full upstream parameter matrix.",
+  "flows": [
+    {
+      "id": "upstream-axi-ram",
+      "project": "verilog-axi",
+      "design_top": "axi_ram",
+      "kind": "upstream_testbench",
+      "entrypoint": "tb/axi_ram/Makefile",
+      "cwd": "tb/axi_ram",
+      "driver": "make",
+      "argv": [
+        "make",
+        "SIM=icarus",
+        "WAVES=0"
+      ],
+      "simulator": "icarus",
+      "environment_profile": "cocotb1",
+      "requirements": {
+        "tools": [
+          "make",
+          "iverilog",
+          "vvp"
+        ],
+        "python_modules": [
+          "cocotb",
+          "cocotb_test",
+          "pytest",
+          "cocotbext.axi"
+        ]
+      },
+      "expected": {
+        "kind": "junit",
+        "paths": [
+          "tb/axi_ram/results.xml"
+        ],
+        "minimum_tests": 25,
+        "allow_skips": false
+      },
+      "status": "required",
+      "timeout_seconds": 300,
+      "description": "Original Cocotb Makefile defaults; all generated test cases in the original test module run unchanged.",
+      "provenance": {
+        "revision": "516bd5dadc3365b7f9e225d2af8fe0b8d804fe53",
+        "entrypoint_sha256": {
+          "tb/axi_ram/test_axi_ram.py": "984854983ff5ed3aa676f400f2a9891e053ad90ff8a3969ccfd5c4c379d5a40b",
+          "tb/axi_ram/Makefile": "1789e9baeb8e9d704babab452ed5dbc5065f9c7f6cab9b2c70fe678213a981a4"
+        }
+      }
+    },
+    {
+      "id": "upstream-axi-register",
+      "project": "verilog-axi",
+      "design_top": "axi_register",
+      "kind": "upstream_testbench",
+      "entrypoint": "tb/axi_register/Makefile",
+      "cwd": "tb/axi_register",
+      "driver": "make",
+      "argv": [
+        "make",
+        "SIM=icarus",
+        "WAVES=0"
+      ],
+      "simulator": "icarus",
+      "environment_profile": "cocotb1",
+      "requirements": {
+        "tools": [
+          "make",
+          "iverilog",
+          "vvp"
+        ],
+        "python_modules": [
+          "cocotb",
+          "cocotb_test",
+          "pytest",
+          "cocotbext.axi"
+        ]
+      },
+      "expected": {
+        "kind": "junit",
+        "paths": [
+          "tb/axi_register/results.xml"
+        ],
+        "minimum_tests": 25,
+        "allow_skips": false
+      },
+      "status": "required",
+      "timeout_seconds": 300,
+      "description": "Original Cocotb Makefile defaults; all generated test cases in the original test module run unchanged.",
+      "provenance": {
+        "revision": "516bd5dadc3365b7f9e225d2af8fe0b8d804fe53",
+        "entrypoint_sha256": {
+          "tb/axi_register/test_axi_register.py": "752a6335a647fb8c21c525ba861faa8e9dfda7fd64dca383bcefbb507f0f7119",
+          "tb/axi_register/Makefile": "aa970b4eacfd8c16df77b4adb8fc648cbd71f607a32a4dff9e096d30dddfb813"
+        }
+      }
+    },
+    {
+      "id": "upstream-axil-ram",
+      "project": "verilog-axi",
+      "design_top": "axil_ram",
+      "kind": "upstream_testbench",
+      "entrypoint": "tb/axil_ram/Makefile",
+      "cwd": "tb/axil_ram",
+      "driver": "make",
+      "argv": [
+        "make",
+        "SIM=icarus",
+        "WAVES=0"
+      ],
+      "simulator": "icarus",
+      "environment_profile": "cocotb1",
+      "requirements": {
+        "tools": [
+          "make",
+          "iverilog",
+          "vvp"
+        ],
+        "python_modules": [
+          "cocotb",
+          "cocotb_test",
+          "pytest",
+          "cocotbext.axi"
+        ]
+      },
+      "expected": {
+        "kind": "junit",
+        "paths": [
+          "tb/axil_ram/results.xml"
+        ],
+        "minimum_tests": 9,
+        "allow_skips": false
+      },
+      "status": "required",
+      "timeout_seconds": 300,
+      "description": "Original Cocotb Makefile defaults; all generated test cases in the original test module run unchanged.",
+      "provenance": {
+        "revision": "516bd5dadc3365b7f9e225d2af8fe0b8d804fe53",
+        "entrypoint_sha256": {
+          "tb/axil_ram/Makefile": "0861e9c984a521680c2c4a974232434068abf6574ed83ece0f7f723fe74adf62",
+          "tb/axil_ram/test_axil_ram.py": "8719ebd62d40513dca89eed1106c8a336683c0fef31f81501ea51da7de2bc681"
+        }
+      }
+    },
+    {
+      "id": "upstream-axil-register",
+      "project": "verilog-axi",
+      "design_top": "axil_register",
+      "kind": "upstream_testbench",
+      "entrypoint": "tb/axil_register/Makefile",
+      "cwd": "tb/axil_register",
+      "driver": "make",
+      "argv": [
+        "make",
+        "SIM=icarus",
+        "WAVES=0"
+      ],
+      "simulator": "icarus",
+      "environment_profile": "cocotb1",
+      "requirements": {
+        "tools": [
+          "make",
+          "iverilog",
+          "vvp"
+        ],
+        "python_modules": [
+          "cocotb",
+          "cocotb_test",
+          "pytest",
+          "cocotbext.axi"
+        ]
+      },
+      "expected": {
+        "kind": "junit",
+        "paths": [
+          "tb/axil_register/results.xml"
+        ],
+        "minimum_tests": 9,
+        "allow_skips": false
+      },
+      "status": "required",
+      "timeout_seconds": 300,
+      "description": "Original Cocotb Makefile defaults; all generated test cases in the original test module run unchanged.",
+      "provenance": {
+        "revision": "516bd5dadc3365b7f9e225d2af8fe0b8d804fe53",
+        "entrypoint_sha256": {
+          "tb/axil_register/Makefile": "f8dece0287cc71139b88545f4736f27c72c805afe2cdf66428a010a1300e33cb",
+          "tb/axil_register/test_axil_register.py": "9ff844017c2be81a0d5f6776ab74c5a84606ffe0fee1a19463a68c1fd1ef7c2d"
+        }
+      }
+    },
+    {
+      "id": "upstream-axis-adapter",
+      "project": "verilog-axis",
+      "design_top": "axis_adapter",
+      "kind": "upstream_testbench",
+      "entrypoint": "tb/axis_adapter/Makefile",
+      "cwd": "tb/axis_adapter",
+      "driver": "make",
+      "argv": [
+        "make",
+        "SIM=icarus",
+        "WAVES=0"
+      ],
+      "simulator": "icarus",
+      "environment_profile": "cocotb1",
+      "requirements": {
+        "tools": [
+          "make"
+        ],
+        "python_modules": [
+          "cocotb",
+          "cocotb_test",
+          "pytest",
+          "cocotbext.axi"
+        ]
+      },
+      "expected": {
+        "kind": "junit",
+        "paths": [
+          "tb/axis_adapter/results.xml"
+        ],
+        "minimum_tests": 9,
+        "allow_skips": false
+      },
+      "status": "required",
+      "timeout_seconds": 300,
+      "description": "Original Cocotb Makefile defaults; all generated test cases in the original test module run unchanged.",
+      "provenance": {
+        "revision": "48ff7a7e2ef782cf778d47910cf85835c64b1bce",
+        "entrypoint_sha256": {
+          "tb/axis_adapter/test_axis_adapter.py": "bd61a765f536279af942825cacdcfacd808db9a5f5b4743a31886dda8295795d",
+          "tb/axis_adapter/Makefile": "934fd3b2b8465d5190aa2b485fccde0bfe12454d68fe8b63211aa9fc64f5f28a"
+        }
+      },
+      "simulators": {
+        "icarus": {
+          "arguments": [
+            "SIM=icarus"
+          ],
+          "tools": [
+            "iverilog",
+            "vvp"
+          ]
+        },
+        "verilator": {
+          "arguments": [
+            "SIM=verilator"
+          ],
+          "tools": [
+            "verilator",
+            "g++"
+          ]
+        }
+      }
+    },
+    {
+      "id": "upstream-axis-arb-mux",
+      "project": "verilog-axis",
+      "design_top": "axis_arb_mux",
+      "kind": "upstream_testbench",
+      "entrypoint": "tb/axis_arb_mux/Makefile",
+      "cwd": "tb/axis_arb_mux",
+      "driver": "make",
+      "argv": [
+        "make",
+        "SIM=icarus",
+        "WAVES=0"
+      ],
+      "simulator": "icarus",
+      "environment_profile": "cocotb1",
+      "requirements": {
+        "tools": [
+          "make",
+          "iverilog",
+          "vvp"
+        ],
+        "python_modules": [
+          "cocotb",
+          "cocotb_test",
+          "pytest",
+          "cocotbext.axi"
+        ]
+      },
+      "expected": {
+        "kind": "junit",
+        "paths": [
+          "tb/axis_arb_mux/results.xml"
+        ],
+        "minimum_tests": 25,
+        "allow_skips": false
+      },
+      "status": "required",
+      "timeout_seconds": 300,
+      "description": "Original Cocotb Makefile defaults; all generated test cases in the original test module run unchanged.",
+      "provenance": {
+        "revision": "48ff7a7e2ef782cf778d47910cf85835c64b1bce",
+        "entrypoint_sha256": {
+          "tb/axis_arb_mux/test_axis_arb_mux.py": "0b86995804ace338ad7713757f81aedef0fe944d5f4ebe14735cb0e5e2c05e4c",
+          "tb/axis_arb_mux/Makefile": "aa238fba2fea3c80ffbe9e9d28b9887b6b78d43c1dea0eb6f79d1658ac08a260"
+        }
+      }
+    },
+    {
+      "id": "upstream-axis-async-fifo",
+      "project": "verilog-axis",
+      "design_top": "axis_async_fifo",
+      "kind": "upstream_testbench",
+      "entrypoint": "tb/axis_async_fifo/Makefile",
+      "cwd": "tb/axis_async_fifo",
+      "driver": "make",
+      "argv": [
+        "make",
+        "SIM=icarus",
+        "WAVES=0"
+      ],
+      "simulator": "icarus",
+      "environment_profile": "cocotb1",
+      "requirements": {
+        "tools": [
+          "make",
+          "iverilog",
+          "vvp"
+        ],
+        "python_modules": [
+          "cocotb",
+          "cocotb_test",
+          "pytest",
+          "cocotbext.axi"
+        ]
+      },
+      "expected": {
+        "kind": "junit",
+        "paths": [
+          "tb/axis_async_fifo/results.xml"
+        ],
+        "minimum_tests": 20,
+        "allow_skips": false
+      },
+      "status": "required",
+      "timeout_seconds": 300,
+      "description": "Original Cocotb Makefile defaults; all generated test cases in the original test module run unchanged.",
+      "provenance": {
+        "revision": "48ff7a7e2ef782cf778d47910cf85835c64b1bce",
+        "entrypoint_sha256": {
+          "tb/axis_async_fifo/Makefile": "7e459d490bdc95d0e0d2a7eabdebc6e3714f697f7b1af697698fecef2d446b75",
+          "tb/axis_async_fifo/test_axis_async_fifo.py": "9ae355ad8377ef6e87a8944ea2cad83bd1715f60e159cfb430f1abce2b0af53a"
+        }
+      }
+    },
+    {
+      "id": "upstream-axis-async-fifo-adapter",
+      "project": "verilog-axis",
+      "design_top": "axis_async_fifo_adapter",
+      "kind": "upstream_testbench",
+      "entrypoint": "tb/axis_async_fifo_adapter/Makefile",
+      "cwd": "tb/axis_async_fifo_adapter",
+      "driver": "make",
+      "argv": [
+        "make",
+        "SIM=icarus",
+        "WAVES=0"
+      ],
+      "simulator": "icarus",
+      "environment_profile": "cocotb1",
+      "requirements": {
+        "tools": [
+          "make",
+          "iverilog",
+          "vvp"
+        ],
+        "python_modules": [
+          "cocotb",
+          "cocotb_test",
+          "pytest",
+          "cocotbext.axi"
+        ]
+      },
+      "expected": {
+        "kind": "junit",
+        "paths": [
+          "tb/axis_async_fifo_adapter/results.xml"
+        ],
+        "minimum_tests": 20,
+        "allow_skips": false
+      },
+      "status": "required",
+      "timeout_seconds": 300,
+      "description": "Original Cocotb Makefile defaults; all generated test cases in the original test module run unchanged.",
+      "provenance": {
+        "revision": "48ff7a7e2ef782cf778d47910cf85835c64b1bce",
+        "entrypoint_sha256": {
+          "tb/axis_async_fifo_adapter/Makefile": "0a9a07ac2eb5f2e84b810223d28e60e9aa36f1f769cefb297c814c427834648d",
+          "tb/axis_async_fifo_adapter/test_axis_async_fifo_adapter.py": "b1cd9721290676570af244f84fe15618644040a327350f5865ec318dfffb1a69"
+        }
+      }
+    },
+    {
+      "id": "upstream-axis-broadcast",
+      "project": "verilog-axis",
+      "design_top": "axis_broadcast",
+      "kind": "upstream_testbench",
+      "entrypoint": "tb/axis_broadcast/Makefile",
+      "cwd": "tb/axis_broadcast",
+      "driver": "make",
+      "argv": [
+        "make",
+        "SIM=icarus",
+        "WAVES=0"
+      ],
+      "simulator": "icarus",
+      "environment_profile": "cocotb1",
+      "requirements": {
+        "tools": [
+          "make",
+          "iverilog",
+          "vvp"
+        ],
+        "python_modules": [
+          "cocotb",
+          "cocotb_test",
+          "pytest",
+          "cocotbext.axi"
+        ]
+      },
+      "expected": {
+        "kind": "junit",
+        "paths": [
+          "tb/axis_broadcast/results.xml"
+        ],
+        "minimum_tests": 4,
+        "allow_skips": false
+      },
+      "status": "required",
+      "timeout_seconds": 300,
+      "description": "Original Cocotb Makefile defaults; all generated test cases in the original test module run unchanged.",
+      "provenance": {
+        "revision": "48ff7a7e2ef782cf778d47910cf85835c64b1bce",
+        "entrypoint_sha256": {
+          "tb/axis_broadcast/Makefile": "00cd06c32e95daa268efaaf67076ee6cbcefb1d00cd25bdc3b0dd57a97f665c6",
+          "tb/axis_broadcast/test_axis_broadcast.py": "69f42e73aacc3c41c173ea2d39dcb8f63d095983316e18530bc97e6f2c131d97"
+        }
+      }
+    },
+    {
+      "id": "upstream-axis-cobs-decode",
+      "project": "verilog-axis",
+      "design_top": "axis_cobs_decode",
+      "kind": "upstream_testbench",
+      "entrypoint": "tb/axis_cobs_decode/Makefile",
+      "cwd": "tb/axis_cobs_decode",
+      "driver": "make",
+      "argv": [
+        "make",
+        "SIM=icarus",
+        "WAVES=0"
+      ],
+      "simulator": "icarus",
+      "environment_profile": "cocotb1",
+      "requirements": {
+        "tools": [
+          "make",
+          "iverilog",
+          "vvp"
+        ],
+        "python_modules": [
+          "cocotb",
+          "cocotb_test",
+          "pytest",
+          "cocotbext.axi"
+        ]
+      },
+      "expected": {
+        "kind": "junit",
+        "paths": [
+          "tb/axis_cobs_decode/results.xml"
+        ],
+        "minimum_tests": 16,
+        "allow_skips": false
+      },
+      "status": "required",
+      "timeout_seconds": 300,
+      "description": "Original Cocotb Makefile defaults; all generated test cases in the original test module run unchanged.",
+      "provenance": {
+        "revision": "48ff7a7e2ef782cf778d47910cf85835c64b1bce",
+        "entrypoint_sha256": {
+          "tb/axis_cobs_decode/test_axis_cobs_decode.py": "ce8950d8c407e72d565442674f95c1540fc99c2658121e1e92a7f44c9e3165c8",
+          "tb/axis_cobs_decode/Makefile": "aa827a9138fd87e2c3e5efee372003dd4e7a052777c38ba98c8c94ef6f581c65"
+        }
+      }
+    },
+    {
+      "id": "upstream-axis-cobs-encode",
+      "project": "verilog-axis",
+      "design_top": "axis_cobs_encode",
+      "kind": "upstream_testbench",
+      "entrypoint": "tb/axis_cobs_encode/Makefile",
+      "cwd": "tb/axis_cobs_encode",
+      "driver": "make",
+      "argv": [
+        "make",
+        "SIM=icarus",
+        "WAVES=0"
+      ],
+      "simulator": "icarus",
+      "environment_profile": "cocotb1",
+      "requirements": {
+        "tools": [
+          "make",
+          "iverilog",
+          "vvp"
+        ],
+        "python_modules": [
+          "cocotb",
+          "cocotb_test",
+          "pytest",
+          "cocotbext.axi"
+        ]
+      },
+      "expected": {
+        "kind": "junit",
+        "paths": [
+          "tb/axis_cobs_encode/results.xml"
+        ],
+        "minimum_tests": 16,
+        "allow_skips": false
+      },
+      "status": "required",
+      "timeout_seconds": 300,
+      "description": "Original Cocotb Makefile defaults; all generated test cases in the original test module run unchanged.",
+      "provenance": {
+        "revision": "48ff7a7e2ef782cf778d47910cf85835c64b1bce",
+        "entrypoint_sha256": {
+          "tb/axis_cobs_encode/test_axis_cobs_encode.py": "d107760adcddd49d25826a309884fa0ae434dbd1e26c919cd52a3b3eed8845a3",
+          "tb/axis_cobs_encode/Makefile": "ad6196aa275ffb087a18265d1e9e33ab0fb83cbd8cc8670e05c8cdd520869278"
+        }
+      }
+    },
+    {
+      "id": "upstream-axis-demux",
+      "project": "verilog-axis",
+      "design_top": "axis_demux",
+      "kind": "upstream_testbench",
+      "entrypoint": "tb/axis_demux/Makefile",
+      "cwd": "tb/axis_demux",
+      "driver": "make",
+      "argv": [
+        "make",
+        "SIM=icarus",
+        "WAVES=0"
+      ],
+      "simulator": "icarus",
+      "environment_profile": "cocotb1",
+      "requirements": {
+        "tools": [
+          "make",
+          "iverilog",
+          "vvp"
+        ],
+        "python_modules": [
+          "cocotb",
+          "cocotb_test",
+          "pytest",
+          "cocotbext.axi"
+        ]
+      },
+      "expected": {
+        "kind": "junit",
+        "paths": [
+          "tb/axis_demux/results.xml"
+        ],
+        "minimum_tests": 16,
+        "allow_skips": false
+      },
+      "status": "required",
+      "timeout_seconds": 300,
+      "description": "Original Cocotb Makefile defaults; all generated test cases in the original test module run unchanged.",
+      "provenance": {
+        "revision": "48ff7a7e2ef782cf778d47910cf85835c64b1bce",
+        "entrypoint_sha256": {
+          "tb/axis_demux/Makefile": "c5f4e8257212a28b130df095fa8afca6142903b28d911bb4a3d6905441ac2ad2",
+          "tb/axis_demux/test_axis_demux.py": "da20adeaa26568fe0143cf7fae12bb1513dbcc20536a22dcb45740858323c4db"
+        }
+      }
+    },
+    {
+      "id": "upstream-axis-fifo",
+      "project": "verilog-axis",
+      "design_top": "axis_fifo",
+      "kind": "upstream_testbench",
+      "entrypoint": "tb/axis_fifo/Makefile",
+      "cwd": "tb/axis_fifo",
+      "driver": "make",
+      "argv": [
+        "make",
+        "SIM=icarus",
+        "WAVES=0"
+      ],
+      "simulator": "icarus",
+      "environment_profile": "cocotb1",
+      "requirements": {
+        "tools": [
+          "make",
+          "iverilog",
+          "vvp"
+        ],
+        "python_modules": [
+          "cocotb",
+          "cocotb_test",
+          "pytest",
+          "cocotbext.axi"
+        ]
+      },
+      "expected": {
+        "kind": "junit",
+        "paths": [
+          "tb/axis_fifo/results.xml"
+        ],
+        "minimum_tests": 14,
+        "allow_skips": false
+      },
+      "status": "required",
+      "timeout_seconds": 300,
+      "description": "Original Cocotb Makefile defaults; all generated test cases in the original test module run unchanged.",
+      "provenance": {
+        "revision": "48ff7a7e2ef782cf778d47910cf85835c64b1bce",
+        "entrypoint_sha256": {
+          "tb/axis_fifo/test_axis_fifo.py": "64a38e6c2205417be175d9082c25a96dd7c7fa6369a80736293098fac82633a4",
+          "tb/axis_fifo/Makefile": "50039f860bf47d0a452c32c9d35383d175825736b4638d1d21cb606fb6e4d86a"
+        }
+      }
+    },
+    {
+      "id": "upstream-axis-fifo-adapter",
+      "project": "verilog-axis",
+      "design_top": "axis_fifo_adapter",
+      "kind": "upstream_testbench",
+      "entrypoint": "tb/axis_fifo_adapter/Makefile",
+      "cwd": "tb/axis_fifo_adapter",
+      "driver": "make",
+      "argv": [
+        "make",
+        "SIM=icarus",
+        "WAVES=0"
+      ],
+      "simulator": "icarus",
+      "environment_profile": "cocotb1",
+      "requirements": {
+        "tools": [
+          "make",
+          "iverilog",
+          "vvp"
+        ],
+        "python_modules": [
+          "cocotb",
+          "cocotb_test",
+          "pytest",
+          "cocotbext.axi"
+        ]
+      },
+      "expected": {
+        "kind": "junit",
+        "paths": [
+          "tb/axis_fifo_adapter/results.xml"
+        ],
+        "minimum_tests": 14,
+        "allow_skips": false
+      },
+      "status": "required",
+      "timeout_seconds": 300,
+      "description": "Original Cocotb Makefile defaults; all generated test cases in the original test module run unchanged.",
+      "provenance": {
+        "revision": "48ff7a7e2ef782cf778d47910cf85835c64b1bce",
+        "entrypoint_sha256": {
+          "tb/axis_fifo_adapter/test_axis_fifo_adapter.py": "97b7f285756570f4d226024a310deb2b6c4f232c76bea48a185b0e3335b7870b",
+          "tb/axis_fifo_adapter/Makefile": "a875f25fee8ea87dc3517d0283770affc189c3dc185cd71d35a8934ab99e371a"
+        }
+      }
+    },
+    {
+      "id": "upstream-axis-mux",
+      "project": "verilog-axis",
+      "design_top": "axis_mux",
+      "kind": "upstream_testbench",
+      "entrypoint": "tb/axis_mux/Makefile",
+      "cwd": "tb/axis_mux",
+      "driver": "make",
+      "argv": [
+        "make",
+        "SIM=icarus",
+        "WAVES=0"
+      ],
+      "simulator": "icarus",
+      "environment_profile": "cocotb1",
+      "requirements": {
+        "tools": [
+          "make",
+          "iverilog",
+          "vvp"
+        ],
+        "python_modules": [
+          "cocotb",
+          "cocotb_test",
+          "pytest",
+          "cocotbext.axi"
+        ]
+      },
+      "expected": {
+        "kind": "junit",
+        "paths": [
+          "tb/axis_mux/results.xml"
+        ],
+        "minimum_tests": 20,
+        "allow_skips": false
+      },
+      "status": "required",
+      "timeout_seconds": 300,
+      "description": "Original Cocotb Makefile defaults; all generated test cases in the original test module run unchanged.",
+      "provenance": {
+        "revision": "48ff7a7e2ef782cf778d47910cf85835c64b1bce",
+        "entrypoint_sha256": {
+          "tb/axis_mux/test_axis_mux.py": "318ad615c96070b776ae2270ee77ec05d5ca86643b8159f950928d33b46e1285",
+          "tb/axis_mux/Makefile": "8735af5f26965679ef202c973ce93ce496f712b4d6314f84956f7192455f33ec"
+        }
+      }
+    },
+    {
+      "id": "upstream-axis-pipeline-fifo",
+      "project": "verilog-axis",
+      "design_top": "axis_pipeline_fifo",
+      "kind": "upstream_testbench",
+      "entrypoint": "tb/axis_pipeline_fifo/Makefile",
+      "cwd": "tb/axis_pipeline_fifo",
+      "driver": "make",
+      "argv": [
+        "make",
+        "SIM=icarus",
+        "WAVES=0"
+      ],
+      "simulator": "icarus",
+      "environment_profile": "cocotb1",
+      "requirements": {
+        "tools": [
+          "make",
+          "iverilog",
+          "vvp"
+        ],
+        "python_modules": [
+          "cocotb",
+          "cocotb_test",
+          "pytest",
+          "cocotbext.axi"
+        ]
+      },
+      "expected": {
+        "kind": "junit",
+        "paths": [
+          "tb/axis_pipeline_fifo/results.xml"
+        ],
+        "minimum_tests": 12,
+        "allow_skips": false
+      },
+      "status": "required",
+      "timeout_seconds": 300,
+      "description": "Original Cocotb Makefile defaults; all generated test cases in the original test module run unchanged.",
+      "provenance": {
+        "revision": "48ff7a7e2ef782cf778d47910cf85835c64b1bce",
+        "entrypoint_sha256": {
+          "tb/axis_pipeline_fifo/Makefile": "5ddb8a73eb8c527ea9457668bde85fac12c8be730329f724484d294cf34cedbe",
+          "tb/axis_pipeline_fifo/test_axis_pipeline_fifo.py": "9381b5efa54f79e88a07391298769263e5f798de4e5fc22314e9c1dd8868624a"
+        }
+      }
+    },
+    {
+      "id": "upstream-axis-pipeline-register",
+      "project": "verilog-axis",
+      "design_top": "axis_pipeline_register",
+      "kind": "upstream_testbench",
+      "entrypoint": "tb/axis_pipeline_register/Makefile",
+      "cwd": "tb/axis_pipeline_register",
+      "driver": "make",
+      "argv": [
+        "make",
+        "SIM=icarus",
+        "WAVES=0"
+      ],
+      "simulator": "icarus",
+      "environment_profile": "cocotb1",
+      "requirements": {
+        "tools": [
+          "make",
+          "iverilog",
+          "vvp"
+        ],
+        "python_modules": [
+          "cocotb",
+          "cocotb_test",
+          "pytest",
+          "cocotbext.axi"
+        ]
+      },
+      "expected": {
+        "kind": "junit",
+        "paths": [
+          "tb/axis_pipeline_register/results.xml"
+        ],
+        "minimum_tests": 9,
+        "allow_skips": false
+      },
+      "status": "required",
+      "timeout_seconds": 300,
+      "description": "Original Cocotb Makefile defaults; all generated test cases in the original test module run unchanged.",
+      "provenance": {
+        "revision": "48ff7a7e2ef782cf778d47910cf85835c64b1bce",
+        "entrypoint_sha256": {
+          "tb/axis_pipeline_register/test_axis_pipeline_register.py": "4afa6d75c56df41e322080c0ad5f04b17c76ffcafc75cc2708cd6b89032795c4",
+          "tb/axis_pipeline_register/Makefile": "1b110a449c5a82612bfc68fc469384ea49f79750476052b83229db8fff7ecca3"
+        }
+      }
+    },
+    {
+      "id": "upstream-axis-register",
+      "project": "verilog-axis",
+      "design_top": "axis_register",
+      "kind": "upstream_testbench",
+      "entrypoint": "tb/axis_register/Makefile",
+      "cwd": "tb/axis_register",
+      "driver": "make",
+      "argv": [
+        "make",
+        "SIM=icarus",
+        "WAVES=0"
+      ],
+      "simulator": "icarus",
+      "environment_profile": "cocotb1",
+      "requirements": {
+        "tools": [
+          "make",
+          "iverilog",
+          "vvp"
+        ],
+        "python_modules": [
+          "cocotb",
+          "cocotb_test",
+          "pytest",
+          "cocotbext.axi"
+        ]
+      },
+      "expected": {
+        "kind": "junit",
+        "paths": [
+          "tb/axis_register/results.xml"
+        ],
+        "minimum_tests": 9,
+        "allow_skips": false
+      },
+      "status": "required",
+      "timeout_seconds": 300,
+      "description": "Original Cocotb Makefile defaults; all generated test cases in the original test module run unchanged.",
+      "provenance": {
+        "revision": "48ff7a7e2ef782cf778d47910cf85835c64b1bce",
+        "entrypoint_sha256": {
+          "tb/axis_register/test_axis_register.py": "46fd1f60b14f9057694251aa2fc31ea155d54a970adb57197ecf179380e8d0cb",
+          "tb/axis_register/Makefile": "ed2e29db173d706d68d9bc822f4ce9993d574645eac00c9ef5ea3d90b6978965"
+        }
+      }
+    },
+    {
+      "id": "upstream-axis-srl-fifo",
+      "project": "verilog-axis",
+      "design_top": "axis_srl_fifo",
+      "kind": "upstream_testbench",
+      "entrypoint": "tb/axis_srl_fifo/Makefile",
+      "cwd": "tb/axis_srl_fifo",
+      "driver": "make",
+      "argv": [
+        "make",
+        "SIM=icarus",
+        "WAVES=0"
+      ],
+      "simulator": "icarus",
+      "environment_profile": "cocotb1",
+      "requirements": {
+        "tools": [
+          "make",
+          "iverilog",
+          "vvp"
+        ],
+        "python_modules": [
+          "cocotb",
+          "cocotb_test",
+          "pytest",
+          "cocotbext.axi"
+        ]
+      },
+      "expected": {
+        "kind": "junit",
+        "paths": [
+          "tb/axis_srl_fifo/results.xml"
+        ],
+        "minimum_tests": 12,
+        "allow_skips": false
+      },
+      "status": "required",
+      "timeout_seconds": 300,
+      "description": "Original Cocotb Makefile defaults; all generated test cases in the original test module run unchanged.",
+      "provenance": {
+        "revision": "48ff7a7e2ef782cf778d47910cf85835c64b1bce",
+        "entrypoint_sha256": {
+          "tb/axis_srl_fifo/test_axis_srl_fifo.py": "a59e6a14fa1e187a903128cd73def11c0801f6a31bfbea002b01253055d41e35",
+          "tb/axis_srl_fifo/Makefile": "1b8d7dcdfbe3abd82a6360e24fbd12ae27c989bb9d821ddb959288e101c404ca"
+        }
+      }
+    },
+    {
+      "id": "upstream-axis-srl-register",
+      "project": "verilog-axis",
+      "design_top": "axis_srl_register",
+      "kind": "upstream_testbench",
+      "entrypoint": "tb/axis_srl_register/Makefile",
+      "cwd": "tb/axis_srl_register",
+      "driver": "make",
+      "argv": [
+        "make",
+        "SIM=icarus",
+        "WAVES=0"
+      ],
+      "simulator": "icarus",
+      "environment_profile": "cocotb1",
+      "requirements": {
+        "tools": [
+          "make",
+          "iverilog",
+          "vvp"
+        ],
+        "python_modules": [
+          "cocotb",
+          "cocotb_test",
+          "pytest",
+          "cocotbext.axi"
+        ]
+      },
+      "expected": {
+        "kind": "junit",
+        "paths": [
+          "tb/axis_srl_register/results.xml"
+        ],
+        "minimum_tests": 9,
+        "allow_skips": false
+      },
+      "status": "required",
+      "timeout_seconds": 300,
+      "description": "Original Cocotb Makefile defaults; all generated test cases in the original test module run unchanged.",
+      "provenance": {
+        "revision": "48ff7a7e2ef782cf778d47910cf85835c64b1bce",
+        "entrypoint_sha256": {
+          "tb/axis_srl_register/test_axis_srl_register.py": "3acab426e072ecb9ff0c8654e8b0754dcdb9e2ebcad2283339d9a75843927877",
+          "tb/axis_srl_register/Makefile": "cfb521ac2f7127609f644c5c4ed80a6cdcdcb6f1c1cad5d261c378006acd063e"
+        }
+      }
+    },
+    {
+      "id": "upstream-i2c-master",
+      "project": "verilog-i2c",
+      "design_top": "i2c_master",
+      "kind": "upstream_testbench",
+      "entrypoint": "tb/test_i2c_master.py",
+      "cwd": "tb",
+      "driver": "pytest",
+      "argv": [
+        "python",
+        "-m",
+        "pytest",
+        "-q",
+        "test_i2c_master.py",
+        "--junitxml=results_i2c_master.xml"
+      ],
+      "simulator": "icarus",
+      "environment_profile": "cocotb1",
+      "requirements": {
+        "tools": [
+          "make",
+          "iverilog",
+          "vvp",
+          "iverilog-vpi",
+          "gcc"
+        ],
+        "python_modules": [
+          "myhdl",
+          "pytest"
+        ],
+        "vpi_modules": [
+          "myhdl"
+        ]
+      },
+      "expected": {
+        "kind": "junit",
+        "paths": [
+          "tb/results_i2c_master.xml"
+        ],
+        "minimum_tests": 1,
+        "allow_skips": false
+      },
+      "status": "required",
+      "timeout_seconds": 300,
+      "description": "Complete original MyHDL co-simulation testbench, with the MyHDL Icarus VPI extension.",
+      "provenance": {
+        "revision": "a65be4045e898a52e791c6ee71f8f79a7cd2e129",
+        "entrypoint_sha256": {
+          "tb/test_i2c_master.py": "470928ccb36dbd510811f96d28fe645c92d46d590ab7d05c0be5d0a861c99384"
+        }
+      }
+    },
+    {
+      "id": "upstream-i2c-master-axil",
+      "project": "verilog-i2c",
+      "design_top": "i2c_master_axil",
+      "kind": "upstream_testbench",
+      "entrypoint": "tb/test_i2c_master_axil.py",
+      "cwd": "tb",
+      "driver": "pytest",
+      "argv": [
+        "python",
+        "-m",
+        "pytest",
+        "-q",
+        "test_i2c_master_axil.py",
+        "--junitxml=results_i2c_master_axil.xml"
+      ],
+      "simulator": "icarus",
+      "environment_profile": "cocotb1",
+      "requirements": {
+        "tools": [
+          "make",
+          "iverilog",
+          "vvp",
+          "iverilog-vpi",
+          "gcc"
+        ],
+        "python_modules": [
+          "myhdl",
+          "pytest"
+        ],
+        "vpi_modules": [
+          "myhdl"
+        ]
+      },
+      "expected": {
+        "kind": "junit",
+        "paths": [
+          "tb/results_i2c_master_axil.xml"
+        ],
+        "minimum_tests": 1,
+        "allow_skips": false
+      },
+      "status": "required",
+      "timeout_seconds": 300,
+      "description": "Complete original MyHDL co-simulation testbench, with the MyHDL Icarus VPI extension.",
+      "provenance": {
+        "revision": "a65be4045e898a52e791c6ee71f8f79a7cd2e129",
+        "entrypoint_sha256": {
+          "tb/test_i2c_master_axil.py": "a22b3441eae631b3848b884f3d5b41152256f7a8862e5d350c046e659cd6b36d"
+        }
+      }
+    },
+    {
+      "id": "upstream-i2c-slave",
+      "project": "verilog-i2c",
+      "design_top": "i2c_slave",
+      "kind": "upstream_testbench",
+      "entrypoint": "tb/test_i2c_slave.py",
+      "cwd": "tb",
+      "driver": "pytest",
+      "argv": [
+        "python",
+        "-m",
+        "pytest",
+        "-q",
+        "test_i2c_slave.py",
+        "--junitxml=results_i2c_slave.xml"
+      ],
+      "simulator": "icarus",
+      "environment_profile": "cocotb1",
+      "requirements": {
+        "tools": [
+          "make",
+          "iverilog",
+          "vvp",
+          "iverilog-vpi",
+          "gcc"
+        ],
+        "python_modules": [
+          "myhdl",
+          "pytest"
+        ],
+        "vpi_modules": [
+          "myhdl"
+        ]
+      },
+      "expected": {
+        "kind": "junit",
+        "paths": [
+          "tb/results_i2c_slave.xml"
+        ],
+        "minimum_tests": 1,
+        "allow_skips": false
+      },
+      "status": "required",
+      "timeout_seconds": 300,
+      "description": "Complete original MyHDL co-simulation testbench, with the MyHDL Icarus VPI extension.",
+      "provenance": {
+        "revision": "a65be4045e898a52e791c6ee71f8f79a7cd2e129",
+        "entrypoint_sha256": {
+          "tb/test_i2c_slave.py": "6770c17593e8bf745cf50867b4dece24bcfc6135def0de57071e9df30679b1e5"
+        }
+      }
+    },
+    {
+      "id": "upstream-uart-rx",
+      "project": "verilog-uart",
+      "design_top": "uart_rx",
+      "kind": "upstream_testbench",
+      "entrypoint": "tb/uart_rx/Makefile",
+      "cwd": "tb/uart_rx",
+      "driver": "make",
+      "argv": [
+        "make",
+        "SIM=icarus",
+        "WAVES=0"
+      ],
+      "simulator": "icarus",
+      "environment_profile": "cocotb1",
+      "requirements": {
+        "tools": [
+          "make",
+          "iverilog",
+          "vvp"
+        ],
+        "python_modules": [
+          "cocotb",
+          "cocotb_test",
+          "pytest",
+          "cocotbext.uart"
+        ]
+      },
+      "expected": {
+        "kind": "junit",
+        "paths": [
+          "tb/uart_rx/results.xml"
+        ],
+        "minimum_tests": 2,
+        "allow_skips": false
+      },
+      "status": "required",
+      "timeout_seconds": 300,
+      "description": "Original Cocotb Makefile defaults; all generated test cases in the original test module run unchanged.",
+      "provenance": {
+        "revision": "1b867e53af738e4a8bc7c839ca2f1c07f40382dc",
+        "entrypoint_sha256": {
+          "tb/uart_rx/test_uart_rx.py": "b0bc11e298f5cd6dec462079f3cb4babcfb127dcf8feca1ba76838c92f5e4c0f",
+          "tb/uart_rx/Makefile": "7b1597e47e28bf931175c1350bc29520c55525f163e390752d9e02aa5a4b43bd"
+        }
+      }
+    },
+    {
+      "id": "upstream-uart-tx",
+      "project": "verilog-uart",
+      "design_top": "uart_tx",
+      "kind": "upstream_testbench",
+      "entrypoint": "tb/uart_tx/Makefile",
+      "cwd": "tb/uart_tx",
+      "driver": "make",
+      "argv": [
+        "make",
+        "SIM=icarus",
+        "WAVES=0"
+      ],
+      "simulator": "icarus",
+      "environment_profile": "cocotb1",
+      "requirements": {
+        "tools": [
+          "make",
+          "iverilog",
+          "vvp"
+        ],
+        "python_modules": [
+          "cocotb",
+          "cocotb_test",
+          "pytest",
+          "cocotbext.uart"
+        ]
+      },
+      "expected": {
+        "kind": "junit",
+        "paths": [
+          "tb/uart_tx/results.xml"
+        ],
+        "minimum_tests": 2,
+        "allow_skips": false
+      },
+      "status": "required",
+      "timeout_seconds": 300,
+      "description": "Original Cocotb Makefile defaults; all generated test cases in the original test module run unchanged.",
+      "provenance": {
+        "revision": "1b867e53af738e4a8bc7c839ca2f1c07f40382dc",
+        "entrypoint_sha256": {
+          "tb/uart_tx/test_uart_tx.py": "b812887d136ae046981da50f5ec72e7a406d42c7e56cfeba9b7a4e3e944cf798",
+          "tb/uart_tx/Makefile": "3b1cf9f7e15236a8902761ce9059917f4a8ffb91fe9925ddb79ff5f95372e4fc"
+        }
+      }
+    }
+  ]
+}

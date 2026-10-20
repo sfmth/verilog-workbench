@@ -1,0 +1,264 @@
+{
+  "schema_version": 1,
+  "flows": [
+    {
+      "id": "nvdla-upstream-nv-small-trace",
+      "project": "nvdla",
+      "design_top": "NV_nvdla",
+      "entrypoint": "verif/verilator/Makefile + verif/verilator/nvdla.cpp",
+      "cwd": ".",
+      "driver": "make",
+      "argv": [
+        "make",
+        "-C",
+        "verif/verilator",
+        "PROJECT=nv_small",
+        "run",
+        "TEST=sdp_1x1x1_pass_through_int8"
+      ],
+      "simulator": "verilator",
+      "steps": [
+        {
+          "argv": [
+            "make",
+            "USE_VM_ENV=1",
+            "VM_PROJ=nv_small",
+            "VM_USE_DESIGNWARE=0",
+            "VM_CPP=cpp",
+            "VM_GCC=gcc",
+            "VM_CXX=g++",
+            "VM_PERL=perl",
+            "VM_JAVA=java",
+            "VM_PYTHON=python",
+            "VM_VERILATOR=verilator",
+            "VM_CLANG=clang"
+          ],
+          "cwd": ".",
+          "driver": "make"
+        },
+        {
+          "argv": [
+            "perl",
+            "tools/bin/tmake",
+            "-build",
+            "vmod",
+            "-projects",
+            "nv_small"
+          ],
+          "cwd": ".",
+          "driver": "perl"
+        },
+        {
+          "argv": [
+            "make",
+            "-C",
+            "verif/verilator",
+            "PROJECT=nv_small",
+            "VERILATOR_PARAMS=--compiler clang --output-split 250000000 --no-timing -I../../outdir/nv_small/vmod/rams/model ../../outdir/nv_small/vmod/fifos/*.v",
+            "VMAKE_PARAMS=-j2"
+          ],
+          "cwd": ".",
+          "driver": "make"
+        },
+        {
+          "driver": "make",
+          "argv": [
+            "make",
+            "-C",
+            "verif/verilator",
+            "PROJECT=nv_small",
+            "run",
+            "TEST=sdp_1x1x1_pass_through_int8"
+          ],
+          "cwd": "."
+        },
+        {
+          "driver": "make",
+          "argv": [
+            "make",
+            "-C",
+            "verif/verilator",
+            "PROJECT=nv_small",
+            "run",
+            "TEST=dc_1x1x8_1x1x8x1_int8_0"
+          ],
+          "cwd": "."
+        },
+        {
+          "driver": "make",
+          "argv": [
+            "make",
+            "-C",
+            "verif/verilator",
+            "PROJECT=nv_small",
+            "run",
+            "TEST=pdp_1x1x1_3x3_ave_int8_0"
+          ],
+          "cwd": "."
+        },
+        {
+          "driver": "make",
+          "argv": [
+            "make",
+            "-C",
+            "verif/verilator",
+            "PROJECT=nv_small",
+            "run",
+            "TEST=cdp_8x8x64_lrn9_int8"
+          ],
+          "cwd": "."
+        }
+      ],
+      "requirements": {
+        "tools": [
+          "make",
+          "cpp",
+          "gcc",
+          "g++",
+          "perl",
+          "java",
+          "python",
+          "clang",
+          "clang++",
+          "verilator"
+        ],
+        "python_modules": [],
+        "licenses": [],
+        "perl_modules": [
+          "YAML",
+          "Capture::Tiny",
+          "XML::Simple",
+          "XML::Parser"
+        ],
+        "native_dependency_lock": "toolchains/upstream-native-dependencies.json"
+      },
+      "expected": {
+        "kind": "log",
+        "patterns": [
+          "^\\*\\*\\* CRC matched 90000040 \\+ 00000008 -> cb0ea2db$",
+          "^\\*\\*\\* CRC matched a0000000 \\+ 00000008 -> 8f68a2ae$",
+          "^\\*\\*\\* CRC matched 80000120 \\+ 000026c0 -> afff270d$",
+          "^\\*\\*\\* CRC matched 90000000 \\+ 00001000 -> 1a232a09$",
+          "^\\*\\*\\* PASS$"
+        ]
+      },
+      "status": "required",
+      "description": "Original NVDLA C++ CSB/AXI trace player with generated full nv_small top and four upstream golden-CRC traces covering SDP, convolution, average pooling, and CDP LRN. Uses included alternate DesignWare implementations. Legacy RAM #delay statements retain Verilator cycle semantics (--no-timing).",
+      "blockers": [],
+      "environment_profile": "nvdla",
+      "timeout_seconds": 900
+    },
+    {
+      "id": "nvdla-upstream-uvm-cross-check",
+      "project": "nvdla",
+      "design_top": "nvdla_tb_top",
+      "entrypoint": "verif/testbench/trace_player/Makefile + verif/tools/run_test.py",
+      "cwd": ".",
+      "driver": "make",
+      "argv": [
+        "perl",
+        "tools/bin/tmake",
+        "-build",
+        "ready_for_test",
+        "-projects",
+        "nv_small"
+      ],
+      "simulator": "vcs",
+      "steps": [
+        {
+          "argv": [
+            "make",
+            "USE_VM_ENV=1",
+            "VM_PROJ=nv_small",
+            "VM_USE_DESIGNWARE=0",
+            "VM_CPP=cpp",
+            "VM_GCC=gcc",
+            "VM_CXX=g++",
+            "VM_PERL=perl",
+            "VM_JAVA=java",
+            "VM_PYTHON=python",
+            "VM_VERILATOR=verilator",
+            "VM_CLANG=clang"
+          ],
+          "cwd": ".",
+          "driver": "make"
+        },
+        {
+          "argv": [
+            "perl",
+            "tools/bin/tmake",
+            "-build",
+            "ready_for_test",
+            "-projects",
+            "nv_small"
+          ],
+          "cwd": ".",
+          "driver": "perl"
+        },
+        {
+          "argv": [
+            "python",
+            "verif/tools/run_test.py",
+            "-P",
+            "nv_small",
+            "dc_24x33x55_5x5x55x25_int8_0",
+            "-outdir",
+            "native_cross_check",
+            "-v",
+            "nvdla_utb"
+          ],
+          "cwd": ".",
+          "driver": "python"
+        }
+      ],
+      "requirements": {
+        "tools": [
+          "make",
+          "cpp",
+          "gcc",
+          "g++",
+          "perl",
+          "java",
+          "python",
+          "vcs",
+          "syscan"
+        ],
+        "python_modules": [],
+        "licenses": [
+          "Synopsys VCS/SystemC licence",
+          "Verdi/Novas PLI as required by the original makefile"
+        ],
+        "libraries": [
+          "SystemC 2.3.0",
+          "UVM 1.2",
+          "UVMC 2.3.0",
+          "NVDLA C model"
+        ],
+        "perl_modules": [
+          "YAML",
+          "Capture::Tiny",
+          "XML::Simple",
+          "XML::Parser"
+        ],
+        "environment": [
+          "VCS_HOME",
+          "VERDI_HOME",
+          "NOVAS_HOME",
+          "SYSTEMC"
+        ]
+      },
+      "expected": {
+        "kind": "log",
+        "patterns": [
+          "^\\*\\*\\s+TEST PASS\\s+\\*\\*$"
+        ]
+      },
+      "status": "external_required",
+      "description": "Original upstream UVM/SystemC/DPI RTL-versus-C-model cross-check bench. Requires the actual simulator and matching C++/SystemC ABI. It is not represented as covered by standalone Verilator or VWB-authored block tests.",
+      "blockers": [
+        "VCS/syscan and their licence are unavailable.",
+        "Matching SystemC and Verdi/Novas libraries have not been configured or verified."
+      ]
+    }
+  ]
+}

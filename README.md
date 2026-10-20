@@ -15,11 +15,19 @@ Open the [published workspace preview](https://sfmth.github.io/verilog-workbench
 The [M0 acceptance gaps](docs/M0_STATUS.md) and complete-release gates remain
 open; this preview is not the finished six-platform release.
 
-Upstream HDL acceptance covers **23 pinned designs**: RISC-V cores, NVDLA blocks,
-AXI/AXIS, UART and I2C. CI runs 15 functional simulations with failing controls
-and eight elaboration checks, and gates Pages and image releases. See
-[the corpus, coverage and local commands](docs/UPSTREAM_HDL.md). Explicit
-`--simulator verilator` adds timed SystemVerilog and Cocotb VPI simulation.
+Upstream acceptance runs **30 original testbench flows for 29 distinct designs**,
+including RISC-V firmware, the generated NVDLA `nv_small` accelerator, AXI/AXIS,
+UART and I2C. It requires at least **300 executed upstream JUnit cases**, plus
+core firmware and golden-CRC verdicts. A further 23 directed component and
+elaboration checks provide supplemental coverage. These gates protect Pages and
+image releases; see [coverage and local commands](docs/UPSTREAM_HDL.md).
+
+Project verification uses VWB's existing Verilator and Cocotb support. It runs
+an upstream project's own Make, FuseSoC or Python driver through `vwb flow` and
+the browser's **Project testbench** action. Each flow declares its dependencies,
+simulator presets and required result files. Commercial simulator flows remain
+explicitly unverified until their installations, licenses and libraries are
+available.
 
 ## First Five Minutes
 
@@ -115,6 +123,7 @@ folder was saved by `init`.
 | HDL support | Works with Verilog, SystemVerilog, and VHDL-2008 designs. |
 | Starter tests | Creates a small Cocotb test when a named design has no test. |
 | Simulation | Tests source code by default and can also test synthesized logic. |
+| Original project testbenches | Runs configured upstream Make, FuseSoC and Python verification flows with their declared simulators and result checks. |
 | Signal waves | Records FST or VCD without adding dump code to the design, including supported memories and arrays. |
 | Source checks | Runs every suitable installed checker and reports all failures at the end. |
 | Synthesis | Creates circuit drawings or raw synthesized data, with an automatic fallback if a schematic cannot be generated. |

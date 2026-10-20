@@ -1,0 +1,189 @@
+{
+  "schema_version": 1,
+  "project": "nvdla",
+  "revision": "1a65f1f5b48268accaa47c95f95c2601918be095",
+  "original_source_files_checked": 2565,
+  "modified_original_files": [],
+  "native_bench": "verif/verilator/nvdla.cpp",
+  "traces": [
+    {
+      "test": "sdp_1x1x1_pass_through_int8",
+      "passed": true,
+      "expected_crc": "cb0ea2db",
+      "crc_matched": true,
+      "log_sha256": "b1433928f5074923bd57c896396400e8eeadafedfba728dc593e61086599997c"
+    },
+    {
+      "test": "dc_1x1x8_1x1x8x1_int8_0",
+      "passed": true,
+      "expected_crc": "8f68a2ae",
+      "crc_matched": true,
+      "log_sha256": "a5e05f6d1390aaa7381806a9ed7045d9c1f9f97284e45254d40110ccb6a3c8b9"
+    },
+    {
+      "test": "pdp_1x1x1_3x3_ave_int8_0",
+      "passed": true,
+      "expected_crc": "afff270d",
+      "crc_matched": true,
+      "log_sha256": "7ce1528e5a348381c5555d93d0e060a9e0deb071e1dc255cc6b5012f18dfe4d3"
+    },
+    {
+      "test": "cdp_8x8x64_lrn9_int8",
+      "passed": true,
+      "expected_crc": "1a232a09",
+      "crc_matched": true,
+      "log_sha256": "7864ab882457d2431996b4a29ed66fbba5388954bcad78cd785a2b8d68fd00bc"
+    }
+  ],
+  "negative_control": {
+    "schema_version": 1,
+    "project": "nvdla",
+    "upstream_revision": "1a65f1f5b48268accaa47c95f95c2601918be095",
+    "control": "Flip only the least significant bit of the first expected golden output CRC in a copy of the upstream converted SDP trace. The upstream C++ bench and RTL are unchanged.",
+    "trace": "sdp_1x1x1_pass_through_int8",
+    "original_sha256": "69274882cfc727c1bb77bd92dedc9a3ca63f5ba93a4318725467c0bac31f1698",
+    "mutated_sha256": "6aad8ee71f328862f50e431e9d25357c840e7f00445089bf3449cc40a2eebacb",
+    "changed_byte_offset": 69,
+    "golden_crc_before": "0xcb0ea2db",
+    "golden_crc_after": "0xcb0ea2da",
+    "returncode": 1,
+    "detected_failure": true,
+    "verdicts": [
+      "*** FAIL: CRC mismatch: 90000040 + 00000008 should have been cb0ea2db, was cb0ea2da",
+      "done at 17496 ticks",
+      "*** FAIL: test failed due to output mismatch"
+    ]
+  },
+  "known_nonpassing_trials": [
+    {
+      "test": "cdp_8x8x32_lrn3_int8_0",
+      "result": "converter assertion: symbolic memory_type PRI_MEM versus expected numeric 1"
+    },
+    {
+      "test": "sdp_3x3x33_bn_int8_reg_0",
+      "result": "90second wall-clock timeout"
+    }
+  ],
+  "tool_versions": {
+    "verilator": "Verilator 5.053 devel rev v5.052-472-g1cfb3b89a (mod)",
+    "clang": "clang version 22.1.8",
+    "java": "openjdk version \"26.0.2.1\" 2026-08-18",
+    "perl": "v5.42.2",
+    "python": "Python 3.14.7"
+  },
+  "dependency_lock_sha256": "e8a578d521442d3dfa4c867c3d82b37eb89a6e122430f0f241a39134565208a0",
+  "bench_manifest_sha256": "ae63e7548f0e81837b3c9d990b6566d3454b2c4f6012b916dae693c19ffedda5",
+  "scope": "Local Linux execution of original NVDLA C++ trace bench through VWB project flow. Fresh upstream source copy, original generator, original C++ bench, and all 4 selected original golden-CRC traces passed. Commercial UVM/SystemC cross-check remains unavailable and is not counted as verified.",
+  "vwb_native_flow": {
+    "state": "passed",
+    "duration_seconds": 86.91,
+    "simulator": "verilator",
+    "driver": "make",
+    "verdict": {
+      "passed": true,
+      "missing_patterns": [],
+      "kind": "log"
+    },
+    "output_bytes": 2570179,
+    "output_sha256": "e55944a426b9c79a1ec080f1d6b70705252c444e12a2ca492ff0965e09240e95",
+    "steps": [
+      {
+        "argv": [
+          "make",
+          "USE_VM_ENV=1",
+          "VM_PROJ=nv_small",
+          "VM_USE_DESIGNWARE=0",
+          "VM_CPP=cpp",
+          "VM_GCC=gcc",
+          "VM_CXX=g++",
+          "VM_PERL=perl",
+          "VM_JAVA=java",
+          "VM_PYTHON=python",
+          "VM_VERILATOR=verilator",
+          "VM_CLANG=clang"
+        ],
+        "cwd": ".",
+        "returncode": 0,
+        "timed_out": false
+      },
+      {
+        "argv": [
+          "perl",
+          "tools/bin/tmake",
+          "-build",
+          "vmod",
+          "-projects",
+          "nv_small"
+        ],
+        "cwd": ".",
+        "returncode": 0,
+        "timed_out": false
+      },
+      {
+        "argv": [
+          "make",
+          "-C",
+          "verif/verilator",
+          "PROJECT=nv_small",
+          "VERILATOR_PARAMS=--compiler clang --output-split 250000000 --no-timing -I../../outdir/nv_small/vmod/rams/model ../../outdir/nv_small/vmod/fifos/*.v",
+          "VMAKE_PARAMS=-j2"
+        ],
+        "cwd": ".",
+        "returncode": 0,
+        "timed_out": false
+      },
+      {
+        "argv": [
+          "make",
+          "-C",
+          "verif/verilator",
+          "PROJECT=nv_small",
+          "run",
+          "TEST=sdp_1x1x1_pass_through_int8"
+        ],
+        "cwd": ".",
+        "returncode": 0,
+        "timed_out": false
+      },
+      {
+        "argv": [
+          "make",
+          "-C",
+          "verif/verilator",
+          "PROJECT=nv_small",
+          "run",
+          "TEST=dc_1x1x8_1x1x8x1_int8_0"
+        ],
+        "cwd": ".",
+        "returncode": 0,
+        "timed_out": false
+      },
+      {
+        "argv": [
+          "make",
+          "-C",
+          "verif/verilator",
+          "PROJECT=nv_small",
+          "run",
+          "TEST=pdp_1x1x1_3x3_ave_int8_0"
+        ],
+        "cwd": ".",
+        "returncode": 0,
+        "timed_out": false
+      },
+      {
+        "argv": [
+          "make",
+          "-C",
+          "verif/verilator",
+          "PROJECT=nv_small",
+          "run",
+          "TEST=cdp_8x8x64_lrn9_int8"
+        ],
+        "cwd": ".",
+        "returncode": 0,
+        "timed_out": false
+      }
+    ]
+  }
+}

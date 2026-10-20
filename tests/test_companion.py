@@ -6,6 +6,7 @@ import json
 import os
 from pathlib import Path
 import queue
+import shutil
 import signal
 import stat
 import subprocess
@@ -70,6 +71,44 @@ class CompanionTests(unittest.TestCase):
         self.assertEqual(status, 200, data)
         return data
 
+    def wait_job(self, job, timeout=10):
+        deadline = time.monotonic() + timeout
+        while job["status"] == "running" and time.monotonic() < deadline:
+            time.sleep(0.02)
+            status, job, _ = self.request("GET", "/v1/jobs/" + job["id"])
+            self.assertEqual(status, 200, job)
+        self.assertNotEqual(job["status"], "running", job)
+        return job
+
+    def project_flow(self, *, failing=False):
+        profile = self.root / "native-verification-profile"
+        profile.mkdir()
+        (profile / "vwb_http_profile_dependency.py").write_text("VALUE = 'declared native profile'\n")
+        executable = "python3" if shutil.which("python3", path=str(Path(sys.executable).parent) + os.pathsep + os.defpath) else "python"
+        xml = '<testsuite tests="2"><testcase name="original_data_assertions"/>'
+        xml += '<testcase name="original_protocol_assertions">'
+        if failing:
+            xml += '<failure message="upstream assertion failed"/>'
+        xml += '</testcase></testsuite>'
+        (self.root / "test/original_project_bench.py").write_text(
+            "from pathlib import Path\nimport os\nimport vwb_http_profile_dependency as dependency\n"
+            "assert dependency.VALUE == 'declared native profile'\n"
+            "assert os.environ['VIRTUAL_ENV'] == " + repr(str(profile)) + "\n"
+            "Path('native-results.xml').write_text(" + repr(xml) + ")\n"
+            "print('ORIGINAL_PROJECT_BENCH_FINISHED')\n")
+        flow = {"id": "http-upstream", "driver": "python", "simulator": "icarus",
+                "argv": [executable, "test/original_project_bench.py"],
+                "environment": {"PATH": str(Path(sys.executable).parent) + os.pathsep + os.defpath,
+                                "PYTHONPATH": str(profile), "VIRTUAL_ENV": str(profile),
+                                "PYTHONNOUSERSITE": "1"},
+                "requirements": {"tools": [executable], "python_modules": ["vwb_http_profile_dependency"]},
+                "expected": {"kind": "junit", "paths": ["native-results.xml"], "minimum_tests": 2}}
+        (self.root / ".vwb-flows.json").write_text(json.dumps({
+            "schema_version": 1, "flows": [flow],
+            "source_files": ["src/counter.sv", "test/original_project_bench.py",
+                             "native-verification-profile/vwb_http_profile_dependency.py"]}))
+        return flow
+
     def test_health_does_not_expose_grant_or_credentials(self):
         status, data, _ = self.request("GET", "/v1/health", origin=None)
         self.assertEqual(status, 200)
@@ -116,7 +155,9 @@ class CompanionTests(unittest.TestCase):
             status, payload, _ = self.request("GET", "/v1/capabilities")
         self.assertEqual(status, 200)
         self.assertEqual(payload["toolchains"]["proof"], "discovered-not-executed")
-        self.assertEqual(set(payload["commands"]), {"list", "doctor", "test", "wave", "lint", "synth", "formal", "fpga"})
+        self.assertEqual(set(payload["commands"]), {"list", "doctor", "test", "wave", "lint", "synth", "formal", "fpga", "flow"})
+        self.assertEqual(payload["limits"]["job_seconds"], 300)
+        self.assertEqual(payload["limits"]["project_flow_seconds"], 7200)
 
     def test_pair_one_time_expiry_and_attempts(self):
         self.pair()
@@ -267,6 +308,208 @@ class CompanionTests(unittest.TestCase):
         self.assertEqual(job["source_revision"], job["source_revision_after"])
         self.assertIn("counter", job["stdout"])
         self.assertIsInstance(json.loads(job["stdout"]), (dict, list))
+
+    def test_project_flow_adapter_only_accepts_names_and_declared_simulator_enums(self):
+        listing = self.server.state.job_argv("flow", {"list": True})
+        self.assertEqual(listing[listing.index("flow"):], ["flow", "--list", "--json"])
+        implicit = self.server.state.job_argv("flow", {})
+        self.assertEqual(implicit[implicit.index("flow"):], ["flow", "--list", "--json"])
+        for simulator in ("icarus", "verilator", "questa", "vcs", "xcelium"):
+            with self.subTest(simulator=simulator):
+                named = self.server.state.job_argv("flow", {"flow": "upstream-original", "simulator": simulator})
+                self.assertEqual(named[named.index("flow"):], ["flow", "upstream-original", "--simulator", simulator])
+        self.assertIn("-I", named)
+
+    def test_project_flow_http_rejects_commands_environment_and_incompatible_listing_options(self):
+        self.pair()
+        options = [
+            {"argv": ["sh", "-c", "anything"]}, {"flow": "native", "environment": {"PATH": "/tmp"}},
+            {"flow": "native", "env": {"PYTHONPATH": "/tmp"}}, {"flow": "native", "driver": "python"},
+            {"flow": "native", "manifest": "outside.json"}, {"flow": "native", "cwd": "../outside"},
+            {"list": True, "flow": "native"}, {"list": True, "simulator": "verilator"},
+            {"list": False}, {"list": "yes"}, {"flow": "--help"}, {"flow": "../native"},
+            {"flow": "native; touch marker"}, {"flow": "native\n"},
+            {"flow": "native", "simulator": "sh"}, {"flow": "native", "simulator": "auto"},
+        ]
+        for value in options:
+            with self.subTest(options=value):
+                status, _, _ = self.request("POST", "/v1/jobs", {"command": "flow", "options": value})
+                self.assertEqual(status, 400)
+        self.assertEqual(self.request("POST", "/v1/jobs", {"command": "flow", "environment": {"PATH": "/tmp"}})[0], 400)
+        self.assertEqual(self.server.state.jobs, {})
+
+    def test_project_flow_long_timeout_is_bounded_and_forwarded_to_native_cli(self):
+        self.project_flow()
+        self.pair()
+        for timeout in (True, 0, -1, 7201, "7200"):
+            with self.subTest(timeout=timeout):
+                self.assertEqual(self.request("POST", "/v1/jobs", {"command": "flow", "options": {"flow": "native"}, "timeout": timeout})[0], 400)
+        self.assertEqual(self.request("POST", "/v1/jobs", {"command": "list", "timeout": 301})[0], 400)
+        self.assertEqual(self.server.state.jobs, {})
+        calls = []
+
+        def runner(argv, **kwargs):
+            calls.append((argv, kwargs))
+            return subprocess.CompletedProcess(argv, 0, "typed timeout adapter exercised", "")
+
+        self.server.state.runner = runner
+        status, job, _ = self.request("POST", "/v1/jobs", {"command": "flow", "options": {"flow": "http-upstream"}, "timeout": 7200})
+        self.assertEqual(status, 202, job)
+        self.assertEqual(self.wait_job(job)["status"], "passed")
+        argv, kwargs = calls[0]
+        self.assertEqual(kwargs["timeout"], 7200)
+        self.assertEqual(argv[-2:], ["--timeout", "7200"])
+
+    def test_real_http_project_flow_uses_declared_environment_and_exposes_fresh_artifacts(self):
+        self.project_flow()
+        self.pair()
+        status, listing, _ = self.request("POST", "/v1/jobs", {"command": "flow", "options": {"list": True}, "timeout": 15})
+        self.assertEqual(status, 202, listing)
+        listing = self.wait_job(listing)
+        self.assertEqual(listing["status"], "passed", listing)
+        discovery = json.loads(listing["stdout"])["flows"][0]
+        self.assertEqual(discovery["id"], "http-upstream")
+        self.assertEqual(discovery["availability"]["missing_python_modules"], [])
+        status, job, _ = self.request("POST", "/v1/jobs", {"command": "flow", "options": {"flow": "http-upstream"}, "timeout": 15})
+        self.assertEqual(status, 202, job)
+        job = self.wait_job(job)
+        self.assertEqual(job["status"], "passed", job)
+        self.assertEqual(job["returncode"], 0)
+        self.assertFalse(job["stale"], job)
+        self.assertIn("ORIGINAL_PROJECT_BENCH_FINISHED", job["stdout"])
+        status, artifacts, _ = self.request("GET", "/v1/artifacts")
+        self.assertEqual(status, 200, artifacts)
+        names = {item["path"] for item in artifacts["files"]}
+        base = ".vwb/flows/http-upstream/"
+        self.assertTrue({base + "report.json", base + "run.log", base + "results/native-results.xml"}.issubset(names), names)
+        status, payload, _ = self.request("GET", "/v1/artifacts/file?path=" + quote(base + "report.json"))
+        self.assertEqual(status, 200)
+        report = json.loads(payload) if isinstance(payload, bytes) else payload
+        self.assertEqual(report["state"], "passed")
+        self.assertEqual(report["verdict"]["tests"], 2)
+        status, result, _ = self.request("GET", "/v1/artifacts/file?path=" + quote(base + "results/native-results.xml"))
+        self.assertEqual(status, 200)
+        self.assertEqual(result, (self.root / "native-results.xml").read_bytes())
+
+    def test_real_http_project_flow_zero_exit_does_not_mask_junit_failure(self):
+        self.project_flow(failing=True)
+        self.pair()
+        status, job, _ = self.request("POST", "/v1/jobs", {"command": "flow", "options": {"flow": "http-upstream"}, "timeout": 15})
+        self.assertEqual(status, 202, job)
+        job = self.wait_job(job)
+        self.assertEqual(job["status"], "failed", job)
+        status, payload, _ = self.request("GET", "/v1/artifacts/file?path=.vwb/flows/http-upstream/report.json")
+        self.assertEqual(status, 200)
+        report = json.loads(payload) if isinstance(payload, bytes) else payload
+        self.assertEqual(report["steps"][0]["returncode"], 0)
+        self.assertEqual(report["state"], "failed")
+        self.assertEqual(report["verdict"]["failures"], 1)
+
+    def test_real_http_project_flow_missing_tool_stays_blocked(self):
+        flow = self.project_flow()
+        flow["requirements"]["tools"].append("vwb_missing_native_simulator")
+        flow["requirements"]["licenses"] = ["Simulator licence requires actual execution to verify"]
+        (self.root / ".vwb-flows.json").write_text(json.dumps({"schema_version": 1, "flows": [flow]}))
+        self.pair()
+        status, job, _ = self.request("POST", "/v1/jobs", {"command": "flow", "options": {"flow": "http-upstream"}, "timeout": 15})
+        self.assertEqual(status, 202, job)
+        job = self.wait_job(job)
+        self.assertEqual(job["status"], "failed", job)
+        status, payload, _ = self.request("GET", "/v1/artifacts/file?path=.vwb/flows/http-upstream/report.json")
+        self.assertEqual(status, 200)
+        report = json.loads(payload) if isinstance(payload, bytes) else payload
+        self.assertEqual(report["state"], "blocked")
+        self.assertIn("vwb_missing_native_simulator", report["dependencies"]["missing_tools"])
+        self.assertEqual(report["dependencies"]["license_state"], "not_verified")
+        self.assertFalse((self.root / "native-results.xml").exists())
+
+    def test_project_flow_snapshot_marks_root_inputs_or_manifest_edits_stale(self):
+        self.project_flow()
+        root_bench = self.root / "original_root_bench.py"
+        root_bench.write_text("# original upstream root testbench\n")
+        path = self.root / ".vwb-flows.json"
+        manifest = json.loads(path.read_text())
+        manifest["source_files"].append(root_bench.name)
+        path.write_text(json.dumps(manifest))
+        self.pair()
+        for mutation in ("root_bench", "manifest", "deleted_input"):
+            with self.subTest(mutation=mutation):
+                root_bench.write_text("# original upstream root testbench\n")
+                path.write_text(json.dumps(manifest))
+                started, finish = threading.Event(), threading.Event()
+
+                def runner(argv, **kwargs):
+                    started.set()
+                    finish.wait(3)
+                    return subprocess.CompletedProcess(argv, 0, "native verification completed", "")
+
+                self.server.state.runner = runner
+                status, job, _ = self.request("POST", "/v1/jobs", {"command": "flow", "options": {"flow": "http-upstream"}})
+                self.assertEqual(status, 202, job)
+                self.assertTrue(started.wait(2))
+                if mutation == "root_bench":
+                    root_bench.write_text("# changed outside src/test during native verification\n")
+                elif mutation == "deleted_input":
+                    root_bench.unlink()
+                else:
+                    path.write_text(json.dumps(manifest) + "\n")
+                finish.set()
+                current = self.wait_job(job)
+                self.assertEqual(current["status"], "passed", current)
+                self.assertTrue(current["stale"], current)
+                self.assertNotEqual(current["source_revision"], current["source_revision_after"])
+                self.assertNotIn("_flow_source_files", current)
+
+    def test_project_flow_snapshot_ignores_generated_files_outside_source_tree(self):
+        self.project_flow()
+        self.pair()
+
+        def runner(argv, **kwargs):
+            (self.root / "generated-model.cpp").write_text("// native generated output\n")
+            output = self.root / "outdir/nv_small"
+            output.mkdir(parents=True)
+            (output / "generated.v").write_text("module generated; endmodule\n")
+            return subprocess.CompletedProcess(argv, 0, "native verification completed", "")
+
+        self.server.state.runner = runner
+        status, job, _ = self.request("POST", "/v1/jobs", {"command": "flow", "options": {"flow": "http-upstream"}})
+        self.assertEqual(status, 202, job)
+        current = self.wait_job(job)
+        self.assertEqual(current["status"], "passed", current)
+        self.assertFalse(current["stale"], current)
+        self.assertEqual(current["source_revision"], current["source_revision_after"])
+
+    def test_project_flow_snapshot_inputs_are_confined_regular_and_bounded(self):
+        self.project_flow()
+        self.pair()
+        path = self.root / ".vwb-flows.json"
+        manifest = json.loads(path.read_text())
+        for source_files in (["../outside"], [".git/config"], [".vwb/results.xml"],
+                             ["src"], ["./src/counter.sv"], ["src/missing-%d" % index for index in range(10001)]):
+            with self.subTest(source_files=source_files[:2], count=len(source_files)):
+                path.write_text(json.dumps(dict(manifest, source_files=source_files)))
+                status, _, _ = self.request("POST", "/v1/jobs", {"command": "flow", "options": {"flow": "http-upstream"}})
+                self.assertIn(status, (400, 403))
+        path.write_text(json.dumps(manifest))
+        with patch("companion.projects.MAX_FLOW_SNAPSHOT_BYTES", 8):
+            self.assertEqual(self.request("POST", "/v1/jobs", {"command": "flow", "options": {"flow": "http-upstream"}})[0], 413)
+        self.assertEqual(self.server.state.jobs, {})
+
+    def test_project_flow_snapshot_rejects_linked_declared_inputs(self):
+        self.project_flow()
+        path = self.root / ".vwb-flows.json"
+        manifest = json.loads(path.read_text())
+        linked = self.root / "linked-input.py"
+        try:
+            linked.symlink_to(self.root / "test/original_project_bench.py")
+        except (OSError, NotImplementedError) as error:
+            self.skipTest("Symlink creation unavailable: " + str(error))
+        manifest["source_files"].append(linked.name)
+        path.write_text(json.dumps(manifest))
+        self.pair()
+        status, _, _ = self.request("POST", "/v1/jobs", {"command": "flow", "options": {"flow": "http-upstream"}})
+        self.assertIn(status, (400, 403))
+        self.assertEqual(self.server.state.jobs, {})
 
     def test_nonzero_job_exit_is_failed(self):
         self.pair()

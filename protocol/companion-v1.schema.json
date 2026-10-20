@@ -27,7 +27,7 @@
     },
     "identifier": {"type": "string", "maxLength": 128, "pattern": "^[A-Za-z_][A-Za-z0-9_$]*(?![\\s\\S])"},
     "modules": {"type": "array", "maxItems": 32, "items": {"$ref": "#/$defs/identifier"}},
-    "command": {"enum": ["list", "doctor", "test", "wave", "lint", "synth", "formal", "fpga"]},
+    "command": {"enum": ["list", "doctor", "test", "wave", "lint", "synth", "formal", "fpga", "flow"]},
     "projectSummary": {
       "type": "object", "additionalProperties": false,
       "required": ["name", "src_dir", "test_dir", "build_dir"],
@@ -89,12 +89,12 @@
       "properties": {
         "protocol": {"$ref": "#/$defs/protocol"},
         "project": {"$ref": "#/$defs/projectSummary"},
-        "commands": {"type": "array", "uniqueItems": true, "minItems": 8, "maxItems": 8, "items": {"$ref": "#/$defs/command"}},
+        "commands": {"type": "array", "uniqueItems": true, "minItems": 9, "maxItems": 9, "items": {"$ref": "#/$defs/command"}},
         "toolchains": {"$ref": "#/$defs/toolchainReport"},
         "limits": {
           "type": "object", "additionalProperties": false,
           "required": ["file_bytes", "request_bytes", "job_seconds"],
-          "properties": {"file_bytes": {"const": 2097152}, "request_bytes": {"const": 3145728}, "job_seconds": {"const": 300}}
+          "properties": {"file_bytes": {"const": 2097152}, "request_bytes": {"const": 3145728}, "job_seconds": {"const": 300}, "project_flow_seconds": {"const": 7200}}
         },
         "execution": {"const": "trusted-local-project"}
       }
@@ -455,20 +455,35 @@
         {"if": {"required": ["program"], "properties": {"program": {"const": true}}}, "then": {"required": ["stage"], "properties": {"stage": {"const": "flash"}}}}
       ]
     },
+    "flowOptions": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "flow": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]{0,95}(?![\\s\\S])"},
+        "list": {"type": "boolean"},
+        "simulator": {"enum": ["icarus", "verilator", "ghdl", "questa", "modelsim", "vcs", "xcelium", "riviera", "activehdl"]}
+      },
+      "oneOf": [
+        {"properties": {"list": {"const": true}}, "propertyNames": {"const": "list"}},
+        {"required": ["flow"], "properties": {"list": {"const": false}}}
+      ],
+      "description": "Select a named project-owned verification flow. Arbitrary commands, arguments, environment and manifest paths cannot be supplied by HTTP. Listing accepts only list=true."
+    },
     "jobRequest": {
       "type": "object", "additionalProperties": false, "required": ["command"],
       "properties": {
         "command": {"$ref": "#/$defs/command"}, "options": {"type": "object"},
-        "timeout": {"type": "integer", "minimum": 1, "maximum": 300, "default": 300}
+        "timeout": {"type": "integer", "minimum": 1, "maximum": 7200, "default": 300}
       },
       "allOf": [
+        {"if": {"properties": {"command": {"not": {"const": "flow"}}}}, "then": {"properties": {"timeout": {"maximum": 300}}}},
         {"if": {"properties": {"command": {"enum": ["list", "doctor"]}}}, "then": {"properties": {"options": {"$ref": "#/$defs/emptyOptions"}}}},
         {"if": {"properties": {"command": {"const": "test"}}}, "then": {"properties": {"options": {"$ref": "#/$defs/testOptions"}}}},
         {"if": {"properties": {"command": {"const": "wave"}}}, "then": {"properties": {"options": {"$ref": "#/$defs/waveOptions"}}}},
         {"if": {"properties": {"command": {"const": "lint"}}}, "then": {"properties": {"options": {"$ref": "#/$defs/lintOptions"}}}},
         {"if": {"properties": {"command": {"const": "synth"}}}, "then": {"properties": {"options": {"$ref": "#/$defs/synthOptions"}}}},
         {"if": {"properties": {"command": {"const": "formal"}}}, "then": {"properties": {"options": {"$ref": "#/$defs/formalOptions"}}}},
-        {"if": {"properties": {"command": {"const": "fpga"}}}, "then": {"required": ["options"], "properties": {"options": {"$ref": "#/$defs/fpgaOptions"}}}}
+        {"if": {"properties": {"command": {"const": "fpga"}}}, "then": {"required": ["options"], "properties": {"options": {"$ref": "#/$defs/fpgaOptions"}}}},
+        {"if": {"properties": {"command": {"const": "flow"}}}, "then": {"properties": {"options": {"$ref": "#/$defs/flowOptions"}}}}
       ]
     },
     "jobResponse": {

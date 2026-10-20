@@ -19,6 +19,7 @@ MAX_BODY_BYTES = 3 * 1024 * 1024
 MAX_EDITOR_BODY_BYTES = 12 * 1024 * 1024
 MAX_ARTIFACT_BYTES = 32 * 1024 * 1024
 MAX_JOB_SECONDS = 300
+MAX_FLOW_SECONDS = 7200
 IDENTIFIER = re.compile(r"[A-Za-z_][A-Za-z0-9_$]*\Z")
 SIMULATION_OPTIONS = {"modules", "simulator", "test", "test_language", "test_top", "testcase", "waves", "wave_format", "seed",
                       "max_array_words", "defines", "includes", "plusargs", "gate_level", "keep_going"}
@@ -30,6 +31,7 @@ COMMAND_OPTIONS = {
     "synth": {"module", "format", "full", "flatten", "schematic", "defines", "includes"},
     "formal": {"config"},
     "fpga": {"module", "board", "stage", "constraints", "program", "defines", "includes"},
+    "flow": {"flow", "list", "simulator"},
 }
 
 
@@ -258,7 +260,22 @@ class CompanionState:
             if 'includes' in options:
                 for value in strings('includes'):
                     argv.append('--include=' + str(source_path(value, directory=True)))
-        if command in ("list", "doctor"):
+        if command == 'flow':
+            from .flows import FLOW_ID, SIMULATORS
+            listing = options.get('list', not options.get('flow'))
+            if type(listing) is not bool:
+                raise ProjectError(400, 'flow list must be boolean')
+            if listing:
+                if set(options) - {'list'}:
+                    raise ProjectError(400, 'listing project flows accepts no execution options')
+                argv.extend(['--list', '--json'])
+            else:
+                value = options.get('flow')
+                if not isinstance(value, str) or not FLOW_ID.fullmatch(value):
+                    raise ProjectError(400, 'choose a named project verification flow')
+                argv.append(value)
+                enum('simulator', SIMULATORS)
+        elif command in ("list", "doctor"):
             argv.append("--json")
         elif command in ('test', 'wave'):
             management = command == 'wave' and (options.get('list_saved') is True or 'load' in options)
@@ -370,9 +387,12 @@ class CompanionState:
         if not isinstance(command, str):
             raise ProjectError(400, "command must be a string")
         seconds = payload.get("timeout", MAX_JOB_SECONDS)
-        if type(seconds) is not int or not 1 <= seconds <= MAX_JOB_SECONDS:
-            raise ProjectError(400, "timeout must be an integer from 1 to 300 seconds")
+        maximum = MAX_FLOW_SECONDS if command == 'flow' else MAX_JOB_SECONDS
+        if type(seconds) is not int or not 1 <= seconds <= maximum:
+            raise ProjectError(400, f"timeout must be an integer from 1 to {maximum} seconds")
         argv = self.job_argv(command, payload.get("options", {}))
+        if command == 'flow':
+            argv.extend(['--timeout', str(seconds)])
         with self.lock:
             if self.editor_busy or self.edits.status()['recovery_required']:
                 raise ProjectError(409, 'finish editor refactoring or recovery before starting a native job')
@@ -382,10 +402,21 @@ class CompanionState:
                 oldest = next(iter(self.jobs))
                 del self.jobs[oldest]
             job_id = secrets.token_hex(12)
-            source_revision = self.project.source_revision()
+            flow_source_files = None
+            if command == 'flow':
+                from .flows import load_flows
+                try:
+                    flow_source_files = load_flows(self.project.root).get('source_files')
+                except (OSError, ValueError) as exc:
+                    raise ProjectError(400, 'invalid project verification flow manifest') from exc
+                source_revision = self.project.flow_source_revision(flow_source_files)
+            else:
+                source_revision = self.project.source_revision()
             job = {"id": job_id, "command": command, "status": "running", "returncode": None,
                    "stdout": "", "stderr": "", "cancel_event": threading.Event(),
                    "source_revision": source_revision, "source_revision_after": None, "stale": False}
+            if command == 'flow':
+                job['_flow_source_files'] = tuple(flow_source_files) if flow_source_files is not None else None
             self.jobs[job_id] = job
             thread = threading.Thread(target=self._run_job, args=(job, argv, seconds), daemon=True)
             job["thread"] = thread
@@ -402,7 +433,8 @@ class CompanionState:
             result = runner(argv, cwd=self.project.root, capture=True, timeout=seconds,
                             cancel_event=job["cancel_event"], max_output_bytes=1024 * 1024)
             try:
-                source_revision_after = self.project.source_revision()
+                source_revision_after = (self.project.flow_source_revision(job.get('_flow_source_files'))
+                                         if job['command'] == 'flow' else self.project.source_revision())
                 snapshot_error = None
             except (OSError, ProjectError) as exc:
                 source_revision_after = None
@@ -426,7 +458,8 @@ class CompanionState:
         with self.lock:
             if job_id not in self.jobs:
                 raise ProjectError(404, "job not found")
-            return {key: value for key, value in self.jobs[job_id].items() if key not in {"cancel_event", "thread"}}
+            return {key: value for key, value in self.jobs[job_id].items()
+                    if key not in {"cancel_event", "thread", "_flow_source_files"}}
 
     def cancel_job(self, job_id):
         with self.lock:
@@ -583,7 +616,7 @@ class Handler(BaseHTTPRequestHandler):
             return 200, {"protocol": PROTOCOL_VERSION, "project": self.state.project.summary(),
                          "commands": sorted(COMMAND_OPTIONS), "toolchains": self.state.capabilities,
                          "limits": {"file_bytes": MAX_FILE_BYTES, "request_bytes": MAX_BODY_BYTES,
-                                    "job_seconds": MAX_JOB_SECONDS}, "execution": "trusted-local-project"}
+                                    "job_seconds": MAX_JOB_SECONDS, "project_flow_seconds": MAX_FLOW_SECONDS}, "execution": "trusted-local-project"}
         if self.command == "GET" and path == "/v1/project/files" and not parsed.query:
             return 200, self.state.project.inventory()
         if path == "/v1/project/file":

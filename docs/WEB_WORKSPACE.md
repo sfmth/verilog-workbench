@@ -63,6 +63,11 @@ preview does not install them.
   validated command adapter. Missing tools surface as real failures. Programming
   is a separate, confirmed action specifying board, module and constraints;
   ordinary FPGA Run requests never flash hardware.
+- **Project testbench** discovers named `.vwb-flows.json` entries and runs the
+  original upstream Make, FuseSoC or Python bench with its configured tools and
+  simulator presets. Fresh JUnit or declared firmware/CRC output establishes
+  the verdict. [Original upstream acceptance](UPSTREAM_HDL.md) provides staged
+  projects, dependency profiles and explicit commercial-simulator limitations.
 - Output distinguishes pass, failure, timeout and cancellation. Recognized source
   locations link to files; full logs remain available. Companion snapshot changes
   and edits made after a run mark results stale. Staleness remains until a new

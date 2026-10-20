@@ -12,6 +12,7 @@ import threading
 MAX_FILE_BYTES = 2 * 1024 * 1024
 MAX_FILES = 10000
 MAX_SNAPSHOT_BYTES = 64 * 1024 * 1024
+MAX_FLOW_SNAPSHOT_BYTES = 512 * 1024 * 1024
 
 
 class ProjectError(Exception):
@@ -261,4 +262,56 @@ class ProjectGrant:
                                     raise ProjectError(413, "source snapshot exceeds 64 MiB")
                                 content_digest.update(chunk)
                         digest.update(content_digest.digest())
+        return digest.hexdigest()
+
+    def flow_source_revision(self, paths=None):
+        """Hash declared native verification inputs without generated outputs.
+
+        The manifest itself is always included. Older manifests without an
+        explicit input list keep the existing source/test snapshot as well.
+        Missing files receive a marker so deletion during a run is stale.
+        """
+        digest = hashlib.sha256(b"vwb-native-flow-inputs/1\0")
+        if paths is None:
+            digest.update(self.source_revision().encode("ascii"))
+            paths = []
+        if (not isinstance(paths, (list, tuple)) or len(paths) > MAX_FILES
+                or any(not isinstance(value, str) for value in paths)):
+            raise ProjectError(400, "native flow inputs must be at most 10000 relative file paths")
+        names = {".vwb-flows.json"}
+        for value in paths:
+            if str(PurePosixPath(value)) != value:
+                raise ProjectError(400, "native flow input paths must use normalized relative spelling")
+            names.add(value)
+        total = 0
+        with self.lock:
+            for value in sorted(names):
+                target = self.path(value)
+                if target == self.build_path or self.build_path in target.parents:
+                    raise ProjectError(403, "native flow inputs must be outside the generated build directory")
+                encoded = value.encode("utf-8")
+                digest.update(len(encoded).to_bytes(4, "big") + encoded)
+                try:
+                    info = target.stat()
+                except FileNotFoundError:
+                    digest.update(b"missing\0")
+                    continue
+                except OSError as exc:
+                    raise ProjectError(400, "cannot inspect declared native input: " + value) from exc
+                if not stat.S_ISREG(info.st_mode):
+                    raise ProjectError(400, "native flow inputs must be regular files: " + value)
+                content = hashlib.sha256()
+                try:
+                    with target.open("rb") as handle:
+                        while True:
+                            chunk = handle.read(65536)
+                            if not chunk:
+                                break
+                            total += len(chunk)
+                            if total > MAX_FLOW_SNAPSHOT_BYTES:
+                                raise ProjectError(413, "native flow input snapshot exceeds 512 MiB")
+                            content.update(chunk)
+                except OSError as exc:
+                    raise ProjectError(400, "cannot read declared native input: " + value) from exc
+                digest.update(b"regular\0" + content.digest())
         return digest.hexdigest()

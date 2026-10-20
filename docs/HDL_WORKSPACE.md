@@ -58,6 +58,36 @@ and Tests. A generated starter is not functional verification: add assertions.
 The first job can be marked stale because it generated new source/test files;
 rerunning uses the now-visible saved test.
 
+## Original project testbenches
+
+The **Project testbench** action and CLI `vwb flow` run entries from the granted
+project's `.vwb-flows.json`. Each named entry retains its upstream Make, FuseSoC,
+Python or other configured build driver, dependency environment and result
+oracle. This uses VWB's existing simulator tools with the project's own bench.
+
+Leave **Project flow** empty and run to discover its entries and missing
+dependencies, then choose a flow and run again. **Project simulator** selects a
+preset explicitly declared by that flow. Unsupported engine changes are
+rejected; a simulator name alone cannot adapt a UVM bench or provide a license.
+The timeout is bounded at 7,200 seconds, so a larger native build can receive
+more time than the default 300 seconds. Original driver output and the complete
+verification result are retained as downloadable build artifacts.
+
+Staged projects declare their original input files, including RTL, firmware,
+testbenches and driver configuration outside `src/` and `test/`. Changes during
+a run mark its result stale; newly generated build files do not. Native input
+snapshots are bounded to 10,000 files and 512 MiB, which includes the complete
+NVDLA project's retained trace data.
+
+The [upstream acceptance guide](UPSTREAM_HDL.md) stages pinned real projects with
+their local dependency profiles. Its primary gate covers 30 original flows for
+29 distinct designs, including original Cocotb/MyHDL peripheral benches,
+GCC-built RISC-V firmware and NVDLA's generated full `nv_small` trace bench.
+Fresh complete JUnit results or the declared firmware/CRC output are required.
+Skipped cases, stale reports and missing dependencies remain unsuccessful.
+Questa, VCS and Xcelium integrations declare their external simulator, license
+and library requirements; those unavailable flows do not count as passing CI.
+
 ## Discovery, synthesis, formal and FPGA
 
 **Designs** includes packages, interfaces, primitives and catalog problems.

@@ -1,0 +1,391 @@
+{
+  "schema_version": 1,
+  "flows": [
+    {
+      "id": "picorv32-upstream-regression",
+      "project": "picorv32",
+      "design_top": "picorv32",
+      "entrypoint": "Makefile",
+      "cwd": ".",
+      "driver": "make",
+      "argv": [
+        "make",
+        "test",
+        "TOOLCHAIN_PREFIX=riscv-none-elf-"
+      ],
+      "simulator": "icarus",
+      "requirements": {
+        "tools": [
+          "make",
+          "bash",
+          "iverilog",
+          "vvp",
+          "python3",
+          "riscv-none-elf-gcc",
+          "riscv-none-elf-objcopy"
+        ],
+        "toolchain_lock": "toolchains/upstream-riscv-toolchain-lock.json"
+      },
+      "expected": {
+        "kind": "log",
+        "patterns": [
+          "^ALL TESTS PASSED\\.$"
+        ],
+        "minimum_matches": 1
+      },
+      "artifacts": [
+        "firmware/firmware.elf",
+        "firmware/firmware.hex",
+        "firmware/firmware.map"
+      ],
+      "timeout_seconds": 300,
+      "status": "required",
+      "description": "Original upstream Makefile, SystemVerilog/Verilog testbench, GCC-built firmware and RISC-V ISA assembly tests; requires the upstream success verdict."
+    },
+    {
+      "id": "picorv32-upstream-verilator",
+      "project": "picorv32",
+      "design_top": "picorv32",
+      "entrypoint": "Makefile",
+      "cwd": ".",
+      "driver": "make",
+      "argv": [
+        "make",
+        "test_verilator",
+        "TOOLCHAIN_PREFIX=riscv-none-elf-"
+      ],
+      "simulator": "verilator",
+      "requirements": {
+        "tools": [
+          "make",
+          "bash",
+          "verilator",
+          "g++",
+          "python3",
+          "riscv-none-elf-gcc",
+          "riscv-none-elf-objcopy"
+        ],
+        "toolchain_lock": "toolchains/upstream-riscv-toolchain-lock.json"
+      },
+      "expected": {
+        "kind": "log",
+        "patterns": [
+          "^ALL TESTS PASSED\\.$"
+        ],
+        "minimum_matches": 1
+      },
+      "artifacts": [
+        "firmware/firmware.elf",
+        "firmware/firmware.hex",
+        "firmware/firmware.map"
+      ],
+      "timeout_seconds": 300,
+      "status": "required",
+      "description": "Original upstream Verilator/C++ testbench, GCC-built firmware and RISC-V ISA assembly tests; requires the upstream success verdict. This is a second simulator flow for the same PicoRV32 design."
+    },
+    {
+      "id": "serv-upstream-zephyr",
+      "project": "serv",
+      "design_top": "servant_sim",
+      "entrypoint": "servant.core",
+      "cwd": ".",
+      "driver": "fusesoc",
+      "argv": [
+        "fusesoc",
+        "--cores-root=.",
+        "run",
+        "--target=verilator_tb",
+        "servant",
+        "--uart_baudrate=57600",
+        "--timeout=200000000",
+        "--run_options=+firmware=../../../sw/zephyr_hello.hex"
+      ],
+      "simulator": "verilator",
+      "environment_profile": "fusesoc",
+      "requirements": {
+        "tools": [
+          "fusesoc",
+          "verilator",
+          "make",
+          "g++",
+          "python3"
+        ],
+        "python_lock": "toolchains/upstream-python-lock.json"
+      },
+      "expected": {
+        "kind": "log",
+        "patterns": [
+          "^\\*\\*\\*\\*\\* Booting Zephyr OS zephyr-v1\\.14\\.1-4-gc7c2d62513fe \\*\\*\\*\\*\\*$",
+          "^Hello World! service$"
+        ],
+        "minimum_matches": 1
+      },
+      "artifacts": [],
+      "timeout_seconds": 300,
+      "status": "required",
+      "description": "Original FuseSoC Verilator/C++ bench and checked-in upstream Zephyr firmware. A bounded UART-output smoke check; the bench timeout exits zero and is not a pass verdict.",
+      "compatibility_notes": [
+        "The original bench stores firmware filenames in a 128-byte Verilog register. The supported FuseSoC backend run_options supplies a short relative +firmware path from the original build directory, avoiding absolute path truncation without changing HDL or driver sources."
+      ]
+    },
+    {
+      "id": "ibex-upstream-simple-system",
+      "project": "ibex",
+      "design_top": "ibex_simple_system",
+      "entrypoint": "examples/simple_system/ibex_simple_system.core",
+      "cwd": ".",
+      "driver": "fusesoc",
+      "simulator": "verilator",
+      "environment_profile": "fusesoc",
+      "steps": [
+        {
+          "driver": "make",
+          "argv": [
+            "make",
+            "-C",
+            "examples/sw/simple_system/hello_test",
+            "hello_test.elf",
+            "CC=riscv-none-elf-gcc",
+            "ARCH=rv32imc_zicsr"
+          ],
+          "cwd": "."
+        },
+        {
+          "driver": "fusesoc",
+          "argv": [
+            "fusesoc",
+            "--cores-root=.",
+            "run",
+            "--target=sim",
+            "--setup",
+            "--build",
+            "lowrisc:ibex:ibex_simple_system",
+            "--RV32E=0",
+            "--RV32M=ibex_pkg::RV32MFast",
+            "--verilator_options=-Wno-fatal"
+          ],
+          "cwd": "."
+        },
+        {
+          "driver": "executable",
+          "argv": [
+            "build/lowrisc_ibex_ibex_simple_system_0/sim-verilator/Vibex_simple_system",
+            "--meminit=ram,examples/sw/simple_system/hello_test/hello_test.elf"
+          ],
+          "cwd": "."
+        }
+      ],
+      "requirements": {
+        "tools": [
+          "make",
+          "python3",
+          "fusesoc",
+          "verilator",
+          "g++",
+          "riscv-none-elf-gcc"
+        ],
+        "system_packages": [
+          "libelf-dev"
+        ],
+        "python_lock": "toolchains/upstream-python-lock.json",
+        "toolchain_lock": "toolchains/upstream-riscv-toolchain-lock.json"
+      },
+      "expected": {
+        "kind": "log",
+        "paths": [
+          "ibex_simple_system.log"
+        ],
+        "patterns": [
+          "^Hello simple system$",
+          "^DEADBEEF$",
+          "^BAADF00D$",
+          "^Tick!$",
+          "^Tock!$"
+        ],
+        "minimum_matches": 1
+      },
+      "artifacts": [
+        "examples/sw/simple_system/hello_test/hello_test.elf",
+        "ibex_simple_system.log",
+        "ibex_simple_system_pcount.csv",
+        "trace_core_00000000.log"
+      ],
+      "timeout_seconds": 600,
+      "status": "required",
+      "description": "Original Ibex Simple System FuseSoC/Verilator C++ bench and GCC-built hello_test firmware, including timer-interrupt Tick/Tock output and software-requested halt. This system smoke check is separate from the UVM/Spike cosimulation environment.",
+      "compatibility_notes": [
+        "ARCH=rv32imc_zicsr names the CSR extension explicitly for modern GNU binutils, using the original Makefile variable.",
+        "The upstream UNOPTFLAT warning on this pinned Verilator is retained in build logs with -Wno-fatal; no RTL, assertions, or testbench files are edited."
+      ]
+    },
+    {
+      "id": "cv32e40p-upstream-questa",
+      "project": "cv32e40p",
+      "design_top": "tb_top",
+      "entrypoint": "example_tb/core/Makefile",
+      "cwd": "example_tb/core",
+      "driver": "make",
+      "argv": [
+        "make",
+        "custom-vsim-run",
+        "VLIB=vlib",
+        "VLOG=vlog",
+        "VOPT=vopt",
+        "VSIM=vsim"
+      ],
+      "simulator": "questa",
+      "requirements": {
+        "tools": [
+          "make",
+          "vlib",
+          "vlog",
+          "vopt",
+          "vsim",
+          "riscv32-unknown-elf-gcc",
+          "riscv32-unknown-elf-objcopy"
+        ],
+        "environment": [
+          "RISCV"
+        ],
+        "system_packages": [
+          "RISC-V 32-bit bare-metal GCC with newlib"
+        ],
+        "licenses": [
+          "A working compatible Siemens Questa/ModelSim license; tool presence alone does not verify entitlement or simulator operation."
+        ]
+      },
+      "expected": {
+        "kind": "log",
+        "patterns": [
+          "^(?:# )?EXIT SUCCESS$"
+        ],
+        "minimum_matches": 1
+      },
+      "artifacts": [
+        "custom/hello_world.elf",
+        "custom/hello_world.hex"
+      ],
+      "timeout_seconds": 600,
+      "status": "external_required",
+      "description": "Original Questa/ModelSim example bench and Hello World C firmware. The upstream README explicitly distinguishes this experimentation bench from complete verification in the separate core-v-verif repository.",
+      "blockers": [
+        "A licensed compatible Questa/ModelSim installation is required and has not been exercised here.",
+        "The pinned example assumes a riscv32-unknown-elf newlib toolchain beneath RISCV; the xPack riscv-none-elf compiler is not substituted silently.",
+        "Complete UVM verification lives in a separately versioned core-v-verif repository, which this source pin does not include."
+      ]
+    },
+    {
+      "id": "ibex-upstream-uvm-xcelium",
+      "project": "ibex",
+      "design_top": "core_ibex_tb_top",
+      "entrypoint": "dv/uvm/core_ibex/Makefile",
+      "cwd": "dv/uvm/core_ibex",
+      "driver": "make",
+      "argv": [
+        "make",
+        "IBEX_CONFIG=opentitan",
+        "SIMULATOR=xlm",
+        "ISS=spike",
+        "ITERATIONS=1",
+        "SEED=1",
+        "TEST=riscv_arithmetic_basic_test",
+        "WAVES=0",
+        "COV=0"
+      ],
+      "simulator": "xcelium",
+      "requirements": {
+        "tools": [
+          "make",
+          "python3",
+          "xrun",
+          "spike",
+          "riscv32-unknown-elf-gcc",
+          "riscv32-unknown-elf-objcopy",
+          "pkg-config",
+          "g++"
+        ],
+        "environment": [
+          "SPIKE_PATH",
+          "PKG_CONFIG_PATH",
+          "RISCV_GCC",
+          "RISCV_OBJCOPY"
+        ],
+        "python_requirements": "python-requirements.txt",
+        "licenses": [
+          "A working Cadence Xcelium license for SystemVerilog/UVM; tool presence alone does not verify simulator operation."
+        ]
+      },
+      "expected": {
+        "kind": "junit",
+        "paths": [
+          "out/run/regr_junit.xml"
+        ],
+        "minimum_tests": 1
+      },
+      "artifacts": [
+        "out/run/regr_junit.xml",
+        "out/run/report.json"
+      ],
+      "timeout_seconds": 1800,
+      "status": "external_required",
+      "description": "Original UVM/riscv-dv instruction generation and RTL/Spike cosimulation regression, following the upstream Xcelium quick-start command.",
+      "blockers": [
+        "A licensed Xcelium installation and its UVM 1.2 environment are required and have not been exercised here.",
+        "Requires the lowRISC ibex_cosim Spike fork and RISC-V GCC; a generic Spike executable does not establish compatibility.",
+        "The full repository Python dependency set and reference model need their own versioned environment; this flow does not reuse the small Cocotb or FuseSoC profile."
+      ]
+    },
+    {
+      "id": "vexriscv-upstream-regression",
+      "project": "vexriscv",
+      "design_top": "VexRiscv",
+      "entrypoint": "src/test/cpp/regression/makefile",
+      "cwd": "src/test/cpp/regression",
+      "driver": "make",
+      "argv": [
+        "make",
+        "run",
+        "THREAD_COUNT=2",
+        "REDO=1"
+      ],
+      "simulator": "verilator",
+      "requirements": {
+        "tools": [
+          "make",
+          "verilator",
+          "g++",
+          "java",
+          "sbt"
+        ],
+        "generator_argv": [
+          "sbt",
+          "runMain vexriscv.demo.GenFull"
+        ],
+        "generator_versions": {
+          "sbt": "1.6.0",
+          "scala": "2.12.18",
+          "spinalhdl": "1.13.0"
+        },
+        "additional_sources": [
+          "src/test/resources/VexRiscvRegressionData git submodule"
+        ]
+      },
+      "expected": {
+        "kind": "log",
+        "patterns": [
+          "^REGRESSION SUCCESS [1-9][0-9]*/[1-9][0-9]*$"
+        ],
+        "minimum_matches": 1
+      },
+      "artifacts": [],
+      "timeout_seconds": 1800,
+      "status": "external_required",
+      "description": "Original C++ Verilator regression driver, which depends on a generated compatible CPU configuration and the separate benchmark-data submodule.",
+      "blockers": [
+        "The source archive does not contain the VexRiscvRegressionData git submodule contents. Its revision and benchmark inputs must be acquired separately.",
+        "Generate the selected CPU with the original Scala/SpinalHDL build first; the existing RTL elaboration fixture is not a substitute for this regression configuration.",
+        "A pinned JVM/SBT/Maven dependency environment has not been provisioned or exercised here."
+      ]
+    }
+  ]
+}

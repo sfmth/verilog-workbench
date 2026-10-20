@@ -268,17 +268,18 @@ async function readHash() {
 function commandChanged() {
   const command = $('command').value;
   const simulation = command === 'test' || (command === 'wave' && $('wave-mode').value === 'simulate');
-  for (const id of ['lint', 'synth', 'formal', 'fpga', 'wave']) $(id + '-options').hidden = id !== command;
+  for (const id of ['lint', 'synth', 'formal', 'fpga', 'wave', 'flow']) $(id + '-options').hidden = id !== command;
   $('test-options').hidden = !simulation;
   $('hdl-options').hidden = !simulation && !['lint', 'synth', 'fpga'].includes(command);
   $('simulation-options').hidden = !simulation;
   $('keep-going-option').hidden = !['test', 'lint'].includes(command);
   $('replace-tag').disabled = command !== 'wave' || $('wave-mode').value !== 'simulate';
-  $('module').disabled = ['list', 'doctor', 'formal'].includes(command);
+  $('module').disabled = ['list', 'doctor', 'formal', 'flow'].includes(command);
 }
 function jobPayload(program) {
   const ids = {command: 'command', module: 'module', simulator: 'simulator', test_language: 'test-language', test: 'test-file', test_top: 'test-top', testcase: 'testcase', seed: 'seed', wave_format: 'wave-format', max_array_words: 'max-array-words', defines: 'hdl-defines', includes: 'hdl-includes', plusargs: 'plusargs', linter: 'linter', synth_format: 'synth-format', formal_config: 'formal-config', board: 'board', stage: 'stage', constraints: 'constraints', wave_mode: 'wave-mode', wave_tag: 'wave-tag'};
   const state = Object.fromEntries(Object.entries(ids).map(([key, id]) => [key, $(id).value]));
+  state.flow = $('flow-name').value; state.flow_simulator = $('flow-simulator').value; state.flow_timeout = $('flow-timeout').value;
   for (const [key, id] of [['waves', 'waves'], ['gate_level', 'gate-level'], ['full', 'synth-full'], ['flatten', 'synth-flatten'], ['replace_tag', 'replace-tag']]) state[key] = $(id).checked;
   return buildHdlJob(state, program);
 }
@@ -317,7 +318,7 @@ function renderJob(job) {
 async function pollJob() {
   if (!activeJob || !client?.token) return;
   const id = activeJob, session = client, sessionEpoch = epoch, generation = ++pollGeneration;
-  const deadline = Date.now() + 330000;
+  const deadline = Date.now() + ((lastJobPayload?.command === 'flow' ? lastJobPayload.timeout || 300 : 300) + 30) * 1000;
   try {
     while (Date.now() < deadline && sessionEpoch === epoch && generation === pollGeneration) {
       const job = await session.request('/v1/jobs/' + encodeURIComponent(id));
@@ -336,6 +337,12 @@ async function pollJob() {
           renderExplorer();
         }
         if (job.command === 'doctor') { $('tools-output').textContent = job.stdout || job.stderr; }
+        if (job.command === 'flow' && job.status === 'passed' && !job.stale && lastJobPayload?.options.list) {
+          try {
+            const report = JSON.parse(job.stdout); $('flow-list').replaceChildren();
+            for (const flow of report.flows || []) { const option = node('option'); option.value = flow.id; option.label = `${flow.driver} / ${flow.simulator}`; $('flow-list').append(option); }
+          } catch { say('Project flow discovery was not valid JSON. Raw output is retained.', 'global-status', true); }
+        }
         await refreshArtifacts();
         if (sessionEpoch !== epoch || generation !== pollGeneration) return;
         if (['test', 'wave'].includes(job.command)) {
@@ -483,6 +490,7 @@ function resetResults() {
   for (const id of ['test-file', 'test-top', 'testcase', 'seed', 'hdl-defines', 'hdl-includes', 'plusargs', 'wave-tag', 'max-array-words']) $(id).value = '';
   for (const id of ['gate-level', 'synth-full', 'synth-flatten', 'replace-tag']) $(id).checked = false;
   $('simulator').value = 'auto'; $('test-language').value = 'auto'; $('wave-mode').value = 'simulate'; $('wave-format').value = 'vcd';
+  $('flow-name').value = ''; $('flow-simulator').value = 'default'; $('flow-timeout').value = '300'; $('flow-list').replaceChildren();
   $('test-file-list').replaceChildren(); $('saved-wave-list').replaceChildren();
   commandChanged();
 }

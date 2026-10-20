@@ -167,6 +167,7 @@ this proof's adapter. Arrays of modules contain at most 32 names.
 | `synth` | `module`, `format` (`json`, `svg`, `png`, `dot`), `full`, `flatten`, `schematic` | Adds `--no-view` |
 | `formal` | Optional existing project `.sby` `config` | Does not request a GUI viewer |
 | `fpga` | `module`, required `board` (`tangnano9k`, `icebreaker`), `stage` (`synth`, `pnr`, `pack`, `flash`), existing `.pcf`/`.cst` `constraints`, `program` | Programming requires both `stage:"flash"` and `program:true` |
+| `flow` | `list`, configured `flow` ID, optional declared `simulator` preset | Lists project entries or runs the original upstream verification driver and checks its declared results |
 
 Omitted options use native VWB defaults. With no explicit FPGA stage, VWB packs
 a programming file; it does not program hardware. `program:true` is rejected
@@ -178,7 +179,17 @@ with fixed launch-granted root/source/test/build paths and colors disabled.
 Project configuration changes cannot replace those paths. There is no native
 viewer launch or arbitrary executable endpoint in the adapter.
 
-Only one job runs at a time. `timeout` defaults to 300 seconds and accepts 1–300.
+Project testbench entries come from the trusted local `.vwb-flows.json`; the
+browser supplies a named entry, not a build command. A flow ID is 1–96 lowercase
+ASCII letters, digits or hyphens, beginning with a letter or digit. Listing
+accepts no execution options. Simulator changes require a preset declared by the
+flow; unavailable tools, libraries and licenses remain visible requirements.
+The CLI archives the actual flow result and full driver output in the granted
+build directory. See [upstream verification](UPSTREAM_HDL.md) for the original
+Make/FuseSoC/Cocotb/MyHDL project recipes and their acceptance boundaries.
+
+Only one job runs at a time. `timeout` defaults to 300 seconds. Ordinary jobs
+accept 1–300; named project testbench jobs accept 1–7,200 seconds.
 POST returns a 24-hex-character job ID immediately; GET polls that ID. Output
 becomes available when the runner finishes, rather than streaming during M0.
 Cancel signals the process tree and returns its current state; poll until a
@@ -224,7 +235,7 @@ missing final revision and stale records as insufficient current evidence.
 | Artifact download | 32 MiB |
 | Concurrent jobs | 1 per native process/project |
 | Retained jobs | 32; oldest finished record evicted before another is created |
-| Job timeout | 1–300 seconds, default 300 |
+| Job timeout | Ordinary jobs 1–300 seconds; project testbenches 1–7,200; default 300 |
 | Captured output | Final 1 MiB of bytes per stdout/stderr stream, decoded with replacement |
 | Pairing | 300 seconds; five failed exchanges; one successful exchange |
 

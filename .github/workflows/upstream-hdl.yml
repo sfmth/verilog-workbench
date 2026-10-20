@@ -1,4 +1,4 @@
-name: Required upstream HDL corpus
+name: Required original upstream HDL testbenches
 
 on:
   workflow_call:
@@ -9,22 +9,29 @@ permissions:
 
 jobs:
   acceptance:
-    name: At least 20 pinned upstream designs
+    name: Original testbenches for 29 pinned designs
     runs-on: ubuntu-24.04
-    timeout-minutes: 25
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Install native Verilator build prerequisites
+      - name: Install native upstream driver and generator prerequisites
         run: |
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends g++ make
+          sudo apt-get install -y --no-install-recommends \
+            gcc g++ make clang default-jre-headless perl \
+            libxml-parser-perl libxml-sax-perl libcapture-tiny-perl libelf-dev zlib1g-dev
       - name: Check corpus integrity and failure reporting contracts
         run: |
           python -m unittest discover -s tests -p test_acquire_upstream_hdl.py -v
           python -m unittest discover -s tests -p test_upstream_hdl.py -v
+          python -m unittest discover -s tests -p test_flows.py -v
+          python -m unittest discover -s tests -p test_upstream_testbenches.py -v
+          python -m unittest discover -s tests -p test_acquire_riscv_toolchain.py -v
+          python -m unittest discover -s tests -p test_acquire_upstream_native.py -v
+          python -m unittest discover -s tests -p test_acquire_upstream_test_tools.py -v
       - name: Acquire integrity-pinned native HDL suite
         run: python scripts/acquire_toolchain.py --target linux-x64 --directory .m0-tools/hdl --output upstream-tool-acquisition.json
       - name: Prove timed Verilator, assertions, VCD, FST and Cocotb VPI
@@ -33,9 +40,41 @@ jobs:
         run: python -m unittest discover -s tests -p test_verilator.py -v
       - name: Acquire immutable upstream sources and retain their licenses
         run: python scripts/acquire_upstream_hdl.py --directory .upstream-hdl --output upstream-acquisition.json
-      - name: Execute every required design through VWB
+      - name: Acquire hash-pinned RISC-V GCC for original core firmware
+        run: python scripts/acquire_riscv_toolchain.py --directory .upstream-tools --output upstream-riscv-acquisition.json
+      - name: Install isolated pinned upstream Python, MyHDL VPI and generator dependencies
+        run: python scripts/acquire_upstream_test_tools.py --directory .upstream-tools --toolchain-acquisition upstream-tool-acquisition.json --output upstream-test-tools.json
+      - name: Run every required original upstream testbench through VWB
+        run: |
+          python scripts/probe_upstream_testbenches.py \
+            --acquisition upstream-acquisition.json \
+            --toolchain-acquisition upstream-tool-acquisition.json \
+            --test-tools upstream-test-tools.json \
+            --riscv-acquisition upstream-riscv-acquisition.json \
+            --work-dir .upstream-evidence --output upstream-native-results.json
+      - name: Require complete original bench coverage and executed assertions
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from scripts.probe_upstream_testbenches import aggregate_results, load_registry
+          report = json.loads(Path('upstream-native-results.json').read_text())
+          required = [flow for flow in load_registry() if flow['status'] == 'required']
+          checked = aggregate_results(required, required, report['flows'])
+          assert report['scope'] == 'complete_required_upstream_flows', report
+          assert report['complete_required_flows_passed'] is True, report
+          assert checked['complete_required_flows_passed'] is True, checked
+          assert checked['result_identities_valid'] is True, checked
+          assert checked['executed_flows'] == checked['required_flows'] >= 30, checked
+          assert checked['executed_distinct_designs'] == checked['required_distinct_designs'] >= 29, checked
+          assert checked['junit_cases'] >= 300, checked
+          assert all(flow['state'] == 'passed' and flow['original_files_changed'] == [] for flow in report['flows']), report
+          assert all(flow['execution_state'] == 'not_run_external_requirements' for flow in report['external_flows']), report
+          print(f"Original benches: {checked['executed_flows']} flows, {checked['executed_distinct_designs']} designs, {checked['junit_cases']} JUnit cases")
+          PY
+      - name: Run supplemental VWB directed component and elaboration checks
         run: python scripts/probe_upstream_hdl.py --acquisition upstream-acquisition.json --toolchain-acquisition upstream-tool-acquisition.json --work-dir .upstream-evidence --output upstream-results.json
-      - name: Require complete coverage without skipped designs
+      - name: Require complete supplemental corpus coverage
         run: |
           python - <<'PY'
           import json
@@ -46,6 +85,55 @@ jobs:
           assert all(case['state'] == 'passed' for case in report['designs']), report
           print(report['coverage_counts'])
           PY
+      - name: Stage the original AXIS project with its declared simulator presets
+        run: |
+          python scripts/probe_upstream_testbenches.py \
+            --acquisition upstream-acquisition.json \
+            --toolchain-acquisition upstream-tool-acquisition.json \
+            --test-tools upstream-test-tools.json \
+            --riscv-acquisition upstream-riscv-acquisition.json \
+            --stage-project verilog-axis --stage-directory .upstream-evidence/axis-project \
+            --output upstream-axis-project.json
+      - name: Run the original AXIS Makefile with its Verilator simulator preset
+        run: |
+          python vwb.py --root .upstream-evidence/axis-project --color never \
+            flow upstream-axis-adapter --simulator verilator --timeout 300 --json \
+            > upstream-axis-verilator.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          report = json.loads(Path('upstream-axis-verilator.json').read_text())
+          assert report['state'] == 'passed' and report['simulator'] == 'verilator', report
+          verdict = report['verdict']
+          assert verdict['passed'] is True and verdict['kind'] == 'junit', verdict
+          assert verdict['tests'] >= 9 and verdict['failures'] == verdict['errors'] == verdict['skipped'] == 0, verdict
+          assert any('SIM=verilator' in step['argv'] for step in report['steps']), report
+          print(f"Original AXIS Verilator preset: {verdict['tests']} JUnit cases")
+          PY
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install pinned browser acceptance harness
+        run: npm install --prefix .upstream-browser --no-audit --no-fund playwright@1.62.1
+      - name: Install Chromium for the original project testbench UI
+        run: .upstream-browser/node_modules/.bin/playwright install --with-deps chromium
+      - name: Build the workspace and stage its original PicoRV32 testbench
+        run: |
+          python scripts/build_web.py --output dist/web --base-path /verilog-workbench/
+          python scripts/probe_upstream_testbenches.py \
+            --acquisition upstream-acquisition.json \
+            --toolchain-acquisition upstream-tool-acquisition.json \
+            --test-tools upstream-test-tools.json \
+            --riscv-acquisition upstream-riscv-acquisition.json \
+            --stage-project picorv32 --stage-directory .upstream-evidence/browser-picorv32 \
+            --output upstream-browser-project.json
+      - name: Run the original upstream core bench through the rendered browser workspace
+        run: |
+          node scripts/probe_upstream_workspace.mjs \
+            --project .upstream-evidence/browser-picorv32 \
+            --acquisition upstream-tool-acquisition.json \
+            --playwright-module "$GITHUB_WORKSPACE/.upstream-browser/node_modules/playwright" \
+            --output upstream-native-browser.json
       - name: Retain provenance, source hashes, commands and assertion logs
         if: always()
         uses: actions/upload-artifact@v4
@@ -55,7 +143,15 @@ jobs:
           path: |
             upstream-tool-acquisition.json
             upstream-acquisition.json
+            upstream-riscv-acquisition.json
+            upstream-test-tools.json
+            upstream-native-results.json
+            upstream-browser-project.json
+            upstream-native-browser.json
+            upstream-axis-project.json
+            upstream-axis-verilator.json
             upstream-results.json
             .upstream-evidence/**/*.log
+            .upstream-evidence/**/results*.xml
           if-no-files-found: warn
           retention-days: 14

@@ -24,6 +24,7 @@ from typing import Iterable, Sequence, TextIO
 
 from companion.process import run_process
 from companion.cocotb_runtime import automatic_startup, stage_runtime, STARTUP_USERS
+from companion.flows import SIMULATORS as FLOW_SIMULATORS
 
 
 VERSION = "0.2.0"
@@ -5493,6 +5494,12 @@ def make_parser() -> argparse.ArgumentParser:
         dest="as_json",
         help="print the result as JSON for scripts",
     )
+    flow_parser = subparsers.add_parser('flow', help='run an upstream project testbench using its own build driver')
+    flow_parser.add_argument('flow', nargs='?', help='named entry in the project .vwb-flows.json')
+    flow_parser.add_argument('--list', action='store_true', dest='list_flows', help='list configured flows and missing dependencies')
+    flow_parser.add_argument('--json', action='store_true', dest='as_json', help='print the complete native flow result as JSON')
+    flow_parser.add_argument('--simulator', choices=sorted(FLOW_SIMULATORS), help='select an explicitly declared project simulator preset')
+    flow_parser.add_argument('--timeout', type=int, default=300, help='total upstream build/run timeout in seconds (1 to 7200)')
     return parser
 
 
@@ -5506,7 +5513,7 @@ def build_workbench(args: argparse.Namespace) -> Workbench:
         verbose=args.verbose,
         dry_run=args.dry_run,
         color=args.color,
-        require_project_dirs=args.command != "clean",
+        require_project_dirs=args.command not in {"clean", "flow"},
         defines=getattr(args, "define", ()),
     )
 
@@ -6089,6 +6096,49 @@ def command_doctor(workbench: Workbench, args: argparse.Namespace) -> int:
     return 0 if all(find_tool(command) for command in required_commands) else 1
 
 
+def command_flow(workbench: Workbench, args: argparse.Namespace) -> int:
+    from companion.flows import archive_result, dependencies, load_flows, run_flow
+    try:
+        manifest = load_flows(workbench.root)
+        if not 1 <= args.timeout <= 7200:
+            raise ValueError('Flow timeout must be from 1 to 7200 seconds')
+        if args.list_flows or not args.flow:
+            if args.flow or args.simulator:
+                raise ValueError('Listing flows does not accept a flow name or simulator override')
+            report = {'schema_version': 1, 'flows': [dict(flow, availability=dependencies(flow, os.environ)) for flow in manifest['flows']]}
+            if args.as_json:
+                print(json.dumps(report, indent=2))
+            else:
+                for flow in report['flows']:
+                    missing = flow['availability']['missing_tools'] + flow['availability']['missing_python_modules'] + flow['availability']['missing_perl_modules']
+                    print(flow['id'] + ' [' + flow['driver'] + '/' + flow['simulator'] + ']'
+                          + (' missing: ' + ', '.join(missing) if missing else ' configured; execute to verify'))
+            return 0
+        selected = next((flow for flow in manifest['flows'] if flow['id'] == args.flow), None)
+        if selected is None:
+            raise ValueError('Unknown project verification flow: ' + args.flow)
+        workbench.prepare_build_dir()
+        report = run_flow(workbench.root, selected, simulator=args.simulator, timeout=args.timeout, dry_run=workbench.dry_run)
+        if not workbench.dry_run:
+            archive_result(workbench.root, workbench.build_dir, report)
+        if args.as_json:
+            print(json.dumps(report, indent=2))
+        else:
+            for step in report['steps']:
+                if workbench.verbose or workbench.dry_run:
+                    print(shlex.join(step['argv']))
+                if step.get('output'):
+                    print(step['output'], end='' if step['output'].endswith('\n') else '\n')
+            print('Upstream flow ' + report['id'] + ': ' + report['state'])
+            if report.get('verdict'):
+                print(json.dumps(report['verdict'], sort_keys=True))
+            if report['state'] == 'blocked':
+                print(json.dumps(report['dependencies'], sort_keys=True), file=sys.stderr)
+        return 0 if report['state'] in {'passed', 'dry_run'} else 2 if report['state'] == 'blocked' else 1
+    except (OSError, ValueError) as error:
+        raise VWBError(str(error)) from error
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     parser = make_parser()
     try:
@@ -6113,6 +6163,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             "formal": command_formal,
             "fpga": command_fpga,
             "doctor": command_doctor,
+            "flow": command_flow,
         }
         if args.command == "clean":
             workbench.clean(args.scope)

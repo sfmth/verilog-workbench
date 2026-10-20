@@ -80,7 +80,8 @@ it cannot make replacements atomic against independent external processes.
 Text files are limited to 2 MiB and ordinary JSON request bodies to 3 MiB. Editor
 endpoints have a separate 12 MiB bound for document snapshots. Inventories are
 capped at 10,000 files, artifact downloads at 32 MiB. Only one job may run at a
-time; 32 recent jobs are retained, each limited to 300 seconds. Output keeps at
+time; 32 recent jobs are retained. Ordinary jobs are limited to 300 seconds;
+named project testbench jobs can request up to 7,200 seconds. Output keeps at
 most the final 1 MiB per stdout/stderr stream and reports truncation. A timeout
 is distinguished from a program that exits with status 124. Cancellation is
 distinguished from a program that exits with status 130.
@@ -108,6 +109,16 @@ Python modules from the project folder or `PYTHONPATH` during driver startup:
 | `synth` | `module`, `format`, `full`, `flatten`, `schematic`; viewer disabled |
 | `formal` | Optional project-relative `.sby` config; viewer disabled |
 | `fpga` | `module`, `board` (`tangnano9k` or `icebreaker`), `stage`, constraints file, `program` |
+| `flow` | `list`, named `flow`, optional explicitly declared `simulator` preset; project testbench timeout up to 7,200 seconds |
+
+The `flow` command preserves a project's original Make, FuseSoC or other
+configured verification entrypoint in `.vwb-flows.json`. It activates that
+flow's saved local tool environment and checks its fresh result files or output
+verdict. Browser requests choose a configured name and simulator preset; build
+commands and dependency paths come from the trusted local project manifest.
+Result JSON and the complete driver log are archived under the configured build
+directory for normal artifact downloads. See the [original upstream bench
+guide](../docs/UPSTREAM_HDL.md) for pinned project staging and current coverage.
 
 Programming hardware requires **both** `stage: "flash"` and `program: true` on
 that specific job. Build requests default to packing and do not program a board.

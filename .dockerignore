@@ -6,6 +6,8 @@
 .vwb.json
 .upstream-hdl
 .upstream-evidence
+.upstream-tools
+.upstream-browser
 .m0-tools
 .m0-evidence
 .m0-browser

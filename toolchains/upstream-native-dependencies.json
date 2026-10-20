@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "description": "Additional immutable open-source packages for the original NVDLA nv_small RTL generator. No commercial simulator or licensed library is downloaded.",
+  "artifacts": [
+    {
+      "name": "XML-Simple-2.25",
+      "url": "https://cpan.metacpan.org/authors/id/G/GR/GRANTM/XML-Simple-2.25.tar.gz",
+      "size": 78443,
+      "sha256": "531fddaebea2416743eb5c4fdfab028f502123d9a220405a4100e68fc480dbf8",
+      "id": "perl-xml-simple",
+      "version": "2.25",
+      "format": "tar.gz",
+      "root": "XML-Simple-2.25",
+      "library_subdirectory": "lib",
+      "license": "Artistic-1.0-Perl OR GPL-1.0-or-later",
+      "installation": "Expose extracted lib directories with PERL5LIB; use the host XML::Parser/XML::SAX and Capture::Tiny prerequisites."
+    },
+    {
+      "name": "YAML-1.31",
+      "url": "https://cpan.metacpan.org/authors/id/I/IN/INGY/YAML-1.31.tar.gz",
+      "size": 88102,
+      "sha256": "a0ce30381657dce8e694df9a09e95d818d13beb03698fd2cf79d0c8d564a9b8e",
+      "id": "perl-yaml",
+      "version": "1.31",
+      "format": "tar.gz",
+      "root": "YAML-1.31",
+      "library_subdirectory": "lib",
+      "license": "Artistic-1.0-Perl OR GPL-1.0-or-later",
+      "installation": "Expose extracted lib directories with PERL5LIB; use the host XML::Parser/XML::SAX and Capture::Tiny prerequisites."
+    }
+  ]
+}

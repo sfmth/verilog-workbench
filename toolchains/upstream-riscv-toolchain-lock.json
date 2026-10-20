@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "id": "xpack-riscv-none-elf-gcc",
+  "version": "14.2.0-3",
+  "target": "linux-x64",
+  "repository": "https://github.com/xpack-dev-tools/riscv-none-elf-gcc-xpack",
+  "archive": {
+    "url": "https://github.com/xpack-dev-tools/riscv-none-elf-gcc-xpack/releases/download/v14.2.0-3/xpack-riscv-none-elf-gcc-14.2.0-3-linux-x64.tar.gz",
+    "size": 344375405,
+    "sha256": "f574415b63f12b09bdd3475223ab492a465d23810646c90c13a4c3b676c83503",
+    "root": "xpack-riscv-none-elf-gcc-14.2.0-3"
+  },
+  "checksum_source": "https://xpack-dev-tools.github.io/riscv-none-elf-gcc-xpack/blog/2024/12/06/riscv-none-elf-gcc-v14-2-0-3-released/",
+  "license_paths": [
+    "README.md",
+    "distro-info/licenses/gcc-14.2.0/COPYING",
+    "distro-info/licenses/gcc-14.2.0/COPYING.RUNTIME",
+    "distro-info/licenses/binutils-2.43.1/COPYING",
+    "distro-info/licenses/newlib-4.4.0.20231231/COPYING"
+  ],
+  "toolchain_prefix": "riscv-none-elf-",
+  "purpose": "Compile the original PicoRV32 firmware and RISC-V ISA tests; the complete upstream binary archive retains all component licenses."
+}

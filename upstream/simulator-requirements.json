@@ -1,0 +1,684 @@
+{
+  "schema_version": 1,
+  "description": "Requirements discovered in each immutable upstream project, separating native testbench execution from VWB-authored smoke tests. A listed simulator is not a claim that its upstream suite passed. Commercial tools are never downloaded or silently substituted.",
+  "dependency_locks": [
+    "toolchains/upstream-native-dependencies.json",
+    "toolchains/upstream-python-lock.json",
+    "toolchains/upstream-riscv-toolchain-lock.json"
+  ],
+  "projects": [
+    {
+      "id": "picorv32",
+      "repository": "https://github.com/YosysHQ/picorv32",
+      "revision": "ef203c2b0a3fb793280f5114941416c425c5b461",
+      "flows": [
+        {
+          "id": "upstream-test-ez",
+          "entrypoint": "make test_ez",
+          "driver": "make",
+          "simulators": [
+            "icarus"
+          ],
+          "dependencies": [
+            "Icarus Verilog",
+            "GNU Make"
+          ],
+          "upstream_pins": {},
+          "state": "not_run",
+          "blockers": [],
+          "evidence": [
+            "README.md",
+            "Makefile",
+            "testbench_ez.v"
+          ],
+          "notes": "The upstream easy bench prints memory writes and has no self-checking pass verdict. Require the expected writes 0..44 at address 0x3fc; a zero process status alone is insufficient."
+        },
+        {
+          "id": "upstream-firmware-tests",
+          "entrypoint": "make test; make test_verilator",
+          "driver": "make",
+          "simulators": [
+            "icarus",
+            "verilator"
+          ],
+          "dependencies": [
+            "GNU Make",
+            "RISC-V GCC/binutils for firmware",
+            "C++ compiler for Verilator"
+          ],
+          "upstream_pins": {},
+          "state": "verified_local",
+          "blockers": [],
+          "evidence": [
+            "Makefile",
+            "testbench.v",
+            "testbench.cc"
+          ],
+          "validated_commands": [
+            "make test TOOLCHAIN_PREFIX=riscv-none-elf-",
+            "make test_verilator TOOLCHAIN_PREFIX=riscv-none-elf-"
+          ],
+          "validated_simulators": [
+            "icarus",
+            "verilator"
+          ],
+          "validated_dependencies": {
+            "xpack_riscv_gcc": "14.2.0-3"
+          },
+          "verdict": "Original firmware/ISA suite printed ALL TESTS PASSED. on both simulators.",
+          "failure_control": "A corrupted copy of upstream firmware caused vvp exit 1 with ERROR! and no pass verdict."
+        }
+      ]
+    },
+    {
+      "id": "ibex",
+      "repository": "https://github.com/lowRISC/ibex",
+      "revision": "1b29dae8866e6c0f0a3cd9dead53a77b4f45e357",
+      "flows": [
+        {
+          "id": "upstream-csr-verilator",
+          "entrypoint": "make build-csr-test run-csr-test",
+          "driver": "fusesoc",
+          "simulators": [
+            "verilator"
+          ],
+          "dependencies": [
+            "FuseSoC",
+            "Edalize",
+            "C++ compiler",
+            "Make",
+            "vendored lowRISC primitives"
+          ],
+          "upstream_pins": {
+            "fusesoc": "2.4.3"
+          },
+          "state": "not_run",
+          "blockers": [],
+          "evidence": [
+            "Makefile",
+            "dv/cs_registers/tb_cs_registers.core"
+          ]
+        },
+        {
+          "id": "upstream-simple-system",
+          "entrypoint": "Build original hello_test.elf; FuseSoC setup/build lowrisc:ibex:ibex_simple_system; run Vibex_simple_system --meminit ELF",
+          "driver": "fusesoc",
+          "simulators": [
+            "verilator"
+          ],
+          "dependencies": [
+            "FuseSoC",
+            "Edalize",
+            "C++ compiler",
+            "Make",
+            "RISC-V compiler",
+            "ELF/DPI helper dependencies",
+            "libelf development headers/library; srecord if building VMEM"
+          ],
+          "upstream_pins": {
+            "fusesoc": "2.4.3"
+          },
+          "state": "verified_local",
+          "blockers": [],
+          "evidence": [
+            "Makefile",
+            "examples/simple_system/ibex_simple_system.core"
+          ],
+          "validated_dependencies": {
+            "fusesoc": "2.4.6",
+            "edalize": "0.6.8",
+            "xpack_riscv_gcc": "14.2.0-3"
+          },
+          "verdict": "Original software requested halt after 13,267 cycles; UART log contains Hello simple system, DEADBEEF, BAADF00D, Tick!, Tock!.",
+          "adaptations": [
+            "Original software Makefile variables select CC=riscv-none-elf-gcc and ARCH=rv32imc_zicsr for modern binutils.",
+            "Original FuseSoC command adds --verilator_options=-Wno-fatal; the UNOPTFLAT diagnostic remains visible in build logs. No RTL or bench is edited."
+          ]
+        },
+        {
+          "id": "upstream-uvm-riscv-dv",
+          "entrypoint": "dv/uvm/core_ibex/Makefile",
+          "driver": "make",
+          "simulators": [
+            "vcs",
+            "questa",
+            "xcelium",
+            "dsim"
+          ],
+          "dependencies": [
+            "SystemVerilog UVM-capable commercial simulator",
+            "riscv-dv",
+            "RISC-V GCC",
+            "Spike ISS/cosimulation",
+            "DPI C++ toolchain",
+            "lowRISC Spike ibex_cosim fork; RISCV_GCC/RISCV_OBJCOPY environment variables"
+          ],
+          "upstream_pins": {},
+          "state": "blocked",
+          "blockers": [
+            "No supported licensed UVM simulator is installed; simulator-specific versions and prerequisites must match upstream tool requirements."
+          ],
+          "evidence": [
+            "dv/uvm/core_ibex/Makefile"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cv32e40p",
+      "repository": "https://github.com/openhwfoundation/cv32e40p",
+      "revision": "360d272898d81806be3377193870dbf83a3ea79f",
+      "flows": [
+        {
+          "id": "upstream-example-questa",
+          "entrypoint": "make -C example_tb/core custom-vsim-run",
+          "driver": "make",
+          "simulators": [
+            "questa"
+          ],
+          "dependencies": [
+            "ModelSim/Questa vlib/vlog/vopt/vsim",
+            "RISC-V GCC/binutils",
+            "firmware from upstream custom test sources"
+          ],
+          "upstream_pins": {
+            "modelsim_questa": "10.7b"
+          },
+          "state": "blocked",
+          "blockers": [
+            "No Questa/ModelSim executable or licence is installed."
+          ],
+          "evidence": [
+            "README.md",
+            "example_tb/README.md",
+            "example_tb/core/Makefile",
+            "example_tb/core/tb_top.sv"
+          ]
+        },
+        {
+          "id": "core-v-verif-uvm",
+          "entrypoint": "External OpenHW CORE-V-VERIF environment",
+          "driver": "make",
+          "simulators": [
+            "vcs",
+            "questa",
+            "xcelium",
+            "dsim"
+          ],
+          "dependencies": [
+            "Separately pinned core-v-verif checkout",
+            "UVM-capable commercial simulator",
+            "RISC-V compiler",
+            "Reference ISS/DPI dependencies"
+          ],
+          "upstream_pins": {},
+          "state": "blocked",
+          "blockers": [
+            "The complete upstream verification environment is explicitly outside this pinned CV32E40P repository.",
+            "No supported licensed UVM simulator is installed."
+          ],
+          "evidence": [
+            "README.md"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "vexriscv",
+      "repository": "https://github.com/SpinalHDL/VexRiscv",
+      "revision": "baf7dc82f855eddaf5b0a20a6802c526f127e38a",
+      "flows": [
+        {
+          "id": "upstream-scala-regression",
+          "entrypoint": "sbt \"testOnly vexriscv.TestIndividualFeatures\"",
+          "driver": "sbt",
+          "simulators": [
+            "verilator"
+          ],
+          "dependencies": [
+            "Java JDK",
+            "Scala/SBT",
+            "SpinalHDL dependency resolution",
+            "Verilator >=3.9 (upstream wording)",
+            "C++ compiler",
+            "RISC-V GCC for selected firmware tests",
+            "Separately pinned external regression data from .gitmodules"
+          ],
+          "upstream_pins": {
+            "sbt": "1.6.0",
+            "scala": "2.12.18",
+            "spinalhdl": "1.13.0"
+          },
+          "state": "not_run",
+          "blockers": [],
+          "evidence": [
+            "README.md",
+            "build.sbt"
+          ]
+        },
+        {
+          "id": "upstream-cpp-simulation",
+          "entrypoint": "src/test/cpp/regression/makefile",
+          "driver": "make",
+          "simulators": [
+            "verilator"
+          ],
+          "dependencies": [
+            "Generated VexRiscv.v from the matching Scala configuration",
+            "C++ compiler",
+            "Make",
+            "upstream bundled instruction tests"
+          ],
+          "upstream_pins": {},
+          "state": "not_run",
+          "blockers": [],
+          "evidence": [
+            "README.md",
+            "src/test/cpp/regression/makefile"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "serv",
+      "repository": "https://github.com/olofk/serv",
+      "revision": "f200eb2ed7b69ac1c6b8eddd47654522aeee5ce8",
+      "flows": [
+        {
+          "id": "upstream-servant",
+          "entrypoint": "fusesoc --cores-root=. run --target=verilator_tb servant --uart_baudrate=57600 --firmware=sw/zephyr_hello.hex --timeout=200000000",
+          "driver": "fusesoc",
+          "simulators": [
+            "verilator"
+          ],
+          "dependencies": [
+            "FuseSoC",
+            "Edalize",
+            "C++ compiler",
+            "Make",
+            "FuseSoC cores libraries for servant peripherals",
+            "bundled prebuilt test software"
+          ],
+          "upstream_pins": {},
+          "state": "verified_local",
+          "blockers": [],
+          "evidence": [
+            "README.md",
+            "servant.core"
+          ],
+          "notes": "The original timeout exits zero, so the native acceptance oracle must also require the expected Zephyr boot banner and Hello World output. FuseSoC 2.4.3 rejects a newer licence metadata field in this SERV pin; the tested profile uses 2.4.6.",
+          "validated_dependencies": {
+            "fusesoc": "2.4.6",
+            "edalize": "0.6.8"
+          },
+          "verdict": "Original C++ bench printed the checked-in Zephyr boot banner and Hello World! service.",
+          "failure_control": "Substituting the upstream blinky firmware still exited zero at timeout, but the mandatory Hello World log oracle rejected it."
+        },
+        {
+          "id": "upstream-compliance",
+          "entrypoint": "Upstream .github/workflows/ci.yml",
+          "driver": "fusesoc",
+          "simulators": [
+            "verilator"
+          ],
+          "dependencies": [
+            "FuseSoC",
+            "Edalize",
+            "RISC-V compiler",
+            "RISC-V compliance dependencies"
+          ],
+          "upstream_pins": {},
+          "state": "not_run",
+          "blockers": [],
+          "evidence": [
+            ".github/workflows/ci.yml"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "verilog-axis",
+      "repository": "https://github.com/alexforencich/verilog-axis",
+      "revision": "48ff7a7e2ef782cf778d47910cf85835c64b1bce",
+      "flows": [
+        {
+          "id": "upstream-cocotb",
+          "entrypoint": "tox.ini; tb/*/test_*.py; tb/*/Makefile",
+          "driver": "python",
+          "simulators": [
+            "icarus"
+          ],
+          "dependencies": [
+            "Python compatible with Cocotb 1.7.2 (upstream CI uses Python 3.10)",
+            "Icarus Verilog with VPI",
+            "pytest",
+            "cocotb-test",
+            "cocotb-bus",
+            "cocotbext-axi"
+          ],
+          "upstream_pins": {
+            "pytest": "7.2.1",
+            "pytest-xdist": "3.1.0",
+            "cocotb": "1.7.2",
+            "cocotb-bus": "0.2.1",
+            "cocotb-test": "0.2.4",
+            "cocotbext-axi": "0.1.20",
+            "pytest-split": "0.8.0"
+          },
+          "state": "verified_local",
+          "blockers": [],
+          "evidence": [
+            "tox.ini",
+            "README.md",
+            ".github/workflows/regression-tests.yml"
+          ],
+          "validated_flows": [
+            "upstream-axis-adapter",
+            "upstream-axis-arb-mux",
+            "upstream-axis-async-fifo",
+            "upstream-axis-async-fifo-adapter",
+            "upstream-axis-broadcast",
+            "upstream-axis-cobs-decode",
+            "upstream-axis-cobs-encode",
+            "upstream-axis-demux",
+            "upstream-axis-fifo",
+            "upstream-axis-fifo-adapter",
+            "upstream-axis-mux",
+            "upstream-axis-pipeline-fifo",
+            "upstream-axis-pipeline-register",
+            "upstream-axis-register",
+            "upstream-axis-srl-fifo",
+            "upstream-axis-srl-register"
+          ],
+          "validated_dependencies": {
+            "cocotb": "1.9.2",
+            "cocotb-test": "0.2.6",
+            "cocotbext-axi": "0.1.24",
+            "cocotbext-uart": "0.1.4",
+            "pytest": "8.3.5"
+          },
+          "compatibility_notes": [
+            "The source tox.ini records upstream historical versions; the isolated tested profile pins the listed compatible Cocotb 1.x versions. No upstream Makefile, Python test, or assertion is modified."
+          ],
+          "verdict": "Selected original native pytest/Cocotb JUnit suites passed with zero skips. Exact per-flow counts are declared in upstream/benchmarks/stream-serial.json.",
+          "validated_simulators": [
+            "icarus",
+            "verilator (axis_adapter: 9 tests)"
+          ],
+          "failure_control": "A corrupted copy of axis_register RTL caused all 9 upstream assertion tests to fail. The upstream Makefile still returned zero; VWB rejects the failed JUnit verdict."
+        }
+      ]
+    },
+    {
+      "id": "verilog-axi",
+      "repository": "https://github.com/alexforencich/verilog-axi",
+      "revision": "516bd5dadc3365b7f9e225d2af8fe0b8d804fe53",
+      "flows": [
+        {
+          "id": "upstream-cocotb",
+          "entrypoint": "tox.ini; tb/*/test_*.py; tb/*/Makefile",
+          "driver": "python",
+          "simulators": [
+            "icarus"
+          ],
+          "dependencies": [
+            "Python compatible with Cocotb 1.7.2 (upstream CI uses Python 3.10)",
+            "Icarus Verilog with VPI",
+            "pytest",
+            "cocotb-test",
+            "cocotb-bus",
+            "cocotbext-axi"
+          ],
+          "upstream_pins": {
+            "pytest": "7.2.1",
+            "pytest-xdist": "3.1.0",
+            "cocotb": "1.7.2",
+            "cocotb-bus": "0.2.1",
+            "cocotb-test": "0.2.4",
+            "cocotbext-axi": "0.1.24",
+            "pytest-split": "0.8.0",
+            "jinja2": "3.1.2"
+          },
+          "state": "verified_local",
+          "blockers": [],
+          "evidence": [
+            "tox.ini",
+            "README.md",
+            ".github/workflows/regression-tests.yml"
+          ],
+          "validated_flows": [
+            "upstream-axi-ram",
+            "upstream-axi-register",
+            "upstream-axil-ram",
+            "upstream-axil-register"
+          ],
+          "validated_dependencies": {
+            "cocotb": "1.9.2",
+            "cocotb-test": "0.2.6",
+            "cocotbext-axi": "0.1.24",
+            "cocotbext-uart": "0.1.4",
+            "pytest": "8.3.5"
+          },
+          "compatibility_notes": [
+            "The source tox.ini records upstream historical versions; the isolated tested profile pins the listed compatible Cocotb 1.x versions. No upstream Makefile, Python test, or assertion is modified."
+          ],
+          "verdict": "Selected original native pytest/Cocotb JUnit suites passed with zero skips. Exact per-flow counts are declared in upstream/benchmarks/stream-serial.json."
+        }
+      ]
+    },
+    {
+      "id": "verilog-uart",
+      "repository": "https://github.com/alexforencich/verilog-uart",
+      "revision": "1b867e53af738e4a8bc7c839ca2f1c07f40382dc",
+      "flows": [
+        {
+          "id": "upstream-cocotb",
+          "entrypoint": "tox.ini; tb/*/test_*.py; tb/*/Makefile",
+          "driver": "python",
+          "simulators": [
+            "icarus"
+          ],
+          "dependencies": [
+            "Python compatible with Cocotb 1.7.2 (upstream CI uses Python 3.10)",
+            "Icarus Verilog with VPI",
+            "pytest",
+            "cocotb-test",
+            "cocotb-bus",
+            "cocotbext-axi",
+            "cocotbext-uart"
+          ],
+          "upstream_pins": {
+            "pytest": "7.2.1",
+            "pytest-xdist": "3.1.0",
+            "cocotb": "1.7.2",
+            "cocotb-bus": "0.2.1",
+            "cocotb-test": "0.2.4",
+            "cocotbext-axi": "0.1.20",
+            "cocotbext-uart": "0.1.2"
+          },
+          "state": "verified_local",
+          "blockers": [],
+          "evidence": [
+            "tox.ini",
+            "README.md",
+            ".github/workflows/regression-tests.yml"
+          ],
+          "validated_flows": [
+            "upstream-uart-rx",
+            "upstream-uart-tx"
+          ],
+          "validated_dependencies": {
+            "cocotb": "1.9.2",
+            "cocotb-test": "0.2.6",
+            "cocotbext-axi": "0.1.24",
+            "cocotbext-uart": "0.1.4",
+            "pytest": "8.3.5"
+          },
+          "compatibility_notes": [
+            "The source tox.ini records upstream historical versions; the isolated tested profile pins the listed compatible Cocotb 1.x versions. No upstream Makefile, Python test, or assertion is modified."
+          ],
+          "verdict": "Selected original native pytest/Cocotb JUnit suites passed with zero skips. Exact per-flow counts are declared in upstream/benchmarks/stream-serial.json."
+        },
+        {
+          "id": "legacy-myhdl",
+          "entrypoint": "tb/test_uart_tx.py; tb/test_uart_rx.py",
+          "driver": "python",
+          "simulators": [
+            "icarus"
+          ],
+          "dependencies": [
+            "Python MyHDL",
+            "myhdl.vpi built using the selected Icarus iverilog-vpi"
+          ],
+          "upstream_pins": {},
+          "state": "not_run",
+          "blockers": [],
+          "evidence": [
+            "tb/test_uart_tx.py",
+            "tb/test_uart_rx.py"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "verilog-i2c",
+      "repository": "https://github.com/alexforencich/verilog-i2c",
+      "revision": "a65be4045e898a52e791c6ee71f8f79a7cd2e129",
+      "flows": [
+        {
+          "id": "upstream-myhdl",
+          "entrypoint": "tb/test_i2c_master.py; tb/test_i2c_slave.py; tb/test_i2c_*axil*.py; tb/test_i2c_*wb*.py",
+          "driver": "python",
+          "simulators": [
+            "icarus"
+          ],
+          "dependencies": [
+            "Python MyHDL",
+            "myhdl.vpi built using the selected Icarus iverilog-vpi",
+            "pytest"
+          ],
+          "upstream_pins": {},
+          "state": "verified_local",
+          "blockers": [],
+          "evidence": [
+            "README.md",
+            "tb/test_i2c_master.py",
+            "tb/test_i2c_master.v"
+          ],
+          "validated_flows": [
+            "upstream-i2c-master",
+            "upstream-i2c-master-axil",
+            "upstream-i2c-slave"
+          ],
+          "validated_dependencies": {
+            "myhdl": "0.11.51",
+            "pytest": "8.3.5",
+            "myhdl_icarus_vpi": "compiled against the selected Icarus ABI"
+          },
+          "verdict": "Original i2c_master, i2c_slave and i2c_master_axil Python cosimulation benches passed with compiled MyHDL VPI."
+        }
+      ]
+    },
+    {
+      "id": "nvdla",
+      "repository": "https://github.com/nvdla/hw",
+      "revision": "1a65f1f5b48268accaa47c95f95c2601918be095",
+      "flows": [
+        {
+          "id": "nv-small-verilator-trace",
+          "entrypoint": "tools/bin/tmake -build vmod; verif/verilator/Makefile run TEST=<trace>",
+          "driver": "make",
+          "simulators": [
+            "verilator"
+          ],
+          "dependencies": [
+            "GNU Make",
+            "C preprocessor",
+            "Perl",
+            "Perl YAML",
+            "Perl Capture::Tiny",
+            "Perl XML::Simple",
+            "Perl XML::Parser or XML::SAX backend",
+            "Java (bundled Ordt.jar)",
+            "Python",
+            "Clang C++",
+            "generated nv_small RTL",
+            "original binary trace parser"
+          ],
+          "upstream_pins": {
+            "upstream_reference_clang": "4.0.1",
+            "upstream_reference_java": "1.8.0_131",
+            "upstream_reference_gcc": "4.8.2",
+            "upstream_reference_perl": "5.10",
+            "scoped_perl_yaml": "1.31",
+            "scoped_perl_xml_simple": "2.25"
+          },
+          "state": "verified_local",
+          "blockers": [],
+          "evidence": [
+            "Makefile",
+            "tools/etc/build.config",
+            "verif/verilator/Makefile",
+            "verif/verilator/nvdla.cpp",
+            "verif/verilator/new_trace_to_verilator.py",
+            "https://nvdla.org/hw/v2/environment_setup_guide.html"
+          ],
+          "validated_traces": [
+            "sdp_1x1x1_pass_through_int8",
+            "dc_1x1x8_1x1x8x1_int8_0",
+            "pdp_1x1x1_3x3_ave_int8_0",
+            "cdp_8x8x64_lrn9_int8"
+          ],
+          "adaptations": [
+            "Pass --no-timing for legacy cycle-based C++ simulation; generated behavioral RAM delays were also ignored by the original older Verilator.",
+            "Supply all generated FIFO .v sources and the generated RAM-model search directory; the original checked-in nv_small file list omits these.",
+            "No upstream HDL, generator, C++ bench, Python parser, or trace was changed for the positive tests."
+          ],
+          "limitations": [
+            "This selected trace set does not cover the complete UVM/SystemC suite.",
+            "The standalone converter rejects some original traces that use symbolic pri_mem rather than numeric memory_type 1 in check_crc (e.g. cdp_8x8x32_lrn3_int8_0).",
+            "The original sdp_3x3x33_bn_int8_reg_0 trace did not complete within a 90 second wall-clock bound in this evaluation; it is not counted as a passing test."
+          ],
+          "failure_control": "A copy of the converted SDP trace with one golden-CRC bit changed produced a CRC mismatch and exit1 using the unchanged original C++ bench."
+        },
+        {
+          "id": "nv-small-uvm-cross-check",
+          "entrypoint": "tools/bin/tmake -build ready_for_test; verif/tools/run_test.py -P nv_small <trace> -v nvdla_utb",
+          "driver": "make",
+          "simulators": [
+            "vcs"
+          ],
+          "dependencies": [
+            "Synopsys VCS and syscan",
+            "UVM 1.2",
+            "SystemC 2.3.0",
+            "UVMC 2.3.0 (included)",
+            "generated NVDLA C model",
+            "DPI C++ compiler matching simulator ABI",
+            "Verdi/Novas PLI as wired by the original Makefile",
+            "all nv_small generator dependencies"
+          ],
+          "upstream_pins": {
+            "upstream_reference_vcs": "2016.06-SP2-4",
+            "upstream_reference_verdi": "2016.06-SP2-9",
+            "systemc": "2.3.0",
+            "uvmc": "2.3.0",
+            "uvm": "1.2"
+          },
+          "state": "blocked",
+          "blockers": [
+            "No VCS executable or simulator licence is installed.",
+            "The original cross-check bench requires SystemC/syscan and Verdi PLI paths; it is not interchangeable with the standalone Verilator trace bench."
+          ],
+          "evidence": [
+            "Makefile",
+            "verif/testbench/trace_generator/Makefile",
+            "verif/testbench/trace_player/Makefile",
+            "verif/vip/reference_model/nvdla_cmod_wrap/Makefile",
+            "https://nvdla.org/hw/v2/verif_guide.html"
+          ]
+        }
+      ]
+    }
+  ]
+}

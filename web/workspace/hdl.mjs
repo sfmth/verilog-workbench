@@ -1,5 +1,5 @@
 const IDENTIFIER = /^[A-Za-z_][A-Za-z0-9_$]*$/;
-const COMMANDS = new Set(['list', 'doctor', 'test', 'wave', 'lint', 'synth', 'formal', 'fpga']);
+const COMMANDS = new Set(['list', 'doctor', 'test', 'wave', 'lint', 'synth', 'formal', 'fpga', 'flow']);
 
 function identifier(value, label) {
   if (!IDENTIFIER.test(value) || value.length > 128) throw new Error(`${label} must be an ordinary HDL identifier.`);
@@ -24,9 +24,21 @@ function choice(value, choices, label) {
 export function buildHdlJob(state, program = false) {
   const command = state.command;
   if (!COMMANDS.has(command)) throw new Error('Choose a supported native workflow.');
+  const options = {};
+  if (command === 'flow') {
+    const flow = String(state.flow || '').trim();
+    if (!flow) options.list = true;
+    else {
+      if (!/^[a-z0-9][a-z0-9-]{0,95}$/.test(flow)) throw new Error('Choose a named project flow.');
+      options.flow = flow;
+      if (state.flow_simulator && state.flow_simulator !== 'default') options.simulator = choice(state.flow_simulator, ['icarus', 'verilator', 'ghdl', 'questa', 'modelsim', 'vcs', 'xcelium', 'riviera', 'activehdl'], 'project simulator');
+    }
+    const timeout = unsigned(state.flow_timeout || '300', 'Project timeout', 7200);
+    if (timeout < 1) throw new Error('Project timeout must be at least one second.');
+    return {command, options, timeout};
+  }
   const names = String(state.module || '').trim().split(/[\s,]+/).filter(Boolean).map(value => identifier(value, 'Top/module'));
   if (names.length > 32) throw new Error('Choose at most 32 modules.');
-  const options = {};
   if (['synth', 'fpga'].includes(command)) {
     if (names.length !== 1) throw new Error('Choose exactly one top/module for this action.');
     options.module = names[0];

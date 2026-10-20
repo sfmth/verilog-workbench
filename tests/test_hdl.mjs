@@ -31,6 +31,30 @@ test('simulation engine selection is bounded and does not leak into saved-wave m
   assert.throws(() => buildHdlJob({command: 'test', simulator: 'shell'}));
   assert.deepEqual(buildHdlJob({command: 'wave', wave_mode: 'list', simulator: 'invalid'}).options, {list_saved: true});
 });
+test('project testbench discovery excludes stale HDL controls and simulator overrides', () => {
+  const request = buildHdlJob({command: 'flow', flow: '  ', flow_simulator: 'invalid-stale-selection', module: '--help', seed: 'bad', test: 'old.py', gate_level: true, stage: 'flash'});
+  assert.deepEqual(request, {command: 'flow', options: {list: true}, timeout: 300});
+});
+test('named project testbenches forward only the declared name, simulator and bounded timeout', () => {
+  assert.deepEqual(buildHdlJob({command: 'flow', flow: '  picorv32-upstream-regression ', flow_simulator: 'default', flow_timeout: '7200', module: 'stale', defines: 'OLD=1'}), {
+    command: 'flow', options: {flow: 'picorv32-upstream-regression'}, timeout: 7200,
+  });
+  for (const simulator of ['icarus', 'verilator', 'ghdl', 'questa', 'modelsim', 'vcs', 'xcelium', 'riviera', 'activehdl']) {
+    assert.deepEqual(buildHdlJob({command: 'flow', flow: 'original-bench', flow_simulator: simulator, flow_timeout: '1'}), {
+      command: 'flow', options: {flow: 'original-bench', simulator}, timeout: 1,
+    });
+  }
+  assert.equal(buildHdlJob({command: 'flow', flow: 'a'.repeat(96)}).options.flow.length, 96);
+});
+test('invalid project flow names, simulators and timeouts cannot reach the companion', () => {
+  for (const flow of ['--help', 'Uppercase', '_private', 'folder/bench', 'a:b', 'a b', 'a\nb', 'a'.repeat(97)]) {
+    assert.throws(() => buildHdlJob({command: 'flow', flow}), Error, flow);
+  }
+  assert.throws(() => buildHdlJob({command: 'flow', flow: 'original', flow_simulator: 'shell'}));
+  for (const flow_timeout of ['0', '-1', '7201', '1.5', '1e3', 'Infinity', 'bad']) {
+    assert.throws(() => buildHdlJob({command: 'flow', flow: 'original', flow_timeout}), Error, flow_timeout);
+  }
+});
 test('synthesis and FPGA expose actual hierarchy and compile settings, with flash explicit', () => {
   const synth = buildHdlJob({command: 'synth', module: 'dut', synth_format: 'json', full: true, flatten: true, defines: 'MODE=1', includes: 'src'}).options;
   assert.equal(synth.schematic, false); assert.equal(synth.full, true); assert.equal(synth.flatten, true);

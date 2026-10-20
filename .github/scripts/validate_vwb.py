@@ -456,6 +456,7 @@ MATRIX_OPTION_DESTINATIONS: dict[str, set[str]] = {
     "formal": {"view"},
     "fpga": {"board", "stage", "constraints", "define", "include"},
     "doctor": {"as_json"},
+    "flow": {"list_flows", "as_json", "simulator", "timeout"},
 }
 
 # Destinations classify behavior, while this map pins every alternate spelling.
