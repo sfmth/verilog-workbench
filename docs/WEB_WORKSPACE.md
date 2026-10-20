@@ -129,14 +129,22 @@ recovery after reload, native inventory, fixture artifact download and the publi
 VCD worker. Eight delivered document/module/style/worker hashes match the deployed
 manifest. This is public-origin acceptance, distinct from the localhost CI proof.
 
+[Pages run 39346208359](https://github.com/sfmth/verilog-workbench/actions/runs/39346208359)
+then redeployed `81ef7c9` and passed all three jobs: build, deploy, and the new
+post-deployment public check. Its [hosted public HTTPS evidence](workspace-evidence/pages-public-ci-linux-x64.json)
+passes the same nine groups in Chromium 151.0.7922.34, with no script or asset
+errors. Subsequent web deployments require this public check automatically.
+
 The public probe explicitly grants local-network permission through Chromium's
-test API. A fresh context without that test grant timed out on loopback health;
-that observation is not proof of a manual deny decision or browser prompt UX.
+test API. Without that test grant, fresh-context loopback health timed out in
+the local Chromium 141 run and returned a blocked `TypeError` in hosted Chromium
+151. Those observations are not proof of a manual deny decision or prompt UX.
 The test does not disable mixed-content/CORS security, and credentials are absent
 from reports, URLs and persistent browser storage. Manual permission/reconnect
 and current Firefox/Safari/platform coverage remain open.
 
-The six native runtime/unit/bundle CI rows pass for this code change. Broader
+The six native runtime/unit/bundle CI rows
+[pass for this code change](https://github.com/sfmth/verilog-workbench/actions/runs/39345754925). Broader
 native toolchain CI continues to expose the documented GHDL/Cocotb/Graphviz
 package gaps on four target rows; publishing the preview does not waive them.
 
