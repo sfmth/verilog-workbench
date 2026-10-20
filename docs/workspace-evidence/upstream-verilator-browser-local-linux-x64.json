@@ -1,0 +1,595 @@
+{
+  "schema": "vwb.hdl-workspace-browser-probe/1",
+  "recorded_at": "2026-10-20T04:50:21.329Z",
+  "state": "passed",
+  "target": "built-local-project-prefix-workspace",
+  "pages_prefix": "/verilog-workbench/",
+  "checks": [
+    "verilator_simulation-real-browser-native-HDL-workflow",
+    "cocotb_verilator-real-browser-native-HDL-workflow",
+    "verilator_native_assertion_failure-real-browser-native-HDL-workflow",
+    "verilator_cocotb_assertion_failure-real-browser-native-HDL-workflow",
+    "verilator_gate_level-real-browser-native-HDL-workflow"
+  ],
+  "workflows": {
+    "verilator_simulation": {
+      "state": "passed",
+      "fixture": "verilator_simulation",
+      "selected_controls": {
+        "command": "test",
+        "module": "m0_gate",
+        "simulator": "verilator",
+        "test": "test/test_m0_gate.v",
+        "test_top": "tb_m0_gate",
+        "test_language": "verilog",
+        "waves": true,
+        "wave_format": "vcd",
+        "gate_level": false
+      },
+      "fixture_change": null,
+      "job": {
+        "command": "test",
+        "status": "passed",
+        "returncode": 0,
+        "stale": false,
+        "source_revision": "a36ee879ade8d20f21c58add40aa236a1486ab3009e90e5ff675e241334a7fe1",
+        "source_revision_after": "a36ee879ade8d20f21c58add40aa236a1486ab3009e90e5ff675e241334a7fe1"
+      },
+      "browser_request": {
+        "command": "test",
+        "options": {
+          "modules": [
+            "m0_gate"
+          ],
+          "simulator": "verilator",
+          "test_language": "verilog",
+          "waves": true,
+          "wave_format": "vcd",
+          "test": "test/test_m0_gate.v",
+          "test_top": "tb_m0_gate"
+        },
+        "timeout": 300
+      },
+      "log_sha256": "66fc18bc647a9463d2fd6a8b449155bd69a5973f9824642344ade9e58f67cf18",
+      "log_characters": 7737,
+      "native_inspection": {
+        "passed": true,
+        "note": "Expected VCD declarations and time changes.",
+        "artifacts": [
+          {
+            "path": "build/sim/m0_gate/verilog-test_m0_gate/m0_gate.vcd",
+            "bytes": 576,
+            "sha256": "80ee2f8e5a385d80717be30b5425596388add5410a942ab42b99e0dc48723e63"
+          },
+          {
+            "path": "build/sim/m0_gate/verilog-test_m0_gate/verilator_build.json",
+            "bytes": 861,
+            "sha256": "5a83d6220f42343557794dfc075b80ae7b84f19deb088c1c43485b692ab17cc2"
+          }
+        ],
+        "xml": [],
+        "statuses": [],
+        "original_M0_oracle_applicable": true
+      },
+      "artifact_acceptance": {
+        "download": "passed-exact-native-disk-bytes-and-sha256",
+        "artifact": {
+          "path": "build/sim/m0_gate/verilog-test_m0_gate/m0_gate.vcd",
+          "bytes": 576,
+          "sha256": "80ee2f8e5a385d80717be30b5425596388add5410a942ab42b99e0dc48723e63"
+        },
+        "browser_view": "passed-real-native-VCD-parsed-and-rendered-by-browser-worker"
+      },
+      "duration_seconds": 7.12,
+      "runtime_manifest_sha256": "8935163cecfcc1e977ba84b83f9dbe07a185b88d8396451a5c22c41a70009737",
+      "response_collection": {
+        "state": "drained-before-context-close",
+        "pending_response_readers": 0,
+        "pending_static_requests": 0
+      },
+      "asset_capture": {
+        "method": "original-browser-network-entity-bytes-paused-before-unchanged-CDP-continueResponse",
+        "source_sha256": "4ce3366c5a2efa23f5197a5df5479be9eb5bf06441bd6ad1eaa0d829df1232eb",
+        "browser_http_cache": "harness-does-not-change-cache-settings",
+        "protocol_scope": "http://127.0.0.1:43673/verilog-workbench/*",
+        "protocol_stage": "Response",
+        "original_network_responses": true,
+        "request_refetches": 0,
+        "response_overrides": 0,
+        "delivered_responses": 17,
+        "delivered_entity_bytes": 231821,
+        "pending_responses": 0
+      }
+    },
+    "cocotb_verilator": {
+      "state": "passed",
+      "fixture": "cocotb_verilator",
+      "selected_controls": {
+        "command": "test",
+        "module": "m0_gate",
+        "simulator": "verilator",
+        "test": "test/test_m0_cocotb.py",
+        "test_language": "cocotb",
+        "waves": true,
+        "wave_format": "vcd",
+        "gate_level": false
+      },
+      "fixture_change": null,
+      "job": {
+        "command": "test",
+        "status": "passed",
+        "returncode": 0,
+        "stale": false,
+        "source_revision": "a36ee879ade8d20f21c58add40aa236a1486ab3009e90e5ff675e241334a7fe1",
+        "source_revision_after": "a36ee879ade8d20f21c58add40aa236a1486ab3009e90e5ff675e241334a7fe1"
+      },
+      "browser_request": {
+        "command": "test",
+        "options": {
+          "modules": [
+            "m0_gate"
+          ],
+          "simulator": "verilator",
+          "test_language": "cocotb",
+          "waves": true,
+          "wave_format": "vcd",
+          "test": "test/test_m0_cocotb.py",
+          "seed": 12345
+        },
+        "timeout": 300
+      },
+      "log_sha256": "fb874dfe8d0ce4662b2a70d2bad5dee6e92f034f069111ae1341b4110b50c457",
+      "log_characters": 13003,
+      "native_inspection": {
+        "passed": true,
+        "note": "Cocotb truth-table assertions reported passing test cases.",
+        "artifacts": [
+          {
+            "path": "build/sim/m0_gate/cocotb-test_m0_cocotb/m0_gate.vcd",
+            "bytes": 382,
+            "sha256": "518add01c6d471f8ea292a923e39568d9f8f6fb0aa60ddcba2d40e2acd30f0c4"
+          },
+          {
+            "path": "build/sim/m0_gate/cocotb-test_m0_cocotb/results.xml",
+            "bytes": 394,
+            "sha256": "697032f34621ec66ae1f3bc55c78f5243c3c20ed7013560b149e2358abf5f1a2"
+          },
+          {
+            "path": "build/sim/m0_gate/cocotb-test_m0_cocotb/verilator_build.json",
+            "bytes": 721,
+            "sha256": "37e66884fde860aafd1e4d204e795a111d0ac81735d1c73ab880a6caab298652"
+          }
+        ],
+        "xml": [
+          {
+            "path": "build/sim/m0_gate/cocotb-test_m0_cocotb/results.xml",
+            "cases": [
+              "xor_truth_table"
+            ],
+            "case_details": [
+              {
+                "name": "xor_truth_table",
+                "failures": 0,
+                "errors": 0,
+                "skipped": 0
+              }
+            ],
+            "failures": 0,
+            "errors": 0,
+            "skipped": 0
+          }
+        ],
+        "statuses": [],
+        "original_M0_oracle_applicable": true
+      },
+      "artifact_acceptance": {
+        "download": "passed-exact-native-disk-bytes-and-sha256",
+        "artifact": {
+          "path": "build/sim/m0_gate/cocotb-test_m0_cocotb/results.xml",
+          "bytes": 394,
+          "sha256": "697032f34621ec66ae1f3bc55c78f5243c3c20ed7013560b149e2358abf5f1a2"
+        }
+      },
+      "duration_seconds": 8.58,
+      "runtime_manifest_sha256": "8935163cecfcc1e977ba84b83f9dbe07a185b88d8396451a5c22c41a70009737",
+      "response_collection": {
+        "state": "drained-before-context-close",
+        "pending_response_readers": 0,
+        "pending_static_requests": 0
+      },
+      "asset_capture": {
+        "method": "original-browser-network-entity-bytes-paused-before-unchanged-CDP-continueResponse",
+        "source_sha256": "4ce3366c5a2efa23f5197a5df5479be9eb5bf06441bd6ad1eaa0d829df1232eb",
+        "browser_http_cache": "harness-does-not-change-cache-settings",
+        "protocol_scope": "http://127.0.0.1:43673/verilog-workbench/*",
+        "protocol_stage": "Response",
+        "original_network_responses": true,
+        "request_refetches": 0,
+        "response_overrides": 0,
+        "delivered_responses": 15,
+        "delivered_entity_bytes": 222810,
+        "pending_responses": 0
+      }
+    },
+    "verilator_native_assertion_failure": {
+      "state": "passed",
+      "fixture": "verilator_simulation",
+      "selected_controls": {
+        "command": "test",
+        "module": "m0_gate",
+        "simulator": "verilator",
+        "test": "test/test_m0_gate.v",
+        "test_top": "tb_m0_gate",
+        "test_language": "verilog",
+        "waves": true,
+        "wave_format": "vcd",
+        "gate_level": false
+      },
+      "fixture_change": {
+        "path": "src/m0_gate.v",
+        "before_sha256": "ad3ef15d3236ddd1938216b9342606fffc34ce1fd466c9363f9a383a8d1c9239",
+        "after_sha256": "55fd339d72df334c407beeb53332cc3c1db2f54d949c66b37ed387c71691b142",
+        "reason": "verilog-assertion"
+      },
+      "job": {
+        "command": "test",
+        "status": "failed",
+        "returncode": 1,
+        "stale": false,
+        "source_revision": "186de5f54dddc1ac1c865b10e5e8ee8b1687892a4cadee5d8cdbf1961fbb2d34",
+        "source_revision_after": "186de5f54dddc1ac1c865b10e5e8ee8b1687892a4cadee5d8cdbf1961fbb2d34"
+      },
+      "browser_request": {
+        "command": "test",
+        "options": {
+          "modules": [
+            "m0_gate"
+          ],
+          "simulator": "verilator",
+          "test_language": "verilog",
+          "waves": true,
+          "wave_format": "vcd",
+          "test": "test/test_m0_gate.v",
+          "test_top": "tb_m0_gate"
+        },
+        "timeout": 300
+      },
+      "log_sha256": "5f642ca3d28c6111cab48b01b3b28c51220226a613edc15e87617ace1ec3e1d7",
+      "log_characters": 7905,
+      "native_inspection": {
+        "passed": false,
+        "note": "VWB command returned a nonzero status.",
+        "artifacts": [
+          {
+            "path": "build/sim/m0_gate/verilog-test_m0_gate/m0_gate.vcd",
+            "bytes": 435,
+            "sha256": "2eb3efc351fa0d3b70f103e6c45f068e4a2f00134493bb97d3c3c61f14ebac83"
+          },
+          {
+            "path": "build/sim/m0_gate/verilog-test_m0_gate/verilator_build.json",
+            "bytes": 903,
+            "sha256": "977a1aae45812bf8672bc0ffc7e95d22524b7cec8e478d42f7b6601ec3406e6f"
+          }
+        ],
+        "xml": [],
+        "statuses": [],
+        "original_M0_oracle_applicable": false
+      },
+      "artifact_acceptance": {
+        "download": "not_applicable-no-primary-output-required"
+      },
+      "duration_seconds": 6.65,
+      "runtime_manifest_sha256": "8935163cecfcc1e977ba84b83f9dbe07a185b88d8396451a5c22c41a70009737",
+      "response_collection": {
+        "state": "drained-before-context-close",
+        "pending_response_readers": 0,
+        "pending_static_requests": 0
+      },
+      "asset_capture": {
+        "method": "original-browser-network-entity-bytes-paused-before-unchanged-CDP-continueResponse",
+        "source_sha256": "4ce3366c5a2efa23f5197a5df5479be9eb5bf06441bd6ad1eaa0d829df1232eb",
+        "browser_http_cache": "harness-does-not-change-cache-settings",
+        "protocol_scope": "http://127.0.0.1:43673/verilog-workbench/*",
+        "protocol_stage": "Response",
+        "original_network_responses": true,
+        "request_refetches": 0,
+        "response_overrides": 0,
+        "delivered_responses": 17,
+        "delivered_entity_bytes": 238629,
+        "pending_responses": 0
+      }
+    },
+    "verilator_cocotb_assertion_failure": {
+      "state": "passed",
+      "fixture": "cocotb_verilator",
+      "selected_controls": {
+        "command": "test",
+        "module": "m0_gate",
+        "simulator": "verilator",
+        "test": "test/test_m0_cocotb.py",
+        "test_language": "cocotb",
+        "waves": true,
+        "wave_format": "vcd",
+        "gate_level": false
+      },
+      "fixture_change": {
+        "path": "test/test_m0_cocotb.py",
+        "before_sha256": "6eef750e30cb0f1eb6164219b011e4d0d5888f2cca6ac93c90169e56ba0cddcc",
+        "after_sha256": "27c12757539a0b04514a9ac755ccce446c0d3bb9b63ce5ded4d5deb5b8869874",
+        "reason": "cocotb-guard"
+      },
+      "job": {
+        "command": "test",
+        "status": "failed",
+        "returncode": 1,
+        "stale": false,
+        "source_revision": "d32d947cf59fcf7c75b95930768553e2768c9b09392cb0c2819eb78015e9171b",
+        "source_revision_after": "d32d947cf59fcf7c75b95930768553e2768c9b09392cb0c2819eb78015e9171b"
+      },
+      "browser_request": {
+        "command": "test",
+        "options": {
+          "modules": [
+            "m0_gate"
+          ],
+          "simulator": "verilator",
+          "test_language": "cocotb",
+          "waves": true,
+          "wave_format": "vcd",
+          "test": "test/test_m0_cocotb.py",
+          "seed": 12345
+        },
+        "timeout": 300
+      },
+      "log_sha256": "f9c9ee4e2e126661fd84ff511513c762cca4b592a7155d8bee95fdff7e9d21ed",
+      "log_characters": 14405,
+      "native_inspection": {
+        "passed": false,
+        "note": "VWB command returned a nonzero status.",
+        "artifacts": [
+          {
+            "path": "build/sim/m0_gate/cocotb-test_m0_cocotb/m0_gate.vcd",
+            "bytes": 400,
+            "sha256": "25c51dada29aaa58eeb143733e31ee00c6bbdce1d001a6db96c5272cf678c3aa"
+          },
+          {
+            "path": "build/sim/m0_gate/cocotb-test_m0_cocotb/results.xml",
+            "bytes": 795,
+            "sha256": "2422d9826a953085188cd71e77067e866a026c166c19ac62983aee03478479b8"
+          },
+          {
+            "path": "build/sim/m0_gate/cocotb-test_m0_cocotb/verilator_build.json",
+            "bytes": 739,
+            "sha256": "507cc0457efd8bfb85fbab66a8f7399a2d35ca02b2f4c42c4f3bcd4ed720a7bf"
+          }
+        ],
+        "xml": [
+          {
+            "path": "build/sim/m0_gate/cocotb-test_m0_cocotb/results.xml",
+            "cases": [
+              "xor_truth_table",
+              "unselected_browser_guard"
+            ],
+            "case_details": [
+              {
+                "name": "xor_truth_table",
+                "failures": 0,
+                "errors": 0,
+                "skipped": 0
+              },
+              {
+                "name": "unselected_browser_guard",
+                "failures": 1,
+                "errors": 0,
+                "skipped": 0
+              }
+            ],
+            "failures": 1,
+            "errors": 0,
+            "skipped": 0
+          }
+        ],
+        "statuses": [],
+        "original_M0_oracle_applicable": false
+      },
+      "artifact_acceptance": {
+        "download": "passed-exact-native-disk-bytes-and-sha256",
+        "artifact": {
+          "path": "build/sim/m0_gate/cocotb-test_m0_cocotb/results.xml",
+          "bytes": 795,
+          "sha256": "2422d9826a953085188cd71e77067e866a026c166c19ac62983aee03478479b8"
+        }
+      },
+      "duration_seconds": 8.87,
+      "runtime_manifest_sha256": "8935163cecfcc1e977ba84b83f9dbe07a185b88d8396451a5c22c41a70009737",
+      "response_collection": {
+        "state": "drained-before-context-close",
+        "pending_response_readers": 0,
+        "pending_static_requests": 0
+      },
+      "asset_capture": {
+        "method": "original-browser-network-entity-bytes-paused-before-unchanged-CDP-continueResponse",
+        "source_sha256": "4ce3366c5a2efa23f5197a5df5479be9eb5bf06441bd6ad1eaa0d829df1232eb",
+        "browser_http_cache": "harness-does-not-change-cache-settings",
+        "protocol_scope": "http://127.0.0.1:43673/verilog-workbench/*",
+        "protocol_stage": "Response",
+        "original_network_responses": true,
+        "request_refetches": 0,
+        "response_overrides": 0,
+        "delivered_responses": 17,
+        "delivered_entity_bytes": 238629,
+        "pending_responses": 0
+      }
+    },
+    "verilator_gate_level": {
+      "state": "passed",
+      "fixture": "verilator_simulation",
+      "selected_controls": {
+        "command": "test",
+        "module": "m0_gate",
+        "simulator": "verilator",
+        "test": "test/test_m0_gate.v",
+        "test_top": "tb_m0_gate",
+        "test_language": "verilog",
+        "waves": true,
+        "wave_format": "vcd",
+        "gate_level": true
+      },
+      "fixture_change": null,
+      "job": {
+        "command": "test",
+        "status": "passed",
+        "returncode": 0,
+        "stale": false,
+        "source_revision": "a36ee879ade8d20f21c58add40aa236a1486ab3009e90e5ff675e241334a7fe1",
+        "source_revision_after": "a36ee879ade8d20f21c58add40aa236a1486ab3009e90e5ff675e241334a7fe1"
+      },
+      "browser_request": {
+        "command": "test",
+        "options": {
+          "modules": [
+            "m0_gate"
+          ],
+          "simulator": "verilator",
+          "test_language": "verilog",
+          "waves": true,
+          "wave_format": "vcd",
+          "test": "test/test_m0_gate.v",
+          "test_top": "tb_m0_gate",
+          "gate_level": true
+        },
+        "timeout": 300
+      },
+      "log_sha256": "80407853b31b4d98c41cf6b5fa321847bf2cd0c12a205f4bb9c94e1a88c4b775",
+      "log_characters": 30905,
+      "native_inspection": {
+        "passed": true,
+        "note": "Expected VCD declarations and time changes.",
+        "artifacts": [
+          {
+            "path": "build/sim/m0_gate/verilog-test_m0_gate/m0_gate.vcd",
+            "bytes": 576,
+            "sha256": "80ee2f8e5a385d80717be30b5425596388add5410a942ab42b99e0dc48723e63"
+          },
+          {
+            "path": "build/sim/m0_gate/verilog-test_m0_gate/verilator_build.json",
+            "bytes": 861,
+            "sha256": "4a7740bd10f6794b30772b72fc5d7e83e90edf8ed0b1f6421a24b2b88df17b1a"
+          },
+          {
+            "path": "build/sim/m0_gate/verilog-test_m0_gate-gate/verilator_build.json",
+            "bytes": 875,
+            "sha256": "03f7d6ce6a1b9b473be17cbb0efe8398986b5bffab53a24371c03b0b60516dd6"
+          },
+          {
+            "path": "build/synth/m0_gate/gate/m0_gate_gate.v",
+            "bytes": 215,
+            "sha256": "68dfeb4f11c1fa1b602306c6c59b5483a77bc072dc45d62385c63f460f56214e"
+          }
+        ],
+        "xml": [],
+        "statuses": [],
+        "original_M0_oracle_applicable": false
+      },
+      "artifact_acceptance": {
+        "download": "passed-exact-native-disk-bytes-and-sha256",
+        "artifact": {
+          "path": "build/synth/m0_gate/gate/m0_gate_gate.v",
+          "bytes": 215,
+          "sha256": "68dfeb4f11c1fa1b602306c6c59b5483a77bc072dc45d62385c63f460f56214e"
+        }
+      },
+      "duration_seconds": 10.11,
+      "runtime_manifest_sha256": "8935163cecfcc1e977ba84b83f9dbe07a185b88d8396451a5c22c41a70009737",
+      "response_collection": {
+        "state": "drained-before-context-close",
+        "pending_response_readers": 0,
+        "pending_static_requests": 0
+      },
+      "asset_capture": {
+        "method": "original-browser-network-entity-bytes-paused-before-unchanged-CDP-continueResponse",
+        "source_sha256": "4ce3366c5a2efa23f5197a5df5479be9eb5bf06441bd6ad1eaa0d829df1232eb",
+        "browser_http_cache": "harness-does-not-change-cache-settings",
+        "protocol_scope": "http://127.0.0.1:43673/verilog-workbench/*",
+        "protocol_stage": "Response",
+        "original_network_responses": true,
+        "request_refetches": 0,
+        "response_overrides": 0,
+        "delivered_responses": 15,
+        "delivered_entity_bytes": 222810,
+        "pending_responses": 0
+      }
+    }
+  },
+  "permission_grant": "not-required-loopback-HTTP-preview-origin-no-browser-security-bypass",
+  "hardware_tested": false,
+  "physical_programming": "not_run",
+  "note": "Actual Chromium controls, real temporary Unicode projects, authenticated local companion and native HDL tools. The 14 M0 workflows use repository fixtures, including the documented final queued-write shutdown extension, and the existing probe_toolchain.inspect_result oracle. Additional rows explicitly modify a copied fixture to prove selected-test filtering, real assertion/diagnostic failures, gate-level tests and pending-write shutdown. Every row starts with a fresh project and build directory. No fake tools, substituted job replies, transport faults or physical FPGA programming. Public local-network permission is explicitly simulated through Chromium test APIs, not a manual permission prompt.",
+  "tool_acquisition": {
+    "release": "2026-10-18",
+    "archive": "oss-cad-suite-linux-x64-20261018.tgz",
+    "sha256": "639c8c0366d74dc56201729c9907bf2d8281db7f18bb025abe2e4f3f2ebaa24e",
+    "size_bytes": 748315612,
+    "target": "linux-x64"
+  },
+  "selected_workflows": [
+    "verilator_simulation",
+    "cocotb_verilator",
+    "verilator_native_assertion_failure",
+    "verilator_cocotb_assertion_failure",
+    "verilator_gate_level"
+  ],
+  "full_probe_scope": false,
+  "fixture_sha256": {
+    "formal/bad.sby": "22efd573b67bda3f3ca48e219cf8cd037e27cc671b13141d31553ee2662dee34",
+    "formal/bad.sv": "eb307c86c6ae93064f44115f33a586b629e429a52e403fd35cc3faec14907b67",
+    "formal/good.sby": "fc19c2609e5f1b45a03ef7d9a282cd92262ecc2a33a473047fca2c64d8045461",
+    "formal/good.sv": "6ccf9855c885a2991db3e2b53bf4b947d9861aa5e6368f8c34a4808ed612af9a",
+    "src/io.cst": "3226e050934c81563db1242fb2d1bf95066fb9d44cffa0c061866d59111e4878",
+    "src/io.pcf": "97ae9b2c677d62cdfea5486a366535505dce5f2180961330abce1ac4707e124d",
+    "src/m0_fpga.v": "3dee0e1e7fc940e8f05185431c5d4a4d9b9254b3f1043f87eb139f3d66cccc5d",
+    "src/m0_gate.v": "ad3ef15d3236ddd1938216b9342606fffc34ce1fd466c9363f9a383a8d1c9239",
+    "src/m0_sv.sv": "8ea99a4c742652e65c0948980770ebfe0d82b600b5fa9b4818624148e8a4a937",
+    "src/m0_vhdl.vhd": "c4d34c7683974d7092950955567040812f9b5bf17f40b48896a2e17e04b9fe62",
+    "test/__init__.py": "f7436bf802698546bfd6f6d9fc6c5b01540a553b015edecb2e6c010469470627",
+    "test/test_m0_cocotb.py": "6eef750e30cb0f1eb6164219b011e4d0d5888f2cca6ac93c90169e56ba0cddcc",
+    "test/test_m0_gate.v": "841ef9457f6851014fd64589d55f4cb8fd2af520696bc679bdafda1587824ede",
+    "test/test_m0_sv.sv": "11a9d7c487d9dcafcd1c90d9ac0b3631702dcd403a2ad1f7fbd20c0e0807a0e6",
+    "test/test_m0_vhdl.vhd": "439bc82fbf99b6e951a48a4b143131ea1a86be01dfb2e48d69fef14f1e5b2fae"
+  },
+  "oracle_sha256": "22066f34b06f9eec20e0253ff3abe214690352aeb84f24c1fefaee19b6615985",
+  "source_sha256": {
+    "vwb.py": "4ccd65901295d7ad9df9ac4dd51bc2747b3f873c6eef9418083cc125ccfa6023",
+    "companion/server.py": "40a81d72ae66970453a27194888b193aa0d9cde46b12cc8609a287de8f55db61",
+    "companion/projects.py": "92fa5d30f405090231504b30413ce13d7a5ab1fbe2e38edfc0763f9992e830d1",
+    "companion/process.py": "500b9a1cfac6aded8028923aa2ba35c14b4efa6677c2d8a81bfdff85cb0c266d",
+    "companion/cocotb_runtime.py": "b8794d6f2b1f3d9008001d165ca32d9c829547a9dffe40d064d08be9a33c4153",
+    "scripts/probe_hdl_workspace.mjs": "a3fecf5d868f31ecd91492447b83c10122da33e9b10e52a6643c20124d1c8b01",
+    "scripts/browser_assets.mjs": "4ce3366c5a2efa23f5197a5df5479be9eb5bf06441bd6ad1eaa0d829df1232eb"
+  },
+  "browser": "141.0.7390.37",
+  "browser_security_flags": [
+    "--no-sandbox"
+  ],
+  "deployed_manifest": {
+    "schema": "vwb.web-build/1",
+    "status": "development-preview",
+    "base_path": "/verilog-workbench/",
+    "file_count": 20,
+    "loaded_runtime_sha256": {
+      "workspace/index.html": "c07e5c6ae02b0968278524f7933dd26de91ef1ed119663b7e06065c8046ad3cb",
+      "workspace/app.mjs": "d1ded2d7190bd31fee124ce8d44331c3cdb8201466836d9616836f68c50187ce",
+      "workspace/style.css": "6a96f62de55dde894b894d09fe65096b83471e09e1018275e08d3021d87658c6",
+      "workspace/model.mjs": "56fcd7aee518afdb4cbd44d87604dbfac0fee07af2e8f8f62aca99ad606cad88",
+      "workspace/hdl.mjs": "04bb768bac2e462fe9d855f3c97158d409a8000e0bc7b8ddc2047e4e6d25dc9f",
+      "workspace/schematic.mjs": "8c08a1e676f68ae3706e2f64064d6a5498f8701e4556b40f56d4dbbc2a3d5101"
+    }
+  },
+  "original_M0_workflows_passed": false,
+  "all_requested_workflows_passed": true,
+  "script_errors": [],
+  "asset_errors": [],
+  "screenshot_recorded": false,
+  "paths_redacted": true,
+  "original_report_sha256": "587ec826907ba89ac864dffff8f162bb9c0273c229c5178b363cfe81a62740eb"
+}

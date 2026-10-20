@@ -1,0 +1,145 @@
+{
+  "schema": "vwb.upstream-hdl-ci/1",
+  "head_sha": "27905aa5523863aecaf2b5480618fe69ef844dd8",
+  "run_url": "https://github.com/sfmth/verilog-workbench/actions/runs/39372047711",
+  "status": "completed",
+  "conclusion": "success",
+  "jobs": [
+    {
+      "name": "build",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/sfmth/verilog-workbench/actions/runs/39372047711/job/118462244303"
+    },
+    {
+      "name": "upstream-hdl / At least 20 pinned upstream designs",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/sfmth/verilog-workbench/actions/runs/39372047711/job/118462244406"
+    },
+    {
+      "name": "deploy",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/sfmth/verilog-workbench/actions/runs/39372047711/job/118463371720"
+    },
+    {
+      "name": "verify-public",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/sfmth/verilog-workbench/actions/runs/39372047711/job/118463435117"
+    }
+  ],
+  "required_corpus": {
+    "designs": 23,
+    "functional_simulations": 15,
+    "elaborations": 8,
+    "negative_controls": 15,
+    "all_passed": true,
+    "suite_tests": {
+      "acquisition": 17,
+      "runner": 22,
+      "verilator": 11
+    },
+    "verilator_real_native_tests": 6,
+    "skipped_tests": 0,
+    "job_log_sha256": "d42b243ba5729ecaa6ccbeb428ae39b573e0ca286b57a2071ea8162a70ba675e"
+  },
+  "browser_reports": [
+    {
+      "scope": "built",
+      "probe": "pages",
+      "state": "passed",
+      "checks": 13,
+      "workflows": 0,
+      "report_sha256": "d902f9473673733c482b1e830df84c624fa54af3e49bbf0921dca4eadf7bc1bc"
+    },
+    {
+      "scope": "public",
+      "probe": "pages",
+      "state": "passed",
+      "checks": 9,
+      "workflows": 0,
+      "report_sha256": "4d2035508d1197767a3b231bde9e2e7bcf6c39c22212532566b0f7740d041d34"
+    },
+    {
+      "scope": "built",
+      "probe": "editor",
+      "state": "passed",
+      "checks": 3,
+      "workflows": 0,
+      "report_sha256": "1117a69e2b94dff9704705458f893214161ceb5f007ec714a6a6dbe4d36b1312"
+    },
+    {
+      "scope": "public",
+      "probe": "editor",
+      "state": "passed",
+      "checks": 3,
+      "workflows": 0,
+      "report_sha256": "ce0b4aa7193bd919d04b797bc4df5faa1b6a71f9a25b327dc15d5b2bdd79769d"
+    },
+    {
+      "scope": "built",
+      "probe": "files",
+      "state": "passed",
+      "checks": 16,
+      "workflows": 0,
+      "report_sha256": "6e9d3c5114c4af0d55d754c429a07a92f70e3179bd5d23a958ad949aa12134d9"
+    },
+    {
+      "scope": "public",
+      "probe": "files",
+      "state": "passed",
+      "checks": 16,
+      "workflows": 0,
+      "report_sha256": "41b3dce82b6ce555e1528afdfdadf2cab998f425c3d029a67b30185c7dbf2508"
+    },
+    {
+      "scope": "built",
+      "probe": "source",
+      "state": "passed",
+      "checks": 15,
+      "workflows": 0,
+      "report_sha256": "067a94b1b090df09a6465371c62bcb9152403f40613b6da559f0c0b82bd7b36f"
+    },
+    {
+      "scope": "public",
+      "probe": "source",
+      "state": "passed",
+      "checks": 15,
+      "workflows": 0,
+      "report_sha256": "91b33024f97573531dba406e5f76fb3798cd95e737c86686a74e4a9f2db6e855"
+    },
+    {
+      "scope": "built",
+      "probe": "hdl",
+      "state": "passed",
+      "checks": 31,
+      "workflows": 31,
+      "report_sha256": "073a7a2856f2661db136ac6c560a24d789d0ed371c77b8a5cc606061959ee2ef"
+    },
+    {
+      "scope": "public",
+      "probe": "hdl",
+      "state": "passed",
+      "checks": 31,
+      "workflows": 31,
+      "report_sha256": "a8dd625cfaa595dc99c75e729b15d289acae5a2504ced1e10aa725c1f7c09606"
+    }
+  ],
+  "limits": [
+    "Verilator engine functional acceptance is Linux x64; other-platform discovery is not execution evidence.",
+    "NVDLA coverage is four functional blocks, not the complete accelerator.",
+    "Native browser tests grant local-network permission through the Chromium test API; manual permission UX and physical FPGA programming remain unverified."
+  ],
+  "native_run_url": "https://github.com/sfmth/verilog-workbench/actions/runs/39372047666",
+  "evidence_files": {
+    "corpus": "upstream-corpus-ci-linux-x64.json",
+    "built_browser": "upstream-hdl-browser-ci-linux-x64.json",
+    "public_browser": "upstream-hdl-public-ci-linux-x64.json",
+    "native_platforms": "upstream-native-ci.json",
+    "local_corpus": "upstream-corpus-local-linux-x64.json",
+    "local_engine": "upstream-verilator-engine-local-linux-x64.json",
+    "local_browser": "upstream-verilator-browser-local-linux-x64.json"
+  }
+}

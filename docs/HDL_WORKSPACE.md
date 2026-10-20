@@ -236,3 +236,25 @@ and nine Cocotb shutdown checks, including three real simulator controls, in
 the build job. Public local
 network permission is still explicitly granted by the test API; manual
 permission UX, clean installers and physical programming remain separate gates.
+
+## Upstream corpus and additional simulator acceptance
+
+The [upstream corpus](UPSTREAM_HDL.md) adds 23 distinct pinned designs from
+RISC-V cores, four NVDLA blocks, AXI/AXIS, UART and I2C. Required CI executes
+15 functional simulations with 15 failing expected-value controls and eight
+explicitly classified elaboration checks. Pages deployment and Docker image
+publication depend on this corpus gate. Complete NVDLA accelerator verification
+and ISA compliance are not claimed by these directed checks.
+
+At `27905aa5523863aecaf2b5480618fe69ef844dd8`,
+[Pages CI](https://github.com/sfmth/verilog-workbench/actions/runs/39372047711)
+passes all 23 designs, 11 Verilator tests (six real native engine tests), and
+all 31 browser HDL workflows against both the built output and actual HTTPS app.
+The five additional browser rows select Verilator for native/Cocotb tests,
+exercise genuine assertion failures, and recheck synthesized gates. Original
+network asset hashes and the existing browser regressions remain verified.
+The [retained report](workspace-evidence/upstream-pages-ci.json) links the
+corpus, browser and native evidence; the added engine has Linux acceptance.
+[Native CI](https://github.com/sfmth/verilog-workbench/actions/runs/39372047666)
+also passes all 14 jobs, preserving the six native platform suites and all
+six 14-workflow toolchain rows plus Arch userspace.

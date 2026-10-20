@@ -1,0 +1,320 @@
+{
+  "schema": "vwb.verilator-engine-evidence/1",
+  "state": "passed",
+  "commit": "277e811f375c797b55b4e31c7bbd48878ded4477",
+  "platform": "linux-x64",
+  "toolchain_archive": {
+    "release": "2026-10-18",
+    "archive": "oss-cad-suite-linux-x64-20261018.tgz",
+    "sha256": "639c8c0366d74dc56201729c9907bf2d8281db7f18bb025abe2e4f3f2ebaa24e",
+    "size_bytes": 748315612,
+    "external_tool_overlays": [],
+    "relocatable": true
+  },
+  "versions": {
+    "verilator": "Verilator 5.053 devel rev v5.052-472-g1cfb3b89a (mod)",
+    "cocotb": "2.1.0.dev0+41564633"
+  },
+  "source_sha256": {
+    "vwb.py": "4ccd65901295d7ad9df9ac4dd51bc2747b3f873c6eef9418083cc125ccfa6023",
+    "companion/server.py": "40a81d72ae66970453a27194888b193aa0d9cde46b12cc8609a287de8f55db61",
+    "companion/toolchains.py": "935b2ba03a17e824b23fc24476299095507e26af67ab71516d173fd0ea9945c0",
+    "protocol/companion-v1.schema.json": "3835d08329c0ae0eb03cf356c01420743ac213b0b037ad08387779f6eebb1a8b",
+    "scripts/probe_toolchain.py": "22066f34b06f9eec20e0253ff3abe214690352aeb84f24c1fefaee19b6615985",
+    ".github/scripts/validate_vwb.py": "41355017f64f61f92a5737bf2b968f69dd53c4162fe768265eddbd0d796f3239",
+    "web/workspace/hdl.mjs": "04bb768bac2e462fe9d855f3c97158d409a8000e0bc7b8ddc2047e4e6d25dc9f",
+    "web/workspace/app.mjs": "d1ded2d7190bd31fee124ce8d44331c3cdb8201466836d9616836f68c50187ce",
+    "web/workspace/index.html": "c07e5c6ae02b0968278524f7933dd26de91ef1ed119663b7e06065c8046ad3cb",
+    "tests/test_verilator.py": "f1b963d0e63c704f014390c9384661a347822497ff21e6a5f0daf26cfef04c51",
+    "tests/test_hdl.py": "95c3d4e054616f49802cc8f067b4fbd65b515afae6254457256a786b4b88580d",
+    "tests/test_hdl.mjs": "3cb18ee33e9f4a54b776276a2b75c9e421ed7c6be2b63d85a463cfe7af98b57f",
+    "tests/test_toolchains.py": "b259146477f1c8c77a1a7a89108b080426af7e153e956faeca3950344c32567f"
+  },
+  "test_command": [
+    "env",
+    "VWB_VERILATOR_TEST_ACQUISITION=[tmp]/vwb-hdl-acquisition.json",
+    "/usr/bin/python",
+    "-m",
+    "unittest",
+    "discover",
+    "-s",
+    "tests",
+    "-p",
+    "test_verilator.py",
+    "-v"
+  ],
+  "tests": {
+    "count": 11,
+    "contracts": 5,
+    "real_native_checks": 6,
+    "project_path_case": "Unicode and spaces",
+    "cases": [
+      {
+        "name": "test_real_assertion_failure_is_nonzero",
+        "class": "test_verilator.ManagedVerilatorTests.test_real_assertion_failure_is_nonzero",
+        "state": "passed"
+      },
+      {
+        "name": "test_real_cocotb_failure_stays_failure_and_fst_is_readable",
+        "class": "test_verilator.ManagedVerilatorTests.test_real_cocotb_failure_stays_failure_and_fst_is_readable",
+        "state": "passed"
+      },
+      {
+        "name": "test_real_cocotb_rechecks_synthesized_gates_with_same_engine",
+        "class": "test_verilator.ManagedVerilatorTests.test_real_cocotb_rechecks_synthesized_gates_with_same_engine",
+        "state": "passed"
+      },
+      {
+        "name": "test_real_cocotb_vpi_truth_table_and_vcd",
+        "class": "test_verilator.ManagedVerilatorTests.test_real_cocotb_vpi_truth_table_and_vcd",
+        "state": "passed"
+      },
+      {
+        "name": "test_real_timed_hdl_assertions_and_vcd",
+        "class": "test_verilator.ManagedVerilatorTests.test_real_timed_hdl_assertions_and_vcd",
+        "state": "passed"
+      },
+      {
+        "name": "test_real_timed_hdl_fst",
+        "class": "test_verilator.ManagedVerilatorTests.test_real_timed_hdl_fst",
+        "state": "passed"
+      },
+      {
+        "name": "test_engine_language_mismatch_fails_before_external_execution",
+        "class": "test_verilator.SimulatorContractTests.test_engine_language_mismatch_fails_before_external_execution",
+        "state": "passed"
+      },
+      {
+        "name": "test_saved_wave_management_rejects_even_explicit_default_engine",
+        "class": "test_verilator.SimulatorContractTests.test_saved_wave_management_rejects_even_explicit_default_engine",
+        "state": "passed"
+      },
+      {
+        "name": "test_temporary_compile_preserves_bytes_outputs_and_cleans_up_on_cancellation",
+        "class": "test_verilator.SimulatorContractTests.test_temporary_compile_preserves_bytes_outputs_and_cleans_up_on_cancellation",
+        "state": "passed"
+      },
+      {
+        "name": "test_test_and_wave_engine_choices_preserve_auto_default",
+        "class": "test_verilator.SimulatorContractTests.test_test_and_wave_engine_choices_preserve_auto_default",
+        "state": "passed"
+      },
+      {
+        "name": "test_timed_verilator_dry_run_uses_assertions_and_real_binary",
+        "class": "test_verilator.SimulatorContractTests.test_timed_verilator_dry_run_uses_assertions_and_real_binary",
+        "state": "passed"
+      }
+    ],
+    "log": "[tmp]/vwb-verilator-acceptance-complete.log",
+    "log_sha256": "0c870b41430bec73d41dba0ee0f8e9bc5ed574c69e71824ba70f4fbc764fdecc",
+    "elapsed_seconds": 40.476
+  },
+  "sigterm_cancellation": {
+    "state": "passed",
+    "returncode": 130,
+    "compiler_started": true,
+    "temporary_directories": [
+      "[tmp]/vwb-verilator-qochpozv"
+    ],
+    "temporary_cleaned": true,
+    "project": "[tmp]/vwb Verilator cancel \u03bc g6otf8gq",
+    "command": [
+      "[repo]/.m0-tools/native/oss-cad-suite-2026-10-18-linux-x64/oss-cad-suite/py3bin/python3",
+      "[repo]/vwb.py",
+      "--root",
+      "[tmp]/vwb Verilator cancel \u03bc g6otf8gq",
+      "--verbose",
+      "--color",
+      "never",
+      "test",
+      "dut",
+      "--test",
+      "test/bench.sv",
+      "--test-language",
+      "verilog",
+      "--test-top",
+      "bench",
+      "--simulator",
+      "verilator"
+    ],
+    "log": "[tmp]/vwb-verilator-real-cancellation.log",
+    "vwb_sha256": "4ccd65901295d7ad9df9ac4dd51bc2747b3f873c6eef9418083cc125ccfa6023"
+  },
+  "serial_fixtures": {
+    "state": "passed",
+    "results": [
+      {
+        "id": "uart-loopback",
+        "negative": false,
+        "passed": true,
+        "returncode": 0,
+        "command": [
+          "[repo]/.m0-tools/native/oss-cad-suite-2026-10-18-linux-x64/oss-cad-suite/py3bin/python3",
+          "[repo]/vwb.py",
+          "--root",
+          "[tmp]/vwb-upstream-serial-projects/uart-loopback",
+          "--verbose",
+          "--color",
+          "never",
+          "test",
+          "uart",
+          "--test",
+          "test/tb_uart_loopback.sv",
+          "--test-top",
+          "tb_uart_loopback",
+          "--test-language",
+          "verilog",
+          "--simulator",
+          "verilator",
+          "--waves",
+          "--wave-format",
+          "vcd"
+        ],
+        "source_files": [
+          {
+            "path": "rtl/uart.v",
+            "sha256": "4f91abcd67ff180afadbad06c3b44d33c9f1d69bfaeae3b5696be112efae35c9"
+          },
+          {
+            "path": "rtl/uart_tx.v",
+            "sha256": "e9559ddebf124f8fbface06bf7091296baa78c7acab95a36b40a919663349d34"
+          },
+          {
+            "path": "rtl/uart_rx.v",
+            "sha256": "e686104e5ff2d25fa1504e8d08259cef508f2ec9c9e8cfa63364f3fcb39b9f5c"
+          }
+        ],
+        "bench_sha256": "7706ec90b816fb718625cc229f154b36fa16784d99270ea7447f2f6c2558559c",
+        "log": "[tmp]/vwb-upstream-uart-loopback-positive.log",
+        "log_tail": "-context -Wno-shadow -Wno-sign-compare -Wno-subobject-linkage -Wno-tautological-compare -Wno-uninitialized -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable  -DVM_PREFIX_INCLUDE=\"<Vtop.h>\"   -DVL_TIME_CONTEXT   -fcoroutines -c -o Vtop__ALL.o Vtop__ALL.cpp\ng++    verilated.o verilated_vcd_c.o verilated_timing.o verilated_threads.o Vtop__ALL.a    -pthread -lpthread -latomic   -o vwb_sim\nrm Vtop__ALL.verilator_deplist.tmp\nmake: Leaving directory '[tmp]/vwb-upstream-serial-projects/uart-loopback/.vwb/sim/uart/verilog-tb_uart_loopback/obj_dir'\n- V e r i l a t i o n   R e p o r t: Verilator 5.053 devel rev v5.052-472-g1cfb3b89a (mod)\n- Verilator: Built from 0.192 MB sources in 7 modules, into 0.097 MB in 9 C++ files needing 0.000 MB\n- Verilator: Walltime 4.545 s (elab=0.001, cvt=0.004, bld=4.536); cpu 0.010 s on 2 threads; allocated 22.391 MB\nVWB_UPSTREAM_PASS uart-loopback\n- [tmp]/vwb-upstream-serial-projects/uart-loopback/test/tb_uart_loopback.sv:47: Verilog $finish\n- S i m u l a t i o n   R e p o r t: Verilator 5.053 devel\n- Verilator: $finish at 26us; walltime 0.001 s; speed 23.533 ms/s\n- Verilator: cpu 0.001 s on 1 threads; allocated 4 MB\n==> [1/1] uart (verilog:tb_uart_loopback.sv)\n$ [repo]/.m0-tools/native/oss-cad-suite-2026-10-18-linux-x64/oss-cad-suite/bin/verilator --timing --assert --timescale 1ns/1ps -Wno-fatal --top-module tb_uart_loopback --Mdir obj_dir --prefix Vtop -o vwb_sim -j 2 --binary -I[tmp]/vwb-upstream-serial-projects/uart-loopback/src -I[tmp]/vwb-upstream-serial-projects/uart-loopback/src/rtl -I[tmp]/vwb-upstream-serial-projects/uart-loopback/test -y [tmp]/vwb-upstream-serial-projects/uart-loopback/src/rtl --trace --trace-max-array 32 [tmp]/vwb-upstream-serial-projects/uart-loopback/src/rtl/uart_rx.v [tmp]/vwb-upstream-serial-projects/uart-loopback/src/rtl/uart_tx.v [tmp]/vwb-upstream-serial-projects/uart-loopback/src/rtl/uart.v [tmp]/vwb-upstream-serial-projects/uart-loopback/test/tb_uart_loopback.sv [tmp]/vwb-upstream-serial-projects/uart-loopback/.vwb/sim/uart/verilog-tb_uart_loopback/vwb_dump.sv (cwd=[tmp]/vwb-upstream-serial-projects/uart-loopback/.vwb/sim/uart/verilog-tb_uart_loopback)\n$ [tmp]/vwb-upstream-serial-projects/uart-loopback/.vwb/sim/uart/verilog-tb_uart_loopback/obj_dir/vwb_sim (cwd=[tmp]/vwb-upstream-serial-projects/uart-loopback/.vwb/sim/uart/verilog-tb_uart_loopback)\n  RTL PASS\nResult:\n  Your code: PASS - 1/1 test runs passed\n  Your setup: OK\n"
+      },
+      {
+        "id": "uart-loopback",
+        "negative": true,
+        "passed": true,
+        "returncode": 1,
+        "command": [
+          "[repo]/.m0-tools/native/oss-cad-suite-2026-10-18-linux-x64/oss-cad-suite/py3bin/python3",
+          "[repo]/vwb.py",
+          "--root",
+          "[tmp]/vwb-upstream-serial-projects/uart-loopback",
+          "--verbose",
+          "--color",
+          "never",
+          "test",
+          "uart",
+          "--test",
+          "test/tb_uart_loopback.sv",
+          "--test-top",
+          "tb_uart_loopback",
+          "--test-language",
+          "verilog",
+          "--simulator",
+          "verilator",
+          "--waves",
+          "--wave-format",
+          "vcd",
+          "--plusarg=VWB_NEGATIVE_CONTROL"
+        ],
+        "source_files": [
+          {
+            "path": "rtl/uart.v",
+            "sha256": "4f91abcd67ff180afadbad06c3b44d33c9f1d69bfaeae3b5696be112efae35c9"
+          },
+          {
+            "path": "rtl/uart_tx.v",
+            "sha256": "e9559ddebf124f8fbface06bf7091296baa78c7acab95a36b40a919663349d34"
+          },
+          {
+            "path": "rtl/uart_rx.v",
+            "sha256": "e686104e5ff2d25fa1504e8d08259cef508f2ec9c9e8cfa63364f3fcb39b9f5c"
+          }
+        ],
+        "bench_sha256": "7706ec90b816fb718625cc229f154b36fa16784d99270ea7447f2f6c2558559c",
+        "log": "[tmp]/vwb-upstream-uart-loopback-negative.log",
+        "log_tail": "re -Wno-uninitialized -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable  -DVM_PREFIX_INCLUDE=\"<Vtop.h>\"   -DVL_TIME_CONTEXT   -fcoroutines -c -o Vtop__ALL.o Vtop__ALL.cpp\ng++    verilated.o verilated_vcd_c.o verilated_timing.o verilated_threads.o Vtop__ALL.a    -pthread -lpthread -latomic   -o vwb_sim\nrm Vtop__ALL.verilator_deplist.tmp\nmake: Leaving directory '[tmp]/vwb-upstream-serial-projects/uart-loopback/.vwb/sim/uart/verilog-tb_uart_loopback/obj_dir'\n- V e r i l a t i o n   R e p o r t: Verilator 5.053 devel rev v5.052-472-g1cfb3b89a (mod)\n- Verilator: Built from 0.192 MB sources in 7 modules, into 0.097 MB in 9 C++ files needing 0.000 MB\n- Verilator: Walltime 4.826 s (elab=0.001, cvt=0.005, bld=4.815); cpu 0.013 s on 2 threads; allocated 22.391 MB\n[3120000] %Fatal: tb_uart_loopback.sv:31: Assertion failed in tb_uart_loopback.exchange.unnamedblk1_1: UART data/valid mismatch sent=00 got=00 expected=01\n%Error: [tmp]/vwb-upstream-serial-projects/uart-loopback/test/tb_uart_loopback.sv:31: Verilog $stop\nAborting...\n==> [1/1] uart (verilog:tb_uart_loopback.sv)\n$ [repo]/.m0-tools/native/oss-cad-suite-2026-10-18-linux-x64/oss-cad-suite/bin/verilator --timing --assert --timescale 1ns/1ps -Wno-fatal --top-module tb_uart_loopback --Mdir obj_dir --prefix Vtop -o vwb_sim -j 2 --binary -I[tmp]/vwb-upstream-serial-projects/uart-loopback/src -I[tmp]/vwb-upstream-serial-projects/uart-loopback/src/rtl -I[tmp]/vwb-upstream-serial-projects/uart-loopback/test -y [tmp]/vwb-upstream-serial-projects/uart-loopback/src/rtl --trace --trace-max-array 32 [tmp]/vwb-upstream-serial-projects/uart-loopback/src/rtl/uart_rx.v [tmp]/vwb-upstream-serial-projects/uart-loopback/src/rtl/uart_tx.v [tmp]/vwb-upstream-serial-projects/uart-loopback/src/rtl/uart.v [tmp]/vwb-upstream-serial-projects/uart-loopback/test/tb_uart_loopback.sv [tmp]/vwb-upstream-serial-projects/uart-loopback/.vwb/sim/uart/verilog-tb_uart_loopback/vwb_dump.sv (cwd=[tmp]/vwb-upstream-serial-projects/uart-loopback/.vwb/sim/uart/verilog-tb_uart_loopback)\n$ [tmp]/vwb-upstream-serial-projects/uart-loopback/.vwb/sim/uart/verilog-tb_uart_loopback/obj_dir/vwb_sim +VWB_NEGATIVE_CONTROL (cwd=[tmp]/vwb-upstream-serial-projects/uart-loopback/.vwb/sim/uart/verilog-tb_uart_loopback)\n  RTL FAIL\nResult:\n  Your code: FAIL - 0/1 test runs passed\n  Your setup: OK\nFailed test runs:\n  uart (verilog:tb_uart_loopback.sv): one or more requested simulation stages failed\n"
+      },
+      {
+        "id": "axil-ram",
+        "negative": false,
+        "passed": true,
+        "returncode": 0,
+        "command": [
+          "[repo]/.m0-tools/native/oss-cad-suite-2026-10-18-linux-x64/oss-cad-suite/py3bin/python3",
+          "[repo]/vwb.py",
+          "--root",
+          "[tmp]/vwb-upstream-serial-projects/axil-ram",
+          "--verbose",
+          "--color",
+          "never",
+          "test",
+          "axil_ram",
+          "--test",
+          "test/tb_axil_ram.sv",
+          "--test-top",
+          "tb_axil_ram",
+          "--test-language",
+          "verilog",
+          "--simulator",
+          "verilator",
+          "--waves",
+          "--wave-format",
+          "vcd"
+        ],
+        "source_files": [
+          {
+            "path": "rtl/axil_ram.v",
+            "sha256": "5a5ae8c10ab01d8ab3ed18418f4dadfa9c7cadb584ab14838a8d18ac4c3b5644"
+          }
+        ],
+        "bench_sha256": "b230db82a9de0ff9d32f358711e7cc7481499883185f71a4b7107294d5ba21f5",
+        "log": "[tmp]/vwb-upstream-axil-ram-positive.log",
+        "log_tail": "include/vltstd -DVERILATOR=1 -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TIMING=1 -DVM_TRACE=1 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=1 -DVM_TRACE_SAIF=0 -DVM_VPI=0 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-int-in-bool-context -Wno-shadow -Wno-sign-compare -Wno-subobject-linkage -Wno-tautological-compare -Wno-uninitialized -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable  -DVM_PREFIX_INCLUDE=\"<Vtop.h>\"   -DVL_TIME_CONTEXT   -fcoroutines -c -o Vtop__ALL.o Vtop__ALL.cpp\ng++    verilated.o verilated_vcd_c.o verilated_timing.o verilated_threads.o Vtop__ALL.a    -pthread -lpthread -latomic   -o vwb_sim\nrm Vtop__ALL.verilator_deplist.tmp\nmake: Leaving directory '[tmp]/vwb-upstream-serial-projects/axil-ram/.vwb/sim/axil_ram/verilog-tb_axil_ram/obj_dir'\n- V e r i l a t i o n   R e p o r t: Verilator 5.053 devel rev v5.052-472-g1cfb3b89a (mod)\n- Verilator: Built from 0.114 MB sources in 5 modules, into 0.170 MB in 9 C++ files needing 0.000 MB\n- Verilator: Walltime 5.080 s (elab=0.001, cvt=0.008, bld=5.066); cpu 0.016 s on 2 threads; allocated 23.016 MB\nVWB_UPSTREAM_PASS axil-ram\n- [tmp]/vwb-upstream-serial-projects/axil-ram/test/tb_axil_ram.sv:71: Verilog $finish\n- S i m u l a t i o n   R e p o r t: Verilator 5.053 devel\n- Verilator: $finish at 1us; walltime 0.000 s; speed 9.328 ms/s\n- Verilator: cpu 0.000 s on 1 threads; allocated 4 MB\n==> [1/1] axil_ram (verilog:tb_axil_ram.sv)\n$ [repo]/.m0-tools/native/oss-cad-suite-2026-10-18-linux-x64/oss-cad-suite/bin/verilator --timing --assert --timescale 1ns/1ps -Wno-fatal --top-module tb_axil_ram --Mdir obj_dir --prefix Vtop -o vwb_sim -j 2 --binary -I[tmp]/vwb-upstream-serial-projects/axil-ram/src -I[tmp]/vwb-upstream-serial-projects/axil-ram/src/rtl -I[tmp]/vwb-upstream-serial-projects/axil-ram/test -y [tmp]/vwb-upstream-serial-projects/axil-ram/src/rtl --trace --trace-max-array 32 [tmp]/vwb-upstream-serial-projects/axil-ram/src/rtl/axil_ram.v [tmp]/vwb-upstream-serial-projects/axil-ram/test/tb_axil_ram.sv [tmp]/vwb-upstream-serial-projects/axil-ram/.vwb/sim/axil_ram/verilog-tb_axil_ram/vwb_dump.sv (cwd=[tmp]/vwb-upstream-serial-projects/axil-ram/.vwb/sim/axil_ram/verilog-tb_axil_ram)\n$ [tmp]/vwb-upstream-serial-projects/axil-ram/.vwb/sim/axil_ram/verilog-tb_axil_ram/obj_dir/vwb_sim (cwd=[tmp]/vwb-upstream-serial-projects/axil-ram/.vwb/sim/axil_ram/verilog-tb_axil_ram)\n  RTL PASS\nResult:\n  Your code: PASS - 1/1 test runs passed\n  Your setup: OK\n"
+      },
+      {
+        "id": "axil-ram",
+        "negative": true,
+        "passed": true,
+        "returncode": 1,
+        "command": [
+          "[repo]/.m0-tools/native/oss-cad-suite-2026-10-18-linux-x64/oss-cad-suite/py3bin/python3",
+          "[repo]/vwb.py",
+          "--root",
+          "[tmp]/vwb-upstream-serial-projects/axil-ram",
+          "--verbose",
+          "--color",
+          "never",
+          "test",
+          "axil_ram",
+          "--test",
+          "test/tb_axil_ram.sv",
+          "--test-top",
+          "tb_axil_ram",
+          "--test-language",
+          "verilog",
+          "--simulator",
+          "verilator",
+          "--waves",
+          "--wave-format",
+          "vcd",
+          "--plusarg=VWB_NEGATIVE_CONTROL"
+        ],
+        "source_files": [
+          {
+            "path": "rtl/axil_ram.v",
+            "sha256": "5a5ae8c10ab01d8ab3ed18418f4dadfa9c7cadb584ab14838a8d18ac4c3b5644"
+          }
+        ],
+        "bench_sha256": "b230db82a9de0ff9d32f358711e7cc7481499883185f71a4b7107294d5ba21f5",
+        "log": "[tmp]/vwb-upstream-axil-ram-negative.log",
+        "log_tail": "_TRACE_FST=0 -DVM_TRACE_VCD=1 -DVM_TRACE_SAIF=0 -DVM_VPI=0 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-int-in-bool-context -Wno-shadow -Wno-sign-compare -Wno-subobject-linkage -Wno-tautological-compare -Wno-uninitialized -Wno-unused-but-set-parameter -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable  -DVM_PREFIX_INCLUDE=\"<Vtop.h>\"   -DVL_TIME_CONTEXT   -fcoroutines -c -o Vtop__ALL.o Vtop__ALL.cpp\ng++    verilated.o verilated_vcd_c.o verilated_timing.o verilated_threads.o Vtop__ALL.a    -pthread -lpthread -latomic   -o vwb_sim\nrm Vtop__ALL.verilator_deplist.tmp\nmake: Leaving directory '[tmp]/vwb-upstream-serial-projects/axil-ram/.vwb/sim/axil_ram/verilog-tb_axil_ram/obj_dir'\n- V e r i l a t i o n   R e p o r t: Verilator 5.053 devel rev v5.052-472-g1cfb3b89a (mod)\n- Verilator: Built from 0.114 MB sources in 5 modules, into 0.170 MB in 9 C++ files needing 0.000 MB\n- Verilator: Walltime 4.968 s (elab=0.001, cvt=0.008, bld=4.955); cpu 0.015 s on 2 threads; allocated 22.945 MB\n[80000] %Fatal: tb_axil_ram.sv:52: Assertion failed in tb_axil_ram.read_word.unnamedblk1_3: AXIL read mismatch addr=00 got=00000000 expected=00000001\n%Error: [tmp]/vwb-upstream-serial-projects/axil-ram/test/tb_axil_ram.sv:52: Verilog $stop\nAborting...\n==> [1/1] axil_ram (verilog:tb_axil_ram.sv)\n$ [repo]/.m0-tools/native/oss-cad-suite-2026-10-18-linux-x64/oss-cad-suite/bin/verilator --timing --assert --timescale 1ns/1ps -Wno-fatal --top-module tb_axil_ram --Mdir obj_dir --prefix Vtop -o vwb_sim -j 2 --binary -I[tmp]/vwb-upstream-serial-projects/axil-ram/src -I[tmp]/vwb-upstream-serial-projects/axil-ram/src/rtl -I[tmp]/vwb-upstream-serial-projects/axil-ram/test -y [tmp]/vwb-upstream-serial-projects/axil-ram/src/rtl --trace --trace-max-array 32 [tmp]/vwb-upstream-serial-projects/axil-ram/src/rtl/axil_ram.v [tmp]/vwb-upstream-serial-projects/axil-ram/test/tb_axil_ram.sv [tmp]/vwb-upstream-serial-projects/axil-ram/.vwb/sim/axil_ram/verilog-tb_axil_ram/vwb_dump.sv (cwd=[tmp]/vwb-upstream-serial-projects/axil-ram/.vwb/sim/axil_ram/verilog-tb_axil_ram)\n$ [tmp]/vwb-upstream-serial-projects/axil-ram/.vwb/sim/axil_ram/verilog-tb_axil_ram/obj_dir/vwb_sim +VWB_NEGATIVE_CONTROL (cwd=[tmp]/vwb-upstream-serial-projects/axil-ram/.vwb/sim/axil_ram/verilog-tb_axil_ram)\n  RTL FAIL\nResult:\n  Your code: FAIL - 0/1 test runs passed\n  Your setup: OK\nFailed test runs:\n  axil_ram (verilog:tb_axil_ram.sv): one or more requested simulation stages failed\n"
+      }
+    ]
+  },
+  "limitations": [
+    "Additional Verilator execution acceptance is Linux x64 with the locked suite; other native OS/architecture combinations are not certified by this report.",
+    "Temporary compilation cleanup was verified for cooperative CLI SIGTERM cancellation; SIGKILL cannot run application cleanup."
+  ],
+  "paths_redacted": true,
+  "original_report_sha256": "d135b6b5d9d8053e172e58404255d60d6b7e65ef51a75346f015f9f052cb1c98"
+}

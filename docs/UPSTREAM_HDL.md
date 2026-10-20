@@ -87,3 +87,32 @@ real Verilator/Cocotb/waveform controls. The normal CI, Pages deployment and Doc
 release workflows call this gate; Pages deployment and image publication depend
 on its success. No `continue-on-error` or simulator-availability skip substitutes
 for a required design pass. CI uploads the provenance and logs for inspection.
+
+## Retained acceptance evidence
+
+The [hosted corpus report](workspace-evidence/upstream-corpus-ci-linux-x64.json)
+passes all 23 designs and all 15 expected-value failure controls at
+`27905aa5523863aecaf2b5480618fe69ef844dd8`. The same required job passes 17 source
+acquisition tests, 22 runner/verdict tests, and 11 simulator tests with no skips;
+six of those simulator tests invoke real native Verilator/Cocotb engines.
+The [local corpus](workspace-evidence/upstream-corpus-local-linux-x64.json),
+[engine/cancellation receipt](workspace-evidence/upstream-verilator-engine-local-linux-x64.json)
+and [five focused browser checks](workspace-evidence/upstream-verilator-browser-local-linux-x64.json)
+retain independent Linux evidence and original report hashes.
+
+[Native CI](https://github.com/sfmth/verilog-workbench/actions/runs/39372047666)
+passes all 14 jobs. The [native receipt](workspace-evidence/upstream-native-ci.json)
+records all six platform test/package jobs, their actual optional/platform skips,
+and all six 14-workflow toolchain suites plus Arch's 14 workflows. It also retains
+the earlier Windows temporary-file failure and the passing corrected run;
+Windows ARM64's x64 tool compatibility remains explicitly disclosed.
+
+The [built-browser report](workspace-evidence/upstream-hdl-browser-ci-linux-x64.json)
+passes all 31 workflows in Chromium 151, including five new Verilator controls.
+The [public HTTPS report](workspace-evidence/upstream-hdl-public-ci-linux-x64.json)
+also passes all 31 after deployment. [Pages CI](https://github.com/sfmth/verilog-workbench/actions/runs/39372047711)
+passes build, the required corpus, deployment and public verification. The
+[retained CI summary](workspace-evidence/upstream-pages-ci.json) also records
+the existing editor, source, workspace and file lifecycle checks on both origins.
+The added engine's functional acceptance is Linux; discovery on another native
+platform does not substitute for simulator execution evidence.

@@ -1,0 +1,660 @@
+{
+  "schema_version": 1,
+  "scope": "Hosted native companion regression and existing 14-workflow HDL platform smoke matrix",
+  "run": {
+    "databaseId": 39372047666,
+    "url": "https://github.com/sfmth/verilog-workbench/actions/runs/39372047666",
+    "headSha": "27905aa5523863aecaf2b5480618fe69ef844dd8",
+    "status": "completed",
+    "conclusion": "success",
+    "createdAt": "2026-10-20T04:54:30Z",
+    "updatedAt": "2026-10-20T04:59:58Z"
+  },
+  "metadata_sha256": "461976f127463a516bee0183f23abbe94858cb8f61ef8c60f77cf508fdbe8df9",
+  "jobs": [
+    {
+      "name": "web-source",
+      "databaseId": 118462200586,
+      "url": "https://github.com/sfmth/verilog-workbench/actions/runs/39372047666/job/118462200586",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Toolchain feasibility darwin-x64",
+      "databaseId": 118462200674,
+      "url": "https://github.com/sfmth/verilog-workbench/actions/runs/39372047666/job/118462200674",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Toolchain feasibility windows-arm64",
+      "databaseId": 118462200701,
+      "url": "https://github.com/sfmth/verilog-workbench/actions/runs/39372047666/job/118462200701",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Native windows-x86_64",
+      "databaseId": 118462200732,
+      "url": "https://github.com/sfmth/verilog-workbench/actions/runs/39372047666/job/118462200732",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Toolchain feasibility darwin-arm64",
+      "databaseId": 118462200754,
+      "url": "https://github.com/sfmth/verilog-workbench/actions/runs/39372047666/job/118462200754",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Arch Linux userspace toolchain feasibility",
+      "databaseId": 118462200762,
+      "url": "https://github.com/sfmth/verilog-workbench/actions/runs/39372047666/job/118462200762",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Native macos-x86_64",
+      "databaseId": 118462200768,
+      "url": "https://github.com/sfmth/verilog-workbench/actions/runs/39372047666/job/118462200768",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Toolchain feasibility windows-x64",
+      "databaseId": 118462200846,
+      "url": "https://github.com/sfmth/verilog-workbench/actions/runs/39372047666/job/118462200846",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Native linux-x86_64",
+      "databaseId": 118462200854,
+      "url": "https://github.com/sfmth/verilog-workbench/actions/runs/39372047666/job/118462200854",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Toolchain feasibility linux-arm64",
+      "databaseId": 118462200856,
+      "url": "https://github.com/sfmth/verilog-workbench/actions/runs/39372047666/job/118462200856",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Native macos-arm64",
+      "databaseId": 118462200861,
+      "url": "https://github.com/sfmth/verilog-workbench/actions/runs/39372047666/job/118462200861",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Native windows-arm64",
+      "databaseId": 118462200868,
+      "url": "https://github.com/sfmth/verilog-workbench/actions/runs/39372047666/job/118462200868",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Toolchain feasibility linux-x64",
+      "databaseId": 118462200880,
+      "url": "https://github.com/sfmth/verilog-workbench/actions/runs/39372047666/job/118462200880",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Native linux-arm64",
+      "databaseId": 118462201067,
+      "url": "https://github.com/sfmth/verilog-workbench/actions/runs/39372047666/job/118462201067",
+      "status": "completed",
+      "conclusion": "success"
+    }
+  ],
+  "native_test_counts": [
+    {
+      "target": "windows-x86_64",
+      "job_url": "https://github.com/sfmth/verilog-workbench/actions/runs/39372047666/job/118462200732",
+      "log_sha256": "1a165aaea48184eb3b96aaae48ff831d3d2b1bffd8f7747d6ab3f55920cb20fc",
+      "suites": [
+        {
+          "suite": "unit",
+          "ran": 319,
+          "skipped": 30,
+          "summary_line": "2026-10-20T04:56:20.5848985Z Ran 319 tests in 16.178s",
+          "outcome_line": "2026-10-20T04:56:20.5849302Z OK (skipped=30)",
+          "skip_reasons": {
+            "Mac Yosys overlay executes POSIX upstream launchers": 1,
+            "Executable mode is a POSIX source property": 1,
+            "Creating upstream symlinks requires Windows developer mode": 1,
+            "Set VWB_COCOTB_RUNTIME_TEST_ACQUISITION to run the real managed runtime regressions": 3,
+            "POSIX SIGTERM graceful shutdown; Windows forced termination has different semantics": 1,
+            "POSIX private directory permissions": 1,
+            "POSIX native path limits only": 1,
+            "POSIX named pipes only": 1,
+            "POSIX permissions only": 1,
+            "Windows os.rename is already exclusive": 1,
+            "native SBY/Yosys/Z3 required": 3,
+            "real Icarus tools required": 1,
+            "POSIX launcher behavior": 1,
+            "POSIX separately owned CLI/tool sessions": 1,
+            "POSIX PID ownership during group cleanup": 1,
+            "Creating symlinks requires Windows developer mode": 1,
+            "Set VWB_VERILATOR_TEST_ACQUISITION for real Verilator acceptance": 6,
+            "needs native GHDL": 1,
+            "needs native Yosys and Graphviz": 1,
+            "needs native Icarus": 1,
+            "needs native Yosys": 1
+          }
+        },
+        {
+          "suite": "cli",
+          "ran": 171,
+          "skipped": 21,
+          "summary_line": "2026-10-20T04:56:27.3476045Z Ran 171 tests in 6.141s",
+          "outcome_line": "2026-10-20T04:56:27.3476518Z OK (skipped=21)",
+          "skip_reasons": {
+            "needs Icarus and Cocotb": 1,
+            "needs Icarus": 7,
+            "needs native POSIX Bash completion and argcomplete": 1,
+            "needs native POSIX process groups and shell": 1,
+            "legacy Linux distribution and Docker installer checks": 11
+          }
+        }
+      ]
+    },
+    {
+      "target": "macos-x86_64",
+      "job_url": "https://github.com/sfmth/verilog-workbench/actions/runs/39372047666/job/118462200768",
+      "log_sha256": "dcd5e19eb98235ea53fd35630efea9398e89b5377b990a8db3a7f92b93d21b65",
+      "suites": [
+        {
+          "suite": "unit",
+          "ran": 319,
+          "skipped": 19,
+          "summary_line": "2026-10-20T04:56:19.6007960Z Ran 319 tests in 22.027s",
+          "outcome_line": "2026-10-20T04:56:19.6008550Z OK (skipped=19)",
+          "skip_reasons": {
+            "Set VWB_COCOTB_RUNTIME_TEST_ACQUISITION to run the real managed runtime regressions": 3,
+            "host does not support this long-path fixture": 1,
+            "native SBY/Yosys/Z3 required": 3,
+            "real Icarus tools required": 1,
+            "Windows containment failure path": 1,
+            "Set VWB_VERILATOR_TEST_ACQUISITION for real Verilator acceptance": 6,
+            "needs native GHDL": 1,
+            "needs native Yosys and Graphviz": 1,
+            "needs native Icarus": 1,
+            "needs native Yosys": 1
+          }
+        },
+        {
+          "suite": "cli",
+          "ran": 171,
+          "skipped": 19,
+          "summary_line": "2026-10-20T04:56:30.4087550Z Ran 171 tests in 10.391s",
+          "outcome_line": "2026-10-20T04:56:30.4087970Z OK (skipped=19)",
+          "skip_reasons": {
+            "needs Icarus and Cocotb": 1,
+            "needs Icarus": 7,
+            "legacy Linux distribution and Docker installer checks": 11
+          }
+        }
+      ]
+    },
+    {
+      "target": "linux-x86_64",
+      "job_url": "https://github.com/sfmth/verilog-workbench/actions/runs/39372047666/job/118462200854",
+      "log_sha256": "b54ff14e03aefbbaf30c8bd52fa80294754da9e46e8ef030dff831a5e66a9bb1",
+      "suites": [
+        {
+          "suite": "unit",
+          "ran": 319,
+          "skipped": 18,
+          "summary_line": "2026-10-20T04:56:04.0050090Z Ran 319 tests in 9.446s",
+          "outcome_line": "2026-10-20T04:56:04.0050574Z OK (skipped=18)",
+          "skip_reasons": {
+            "Set VWB_COCOTB_RUNTIME_TEST_ACQUISITION to run the real managed runtime regressions": 3,
+            "native SBY/Yosys/Z3 required": 3,
+            "real Icarus tools required": 1,
+            "Windows containment failure path": 1,
+            "Set VWB_VERILATOR_TEST_ACQUISITION for real Verilator acceptance": 6,
+            "needs native GHDL": 1,
+            "needs native Yosys and Graphviz": 1,
+            "needs native Icarus": 1,
+            "needs native Yosys": 1
+          }
+        },
+        {
+          "suite": "cli",
+          "ran": 171,
+          "skipped": 8,
+          "summary_line": "2026-10-20T04:56:08.1602361Z Ran 171 tests in 3.942s",
+          "outcome_line": "2026-10-20T04:56:08.1602832Z OK (skipped=8)",
+          "skip_reasons": {
+            "needs Icarus and Cocotb": 1,
+            "needs Icarus": 7
+          }
+        }
+      ]
+    },
+    {
+      "target": "macos-arm64",
+      "job_url": "https://github.com/sfmth/verilog-workbench/actions/runs/39372047666/job/118462200861",
+      "log_sha256": "9bb392f726d6de575ba39eba1f7b6285b31ced18d915cd2440dfb97c7d5eba68",
+      "suites": [
+        {
+          "suite": "unit",
+          "ran": 319,
+          "skipped": 19,
+          "summary_line": "2026-10-20T04:56:14.7014590Z Ran 319 tests in 14.204s",
+          "outcome_line": "2026-10-20T04:56:14.7015860Z OK (skipped=19)",
+          "skip_reasons": {
+            "Set VWB_COCOTB_RUNTIME_TEST_ACQUISITION to run the real managed runtime regressions": 3,
+            "host does not support this long-path fixture": 1,
+            "native SBY/Yosys/Z3 required": 3,
+            "real Icarus tools required": 1,
+            "Windows containment failure path": 1,
+            "Set VWB_VERILATOR_TEST_ACQUISITION for real Verilator acceptance": 6,
+            "needs native GHDL": 1,
+            "needs native Yosys and Graphviz": 1,
+            "needs native Icarus": 1,
+            "needs native Yosys": 1
+          }
+        },
+        {
+          "suite": "cli",
+          "ran": 171,
+          "skipped": 19,
+          "summary_line": "2026-10-20T04:56:20.8905060Z Ran 171 tests in 5.807s",
+          "outcome_line": "2026-10-20T04:56:20.8905490Z OK (skipped=19)",
+          "skip_reasons": {
+            "needs Icarus and Cocotb": 1,
+            "needs Icarus": 7,
+            "legacy Linux distribution and Docker installer checks": 11
+          }
+        }
+      ]
+    },
+    {
+      "target": "windows-arm64",
+      "job_url": "https://github.com/sfmth/verilog-workbench/actions/runs/39372047666/job/118462200868",
+      "log_sha256": "3ef9e730352bbe27294bf568e06a36a1bdc5e59d597fec9e15f218ae2618bf71",
+      "suites": [
+        {
+          "suite": "unit",
+          "ran": 319,
+          "skipped": 30,
+          "summary_line": "2026-10-20T04:56:25.5933931Z Ran 319 tests in 16.594s",
+          "outcome_line": "2026-10-20T04:56:25.5934133Z OK (skipped=30)",
+          "skip_reasons": {
+            "Mac Yosys overlay executes POSIX upstream launchers": 1,
+            "Executable mode is a POSIX source property": 1,
+            "Creating upstream symlinks requires Windows developer mode": 1,
+            "Set VWB_COCOTB_RUNTIME_TEST_ACQUISITION to run the real managed runtime regressions": 3,
+            "POSIX SIGTERM graceful shutdown; Windows forced termination has different semantics": 1,
+            "POSIX private directory permissions": 1,
+            "POSIX native path limits only": 1,
+            "POSIX named pipes only": 1,
+            "POSIX permissions only": 1,
+            "Windows os.rename is already exclusive": 1,
+            "native SBY/Yosys/Z3 required": 3,
+            "real Icarus tools required": 1,
+            "POSIX launcher behavior": 1,
+            "POSIX separately owned CLI/tool sessions": 1,
+            "POSIX PID ownership during group cleanup": 1,
+            "Creating symlinks requires Windows developer mode": 1,
+            "Set VWB_VERILATOR_TEST_ACQUISITION for real Verilator acceptance": 6,
+            "needs native GHDL": 1,
+            "needs native Yosys and Graphviz": 1,
+            "needs native Icarus": 1,
+            "needs native Yosys": 1
+          }
+        },
+        {
+          "suite": "cli",
+          "ran": 171,
+          "skipped": 21,
+          "summary_line": "2026-10-20T04:56:32.3460514Z Ran 171 tests in 6.056s",
+          "outcome_line": "2026-10-20T04:56:32.3460724Z OK (skipped=21)",
+          "skip_reasons": {
+            "needs Icarus and Cocotb": 1,
+            "needs Icarus": 7,
+            "needs native POSIX Bash completion and argcomplete": 1,
+            "needs native POSIX process groups and shell": 1,
+            "legacy Linux distribution and Docker installer checks": 11
+          }
+        }
+      ]
+    },
+    {
+      "target": "linux-arm64",
+      "job_url": "https://github.com/sfmth/verilog-workbench/actions/runs/39372047666/job/118462201067",
+      "log_sha256": "a3a6b2f221a2a44e30e9480bbd556d349ed8b39460ca8e4c239953c0133bcd09",
+      "suites": [
+        {
+          "suite": "unit",
+          "ran": 319,
+          "skipped": 18,
+          "summary_line": "2026-10-20T04:56:04.4007275Z Ran 319 tests in 8.225s",
+          "outcome_line": "2026-10-20T04:56:04.4007586Z OK (skipped=18)",
+          "skip_reasons": {
+            "Set VWB_COCOTB_RUNTIME_TEST_ACQUISITION to run the real managed runtime regressions": 3,
+            "native SBY/Yosys/Z3 required": 3,
+            "real Icarus tools required": 1,
+            "Windows containment failure path": 1,
+            "Set VWB_VERILATOR_TEST_ACQUISITION for real Verilator acceptance": 6,
+            "needs native GHDL": 1,
+            "needs native Yosys and Graphviz": 1,
+            "needs native Icarus": 1,
+            "needs native Yosys": 1
+          }
+        },
+        {
+          "suite": "cli",
+          "ran": 171,
+          "skipped": 8,
+          "summary_line": "2026-10-20T04:56:07.6964971Z Ran 171 tests in 3.121s",
+          "outcome_line": "2026-10-20T04:56:07.6965283Z OK (skipped=8)",
+          "skip_reasons": {
+            "needs Icarus and Cocotb": 1,
+            "needs Icarus": 7
+          }
+        }
+      ]
+    }
+  ],
+  "toolchain_workflows": [
+    {
+      "target": "arch-x64",
+      "artifact_name": "m0-toolchains-arch-userspace",
+      "report_file": "workflows-arch-x64.json",
+      "report_sha256": "be1fd0a73a5906a0524d00ca4a98662cfd56888eb99ce4051ed836b46ce7503a",
+      "mode": "execution",
+      "smoke_passed": true,
+      "required_workflows": 14,
+      "passed_required_workflows": 14,
+      "workflow_states": {
+        "verilog_simulation": "passed",
+        "systemverilog_simulation": "passed",
+        "verilator_simulation": "blocked",
+        "cocotb_verilator": "blocked",
+        "waveforms": "passed",
+        "cocotb_verilog": "passed",
+        "vhdl_simulation": "passed",
+        "cocotb_vhdl": "passed",
+        "lint": "passed",
+        "synthesis": "passed",
+        "schematics": "passed",
+        "vhdl_synthesis": "passed",
+        "formal_proof": "passed",
+        "formal_counterexample": "passed",
+        "fpga_tangnano9k_build": "passed",
+        "fpga_icebreaker_build": "passed",
+        "fpga_tangnano9k_programming": "not_run",
+        "fpga_icebreaker_programming": "not_run"
+      },
+      "binary_architecture": "x64",
+      "compatibility": "none",
+      "source_sha256": {
+        "vwb.py": "4ccd65901295d7ad9df9ac4dd51bc2747b3f873c6eef9418083cc125ccfa6023",
+        "companion/process.py": "500b9a1cfac6aded8028923aa2ba35c14b4efa6677c2d8a81bfdff85cb0c266d",
+        "companion/toolchains.py": "935b2ba03a17e824b23fc24476299095507e26af67ab71516d173fd0ea9945c0",
+        "scripts/probe_toolchain.py": "22066f34b06f9eec20e0253ff3abe214690352aeb84f24c1fefaee19b6615985"
+      }
+    },
+    {
+      "target": "darwin-arm64",
+      "artifact_name": "m0-toolchains-darwin-arm64",
+      "report_file": "workflows-darwin-arm64.json",
+      "report_sha256": "75115b955f7675373f9bcbf6b642f4bb97a9c18d9c0556bc9c891ff55a0433cb",
+      "mode": "execution",
+      "smoke_passed": true,
+      "required_workflows": 14,
+      "passed_required_workflows": 14,
+      "workflow_states": {
+        "verilog_simulation": "passed",
+        "systemverilog_simulation": "passed",
+        "verilator_simulation": "not_run",
+        "cocotb_verilator": "not_run",
+        "waveforms": "passed",
+        "cocotb_verilog": "passed",
+        "vhdl_simulation": "passed",
+        "cocotb_vhdl": "passed",
+        "lint": "passed",
+        "synthesis": "passed",
+        "schematics": "passed",
+        "vhdl_synthesis": "passed",
+        "formal_proof": "passed",
+        "formal_counterexample": "passed",
+        "fpga_tangnano9k_build": "passed",
+        "fpga_icebreaker_build": "passed",
+        "fpga_tangnano9k_programming": "not_run",
+        "fpga_icebreaker_programming": "not_run"
+      },
+      "binary_architecture": "arm64",
+      "compatibility": "none",
+      "source_sha256": {
+        "vwb.py": "4ccd65901295d7ad9df9ac4dd51bc2747b3f873c6eef9418083cc125ccfa6023",
+        "companion/process.py": "500b9a1cfac6aded8028923aa2ba35c14b4efa6677c2d8a81bfdff85cb0c266d",
+        "companion/toolchains.py": "935b2ba03a17e824b23fc24476299095507e26af67ab71516d173fd0ea9945c0",
+        "scripts/probe_toolchain.py": "22066f34b06f9eec20e0253ff3abe214690352aeb84f24c1fefaee19b6615985"
+      }
+    },
+    {
+      "target": "darwin-x64",
+      "artifact_name": "m0-toolchains-darwin-x64",
+      "report_file": "workflows-darwin-x64.json",
+      "report_sha256": "29ddaf13d8ed3a1e6f067eaf05c2f4070a019b0c8aa9365885b85c605f75de42",
+      "mode": "execution",
+      "smoke_passed": true,
+      "required_workflows": 14,
+      "passed_required_workflows": 14,
+      "workflow_states": {
+        "verilog_simulation": "passed",
+        "systemverilog_simulation": "passed",
+        "verilator_simulation": "not_run",
+        "cocotb_verilator": "not_run",
+        "waveforms": "passed",
+        "cocotb_verilog": "passed",
+        "vhdl_simulation": "passed",
+        "cocotb_vhdl": "passed",
+        "lint": "passed",
+        "synthesis": "passed",
+        "schematics": "passed",
+        "vhdl_synthesis": "passed",
+        "formal_proof": "passed",
+        "formal_counterexample": "passed",
+        "fpga_tangnano9k_build": "passed",
+        "fpga_icebreaker_build": "passed",
+        "fpga_tangnano9k_programming": "not_run",
+        "fpga_icebreaker_programming": "not_run"
+      },
+      "binary_architecture": "x64",
+      "compatibility": "none",
+      "source_sha256": {
+        "vwb.py": "4ccd65901295d7ad9df9ac4dd51bc2747b3f873c6eef9418083cc125ccfa6023",
+        "companion/process.py": "500b9a1cfac6aded8028923aa2ba35c14b4efa6677c2d8a81bfdff85cb0c266d",
+        "companion/toolchains.py": "935b2ba03a17e824b23fc24476299095507e26af67ab71516d173fd0ea9945c0",
+        "scripts/probe_toolchain.py": "22066f34b06f9eec20e0253ff3abe214690352aeb84f24c1fefaee19b6615985"
+      }
+    },
+    {
+      "target": "linux-arm64",
+      "artifact_name": "m0-toolchains-linux-arm64",
+      "report_file": "workflows-linux-arm64.json",
+      "report_sha256": "29a490e0ffa30b5b79d1b0245554960e3296c822ed6456fcffd2690a83e6e572",
+      "mode": "execution",
+      "smoke_passed": true,
+      "required_workflows": 14,
+      "passed_required_workflows": 14,
+      "workflow_states": {
+        "verilog_simulation": "passed",
+        "systemverilog_simulation": "passed",
+        "verilator_simulation": "not_run",
+        "cocotb_verilator": "not_run",
+        "waveforms": "passed",
+        "cocotb_verilog": "passed",
+        "vhdl_simulation": "passed",
+        "cocotb_vhdl": "passed",
+        "lint": "passed",
+        "synthesis": "passed",
+        "schematics": "passed",
+        "vhdl_synthesis": "passed",
+        "formal_proof": "passed",
+        "formal_counterexample": "passed",
+        "fpga_tangnano9k_build": "passed",
+        "fpga_icebreaker_build": "passed",
+        "fpga_tangnano9k_programming": "not_run",
+        "fpga_icebreaker_programming": "not_run"
+      },
+      "binary_architecture": "arm64",
+      "compatibility": "none",
+      "source_sha256": {
+        "vwb.py": "4ccd65901295d7ad9df9ac4dd51bc2747b3f873c6eef9418083cc125ccfa6023",
+        "companion/process.py": "500b9a1cfac6aded8028923aa2ba35c14b4efa6677c2d8a81bfdff85cb0c266d",
+        "companion/toolchains.py": "935b2ba03a17e824b23fc24476299095507e26af67ab71516d173fd0ea9945c0",
+        "scripts/probe_toolchain.py": "22066f34b06f9eec20e0253ff3abe214690352aeb84f24c1fefaee19b6615985"
+      }
+    },
+    {
+      "target": "linux-x64",
+      "artifact_name": "m0-toolchains-linux-x64",
+      "report_file": "workflows-linux-x64.json",
+      "report_sha256": "45887477d322fb40729753cdd0caf7fb283d7bd91a9271c6e8dbcd8eb2ce0aef",
+      "mode": "execution",
+      "smoke_passed": true,
+      "required_workflows": 14,
+      "passed_required_workflows": 14,
+      "workflow_states": {
+        "verilog_simulation": "passed",
+        "systemverilog_simulation": "passed",
+        "verilator_simulation": "not_run",
+        "cocotb_verilator": "not_run",
+        "waveforms": "passed",
+        "cocotb_verilog": "passed",
+        "vhdl_simulation": "passed",
+        "cocotb_vhdl": "passed",
+        "lint": "passed",
+        "synthesis": "passed",
+        "schematics": "passed",
+        "vhdl_synthesis": "passed",
+        "formal_proof": "passed",
+        "formal_counterexample": "passed",
+        "fpga_tangnano9k_build": "passed",
+        "fpga_icebreaker_build": "passed",
+        "fpga_tangnano9k_programming": "not_run",
+        "fpga_icebreaker_programming": "not_run"
+      },
+      "binary_architecture": "x64",
+      "compatibility": "none",
+      "source_sha256": {
+        "vwb.py": "4ccd65901295d7ad9df9ac4dd51bc2747b3f873c6eef9418083cc125ccfa6023",
+        "companion/process.py": "500b9a1cfac6aded8028923aa2ba35c14b4efa6677c2d8a81bfdff85cb0c266d",
+        "companion/toolchains.py": "935b2ba03a17e824b23fc24476299095507e26af67ab71516d173fd0ea9945c0",
+        "scripts/probe_toolchain.py": "22066f34b06f9eec20e0253ff3abe214690352aeb84f24c1fefaee19b6615985"
+      }
+    },
+    {
+      "target": "windows-arm64",
+      "artifact_name": "m0-toolchains-windows-arm64",
+      "report_file": "workflows-windows-arm64.json",
+      "report_sha256": "727fdd66c01a74951f6d7c8e627c66186d35783b4b65bd00bdffa4dee1455633",
+      "mode": "execution",
+      "smoke_passed": true,
+      "required_workflows": 14,
+      "passed_required_workflows": 14,
+      "workflow_states": {
+        "verilog_simulation": "passed",
+        "systemverilog_simulation": "passed",
+        "verilator_simulation": "not_run",
+        "cocotb_verilator": "not_run",
+        "waveforms": "passed",
+        "cocotb_verilog": "passed",
+        "vhdl_simulation": "passed",
+        "cocotb_vhdl": "passed",
+        "lint": "passed",
+        "synthesis": "passed",
+        "schematics": "passed",
+        "vhdl_synthesis": "passed",
+        "formal_proof": "passed",
+        "formal_counterexample": "passed",
+        "fpga_tangnano9k_build": "passed",
+        "fpga_icebreaker_build": "passed",
+        "fpga_tangnano9k_programming": "not_run",
+        "fpga_icebreaker_programming": "not_run"
+      },
+      "binary_architecture": "x64",
+      "compatibility": "Windows 11 built-in x64 emulation; not ARM64-native",
+      "source_sha256": {
+        "vwb.py": "3011f5b3a2727f6a370a5e4bd64766ac3b4de460cf1c83f8c40cb9471e7a5062",
+        "companion/process.py": "d61e4905168e2e42015ac068e62aada4676baf968566d530d7a855c89333ba8f",
+        "companion/toolchains.py": "f4ff466efe3b58defd3a3ddb608f489142200a3e54e5b59670f7ed83af9480f0",
+        "scripts/probe_toolchain.py": "1253512661d8247c28b9401f6ce8b8e19e839e41bcc8ce39ef5f58487da6166b"
+      }
+    },
+    {
+      "target": "windows-x64",
+      "artifact_name": "m0-toolchains-windows-x64",
+      "report_file": "workflows-windows-x64.json",
+      "report_sha256": "5bbdadba3ce79cda3a0b0b832782334d9b2641beb899c4bed695de65af0304dd",
+      "mode": "execution",
+      "smoke_passed": true,
+      "required_workflows": 14,
+      "passed_required_workflows": 14,
+      "workflow_states": {
+        "verilog_simulation": "passed",
+        "systemverilog_simulation": "passed",
+        "verilator_simulation": "not_run",
+        "cocotb_verilator": "not_run",
+        "waveforms": "passed",
+        "cocotb_verilog": "passed",
+        "vhdl_simulation": "passed",
+        "cocotb_vhdl": "passed",
+        "lint": "passed",
+        "synthesis": "passed",
+        "schematics": "passed",
+        "vhdl_synthesis": "passed",
+        "formal_proof": "passed",
+        "formal_counterexample": "passed",
+        "fpga_tangnano9k_build": "passed",
+        "fpga_icebreaker_build": "passed",
+        "fpga_tangnano9k_programming": "not_run",
+        "fpga_icebreaker_programming": "not_run"
+      },
+      "binary_architecture": "x64",
+      "compatibility": "none",
+      "source_sha256": {
+        "vwb.py": "3011f5b3a2727f6a370a5e4bd64766ac3b4de460cf1c83f8c40cb9471e7a5062",
+        "companion/process.py": "d61e4905168e2e42015ac068e62aada4676baf968566d530d7a855c89333ba8f",
+        "companion/toolchains.py": "f4ff466efe3b58defd3a3ddb608f489142200a3e54e5b59670f7ed83af9480f0",
+        "scripts/probe_toolchain.py": "1253512661d8247c28b9401f6ce8b8e19e839e41bcc8ce39ef5f58487da6166b"
+      }
+    }
+  ],
+  "earlier_failure": {
+    "run_url": "https://github.com/sfmth/verilog-workbench/actions/runs/39371817540",
+    "head_sha": "277e811f375c797b55b4e31c7bbd48878ded4477",
+    "affected_jobs": [
+      {
+        "target": "windows-x64",
+        "url": "https://github.com/sfmth/verilog-workbench/actions/runs/39371817540/job/118461152001"
+      },
+      {
+        "target": "windows-arm64",
+        "url": "https://github.com/sfmth/verilog-workbench/actions/runs/39371817540/job/118461151824"
+      }
+    ],
+    "reason": "New upstream source downloads attempted atomic replacement and failure cleanup while NamedTemporaryFile writer remained open; Windows raised WinError 32. Three download-path test errors on each Windows architecture.",
+    "fix_sha": "27905aa5523863aecaf2b5480618fe69ef844dd8",
+    "fix": "Close the temporary writer before digest verification, atomic replacement, and cleanup; portable success/failure handle-order regression added."
+  },
+  "proof_limits": [
+    "Availability and platform-specific skips in the six native unit/CLI jobs are retained exactly; these jobs do not execute every optional installed-tool test.",
+    "The six new managed Verilator timed/asserting/VPI/VCD/FST tests and 23-design upstream corpus are required separately in Linux x64 upstream-hdl CI; this M0 matrix does not prove those additional engine workflows on all six platforms.",
+    "Windows ARM64 companion/runtime job is native ARM64; its 14 HDL toolchain workflows use explicitly declared Windows 11 x64 emulation and an x64 MSVC Python overlay.",
+    "Arch evidence is a development-container userspace smoke gate, not a clean workstation installation.",
+    "Physical FPGA programming and clean-machine installation are not exercised by this smoke matrix."
+  ],
+  "paths_redacted": true,
+  "original_report_sha256": "32e4536ab0179156d5454a153491b54fb0fb5410b8ad9596719559384cdfafed"
+}
