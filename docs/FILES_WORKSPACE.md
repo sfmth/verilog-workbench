@@ -154,3 +154,14 @@ That is native filesystem/API evidence; full browser/platform and crash-durabili
 acceptance are separate. The four wider toolchain failures still match the
 documented missing GHDL/Cocotb/Graphviz package routes. Linux x86-64, Arch userspace
 and Apple Silicon pass all 14 toolchain smoke checks.
+
+The follow-up `6ceb9c3` preserves the prior native Windows uppercase `.PY`/`.SBY`
+matching and POSIX case sensitivity in default discovery; `9381fae` canonicalizes
+that new test fixture's temporary paths. The web and companion source bytes are
+unchanged. [Final Pages run 39356087324](https://github.com/sfmth/verilog-workbench/actions/runs/39356087324)
+passes build, deploy and every public probe again. Its
+[final Pages summary](workspace-evidence/files-final-pages-ci.json) records all
+six browser reports and ten delivered asset hashes matching the retained
+14-file manifest. [Native run 39356198313](https://github.com/sfmth/verilog-workbench/actions/runs/39356198313)
+verifies the compatibility case on both Windows architectures and the six-host
+unit/CLI/bundle/smoke gates, with [final native evidence](workspace-evidence/files-native-final-ci.json).

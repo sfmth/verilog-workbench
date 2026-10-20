@@ -1,0 +1,144 @@
+{
+  "schema": "vwb.files-final-pages-evidence/1",
+  "recorded_at": "2026-10-20T01:59:04.722180+00:00",
+  "run_url": "https://github.com/sfmth/verilog-workbench/actions/runs/39356087324",
+  "head_sha": "6ceb9c31d3f8f6feeddf1aeb5ab839a3d098f62f",
+  "status": "completed",
+  "conclusion": "success",
+  "jobs": [
+    {
+      "name": "build",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/sfmth/verilog-workbench/actions/runs/39356087324/job/118411066659"
+    },
+    {
+      "name": "deploy",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/sfmth/verilog-workbench/actions/runs/39356087324/job/118411471083"
+    },
+    {
+      "name": "verify-public",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/sfmth/verilog-workbench/actions/runs/39356087324/job/118411552540"
+    }
+  ],
+  "reports": {
+    "built_lifecycle": {
+      "state": "passed",
+      "browser": "151.0.7922.34",
+      "checks": [
+        "real-workspace-project-prefix-and-companion-UI-pairing",
+        "UI-Enter-creates-Unicode-folder-and-button-creates-empty-file-then-edits-and-saves",
+        "delayed-entry-response-after-deselection-cannot-stick-loading-or-enable-stale-mutation",
+        "post-create-open-transport-failure-keeps-committed-file-reports-applied-error-and-never-retries-POST",
+        "multi-file-folder-move-preserves-exact-bytes-remaps-clean-tabs-hash-and-save-target",
+        "dirty-buffer-blocks-lifecycle-without-disk-changes",
+        "unresolved-recovery-draft-blocks-lifecycle",
+        "stale-entry-revision-conflict-preserves-external-bytes-and-path",
+        "existing-destination-conflict-never-overwrites-either-file",
+        "UI-folder-trash-closes-remapped-tabs-retains-private-undownloadable-data",
+        "trash-survives-real-native-clean-companion-restart-and-new-UI-session",
+        "UI-restore-refuses-external-replacement-then-restores-original-four-language-tree",
+        "authenticated-HTTP-rejects-configured-roots-config-build-Git-traversal-and-private-trash",
+        "restored-project-runs-real-native-discovery-through-UI",
+        "loaded-assets-match-manifest-and-browser-storage-keeps-credentials-and-unopted-drafts-out"
+      ],
+      "report_sha256": "5c51fb21ce0d4acf0d34318ade099fc0a8f1ddda704e6d072e653fcb52fe7a3f"
+    },
+    "built_semantic": {
+      "state": "passed",
+      "browser": "151.0.7922.34",
+      "checks": [
+        "systemverilog-real-semantic-editor-UI-and-transaction-acceptance",
+        "vhdl-real-semantic-editor-UI-and-transaction-acceptance",
+        "python-real-semantic-editor-UI-and-transaction-acceptance"
+      ],
+      "report_sha256": "74d60ad15ac30e0dd71cc26b3979dfce2d85a4e8f6646c8160dd5bdfd56e53c3"
+    },
+    "built_workspace": {
+      "state": "passed",
+      "browser": "151.0.7922.34",
+      "checks": [
+        "built-root-project-prefix-and-fragment-reload",
+        "real-pairing-multifile-tabs-revision-save-CRLF-and-keyboard",
+        "external-change-conflict-without-overwrite",
+        "draft-export-import-explicit-recovery-reload-and-no-stored-credentials",
+        "native-companion-discover-job",
+        "saved-and-reverted-edits-retain-stale-job-status",
+        "artifact-download-vcd-worker-render-and-malformed-recovery",
+        "native-Icarus-pass-assertions-generated-VCD-download-and-worker-render",
+        "native-compiler-failure-and-raw-diagnostics",
+        "native-infinite-simulation-stop-after-runtime-marker",
+        "native-simulation-recovery-after-failure-and-cancellation",
+        "optional-guide-open-and-close",
+        "distinct-project-clears-results-and-ignores-simulated-late-old-session-responses"
+      ],
+      "report_sha256": "4f31cb15dd187b8f09b791dd8d0fcac9fd356521887886ecc4393aa614161c62"
+    },
+    "public_lifecycle": {
+      "state": "passed",
+      "browser": "151.0.7922.34",
+      "checks": [
+        "real-workspace-project-prefix-and-companion-UI-pairing",
+        "UI-Enter-creates-Unicode-folder-and-button-creates-empty-file-then-edits-and-saves",
+        "delayed-entry-response-after-deselection-cannot-stick-loading-or-enable-stale-mutation",
+        "post-create-open-transport-failure-keeps-committed-file-reports-applied-error-and-never-retries-POST",
+        "multi-file-folder-move-preserves-exact-bytes-remaps-clean-tabs-hash-and-save-target",
+        "dirty-buffer-blocks-lifecycle-without-disk-changes",
+        "unresolved-recovery-draft-blocks-lifecycle",
+        "stale-entry-revision-conflict-preserves-external-bytes-and-path",
+        "existing-destination-conflict-never-overwrites-either-file",
+        "UI-folder-trash-closes-remapped-tabs-retains-private-undownloadable-data",
+        "trash-survives-real-native-clean-companion-restart-and-new-UI-session",
+        "UI-restore-refuses-external-replacement-then-restores-original-four-language-tree",
+        "authenticated-HTTP-rejects-configured-roots-config-build-Git-traversal-and-private-trash",
+        "restored-project-runs-real-native-discovery-through-UI",
+        "loaded-assets-match-manifest-and-browser-storage-keeps-credentials-and-unopted-drafts-out"
+      ],
+      "report_sha256": "c8e1f9d453014442f6764b5e9abe4b6607434c1fcf52fe944d5dfb86997c3fbb"
+    },
+    "public_semantic": {
+      "state": "passed",
+      "browser": "151.0.7922.34",
+      "checks": [
+        "systemverilog-real-semantic-editor-UI-and-transaction-acceptance",
+        "vhdl-real-semantic-editor-UI-and-transaction-acceptance",
+        "python-real-semantic-editor-UI-and-transaction-acceptance"
+      ],
+      "report_sha256": "762c25f6ade0e8be264968d1ac5d29de447f4a4a2101694e3ca0929c55190f39"
+    },
+    "public_workspace": {
+      "state": "passed",
+      "browser": "151.0.7922.34",
+      "checks": [
+        "fresh-context-observed-loopback-health-without-test-permission-grant",
+        "actual-HTTPS-Pages-app-brand-preview-manifest-and-fragment-route",
+        "real-public-app-UI-pairing-Unicode-project-multifile-CRLF-and-keyboard-save",
+        "real-disk-revision-conflict-preserves-external-edit-and-explicit-reload",
+        "public-fragment-reload-forgets-session-and-new-one-time-UI-pairing-restores-file",
+        "real-native-discovery-job-and-output-through-public-app",
+        "exact-companion-viewer-fixture-download-and-public-VCD-worker-render",
+        "deployed-document-styles-modules-and-worker-bytes-match-public-build-manifest",
+        "no-browser-script-errors-or-stored-credentials"
+      ],
+      "report_sha256": "78d8c6c4664b29e7bf93297c2187ad79000d968aeaf7f351b02f5331d345264e"
+    }
+  },
+  "final_cli_sha256": "3b08aaaa1451d4e207aa0557e23d2626c6ef8fdd178ed96a27c70aa8852c7819",
+  "scope": "Final Linux Chromium build/public acceptance after native filename-matching correction. Public local-network permission is a Chromium test API grant. Hardware, manual browser prompts and full release gates remain separate.",
+  "verified_deployed_assets": {
+    "m0/client.mjs": "b00b1560eb55a8da374c59c0903b9281727d44132e3227f7da3063944167f9f4",
+    "workspace/app.mjs": "f217521f0bfd67a59a9618e0e649bbb53f60725bac7c4d5a8186a531e5a23bd2",
+    "workspace/files.mjs": "dec64e371c20342bbcc7b740f21964064a1d0b3e7d24088b175532ba291c9b9c",
+    "workspace/index.html": "63da4f720e4b8ef2d6b19611a97fb21e52f6c22cadf69cc8926f4e9660b84a73",
+    "workspace/intelligence.mjs": "737a179def2088dba8e4d45f7c1ef02f971484d890ad9f9f95c851296ca6d556",
+    "workspace/model.mjs": "56fcd7aee518afdb4cbd44d87604dbfac0fee07af2e8f8f62aca99ad606cad88",
+    "workspace/style.css": "fdb30da580ca770e6a55b7670bba954c04642b3db7ea2ae8c170e9e361bddfd4",
+    "workspace/vcd-worker.mjs": "ae1cf96d1cdff4435311cb13df4be3d6670854faece90b518489115a24043a20",
+    "workspace/vcd.mjs": "ba8509f15d38d0e1824e41101c0d9bb30c00b4a2aade00f57575f27d8f66f7f7",
+    "workspace/waveform.mjs": "cfd91d2a7f5ae378f8253b7ade5ca047dd90e721af77be9285e22941ece907fd"
+  }
+}

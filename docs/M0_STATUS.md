@@ -20,6 +20,12 @@ recovery. Real local Chromium checks pass the SystemVerilog, VHDL and Python
 fixtures. Broader constructs, managed service installation and other-platform
 semantic/durability acceptance remain open; the original M0 table is unchanged.
 
+The [file/folder workspace integration](FILES_WORKSPACE.md) now adds native
+revision-checked creation/moves, private persistent trash and conflict-safe
+restoration. Its Linux Chromium built/public probes pass 15 groups; all six
+native unit/CLI/bundle/smoke jobs pass. Broader browser/install/hardware gates
+and the four documented toolchain package gaps remain open.
+
 The local Linux x86-64 toolchain passed **14 real checks in each of three path
 cases: 42 executions** across ordinary paths, spaces, and Unicode/spaces. Native
 runtime packaging and semantic editor probes also have local evidence. Those
