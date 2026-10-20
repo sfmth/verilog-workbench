@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self' http://127.0.0.1:* http://localhost:* http://[::1]:* https://127.0.0.1:* https://localhost:*; worker-src 'self'; img-src 'self' blob:; object-src 'none'; base-uri 'none'">
+  <title>Workspace · Verilog Workbench</title>
+  <link rel="stylesheet" href="style.css">
+  <script type="module" src="app.mjs"></script>
+</head>
+<body>
+  <a class="skip" href="#editor">Skip to editor</a>
+  <header class="topbar"><a class="brand" href="../">V<span>WB</span><small>VERILOG WORKBENCH</small></a><span class="preview-badge">DEVELOPMENT PREVIEW</span><div class="header-actions"><span id="connection-indicator" class="connection">Disconnected</span><button id="guide-toggle">Guide</button><button id="connect-toggle" class="primary">Connect companion</button></div></header>
+  <div class="workbench">
+    <aside class="sidebar" aria-label="Project explorer">
+      <div class="section-heading"><h1 id="project-name">Local project</h1><button id="refresh" disabled aria-label="Refresh files">↻</button></div>
+      <nav class="explorer-tabs" aria-label="Project views"><button data-explorer="files" aria-pressed="true">Files</button><button data-explorer="designs" aria-pressed="false">Designs</button><button data-explorer="tests" aria-pressed="false">Tests</button></nav>
+      <label class="sr-only" for="filter">Filter project files</label><input id="filter" type="search" placeholder="Find a file…" autocomplete="off">
+      <div id="explorer" class="explorer"><p class="empty">Connect a companion to open your project.</p></div>
+      <section id="recovery" hidden><h2>Recovered drafts</h2><p>Review before saving. Disk changes are checked.</p><div id="recovery-list"></div></section>
+      <div class="sidebar-foot"><label class="check"><input id="persist-drafts" type="checkbox"> Keep unsaved recovery in this browser</label><p>Recovery stores source text here only. Session credentials stay in memory.</p><div class="actions"><button id="export-drafts" disabled>Export drafts</button><label class="button file-picker">Import drafts<input id="import-drafts" type="file" accept=".json,application/json" disabled></label></div></div>
+    </aside>
+    <main class="workspace-main">
+      <section class="runbar" aria-label="Native tool controls">
+        <label>Action<select id="command"><option value="list">Discover project</option><option value="test">Run tests</option><option value="lint">Lint</option><option value="synth">Synthesize</option><option value="formal">Formal</option><option value="fpga">FPGA build</option><option value="doctor">Check tools</option></select></label>
+        <label>Top / module<input id="module" list="module-list" placeholder="All discovered tops" autocomplete="off" spellcheck="false"><datalist id="module-list"></datalist></label>
+        <div id="test-options" class="command-options" hidden><label>Test language<select id="test-language"><option value="auto">Auto</option><option value="cocotb">Cocotb / Python</option><option value="verilog">Verilog</option><option value="vhdl">VHDL</option></select></label><label>Seed<input id="seed" type="number" min="0" max="4294967295" placeholder="Default"></label><label class="check"><input id="waves" type="checkbox" checked> VCD waves</label></div>
+        <div id="lint-options" class="command-options" hidden><label>Linter<select id="linter"><option value="all">All available</option><option value="iverilog">Icarus</option><option value="verilator">Verilator</option><option value="yosys">Yosys</option><option value="verible">Verible</option><option value="ghdl">GHDL</option></select></label></div>
+        <div id="synth-options" class="command-options" hidden><label>Output<select id="synth-format"><option value="svg">SVG schematic</option><option value="json">JSON netlist</option><option value="png">PNG schematic</option><option value="dot">DOT graph</option></select></label></div>
+        <div id="formal-options" class="command-options" hidden><label>Configuration<input id="formal-config" placeholder="Project .sby file (optional)" spellcheck="false"></label></div>
+        <div id="fpga-options" class="command-options" hidden><label>Board<select id="board"><option value="tangnano9k">Tang Nano 9K</option><option value="icebreaker">iCEBreaker</option></select></label><label>Stage<select id="stage"><option value="pack">Pack image</option><option value="pnr">Place &amp; route</option><option value="synth">Synthesize</option></select></label><label>Constraints<input id="constraints" placeholder="src/io.cst or .pcf" spellcheck="false"></label><button id="program" disabled>Program board…</button></div>
+        <div class="actions run-actions"><button id="run" class="primary" disabled>Run</button><button id="cancel" disabled>Stop</button></div>
+      </section>
+      <section class="editor-panel" aria-label="File editor">
+        <div id="file-tabs" class="file-tabs" aria-label="Open files"></div>
+        <div class="editor-toolbar"><span id="active-file">No file open</span><div class="actions"><button id="reload" disabled>Reload from disk</button><button id="save" disabled>Save <kbd>Ctrl S</kbd></button><button id="save-all" disabled>Save all</button></div></div>
+        <div id="editor-empty" class="editor-empty"><span class="circuit-mark" aria-hidden="true">⌘</span><h2>Make something work.</h2><p>Connect a companion, choose a file, and start building.</p><button id="empty-connect" class="primary">Connect your project</button></div>
+        <textarea id="editor" aria-label="File contents" spellcheck="false" autocapitalize="off" autocomplete="off" wrap="off" hidden disabled></textarea>
+        <div class="editor-status"><span id="file-status" role="status">Files are saved to your local project.</span><span id="position">UTF-8</span></div>
+      </section>
+      <section class="results" aria-label="Tool results">
+        <div class="results-heading"><nav aria-label="Result views"><button data-result="logs" aria-pressed="true">Output</button><button data-result="diagnostics" aria-pressed="false">Diagnostics <span id="diagnostic-count">0</span></button><button data-result="artifacts" aria-pressed="false">Artifacts</button><button data-result="waveform" aria-pressed="false">Waveform</button><button data-result="tools" aria-pressed="false">Tools</button></nav><span id="job-status" role="status">No job submitted</span><button id="resume-job" hidden>Resume status</button></div>
+        <div id="result-logs" class="result-pane"><pre id="job-output">Native tool output will appear here. Run “Discover project” to list design units and tests.</pre></div>
+        <div id="result-diagnostics" class="result-pane" hidden><p class="muted">Compiler messages link to source when a location is recognized. Full raw output is always retained.</p><div id="diagnostics"></div></div>
+        <div id="result-artifacts" class="result-pane" hidden><div class="actions"><button id="refresh-artifacts" disabled>Refresh artifacts</button><span class="muted">Artifacts include previous runs. Rerun the relevant workflow to regenerate them.</span></div><div id="artifact-list"></div><div id="artifact-preview"></div></div>
+        <div id="result-waveform" class="result-pane" hidden><div class="actions"><label class="button file-picker">Open local VCD<input id="import-vcd" type="file" accept=".vcd"></label><span class="muted">VCD only. FST and GTKWave layout import are not available.</span></div><div id="waveform-view"><p class="empty">Open a VCD artifact after a simulation, or choose a local VCD file.</p></div></div>
+        <div id="result-tools" class="result-pane" hidden><p class="muted">Discovery reports installed tools; it does not certify workflow or hardware support.</p><button id="check-tools" disabled>Refresh tool report</button><pre id="tools-output">No capability report loaded.</pre></div>
+      </section>
+    </main>
+    <aside id="guide" class="guide" hidden aria-label="Getting started guide"><div class="section-heading"><h2>First circuit</h2><button id="guide-close" aria-label="Close guide">×</button></div><p class="eyebrow">A SMALL LOOP, REAL TOOLS.</p><ol><li><h3>Connect a folder</h3><p>Start the command below with a trusted project. The companion uses your project’s configured source and test paths.</p><pre id="launch-command"></pre></li><li><h3>Explore the design</h3><p>Run “Discover project”. Choose a top from the toolbar, then open its files from Designs or Tests.</p></li><li><h3>Save and simulate</h3><p>Edit a file, then Run tests. Runs first save all open edits. An external disk change stops the save with a visible conflict.</p></li><li><h3>Inspect the result</h3><p>Read Output and Diagnostics. In Artifacts, open a VCD waveform or download a schematic. Cancel long jobs with Stop.</p></li><li><h3>Keep experimenting</h3><p>Try the bundled examples folder as your companion project. Start with <code>sv_beginner_counter</code> or <code>vhdl_beginner_counter</code>. Native HDL tools must be installed.</p></li></ol><p class="notice">Development preview: semantic completion, navigation and rename, file lifecycle operations, complete installers and six-platform/board acceptance remain release gates.</p></aside>
+  </div>
+  <footer class="statusbar"><span id="global-status" role="status">Ready · Project files stay on your machine</span><span>Protocol v1 · Local native tools</span></footer>
+  <dialog id="connect-dialog"><form id="pair-form"><div class="section-heading"><h2>Connect your companion</h2><button id="connect-close" type="button" aria-label="Close connection dialog">×</button></div><p>Start the companion with your trusted local project, then enter its address and one-time code.</p><pre id="connect-command"></pre><label for="endpoint">Local companion address</label><input id="endpoint" type="url" value="http://127.0.0.1:8765" required autocomplete="off" spellcheck="false"><label for="code">One-time pairing code</label><input id="code" type="password" required autocomplete="off"><div class="actions"><button id="pair" class="primary">Pair companion</button><button id="retry" type="button" hidden>Retry connection</button><button id="forget" type="button" hidden>Forget session</button></div><p id="connection-status" role="status">Not connected.</p><details><summary>Permission, disconnect and pairing help</summary><p>Allow this site’s local network permission when your browser asks. After a temporary disconnect, Retry connection retains your session and edits. After restarting the companion, use its new code. Codes expire after five minutes and work once. Reloading this page forgets credentials; enable draft recovery or export your edits first.</p></details></form></dialog>
+</body>
+</html>

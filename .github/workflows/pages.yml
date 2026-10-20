@@ -1,32 +1,91 @@
-name: VWB development proof on Pages
+name: VWB development preview on Pages
 
 on:
   push:
     branches: [web-port-plan]
-    paths: ['web/**', '.github/workflows/pages.yml']
+    paths:
+      - 'web/**'
+      - 'companion/**'
+      - 'protocol/**'
+      - 'vwb.py'
+      - 'scripts/build_web.py'
+      - 'scripts/probe_workspace.mjs'
+      - 'tests/test_web_build.py'
+      - 'tests/test_*.mjs'
+      - '.github/workflows/pages.yml'
+  pull_request:
+    paths:
+      - 'web/**'
+      - 'companion/**'
+      - 'protocol/**'
+      - 'vwb.py'
+      - 'scripts/build_web.py'
+      - 'scripts/probe_workspace.mjs'
+      - 'tests/test_web_build.py'
+      - 'tests/test_*.mjs'
+      - '.github/workflows/pages.yml'
   workflow_dispatch:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 concurrency:
-  group: pages
+  group: pages-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Check Pages paths and repeatable static builds
+        run: python -m unittest discover -s tests -p test_web_build.py -v
+      - name: Check browser protocol and workspace models
+        run: node --test tests/test_*.mjs
+      - name: Build validated development preview
+        run: python scripts/build_web.py --output dist/web --base-path /verilog-workbench/
+      - name: Install pinned browser acceptance harness
+        run: npm install --prefix .web-browser --no-audit --no-fund playwright@1.62.1
+      - name: Install Chromium
+        run: .web-browser/node_modules/.bin/playwright install --with-deps chromium
+      - name: Install native Icarus for real pass, failure and cancellation acceptance
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y iverilog
+      - name: Exercise built Pages paths with the real native companion
+        run: node scripts/probe_workspace.mjs --playwright-module ../.web-browser/node_modules/playwright --native-sim true --output pages-browser-evidence.json --screenshot pages-workspace.png
+      - name: Retain browser evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pages-browser-evidence
+          path: |
+            pages-browser-evidence.json
+            pages-workspace.png
+          if-no-files-found: warn
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist/web
+
   deploy:
-    if: github.ref == 'refs/heads/web-port-plan'
+    needs: build
+    if: github.ref == 'refs/heads/web-port-plan' && github.event_name != 'pull_request'
+    permissions:
+      pages: write
+      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deploy.outputs.page_url }}
     runs-on: ubuntu-24.04
+    timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
       - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: web
       - uses: actions/deploy-pages@v4
         id: deploy

@@ -15,7 +15,8 @@ export class CompanionClient {
     this.token = null;
   }
   forget() { this.token = null; }
-  async request(path, {method = 'GET', body, authenticated = true} = {}) {
+  async request(path, {method = 'GET', body, authenticated = true, responseType = 'json'} = {}) {
+    if (!['json', 'blob'].includes(responseType)) throw new Error('Invalid response type.');
     if (!path.startsWith('/v1/') || path.includes('://')) throw new Error('Invalid protocol path.');
     if (authenticated && !this.token) throw new Error('Pair the companion first.');
     const headers = {};
@@ -29,13 +30,13 @@ export class CompanionClient {
         signal: controller.signal, mode: 'cors', credentials: 'omit',
         cache: 'no-store', referrerPolicy: 'no-referrer', targetAddressSpace: 'loopback',
       });
-      const data = await response.json();
       if (!response.ok) {
+        const data = await response.json();
         const error = new Error(data.error || `Companion request failed (${response.status}).`);
         error.status = response.status;
         throw error;
       }
-      return data;
+      return responseType === 'blob' ? await response.blob() : await response.json();
     } finally { clearTimeout(timer); }
   }
   async pair(code) {

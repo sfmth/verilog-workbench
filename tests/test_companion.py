@@ -75,6 +75,15 @@ class CompanionTests(unittest.TestCase):
         self.assertEqual(status, 200)
         self.assertEqual(set(data), {"status", "protocol", "version"})
 
+    def test_project_identity_scopes_recovery_without_exposing_absolute_path(self):
+        paired = self.pair()["project"]
+        self.assertRegex(paired["id"], r"^[a-f0-9]{64}$")
+        self.assertEqual(paired["id"], ProjectGrant(self.root).summary()["id"])
+        self.assertNotIn(str(self.root), json.dumps(paired))
+        sibling = self.root / "other" / self.root.name
+        sibling.mkdir(parents=True)
+        self.assertNotEqual(paired["id"], ProjectGrant(sibling).summary()["id"])
+
     def test_numeric_loopback_startup_never_reverse_resolves_dns(self):
         with patch("socket.getfqdn", side_effect=AssertionError("loopback startup must not query DNS")):
             server = create_server(self.root, ORIGIN)

@@ -1,0 +1,40 @@
+{
+  "schema": "vwb.workspace-browser-probe/1",
+  "recorded_at": "2026-10-19T18:28:47.255Z",
+  "state": "passed",
+  "checks": [
+    "built-root-project-prefix-and-fragment-reload",
+    "real-pairing-multifile-tabs-revision-save-CRLF-and-keyboard",
+    "external-change-conflict-without-overwrite",
+    "draft-export-import-explicit-recovery-reload-and-no-stored-credentials",
+    "native-companion-discover-job",
+    "saved-and-reverted-edits-retain-stale-job-status",
+    "artifact-download-vcd-worker-render-and-malformed-recovery",
+    "native-Icarus-pass-assertions-generated-VCD-download-and-worker-render",
+    "native-compiler-failure-and-raw-diagnostics",
+    "native-infinite-simulation-stop-after-runtime-marker",
+    "native-simulation-recovery-after-failure-and-cancellation",
+    "optional-guide-open-and-close",
+    "distinct-project-clears-results-and-ignores-simulated-late-old-session-responses"
+  ],
+  "pages_prefix": "/verilog-workbench/",
+  "native_job": "passed-real-vwb-list",
+  "waveform": "passed-explicit-fixture-worker-render-download-and-malformed-input",
+  "actual_pages_deployment": "not_tested",
+  "hardware_tested": false,
+  "native_simulation": "passed-real-Icarus-assertions-and-generated-VCD",
+  "native_failure": "passed-real-compiler-failure-with-raw-source-diagnostics",
+  "native_cancellation": "passed-real-vvp-runtime-stop-and-terminal-cancelled",
+  "note": "Built local preview and native inventory acceptance; fixture VCD is not a simulation or FPGA programming result.",
+  "iverilog_version": "Icarus Verilog version 13.0 (stable) (v13_0-dirty)",
+  "browser": "141.0.7390.37",
+  "session_isolation": "passed-distinct-real-projects-with-simulated-delayed-old-tool-success-and-artifact401",
+  "static_errors": [],
+  "script_errors": [],
+  "workers": [
+    "http://127.0.0.1:35375/verilog-workbench/workspace/vcd-worker.mjs",
+    "http://127.0.0.1:35375/verilog-workbench/workspace/vcd-worker.mjs",
+    "http://127.0.0.1:35375/verilog-workbench/workspace/vcd-worker.mjs",
+    "http://127.0.0.1:35375/verilog-workbench/workspace/vcd-worker.mjs"
+  ]
+}

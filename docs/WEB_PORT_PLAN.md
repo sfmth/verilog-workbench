@@ -7,6 +7,13 @@ Local Linux evidence is recorded; the full M0 exit gate remains open for the
 unverified platform/browser/install/hardware cells and documented blockers.
 See [M0 implementation and evidence status](M0_STATUS.md).
 
+Development update, 2026-10-19: an internal [browser workspace preview](WEB_WORKSPACE.md)
+now adds multi-file local editing, revision-safe saves/recovery, controls for the
+existing native jobs, artifact downloads, worker-parsed VCD viewing, and a
+validated Pages build. This advances portions of M1/M2/M4 without closing their
+exit gates. Semantic editor integration, remaining platform/tool installation,
+actual public HTTPS/browser acceptance and physical board evidence remain open.
+
 Started: 2026-10-17 (America/Los_Angeles).
 Latest owner decisions: 2026-10-18 (America/Los_Angeles).
 
@@ -47,9 +54,9 @@ not satisfy the requested first usable release until all required workflows
 work on the agreed platform/board matrix. No required feature is deferred
 merely because browser-only execution is difficult.
 
-This branch now contains the M0 engineering foundation and local feasibility
-evidence alongside this plan. It does not yet provide the complete editor
-website or certify the requested six-platform release. Existing CLI behavior
+This branch contains the M0 engineering foundation, local feasibility
+evidence and internal workspace preview alongside this plan. It does not yet
+provide the complete editor website or certify the requested six-platform release. Existing CLI behavior
 remains the compatibility baseline; narrow process and formal-path fixes are
 covered by regression checks. Public Pages publication remains a separate gate.
 

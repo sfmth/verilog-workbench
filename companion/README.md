@@ -4,6 +4,10 @@ This module establishes a working, stdlib-only bridge between the GitHub Pages
 frontend and one explicitly granted local project. It is an engineering proof,
 not a declaration that the website or six-platform release is finished.
 
+The [workspace development preview](../docs/WEB_WORKSPACE.md) uses this same
+bridge for multi-file editing, recovery, native jobs and artifact/VCD viewing.
+The M0 proof remains available for focused connection checks.
+
 From a source checkout with Python 3.10 or newer:
 
 ```sh

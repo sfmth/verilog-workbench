@@ -35,3 +35,18 @@ test('browser fetch receives its Window receiver', async () => {
   });
   await client.pair('one-time-code');
 });
+test('artifact bytes use the authenticated fetch and retain structured errors', async () => {
+  const payload = new Blob(['$enddefinitions $end\n#0\n0!\n']);
+  const calls = [];
+  const client = new CompanionClient('http://127.0.0.1:8765', async (url, options) => {
+    calls.push({url, options});
+    return {ok: true, blob: async () => payload};
+  });
+  client.token = 'artifact-session';
+  assert.equal(await client.request('/v1/artifacts/file?path=.vwb%2Fa.vcd', {responseType: 'blob'}), payload);
+  assert.equal(calls[0].options.headers.Authorization, 'Bearer artifact-session');
+  assert.equal(calls[0].options.credentials, 'omit');
+  assert.ok(!calls[0].url.includes('artifact-session'));
+  client.fetcher = async () => ({ok: false, status: 413, json: async () => ({error: 'artifact exceeds limit'})});
+  await assert.rejects(client.request('/v1/artifacts/file?path=x', {responseType: 'blob'}), error => error.status === 413);
+});

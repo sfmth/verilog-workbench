@@ -32,6 +32,7 @@
       "type": "object", "additionalProperties": false,
       "required": ["name", "src_dir", "test_dir", "build_dir"],
       "properties": {
+        "id": {"type": "string", "pattern": "^[a-f0-9]{64}$", "description": "Optional stable opaque canonical-folder identity for scoped browser draft recovery; not a credential or proof of project contents."},
         "name": {"type": "string"},
         "src_dir": {"$ref": "#/$defs/path"},
         "test_dir": {"$ref": "#/$defs/path"},

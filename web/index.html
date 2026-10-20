@@ -1,2 +1,27 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Verilog Workbench · Development</title><meta http-equiv="refresh" content="0;url=m0/"></head><body><p>VWB is in development. <a href="m0/">Open the M0 companion connection proof.</a></p></body></html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self'; object-src 'none'; base-uri 'none'">
+  <title>Verilog Workbench · Local tools, browser workspace</title>
+  <link rel="stylesheet" href="workspace/style.css">
+</head>
+<body class="landing">
+  <header class="topbar"><a class="brand" href="./">V<span>WB</span><small>VERILOG WORKBENCH</small></a><span class="preview-badge">DEVELOPMENT PREVIEW</span></header>
+  <main class="welcome">
+    <p class="eyebrow">YOUR PROJECT. YOUR MACHINE.</p>
+    <h1>A workbench for<br>your next circuit.</h1>
+    <p class="lede">Edit local HDL and Python files, run your native tools, and explore the results in your browser.</p>
+    <div class="actions"><a class="button primary" href="workspace/">Open workspace ↗</a><a class="button" href="m0/">Connection proof</a></div>
+    <div class="welcome-grid">
+      <section><span class="step">01 / CONNECT</span><h2>Open an ordinary folder.</h2><p>Start the native companion with a trusted project. Pair this tab using its one-time code. Files stay on your computer.</p><pre>python -m companion --project /path/to/project
+  --origin https://sfmth.github.io --port 0</pre></section>
+      <section><span class="step">02 / BUILD</span><h2>Work with real tools.</h2><p>Save with revision checks, run tests, lint, synthesis, formal and FPGA builds through the companion. Download artifacts or view VCD waveforms.</p><p>Native tools must be installed separately. A missing tool is reported by the companion.</p></section>
+      <section><span class="step">03 / EXPLORE</span><h2>See what changed.</h2><p>Inspect logs and source-linked messages. Keep unsaved drafts with opt-in browser recovery, or export them for later.</p><p>Semantic editing, complete installers, six-platform and physical-board acceptance remain release gates.</p></section>
+    </div>
+    <p class="muted">GPL-2.0-only · No account or project upload · Development preview, with release gates still open.</p>
+  </main>
+</body>
+</html>

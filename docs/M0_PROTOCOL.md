@@ -62,6 +62,14 @@ selective revocation or automatic session timeout in M0; stopping/restarting
 the process revokes it. Forgetting a token in one browser tab only clears that
 tab. Never put codes/tokens in URLs, persistent frontend storage, or logs.
 
+Project summaries additionally expose an optional `id`: a SHA-256 digest of the
+canonical folder path, normalized for host case behavior. The workspace uses it
+to scope opted-in recovery so equally named folders do not share drafts. It is
+not an authorization token or content revision, and does not expose the absolute
+path. Older protocol-1 companions without this field remain usable; automatic
+browser recovery is disabled for them. Moving a project changes this identity;
+draft exports can be reviewed and imported explicitly.
+
 CORS preflights are unauthenticated and have no pairing or file/job side
 effects. With the exact Origin/Host, they allow requested methods `GET`, `POST`,
 or `PUT` and headers `Authorization`/`Content-Type` only. An older browser's

@@ -5,10 +5,11 @@ check them, records waveforms, creates circuit drawings, and builds supported
 FPGA projects. It is intended for people who know basic digital logic and are
 starting to write Verilog, SystemVerilog, or VHDL.
 
-The `web-port-plan` branch also contains the M0 website/companion foundation.
-See the [M0 status and remaining acceptance gates](docs/M0_STATUS.md),
-[native companion](companion/README.md), and [browser proof](docs/M0_BROWSER.md).
-The complete website workspace is still in development.
+The `web-port-plan` branch contains a [browser workspace development preview](docs/WEB_WORKSPACE.md)
+with local file editing, draft recovery, native tool controls and a VCD viewer.
+It builds for GitHub Pages and uses the [native companion](companion/README.md).
+The [M0 acceptance gaps](docs/M0_STATUS.md) and complete-release gates remain
+open; this preview is not the finished six-platform release.
 
 ## First Five Minutes
 

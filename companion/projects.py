@@ -70,7 +70,10 @@ class ProjectGrant:
                 raise ProjectError(400, "source and test directories cannot be inside build directory")
 
     def summary(self):
-        return {"name": self.root.name, "src_dir": self.src_dir,
+        # Scope browser recovery to the canonical grant, including two folders
+        # with the same display name. Never expose the absolute host path.
+        identity = hashlib.sha256(os.fsencode(os.path.normcase(str(self.root)))).hexdigest()
+        return {"id": identity, "name": self.root.name, "src_dir": self.src_dir,
                 "test_dir": self.test_dir, "build_dir": self.build_dir}
 
     def path(self, value, *, allow_root=False):
