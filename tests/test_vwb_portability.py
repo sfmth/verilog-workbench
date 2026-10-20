@@ -37,7 +37,7 @@ class VwbPortabilityTests(unittest.TestCase):
 
     def test_uppercase_cocotb_and_formal_suffixes_keep_native_glob_case_semantics(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             (root / 'src').mkdir()
             (root / 'test').mkdir()
             (root / 'src/top.sv').write_text('module top; endmodule\n', encoding='utf-8')
