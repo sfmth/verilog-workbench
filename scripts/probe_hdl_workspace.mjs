@@ -45,7 +45,7 @@ const prefix = publicUrl ? new URL('../', publicUrl).pathname : '/verilog-workbe
 const secrets = new Set([temporary, repo]);
 if (acquisition) secrets.add(acquisition.suitePath);
 const sha = value => createHash('sha256').update(value).digest('hex');
-const children = [], contexts = [], scriptErrors = [], assetErrors = [], assetResponses = [];
+const children = [], contexts = [], scriptErrors = [], assetErrors = [];
 const loadedAssets = new Map();
 let browser, page, staticServer, origin, workspaceUrl, endpoint, project, screenshotSaved = false;
 let manifestFingerprint;
@@ -348,8 +348,24 @@ try {
   for (const name of selected) {
     const started = Date.now(), definition = definitions[name], spec = specFor(definition);
     const evidence = report.workflows[name] = {state: 'failed', fixture: definition.base || name, selected_controls: spec};
-    const workflowAssets = new Map();
-    let context, native;
+    const workflowAssets = new Map(), responseTasks = new Set(), staticRequests = new Set();
+    let context, native, workflowPage, observeStaticResponse, observeJobResponse, observeStaticRequest, forgetStaticRequest;
+    const trackResponse = promise => {
+      responseTasks.add(promise);
+      promise.finally(() => responseTasks.delete(promise));
+    };
+    const isStaticRequest = request => {
+      const url = new URL(request.url());
+      return url.origin === origin && url.pathname.startsWith(prefix);
+    };
+    const drainResponses = async () => {
+      // Responses can start more module/worker requests while their bodies are
+      // read. A Promise.all(array) snapshot misses those later readers and can
+      // close their browser context underneath response.body(). Track both the
+      // live requests and readers, then detach observers before closing.
+      await until(() => responseTasks.size === 0 && staticRequests.size === 0,
+        'all current workflow static requests and response bodies before context teardown');
+    };
     try {
       project = path.join(temporary, name + ' project µ'); await fs.cp(fixtures, project, {recursive: true});
       await fs.writeFile(path.join(project, '.vwb.json'), JSON.stringify({version: 1, src_dir: 'src', test_dir: 'test', build_dir: 'build'}) + '\n');
@@ -375,19 +391,26 @@ try {
       native = await companion(); context = await browser.newContext({acceptDownloads: true, viewport: {width: 1512, height: 1050}}); contexts.push(context);
       if (publicUrl) { await context.grantPermissions(['local-network-access'], {origin}); report.permission_grant = 'explicit-simulated-Chromium-context-grantPermissions-local-network-access'; }
       else report.permission_grant = 'not-required-loopback-HTTP-preview-origin-no-browser-security-bypass';
-      page = await context.newPage(); page.setDefaultTimeout(30000);
+      page = workflowPage = await context.newPage(); page.setDefaultTimeout(30000);
       page.on('pageerror', error => scriptErrors.push({workflow: name, message: safe(error.message)})); page.on('dialog', dialog => dialog.accept());
-      page.on('response', response => {
+      observeJobResponse = response => {
         if (!response.url().startsWith(native.ready.url + '/v1/jobs/')) return;
         if (response.request().method() !== 'GET') return;
-        assetResponses.push(response.json().then(body => page.evaluate(({url, body}) => { (window.__vwbHDLResponses ||= []).push({url, body}); }, {url: response.url(), body})).catch(() => {}));
-      });
-      context.on('response', response => {
+        trackResponse(response.json().then(body => workflowPage.evaluate(({url, body}) => { (window.__vwbHDLResponses ||= []).push({url, body}); }, {url: response.url(), body})).catch(() => {}));
+      };
+      observeStaticRequest = request => { if (isStaticRequest(request)) staticRequests.add(request); };
+      forgetStaticRequest = request => staticRequests.delete(request);
+      observeStaticResponse = response => {
         const url = new URL(response.url()); if (url.origin !== origin || !url.pathname.startsWith(prefix)) return;
         const relative = decodeURIComponent(url.pathname.slice(prefix.length)), asset = relative.endsWith('/') ? relative + 'index.html' : relative;
         if (asset === 'vwb-web-build.json' || asset.endsWith('favicon.ico')) return;
-        assetResponses.push((async () => { if (response.status() !== 200) assetErrors.push({workflow: name, path: asset, status: response.status()}); else { const digest = sha(await response.body()); loadedAssets.set(asset, digest); workflowAssets.set(asset, digest); } })().catch(error => assetErrors.push({workflow: name, path: asset, error: safe(error.message)})));
-      });
+        trackResponse((async () => { if (response.status() !== 200) assetErrors.push({workflow: name, path: asset, status: response.status()}); else { const digest = sha(await response.body()); loadedAssets.set(asset, digest); workflowAssets.set(asset, digest); } })().catch(error => assetErrors.push({workflow: name, path: asset, error: safe(error.message)})));
+      };
+      page.on('response', observeJobResponse);
+      context.on('request', observeStaticRequest);
+      context.on('requestfinished', forgetStaticRequest);
+      context.on('requestfailed', forgetStaticRequest);
+      context.on('response', observeStaticResponse);
       const navigation = await page.goto(workspaceUrl, {waitUntil: 'networkidle', timeout: 45000}); assert.equal(navigation.status(), 200); await pair(native.ready);
       await page.locator('[data-result="tools"]').click();
       const [capabilityResponse] = await Promise.all([page.waitForResponse(response => response.url() === endpoint + '/v1/capabilities'), page.locator('#check-tools').click()]);
@@ -509,7 +532,8 @@ try {
       evidence.duration_seconds = Math.round((Date.now() - started) / 10) / 100;
       if (page && context) {
         const manifest = await page.evaluate(async url => { const response = await fetch(url, {cache: 'no-store'}); if (!response.ok) throw new Error('Manifest HTTP ' + response.status); return response.json(); }, origin + prefix + 'vwb-web-build.json').catch(() => null);
-        await Promise.all(assetResponses);
+        await drainResponses();
+        assert.ok(manifest, 'Every HDL workflow must read its runtime manifest before context teardown.');
         if (manifest) {
           const fingerprint = sha(JSON.stringify(manifest));
           if (manifestFingerprint !== undefined) assert.equal(fingerprint, manifestFingerprint, 'The deployed build changed between HDL workflow contexts; rerun one coherent deployment.');
@@ -518,7 +542,15 @@ try {
           report.deployed_manifest = manifest;
         }
       }
-      await Promise.all(assetResponses); await context?.close().catch(() => {}); if (native) await stop(native.child);
+      if (context) {
+        await drainResponses();
+        evidence.response_collection = {state: 'drained-before-context-close', pending_response_readers: responseTasks.size, pending_static_requests: staticRequests.size};
+        if (observeStaticResponse) context.off('response', observeStaticResponse);
+        if (observeStaticRequest) context.off('request', observeStaticRequest);
+        if (forgetStaticRequest) { context.off('requestfinished', forgetStaticRequest); context.off('requestfailed', forgetStaticRequest); }
+        if (observeJobResponse) workflowPage.off('response', observeJobResponse);
+      }
+      await context?.close().catch(() => {}); if (native) await stop(native.child);
     }
   }
   assert.equal(report.deployed_manifest?.schema, 'vwb.web-build/1'); assert.equal(report.deployed_manifest?.base_path, prefix);
