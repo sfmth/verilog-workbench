@@ -1,0 +1,54 @@
+{
+  "schema": "vwb.source-editing-source-evidence/1",
+  "recorded_at": "2026-10-20T02:13:21.817833+00:00",
+  "scope": "Local actual Chromium source editing acceptance, plus separate simulation, semantic and lifecycle regressions. Actual public HTTPS and six-host CI are recorded after publishing. The persisted-pagehide check is explicitly a simulated DOM event, not real BFCache acceptance.",
+  "source_sha256": {
+    "web/workspace/app.mjs": "6d5d5b9a858caa9a5e2f7d611df3cf11a40d7aa13ab755b60e069f327fa110c3",
+    "web/workspace/index.html": "48e4d54c0032f451eb5a45ca34548b1337a697eef1a5d88ea70b8a5ab7037b71",
+    "web/workspace/style.css": "9de2b7f8f661b2380239dd993a36253f15ebe81a1e5176b6a58b7bb091de3306",
+    "web/workspace/search.mjs": "a5cf5b25d679a70a6a911dcabd694b0e9247abf265b8f617d4c03fba0ce14e24",
+    "web/workspace/syntax.mjs": "7ff937c236481cfa97aa8867cfd14aa25cf40bedf351a4103b1d0471704faf95",
+    "web/workspace/syntax-worker.mjs": "a2a32b3e911873858c6808ed8ad8af8150f4a66d53f74c1cb16f013eea066136",
+    "web/workspace/syntax-view.mjs": "2762ad1daf4bdadcd03a0e10856f6e276da35f767253fc06b8b095f221af97ed",
+    "web/workspace/files.mjs": "35aab4320e716da536bcc2f4228af47c54c8ae4eee324b7c8c57e8e30028e438",
+    "scripts/probe_source_workspace.mjs": "64542f2bd61c5b525534cac29cf0b5b8d09d50b3e8aa845d4b7e35c73f01906d",
+    "scripts/probe_files_workspace.mjs": "1ab1c7f415535c89456a1c4e4ce63c8f12b29e4ae149159625b5d69ae780a26f",
+    "tests/test_search.mjs": "d98337f709ea128ed28e4ddea9c4ec9836900b9c809c348050e2e5c5009b0e6d",
+    "tests/test_syntax.mjs": "67cb2e5f46b86a8bf679d30a2f96554a4104d25b637e978c88a773ab42f14043",
+    "tests/test_syntax_view.mjs": "2e35c9b72b7bf0dfe153001502574849a9aa47338a296c2c307f31f93235de9f",
+    ".github/workflows/pages.yml": "cd5c8aea76af03fcedee195aa5d256c369a7b68b1b9202a652fd78b7735d00a5"
+  },
+  "local_tests": {
+    "python": {
+      "total": 238,
+      "skipped": 5,
+      "state": "passed"
+    },
+    "cli": {
+      "total": 162,
+      "skipped": 1,
+      "state": "passed"
+    },
+    "javascript": {
+      "total": 106,
+      "skipped": 0,
+      "state": "passed"
+    }
+  },
+  "local_browser_groups": {
+    "source": 15,
+    "workspace": 13,
+    "semantic_languages": 3,
+    "lifecycle": 16
+  },
+  "browser": "141.0.7390.37",
+  "limits": {
+    "highlight_utf8_bytes": 262144,
+    "highlight_lines": 10000,
+    "highlight_tokens": 8000,
+    "editable_file_utf8_bytes": 2097152,
+    "search_query_utf16_units": 256,
+    "search_matches": 2000
+  },
+  "hardware_tested": false
+}

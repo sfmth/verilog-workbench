@@ -1,8 +1,10 @@
 import {CompanionClient} from '../m0/client.mjs';
 import {WorkspaceModel, MAX_DRAFT_IMPORT_BYTES} from './model.mjs';
 import {mountWaveform} from './waveform.mjs';
-import {mountIntelligence, offsetAt} from './intelligence.mjs';
+import {mountIntelligence, offsetAt, positionAt} from './intelligence.mjs';
 import {mountFileManager} from './files.mjs';
+import {mountSyntax} from './syntax-view.mjs';
+import {mountSearch} from './search.mjs';
 
 const $ = id => document.getElementById(id);
 const all = selector => [...document.querySelectorAll(selector)];
@@ -16,6 +18,7 @@ let pairing = false;
 const dirty = () => [...(model?.buffers.values() || [])].some(buffer => buffer.dirty);
 let intelligence;
 let fileManager;
+let syntaxView, fileSearch;
 
 function node(tag, text, className) {
   const value = document.createElement(tag);
@@ -61,6 +64,7 @@ function renderControls() {
   $('save-all').disabled = !online || !dirty() || preparing;
   $('reload').disabled = !online || !current || !!current.saving || preparing;
   $('editor').disabled = !current || preparing;
+  $('find-open').disabled = !current || preparing;
   $('export-drafts').disabled = !model;
   $('import-drafts').disabled = !model || preparing;
   $('persist-drafts').disabled = !model?.storageKey;
@@ -75,6 +79,7 @@ function renderControls() {
   $('resume-job').hidden = !activeJob;
   intelligence?.refresh();
   fileManager?.refresh();
+  syntaxView?.refresh(); fileSearch?.refresh();
 }
 function renderFileStatus() {
   const file = model?.buffers.get(activePath);
@@ -82,9 +87,8 @@ function renderFileStatus() {
     const message = file.conflict ? 'Conflict: disk changed. Export your draft, then reload to review the disk file.' :
       file.error ? describe(file.error) : file.saving ? 'Saving to local file…' : file.dirty ? 'Unsaved changes' : 'Saved to local file · revision checked';
     say(message, 'file-status', !!file.conflict || !!file.error);
-    const prefix = $('editor').value.slice(0, $('editor').selectionStart);
-    const lines = prefix.split('\n');
-    $('position').textContent = `Ln ${lines.length}, Col ${lines.at(-1).length + 1} · ${file.newline === '\r\n' ? 'CRLF' : file.newline === '\r' ? 'CR' : 'LF'} · UTF-8`;
+    const position = positionAt($('editor').value, $('editor').selectionStart);
+    $('position').textContent = `Ln ${position.line + 1}, Col ${position.character + 1} · ${file.newline === '\r\n' ? 'CRLF' : file.newline === '\r' ? 'CR' : 'LF'} · UTF-8`;
   }
   if (model?.storageError) say(model.storageError + ' Export drafts to keep a copy.', 'global-status', true);
 }
@@ -108,8 +112,10 @@ function renderEditor() {
   const file = model?.buffers.get(activePath);
   $('editor-empty').hidden = !!file;
   $('editor').hidden = !file;
+  $('source-editor').hidden = !file;
   $('editor').value = file?.content || '';
   $('active-file').textContent = file?.path || 'No file open';
+  syntaxView?.refresh(); fileSearch?.refresh();
   renderTabs(); renderControls(); renderFileStatus(); renderExplorer();
 }
 async function openFile(path, line) {
@@ -492,6 +498,7 @@ $('reload').addEventListener('click', () => perform(async () => {
   renderEditor();
 }));
 document.addEventListener('keydown', event => {
+  if (event.isComposing) return;
   const command = (event.ctrlKey || event.metaKey) && event.code === 'Space' ? 'completion' : event.key === 'F12' ? (event.shiftKey ? 'references' : 'definition') : null;
   if (command && document.activeElement === $('editor')) {
     event.preventDefault(); showResult('intelligence'); void intelligence.query(command); return;
@@ -543,7 +550,6 @@ window.addEventListener('hashchange', () => perform(readHash));
 window.addEventListener('beforeunload', event => {
   if (dirty() || model?.recoverable.length || activeJob) { event.preventDefault(); event.returnValue = ''; }
 });
-window.addEventListener('pagehide', () => { disposeWaveform?.(); if (previewUrl) URL.revokeObjectURL(previewUrl); });
 const acceptEdits = result => {
   model.acceptEditorFiles(result.files); editVersion++;
   renderEditor(); if (lastJob) renderJob(lastJob);
@@ -601,6 +607,13 @@ fileManager = mountFileManager($('files-dialog'), {
     say(message, 'global-status', error);
   },
 });
-window.addEventListener('pagehide', () => intelligence.dispose());
-window.addEventListener('pagehide', () => fileManager.dispose());
+const sourceContext = () => ({path: model?.buffers.has(activePath) ? activePath : undefined, sessionId: epoch});
+syntaxView = mountSyntax($('source-editor'), {editor: $('editor'), gutter: $('editor-gutter'), backdrop: $('syntax-backdrop'), status: $('syntax-status'), getContext: sourceContext});
+fileSearch = mountSearch($('find-bar'), {editor: $('editor'), openButton: $('find-open'), query: $('find-query'), matchCase: $('find-case'), previous: $('find-prev'), next: $('find-next'), closeButton: $('find-close'), status: $('find-status'), getContext: sourceContext, onSelect: renderFileStatus});
+window.addEventListener('pagehide', event => {
+  // A back/forward cache restore keeps the same objects and listeners alive.
+  if (event.persisted) return;
+  disposeWaveform?.(); if (previewUrl) URL.revokeObjectURL(previewUrl);
+  intelligence.dispose(); fileManager.dispose(); syntaxView.dispose(); fileSearch.dispose();
+});
 commandChanged(); renderControls(); perform(readHash);

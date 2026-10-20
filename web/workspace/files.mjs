@@ -45,6 +45,9 @@ export function mountFileManager(dialog, {getContext, onBusy, onChanged, onStatu
   let generation = 0, trashGeneration = 0, selected = '', renderedInventory = null;
   let preferredKind = 'file';
   const restoreButtons = [];
+  // A stale reply still owns a model read until its promise settles. Keep all
+  // reads for each model counted across dialog close/reopen and session changes.
+  const pendingReads = new Map();
   const same = previous => {
     const context = getContext();
     return !disposed && previous.model === context.model && previous.client === context.client && previous.sessionId === context.sessionId;
@@ -60,6 +63,7 @@ export function mountFileManager(dialog, {getContext, onBusy, onChanged, onStatu
     if (busy || context.jobRunning) return 'Wait for the active job or file operation.';
     if ([...context.model.buffers.values()].some(buffer => buffer.dirty || buffer.saving || buffer.conflict)) return 'Save or reload all files before changing project paths.';
     if (context.model.recoverable.length) return 'Restore or discard recovery drafts before changing project paths.';
+    if (pendingReads.get(context.model)) return 'Wait for pending file and project trash checks before changing project files.';
     return '';
   }
   function controls() {
@@ -70,8 +74,19 @@ export function mountFileManager(dialog, {getContext, onBusy, onChanged, onStatu
     }
     for (const control of [entries, destination, createPath, close]) control.disabled = busy;
     reload.disabled = busy || !getContext().online || !selected || loading;
-    refreshTrash.disabled = busy || !getContext().online;
+    refreshTrash.disabled = busy || !getContext().online || !!pendingReads.get(getContext().model);
     availability.textContent = blocked;
+  }
+  async function read(context, action) {
+    pendingReads.set(context.model, (pendingReads.get(context.model) || 0) + 1);
+    controls();
+    try { return await action(); }
+    finally {
+      const remaining = pendingReads.get(context.model) - 1;
+      if (remaining) pendingReads.set(context.model, remaining);
+      else pendingReads.delete(context.model);
+      controls();
+    }
   }
   async function inspect() {
     const context = getContext(), request = ++generation;
@@ -79,7 +94,7 @@ export function mountFileManager(dialog, {getContext, onBusy, onChanged, onStatu
     if (!context.online || !selected) { loading = false; details.textContent = 'Choose a file or folder.'; controls(); return; }
     loading = true; controls();
     try {
-      const entry = await context.model.entry(selected);
+      const entry = await read(context, () => context.model.entry(selected));
       if (!same(context) || request !== generation || entry.path !== selected) return;
       snapshot = entry;
       details.textContent = `${entry.kind === 'directory' ? 'Folder' : 'File'} · ${entry.file_count} file${entry.file_count === 1 ? '' : 's'} · ${entry.bytes} bytes`;
@@ -106,7 +121,7 @@ export function mountFileManager(dialog, {getContext, onBusy, onChanged, onStatu
     const context = getContext(), request = ++trashGeneration;
     if (!context.online || !context.model) return;
     try {
-      const result = await context.model.trashEntries();
+      const result = await read(context, () => context.model.trashEntries());
       if (!same(context) || request !== trashGeneration) return;
       trash.replaceChildren(); restoreButtons.length = 0;
       for (const entry of result) {

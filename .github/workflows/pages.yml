@@ -13,6 +13,7 @@ on:
       - 'scripts/probe_pages.mjs'
       - 'scripts/probe_editor_workspace.mjs'
       - 'scripts/probe_files_workspace.mjs'
+      - 'scripts/probe_source_workspace.mjs'
       - 'scripts/acquire_editor_tools.py'
       - 'editor-fixtures/**'
       - 'tests/test_editor.py'
@@ -35,6 +36,7 @@ on:
       - 'scripts/probe_pages.mjs'
       - 'scripts/probe_editor_workspace.mjs'
       - 'scripts/probe_files_workspace.mjs'
+      - 'scripts/probe_source_workspace.mjs'
       - 'scripts/acquire_editor_tools.py'
       - 'editor-fixtures/**'
       - 'tests/test_editor.py'
@@ -97,6 +99,8 @@ jobs:
         run: node scripts/probe_workspace.mjs --playwright-module ../.web-browser/node_modules/playwright --native-sim true --output pages-browser-evidence.json --screenshot pages-workspace.png
       - name: Exercise file and folder management through the built browser UI
         run: node scripts/probe_files_workspace.mjs --playwright-module ../.web-browser/node_modules/playwright --output files-browser-evidence.json --screenshot files-workspace.png
+      - name: Exercise syntax, native editing and literal search through the built browser UI
+        run: node scripts/probe_source_workspace.mjs --playwright-module ../.web-browser/node_modules/playwright --output source-browser-evidence.json --screenshot source-workspace.png
       - name: Retain browser evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -109,6 +113,8 @@ jobs:
             editor-workspace.png
             files-browser-evidence.json
             files-workspace.png
+            source-browser-evidence.json
+            source-workspace.png
           if-no-files-found: warn
       - uses: actions/upload-pages-artifact@v3
         with:
@@ -163,6 +169,10 @@ jobs:
         env:
           VWB_PUBLIC_WORKSPACE: ${{ format('{0}workspace/', needs.deploy.outputs.page_url) }}
         run: node scripts/probe_files_workspace.mjs --public-url "$VWB_PUBLIC_WORKSPACE" --playwright-module ../.web-browser/node_modules/playwright --output files-public-evidence.json --screenshot files-public-workspace.png
+      - name: Verify source editing from the actual HTTPS app
+        env:
+          VWB_PUBLIC_WORKSPACE: ${{ format('{0}workspace/', needs.deploy.outputs.page_url) }}
+        run: node scripts/probe_source_workspace.mjs --public-url "$VWB_PUBLIC_WORKSPACE" --playwright-module ../.web-browser/node_modules/playwright --output source-public-evidence.json --screenshot source-public-workspace.png
       - name: Retain public HTTPS evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -175,4 +185,6 @@ jobs:
             editor-public-workspace.png
             files-public-evidence.json
             files-public-workspace.png
+            source-public-evidence.json
+            source-public-workspace.png
           if-no-files-found: warn

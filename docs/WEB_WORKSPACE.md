@@ -186,8 +186,14 @@ unit/CLI/bundle/smoke jobs pass; the four existing toolchain package gaps remain
 
 ## Remaining release gates
 
+The [source-editing increment](SOURCE_WORKSPACE.md) adds bounded lexical colors
+for all three source languages, synchronized line numbers and literal Unicode
+current-file search. Native textarea input, undo, save/recovery and semantic
+editing remain in place. Built-output and actual HTTPS source probes are now
+required by Pages CI; retained deployment evidence is recorded separately.
+
 M1 still requires broader semantic/rename, project lifecycle and recovery
-fixtures, syntax highlighting and complete folder-selection/watch behavior. M2 needs full
+fixtures, broader syntax coverage and complete folder-selection/watch behavior. M2 needs full
 language/analysis workflows and large-design acceptance.
 M3 needs complete native tool acquisition/install/repair/uninstall and recorded
 board programming. M4 requires the remaining real HTTPS browser/permission

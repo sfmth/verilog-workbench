@@ -21,6 +21,11 @@ creation, reviewed revision-checked moves, clean-tab remapping, persistent priva
 trash and conflict-safe restoration. This closes the initial browser file-action
 gap while broader project/platform acceptance remains required.
 
+The [source-editing increment](SOURCE_WORKSPACE.md) adds bounded lexical colors
+for HDL/Python, synchronized line numbers and literal current-file search while
+preserving native textarea input and undo. Broader syntax/semantic fixtures and
+the remaining release matrix continue to be required.
+
 Started: 2026-10-17 (America/Los_Angeles).
 Latest owner decisions: 2026-10-18 (America/Los_Angeles).
 

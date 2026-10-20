@@ -169,7 +169,9 @@ The wider toolchain workflow still fails its four previously documented package
 gap rows. Native runtime success does not establish semantic service acceptance
 on every platform.
 
-Broader construct/configuration fixtures, diagnostic accuracy, interactive
-snippets, syntax highlighting, file/folder lifecycle, managed service/runtime
+The [file/folder lifecycle](FILES_WORKSPACE.md) and
+[source highlighting/line-number/search](SOURCE_WORKSPACE.md) increments now
+extend this editor. Broader construct/configuration fixtures, diagnostic accuracy,
+interactive snippets, managed service/runtime
 installation, current Firefox/Safari, six-platform durability and physical board
 acceptance remain open. See the [workspace release gates](WEB_WORKSPACE.md).

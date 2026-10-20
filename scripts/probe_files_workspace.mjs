@@ -50,7 +50,7 @@ const report = {
   target: publicUrl ? 'public-HTTPS-workspace' : 'built-local-project-prefix-workspace',
   pages_prefix: prefix, ...(publicUrl ? {public_url: publicUrl.href} : {}), checks: [],
   permission_grant: 'not_run', native_job: 'not_run', hardware_tested: false, transport_fault_injection: [],
-  note: 'Real Chromium controls, native companion and temporary Unicode project. Successful create, move, trash and restore actions use the browser UI; direct authenticated HTTP calls only check access boundaries. Two explicit browser transport faults delay a real entry response and abort the post-create file read; native mutation responses remain real. Native inventory is real; no HDL simulation, language-service or FPGA result is implied. Public runs grant local-network access with the Chromium test API, not a manual permission prompt.',
+  note: 'Real Chromium controls, native companion and temporary Unicode project. Successful create, move, trash and restore actions use the browser UI; direct authenticated HTTP calls only check access boundaries. Three explicit browser transport faults delay real trash and entry responses and abort the post-create file read; native mutation responses remain real. Native inventory is real; no HDL simulation, language-service or FPGA result is implied. Public runs grant local-network access with the Chromium test API, not a manual permission prompt.',
 };
 const checked = name => { report.checks.push(name); process.stderr.write('[files-probe] passed ' + name + '\n'); };
 function safe(value, limit = 14000) {
@@ -278,7 +278,44 @@ try {
   await pair(native.ready);
   checked('real-workspace-project-prefix-and-companion-UI-pairing');
 
-  await showManager('New folder');
+  // Opening the manager starts a real trash read. Hold its response, then
+  // reopen the dialog and deliver a newer read first: the older pending read
+  // must still block both buttons and implicit Enter submission until settled.
+  const trashMatcher = url => url.origin === new URL(endpoint).origin && url.pathname === '/v1/project/trash';
+  let releaseTrash, trashArrived = false, trashReads = 0, pendingCreatePosts = 0;
+  const trashReleased = new Promise(resolve => { releaseTrash = resolve; });
+  const watchCreate = request => {
+    if (request.method() === 'POST' && new URL(request.url()).pathname === '/v1/project/create') pendingCreatePosts++;
+  };
+  page.on('request', watchCreate);
+  await page.route(trashMatcher, async route => {
+    const response = await route.fetch();
+    if (++trashReads === 1) { trashArrived = true; await trashReleased; }
+    await route.fulfill({response});
+  });
+  try {
+    await showManager('New folder');
+    await until(() => trashArrived, 'held real project trash response');
+    assert.ok(await manager().getByRole('button', {name: 'Create folder', exact: true}).isDisabled());
+    await closeManager();
+    const reopenedTrash = page.waitForResponse(response => trashMatcher(new URL(response.url())));
+    await showManager('New folder'); await reopenedTrash;
+    await manager().getByLabel('New path', {exact: true}).fill('src/new µ');
+    assert.ok(await manager().getByRole('button', {name: 'Create file', exact: true}).isDisabled());
+    assert.ok(await manager().getByRole('button', {name: 'Create folder', exact: true}).isDisabled());
+    await manager().getByLabel('New path', {exact: true}).press('Enter');
+    await until(async () => /pending file and project trash checks/i.test(await manager().textContent()), 'visible pending trash submission guard');
+    assert.equal(pendingCreatePosts, 0, 'Enter must not submit a native create while an older trash query is pending.');
+    assert.ok(!(await exists('src/new µ')), 'Blocked submission must leave native disk unchanged.');
+    const delivered = page.waitForResponse(response => trashMatcher(new URL(response.url())));
+    releaseTrash(); await delivered;
+    await until(() => manager().getByRole('button', {name: 'Create folder', exact: true}).isEnabled(), 'all pending trash checks settle');
+  } finally {
+    releaseTrash(); await page.unroute(trashMatcher); page.off('request', watchCreate);
+  }
+  report.transport_fault_injection.push('delayed-real-native-trash-response-delivered-after-dialog-reopen-and-newer-response');
+  checked('pending-trash-reads-across-dialog-reopen-block-buttons-and-Enter-without-native-mutation');
+
   await manager().getByLabel('New path', {exact: true}).fill('src/new µ');
   await action('Create folder', 'create', 200, () => manager().getByLabel('New path', {exact: true}).press('Enter'));
   assert.ok((await fs.stat(path.join(project, 'src/new µ'))).isDirectory());

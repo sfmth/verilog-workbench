@@ -165,3 +165,10 @@ six browser reports and ten delivered asset hashes matching the retained
 14-file manifest. [Native run 39356198313](https://github.com/sfmth/verilog-workbench/actions/runs/39356198313)
 verifies the compatibility case on both Windows architectures and the six-host
 unit/CLI/bundle/smoke gates, with [final native evidence](workspace-evidence/files-native-final-ci.json).
+
+The [source-editing increment](SOURCE_WORKSPACE.md) also fixes a discovered
+dialog race: pending entry/trash reads now block mutation controls and Enter
+submission, including after closing and reopening the dialog. A sixteenth
+lifecycle browser group holds an older real trash reply while delivering a
+newer reply first, verifies no create is posted, then releases the older read
+and completes creation. Backend revision and pending-read guards are unchanged.

@@ -1,0 +1,31 @@
+{
+  "base_path": "/verilog-workbench/",
+  "entry_points": [
+    "/verilog-workbench/",
+    "/verilog-workbench/workspace/",
+    "/verilog-workbench/m0/"
+  ],
+  "files": {
+    "index.html": "662187fa1249334da993e578293641cc3ec3d00745f0ad0e0e0a9fb0cda6e168",
+    "m0/app.js": "81951181c831b77e5ff53b278489e2392447716ad41dac39a4e40b960f809e82",
+    "m0/client.mjs": "b00b1560eb55a8da374c59c0903b9281727d44132e3227f7da3063944167f9f4",
+    "m0/index.html": "892029bce98dcafa4ec78dd545218202d911f8534d9d8f507de19f2d1dc24e0b",
+    "m0/style.css": "0819a392357ca1f089a165143867b7d710b5703e5dbcab980f7c83a5b68bab77",
+    "workspace/app.mjs": "6d5d5b9a858caa9a5e2f7d611df3cf11a40d7aa13ab755b60e069f327fa110c3",
+    "workspace/files.mjs": "35aab4320e716da536bcc2f4228af47c54c8ae4eee324b7c8c57e8e30028e438",
+    "workspace/index.html": "48e4d54c0032f451eb5a45ca34548b1337a697eef1a5d88ea70b8a5ab7037b71",
+    "workspace/intelligence.mjs": "737a179def2088dba8e4d45f7c1ef02f971484d890ad9f9f95c851296ca6d556",
+    "workspace/model.mjs": "56fcd7aee518afdb4cbd44d87604dbfac0fee07af2e8f8f62aca99ad606cad88",
+    "workspace/search.mjs": "a5cf5b25d679a70a6a911dcabd694b0e9247abf265b8f617d4c03fba0ce14e24",
+    "workspace/style.css": "9de2b7f8f661b2380239dd993a36253f15ebe81a1e5176b6a58b7bb091de3306",
+    "workspace/syntax-view.mjs": "2762ad1daf4bdadcd03a0e10856f6e276da35f767253fc06b8b095f221af97ed",
+    "workspace/syntax-worker.mjs": "a2a32b3e911873858c6808ed8ad8af8150f4a66d53f74c1cb16f013eea066136",
+    "workspace/syntax.mjs": "7ff937c236481cfa97aa8867cfd14aa25cf40bedf351a4103b1d0471704faf95",
+    "workspace/vcd-worker.mjs": "ae1cf96d1cdff4435311cb13df4be3d6670854faece90b518489115a24043a20",
+    "workspace/vcd.mjs": "ba8509f15d38d0e1824e41101c0d9bb30c00b4a2aade00f57575f27d8f66f7f7",
+    "workspace/waveform.mjs": "cfd91d2a7f5ae378f8253b7ade5ca047dd90e721af77be9285e22941ece907fd"
+  },
+  "routing": "static-directories-and-fragments",
+  "schema": "vwb.web-build/1",
+  "status": "development-preview"
+}
