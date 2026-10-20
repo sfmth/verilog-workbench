@@ -1,7 +1,7 @@
 # Directed serial and AXI-lite checks
 
 These benches exercise unchanged source files from the pinned upstream archives
-in `upstream/projects.lock.json`. `designs.json` is consumed by the shared
+in `toolchains/upstream-hdl-lock.json`. `designs.json` is consumed by the shared
 upstream CI runner; sources and their original license notices stay in those
 verified archives.
 

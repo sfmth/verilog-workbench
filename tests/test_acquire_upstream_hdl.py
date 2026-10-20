@@ -114,6 +114,37 @@ class AcquisitionTests(unittest.TestCase):
                 self.assertEqual(list((self.directory / 'projects').iterdir()), [])
                 self.assertEqual(list(self.cache.iterdir()), [])
 
+    def test_download_closes_writer_before_replace_or_failure_cleanup(self):
+        original_content = self.archive.read_bytes()
+        original_temporary = acquire_hdl.tempfile.NamedTemporaryFile
+        original_replace = acquire_hdl.os.replace
+        original_unlink = Path.unlink
+        for content in [original_content, original_content + b'oversized']:
+            self.archive.unlink(missing_ok=True)
+            opened = []
+            def temporary(*args, **kwargs):
+                stream = original_temporary(*args, **kwargs)
+                opened.append(stream)
+                return stream
+            def replace(source, destination):
+                self.assertTrue(opened[-1].closed, 'Temporary writer must close before atomic replacement')
+                return original_replace(source, destination)
+            def unlink(path, *args, **kwargs):
+                if opened and str(path) == opened[-1].name:
+                    self.assertTrue(opened[-1].closed, 'Temporary writer must close before cleanup')
+                return original_unlink(path, *args, **kwargs)
+            with self.subTest(size=len(content)), \
+                    patch.object(acquire_hdl.tempfile, 'NamedTemporaryFile', side_effect=temporary), \
+                    patch.object(acquire_hdl.os, 'replace', side_effect=replace), \
+                    patch.object(Path, 'unlink', unlink), \
+                    patch.object(acquire_hdl.urllib.request, 'urlopen', return_value=io.BytesIO(content)):
+                project = acquire_hdl.load_lock(self.lock)['projects'][0]
+                if content == original_content:
+                    acquire_hdl._archive(project, self.cache, offline=False)
+                else:
+                    with self.assertRaisesRegex(ValueError, 'exceeds'):
+                        acquire_hdl._archive(project, self.cache, offline=False)
+
     def test_unknown_project_rejected(self):
         with self.assertRaisesRegex(ValueError, 'Unknown'):
             self.acquire(projects=['not-pinned'])

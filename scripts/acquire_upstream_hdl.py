@@ -211,9 +211,10 @@ def _archive(project, cache, offline):
     if not path.exists():
         if offline:
             raise ValueError('Pinned source archive is not cached: ' + project['id'])
-        with tempfile.NamedTemporaryFile(dir=cache, delete=False) as output:
-            temporary = Path(output.name)
-            try:
+        temporary = None
+        try:
+            with tempfile.NamedTemporaryFile(dir=cache, delete=False) as output:
+                temporary = Path(output.name)
                 size = 0
                 request = urllib.request.Request(record['url'], headers={'User-Agent': 'verilog-workbench-upstream-acquisition/1'})
                 with urllib.request.urlopen(request, timeout=60) as response:
@@ -222,11 +223,14 @@ def _archive(project, cache, offline):
                         if size > record['size']:
                             raise ValueError('Upstream download exceeds its pinned size')
                         output.write(chunk)
-                output.flush()
-                if size != record['size'] or digest(temporary) != record['sha256']:
-                    raise ValueError('Upstream source archive integrity mismatch: ' + project['id'])
-                os.replace(temporary, path)
-            finally:
+            # Windows cannot rename or unlink a temporary file while its writer
+            # is open. Close it on success and failure before verification,
+            # atomic publication, or cleanup.
+            if size != record['size'] or digest(temporary) != record['sha256']:
+                raise ValueError('Upstream source archive integrity mismatch: ' + project['id'])
+            os.replace(temporary, path)
+        finally:
+            if temporary is not None:
                 temporary.unlink(missing_ok=True)
     if (path.is_symlink() or not path.is_file() or path.stat().st_size != record['size']
             or digest(path) != record['sha256']):
