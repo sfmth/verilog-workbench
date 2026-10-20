@@ -1,0 +1,45 @@
+{
+  "schema": "vwb.editor-workspace-source-evidence/1",
+  "recorded_at": "2026-10-20T01:04:15.188645+00:00",
+  "scope": "Local Linux x86-64 real browser fixture acceptance; source and pinned acquisition receipts. Not full-platform or hardware acceptance.",
+  "source_sha256": {
+    "companion/editor.py": "6f27687e849265c5123be1655aefe4ed4913af9c4ad94791a98e63238f563bc6",
+    "companion/edits.py": "9546ee60a1e39d4a31b174ad9962843ce97442c51b82e25868ad6bda239fe0c4",
+    "companion/server.py": "ccbf8c7ffec0d1b6d76e8bd505b780698fd2520f601dae6fc8c0bc3c4b4c0a62",
+    "companion/projects.py": "bb49c46fe54cf58ac82575173ad2c6a6583b7fca1221410a32d36722d97004c2",
+    "companion/__main__.py": "2a7fcda57ab91a8dc973a541a8e18a875610bf51d8137cf29484be0cfafbf0ee",
+    "companion/lsp.py": "6094b134af1baef1ba24f8c75da263f9be0b941d44afd9cbc3c273775d8e4d03",
+    "scripts/probe_editor_workspace.mjs": "dd02c8c10b5de0a7a3d4b4afc8e14150e72b97d2129bec435a659a1ec7ae013b",
+    "scripts/acquire_editor_tools.py": "6633ad7231f28874381462eca789c5e433dbeb2766a57eef7e1f733c77bfdeae"
+  },
+  "services": {
+    "systemverilog": {
+      "url": "https://github.com/hudson-trading/slang-server/releases/download/v0.3.0/slang-server-linux-x64.tar.gz",
+      "archive_digest": "29ad91f245f100337c35ce27dba711d5f0ea50ebc70e73c78e2b27400a87ae62",
+      "algorithm": "sha256",
+      "entry": "slang-server",
+      "entry_sha256": "737b65e5e1d9f1b17e748d9295fbcfcef9f45cd87ffb2cd0741b864715e65e14"
+    },
+    "sv_refactor": {
+      "url": "https://github.com/chipsalliance/verible/releases/download/v0.0-4296-g0f262651/verible-v0.0-4296-g0f262651-linux-static-x86_64.tar.gz",
+      "archive_digest": "8569defb891d2316067613ea00442af28a7a09d405d95b54c0c91f9942d26635",
+      "algorithm": "sha256",
+      "entry": "verible-v0.0-4296-g0f262651/bin/verible-verilog-ls",
+      "entry_sha256": "d401eaa313b52afd04b0bdf8c1f81c3988e4b79caf6a02039967a184ed8eaf4a"
+    },
+    "vhdl": {
+      "url": "https://github.com/VHDL-LS/rust_hdl/releases/download/v0.88.0/vhdl_ls-x86_64-unknown-linux-gnu.zip",
+      "archive_digest": "8cba241c6df50c9d6d8c2bd7e8ddd592b15c54f5b7656c440265de25bc3335f3",
+      "algorithm": "sha256",
+      "entry": "vhdl_ls-x86_64-unknown-linux-gnu/bin/vhdl_ls",
+      "entry_sha256": "ac39d312a76728590c85da02ee654d0cd80da873c73376c6c8aaf7bac40043a6"
+    },
+    "python": {
+      "url": "https://registry.npmjs.org/basedpyright/-/basedpyright-1.40.2.tgz",
+      "archive_digest": "f6e95df3ee6d642d86c5ff272329f2ba72b4378c67d355b5029ccb3170c072e03cb89ab64127e57589fd8126f19fd31647cc261c3a3b19a1072e19672c51da24",
+      "algorithm": "sha512",
+      "entry": "package/dist/pyright-langserver.js",
+      "entry_sha256": "4764ebf1a41596e63d2411d22b3a6893f2b269d849df58056f18009c59ca6e43"
+    }
+  }
+}

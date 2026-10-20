@@ -11,8 +11,10 @@ Development update, 2026-10-19: a [browser workspace preview](WEB_WORKSPACE.md)
 now adds multi-file local editing, revision-safe saves/recovery, controls for the
 existing native jobs, artifact downloads, worker-parsed VCD viewing, and a
 validated Pages build. This advances portions of M1/M2/M4 without closing their
-exit gates. Semantic editor integration, remaining platform/tool installation,
-remaining browser/permission acceptance and physical board evidence remain open.
+exit gates. The [semantic editor extension](EDITOR_WORKSPACE.md) now adds real
+language-service queries and reviewed cross-file rename Apply/Undo/recovery.
+Broader semantic fixtures, remaining platform/tool installation, browser/permission
+acceptance and physical board evidence remain open.
 
 Started: 2026-10-17 (America/Los_Angeles).
 Latest owner decisions: 2026-10-18 (America/Los_Angeles).

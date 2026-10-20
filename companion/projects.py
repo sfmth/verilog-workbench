@@ -121,7 +121,10 @@ class ProjectGrant:
 
     def read(self, value):
         with self.lock:
-            data = self._bytes(self.path(value))
+            target = self.path(value)
+            if self.private_editor_path(target):
+                raise ProjectError(403, 'editor recovery data is private')
+            data = self._bytes(target)
             try:
                 content = data.decode("utf-8")
             except UnicodeError as exc:
@@ -167,6 +170,10 @@ class ProjectGrant:
                     os.unlink(temporary)
             return {"path": value, "revision": revision(data), "size": len(data)}
 
+    def private_editor_path(self, target):
+        private = self.build_path / 'editor-recovery'
+        return target == private or private in target.parents
+
     def inventory(self, *, artifacts=False):
         base = self.build_path if artifacts else self.root
         files = []
@@ -176,6 +183,7 @@ class ProjectGrant:
         for directory, dirs, names in os.walk(base, followlinks=False):
             dirs[:] = sorted(d for d in dirs if d.casefold() != ".git"
                              and not is_link(Path(directory) / d)
+                             and not self.private_editor_path(Path(directory) / d)
                              and (artifacts or Path(directory) / d != self.build_path))
             for name in sorted(names):
                 path = Path(directory) / name

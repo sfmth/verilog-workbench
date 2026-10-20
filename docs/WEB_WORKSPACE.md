@@ -48,6 +48,11 @@ preview does not install them.
   companion. Retry connection reuses the current token after a temporary network
   interruption; a failed status request keeps the active job available to resume
   or stop. Forgetting the session does not cancel native jobs.
+- [Semantic editing](EDITOR_WORKSPACE.md) uses local language services for
+  completion, hover, definition and references in HDL and Python. Cross-file
+  rename has an explicit before/after preview, revision-checked Apply and Undo,
+  and interrupted-write recovery. Language services must be installed or
+  configured locally; unavailable operations explain the missing prerequisite.
 - Discover project populates design/test views and top selection. Tests, lint,
   synthesis, formal, FPGA stages and tool checks use the companion's existing
   validated command adapter. Missing tools surface as real failures. Programming
@@ -150,9 +155,9 @@ package gaps on four target rows; publishing the preview does not waive them.
 
 ## Remaining release gates
 
-M1 still requires semantic language-service integration, safe project-wide
-rename/undo, complete folder/file lifecycle operations and broader recovery
-fixtures. M2 needs full language/analysis workflows and large-design acceptance.
+M1 still requires broader semantic/rename and recovery fixtures, syntax
+highlighting and complete folder/file lifecycle operations. M2 needs full
+language/analysis workflows and large-design acceptance.
 M3 needs complete native tool acquisition/install/repair/uninstall and recorded
 board programming. M4 requires the remaining real HTTPS browser/permission
 checks and the complete six-platform/board matrix. The [M0 evidence gaps](M0_STATUS.md)

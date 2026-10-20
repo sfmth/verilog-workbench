@@ -17,6 +17,19 @@
 }
 
 * { box-sizing: border-box; }
+.intelligence-view { display: flex; flex-direction: column; gap: 10px; }
+.intelligence-view p { margin: 0; font-size: 12px; }
+.intelligence-capabilities { color: var(--muted); }
+.intelligence-controls, .intelligence-rename { display: flex; flex-wrap: wrap; align-items: end; gap: 7px; }
+.intelligence-rename label { flex: 1; max-width: 300px; }
+.intelligence-results, .intelligence-diagnostics { display: grid; gap: 7px; }
+.intelligence-results > button, .intelligence-diagnostics > button { justify-content: flex-start; text-align: left; white-space: normal; overflow-wrap: anywhere; }
+.intelligence-results pre { white-space: pre-wrap; overflow-wrap: anywhere; margin: 0; padding: 10px; background: var(--editor); border: 1px solid var(--line); font-size: 12px; }
+.intelligence-results details { border: 1px solid var(--line); border-radius: 4px; padding: 9px; }
+.intelligence-results summary { cursor: pointer; font-family: ui-monospace, monospace; }
+.intelligence-diff { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; margin-top: 10px; }
+.intelligence-diff h4 { color: var(--muted); margin: 0 0 7px; font-size: 11px; }
+@media(max-width:700px) { .intelligence-diff { grid-template-columns: 1fr; } }
 [hidden] { display: none !important; }
 html { height: 100%; }
 body { margin: 0; height: 100dvh; display: flex; flex-direction: column; overflow: hidden; }

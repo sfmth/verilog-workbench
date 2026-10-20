@@ -236,6 +236,36 @@ export class WorkspaceModel {
     return results.map(result => result.value);
   }
 
+  editorDocuments() {
+    this._active();
+    return [...this.buffers.values()].map(buffer => ({
+      path: buffer.path, content: buffer._exactContent, revision: buffer.revision,
+      version: buffer._version + 1,
+    }));
+  }
+
+  acceptEditorFiles(files) {
+    this._active();
+    if (!Array.isArray(files) || !files.length || files.length > 32) throw new Error('Invalid editor transaction files.');
+    const replacements = new Map();
+    for (const file of files) {
+      const next = bufferFrom(file);
+      if (file.revision === null || replacements.has(file.path)) throw new Error('Invalid editor transaction revision or duplicate file.');
+      const previous = this.buffers.get(file.path);
+      if (previous?.dirty || previous?.saving || this._recovery.has(file.path)) {
+        throw new Error('The disk edit completed, but a draft changed. Retain/export the draft and reload before continuing.');
+      }
+      next._version = (previous?._version ?? -1) + 1;
+      replacements.set(file.path, next);
+    }
+    for (const [path, next] of replacements) {
+      // A disk read started before the transaction must not install old bytes.
+      if (this.buffers.has(path) || this._opening.has(path)) this.buffers.set(path, next);
+    }
+    this._persist();
+    return files;
+  }
+
   get recoverable() {
     return [...this._recovery.values()].map(file => ({...file}));
   }

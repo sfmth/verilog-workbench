@@ -16,6 +16,7 @@ from . import PROTOCOL_VERSION, VERSION
 from .projects import MAX_FILE_BYTES, ProjectError, ProjectGrant
 
 MAX_BODY_BYTES = 3 * 1024 * 1024
+MAX_EDITOR_BODY_BYTES = 12 * 1024 * 1024
 MAX_ARTIFACT_BYTES = 32 * 1024 * 1024
 MAX_JOB_SECONDS = 300
 IDENTIFIER = re.compile(r"[A-Za-z_][A-Za-z0-9_$]*\Z")
@@ -41,7 +42,7 @@ def validate_origin(origin):
 
 
 class CompanionState:
-    def __init__(self, project, origin, *, pairing_lifetime=300, runner=None):
+    def __init__(self, project, origin, *, pairing_lifetime=300, runner=None, editor_config=None):
         self.project = project
         self.origin = validate_origin(origin)
         self.pairing_code = secrets.token_urlsafe(18)
@@ -52,6 +53,80 @@ class CompanionState:
         self.jobs = {}
         self.capabilities = None
         self.runner = runner
+        from .editor import EditorService
+        from .edits import EditTransactions
+        self.editor = EditorService(project, editor_config)
+        self.edits = EditTransactions(project)
+        self.editor_busy = False
+        self.editor_plans = {}
+        self.editor_undos = {}
+
+    def editor_capabilities(self):
+        result = self.editor.capabilities()
+        result['transactions'] = self.edits.status()
+        return result
+
+    def editor_query(self, payload):
+        if not isinstance(payload, dict):
+            raise ProjectError(400, 'editor query must be an object')
+        rename = payload.get('operation') == 'rename'
+        if self.edits.status()['recovery_required']:
+            raise ProjectError(409, 'recover the interrupted editor transaction before semantic queries')
+        if rename:
+            with self.lock:
+                self._editor_idle()
+                self.editor_busy = True
+        try:
+            response = self.editor.query(payload)
+            if rename:
+                with self.lock:
+                    if (self.project.source_revision() != response['source_revision'] or
+                            self.editor.project_fingerprint() != response['project_fingerprint']):
+                        raise ProjectError(409, 'project changed during rename; request a new preview')
+                    plan = self.edits.preview(response['result']['files'])
+                    if len(self.editor_plans) >= 16:
+                        self.editor_plans.pop(next(iter(self.editor_plans)))
+                    self.editor_plans[plan['id']] = (response['source_revision'], response['project_fingerprint'])
+                return {'operation': 'rename', 'plan': plan, 'language': response['language'],
+                        'path': response['path'], 'version': response['version'], 'revision': response['revision'],
+                        'source_revision': response['source_revision']}
+            return response
+        finally:
+            if rename:
+                with self.lock:
+                    self.editor_busy = False
+
+    def _editor_idle(self, *, recovery=False):
+        if self.editor_busy or any(job['status'] == 'running' for job in self.jobs.values()):
+            raise ProjectError(409, 'stop the active job or editor operation before changing project sources')
+        if not recovery and self.edits.status()['recovery_required']:
+            raise ProjectError(409, 'an interrupted editor transaction requires recovery first')
+
+    def editor_edit(self, operation, payload):
+        if not isinstance(payload, dict) or (set(payload) != {'id'} if operation != 'recover' else bool(payload)):
+            raise ProjectError(400, 'editor operation requires only its plan id, or an empty recovery object')
+        with self.lock:
+            self._editor_idle(recovery=operation == 'recover')
+            if operation != 'recover':
+                key = payload['id']
+                if not isinstance(key, str) or not re.fullmatch(r'[A-Za-z0-9_-]{16,128}', key):
+                    raise ProjectError(400, 'invalid editor plan id')
+                known = self.editor_plans if operation == 'apply' else self.editor_undos
+                current = (self.project.source_revision(), self.editor.project_fingerprint())
+                if key not in known or current != known[key]:
+                    raise ProjectError(409, 'project changed or edit plan expired; request a fresh preview')
+            if operation == 'apply':
+                result = self.edits.apply(key)
+                self.editor_plans.pop(key, None)
+                self.editor_undos.clear()
+                self.editor_undos[result['undo_id']] = (self.project.source_revision(), self.editor.project_fingerprint())
+            elif operation == 'undo':
+                result = self.edits.undo(key)
+                self.editor_undos.pop(key, None)
+            else:
+                result = self.edits.recover()
+                self.editor_plans.clear(); self.editor_undos.clear()
+            return result
 
     def pair(self, code):
         with self.lock:
@@ -183,6 +258,8 @@ class CompanionState:
             raise ProjectError(400, "timeout must be an integer from 1 to 300 seconds")
         argv = self.job_argv(command, payload.get("options", {}))
         with self.lock:
+            if self.editor_busy or self.edits.status()['recovery_required']:
+                raise ProjectError(409, 'finish editor refactoring or recovery before starting a native job')
             if any(job["status"] == "running" for job in self.jobs.values()):
                 raise ProjectError(409, "a project job is already running")
             if len(self.jobs) >= 32:
@@ -249,6 +326,7 @@ class CompanionState:
             threads = [job["thread"] for job in self.jobs.values()]
         for thread in threads:
             thread.join(timeout=5)
+        self.editor.close()
 
 
 class CompanionHTTPServer(ThreadingHTTPServer):
@@ -303,7 +381,7 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(raw)
 
-    def _body(self):
+    def _body(self, limit=MAX_BODY_BYTES):
         if self.headers.get("Transfer-Encoding"):
             raise ProjectError(400, "transfer encoding is not supported")
         if self.headers.get_content_type() != "application/json":
@@ -312,7 +390,7 @@ class Handler(BaseHTTPRequestHandler):
         if len(lengths) != 1 or not lengths[0].isdigit():
             raise ProjectError(411, "one Content-Length is required")
         length = int(lengths[0])
-        if not 0 < length <= MAX_BODY_BYTES:
+        if not 0 < length <= limit:
             raise ProjectError(413, "body exceeds request limit")
         try:
             raw = self.rfile.read(length)
@@ -368,6 +446,12 @@ class Handler(BaseHTTPRequestHandler):
         if len(self.headers.get_all("Authorization", [])) != 1:
             raise ProjectError(401, "one bearer session token required")
         self.state.authorize(self.headers.get("Authorization"))
+        if self.command == 'GET' and path == '/v1/editor/capabilities' and not parsed.query:
+            return 200, self.state.editor_capabilities()
+        if self.command == 'POST' and path == '/v1/editor/query' and not parsed.query:
+            return 200, self.state.editor_query(self._body(MAX_EDITOR_BODY_BYTES))
+        if self.command == 'POST' and path in {'/v1/editor/apply', '/v1/editor/undo', '/v1/editor/recover'} and not parsed.query:
+            return 200, self.state.editor_edit(path.rsplit('/', 1)[1], self._body())
         if self.command == "GET" and path == "/v1/capabilities" and not parsed.query:
             with self.state.lock:
                 if self.state.capabilities is None:
@@ -386,12 +470,17 @@ class Handler(BaseHTTPRequestHandler):
                 payload = self._body()
                 if set(payload) != {"path", "content", "revision"}:
                     raise ProjectError(400, "save requires path, content, and revision")
-                return 200, self.state.project.save(payload["path"], payload["content"], payload["revision"])
+                with self.state.lock:
+                    if self.state.editor_busy or self.state.edits.status()['recovery_required']:
+                        raise ProjectError(409, 'finish editor refactoring or recovery before saving project files')
+                    return 200, self.state.project.save(payload["path"], payload["content"], payload["revision"])
         if self.command == "GET" and path == "/v1/artifacts" and not parsed.query:
             return 200, self.state.project.inventory(artifacts=True)
         if self.command == "GET" and path == "/v1/artifacts/file":
             value = self._path_parameter(parsed.query)
             target = self.state.project.path(value)
+            if self.state.project.private_editor_path(target):
+                raise ProjectError(403, 'editor recovery data is private')
             if self.state.project.build_path not in target.parents or not target.is_file():
                 raise ProjectError(403, "artifact must be inside the project build directory")
             with target.open("rb") as handle:
@@ -439,10 +528,10 @@ class Handler(BaseHTTPRequestHandler):
 
 
 def create_server(project, origin, *, port=0, src_dir=None, test_dir=None, build_dir=None,
-                  pairing_lifetime=300, runner=None):
+                  pairing_lifetime=300, runner=None, editor_config=None):
     grant = project if isinstance(project, ProjectGrant) else ProjectGrant(
         project, src_dir=src_dir, test_dir=test_dir, build_dir=build_dir)
-    state = CompanionState(grant, origin, pairing_lifetime=pairing_lifetime, runner=runner)
+    state = CompanionState(grant, origin, pairing_lifetime=pairing_lifetime, runner=runner, editor_config=editor_config)
     server = CompanionHTTPServer(("127.0.0.1", port), Handler)
     server.state = state
     return server

@@ -7,6 +7,11 @@ The server validates requests with its own stdlib checks; it does **not** load
 or automatically validate against that schema. Endpoint-specific bodies are
 defined under `$defs`, for example `fileSaveRequest` and `jobResponse`.
 
+The [semantic editor extension](EDITOR_WORKSPACE.md) adds authenticated
+`/v1/editor/capabilities`, `/query`, `/apply`, `/undo` and `/recover` operations.
+Its bounded document snapshots and server-issued edit IDs remain protocol 1;
+it does not expose arbitrary LSP RPC or browser-selected native commands.
+
 The protocol version is the JSON number **`1`**. It is not a string or a named
 version token. Native tool discovery has a separate nested schema identifier,
 `"vwb.toolchains/1"`, which does not change the HTTP protocol version.

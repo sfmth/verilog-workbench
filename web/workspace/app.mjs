@@ -1,6 +1,7 @@
 import {CompanionClient} from '../m0/client.mjs';
 import {WorkspaceModel, MAX_DRAFT_IMPORT_BYTES} from './model.mjs';
 import {mountWaveform} from './waveform.mjs';
+import {mountIntelligence, offsetAt} from './intelligence.mjs';
 
 const $ = id => document.getElementById(id);
 const all = selector => [...document.querySelectorAll(selector)];
@@ -12,6 +13,7 @@ let pendingPath = new URLSearchParams(location.hash.slice(1)).get('file');
 let editVersion = 0, lastJobEditVersion = 0;
 let pairing = false;
 const dirty = () => [...(model?.buffers.values() || [])].some(buffer => buffer.dirty);
+let intelligence;
 
 function node(tag, text, className) {
   const value = document.createElement(tag);
@@ -60,12 +62,15 @@ function renderControls() {
   $('export-drafts').disabled = !model;
   $('import-drafts').disabled = !model || preparing;
   $('persist-drafts').disabled = !model?.storageKey;
+  $('forget').disabled = preparing;
+  $('connect-toggle').disabled = preparing;
   $('connection-indicator').textContent = online ? 'Companion connected' : 'Disconnected';
   $('connection-indicator').classList.toggle('connected', online);
   $('connect-toggle').textContent = online ? 'Connection' : 'Connect companion';
   $('retry').hidden = !client?.token;
   $('forget').hidden = !client?.token;
   $('resume-job').hidden = !activeJob;
+  intelligence?.refresh();
 }
 function renderFileStatus() {
   const file = model?.buffers.get(activePath);
@@ -178,7 +183,7 @@ function renderRecovery() {
   }
 }
 function showResult(view) {
-  if (!['logs', 'diagnostics', 'artifacts', 'waveform', 'tools'].includes(view)) return;
+  if (!['logs', 'intelligence', 'diagnostics', 'artifacts', 'waveform', 'tools'].includes(view)) return;
   resultView = view;
   for (const tab of all('[data-result]')) tab.setAttribute('aria-pressed', String(tab.dataset.result === view));
   for (const pane of all('.result-pane')) pane.hidden = pane.id !== 'result-' + view;
@@ -463,6 +468,10 @@ $('reload').addEventListener('click', () => perform(async () => {
   renderEditor();
 }));
 document.addEventListener('keydown', event => {
+  const command = (event.ctrlKey || event.metaKey) && event.code === 'Space' ? 'completion' : event.key === 'F12' ? (event.shiftKey ? 'references' : 'definition') : null;
+  if (command && document.activeElement === $('editor')) {
+    event.preventDefault(); showResult('intelligence'); void intelligence.query(command); return;
+  }
   if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 's') {
     event.preventDefault(); if (!$('save').disabled) $('save').click();
   }
@@ -511,4 +520,34 @@ window.addEventListener('beforeunload', event => {
   if (dirty() || model?.recoverable.length || activeJob) { event.preventDefault(); event.returnValue = ''; }
 });
 window.addEventListener('pagehide', () => { disposeWaveform?.(); if (previewUrl) URL.revokeObjectURL(previewUrl); });
+const acceptEdits = result => {
+  model.acceptEditorFiles(result.files); editVersion++;
+  renderEditor(); if (lastJob) renderJob(lastJob);
+};
+intelligence = mountIntelligence($('intelligence-view'), {
+  getContext: () => ({client, model, path: activePath, editor: $('editor'), online, sessionId: epoch, jobRunning: !!activeJob || preparing}),
+  onNavigate: async (path, range) => {
+    const workspace = model, navigationEpoch = epoch;
+    const opening = openFile(path, range?.start?.line + 1), navigationGeneration = openGeneration;
+    await opening;
+    if (range && workspace === model && navigationEpoch === epoch &&
+        navigationGeneration === openGeneration && activePath === path) {
+      const editor = $('editor');
+      editor.setSelectionRange(offsetAt(editor.value, range.start), offsetAt(editor.value, range.end));
+      editor.focus();
+    }
+  },
+  onApply: acceptEdits, onUndo: acceptEdits,
+  onRecover: result => { if (result.files?.length) acceptEdits(result); },
+  onBusy: value => { preparing = value; renderControls(); },
+  onStatus: (message, error = false, cause) => {
+    if (cause?.status === 401 || cause?.name === 'AbortError' || cause instanceof TypeError) {
+      online = false;
+      say('Disconnected. Retry the connection to retain this session, or pair a restarted companion.', 'connection-status', true);
+      renderControls();
+    }
+    say(message, 'global-status', error);
+  },
+});
+window.addEventListener('pagehide', () => intelligence.dispose());
 commandChanged(); renderControls(); perform(readHash);

@@ -205,6 +205,32 @@
         "source_snapshot_error": {"type": "string"}
       }
     },
+    "editorPosition": {
+      "type": "object", "additionalProperties": false, "required": ["line", "character"],
+      "properties": {"line": {"type": "integer", "minimum": 0}, "character": {"type": "integer", "minimum": 0}},
+      "description": "Zero-based UTF-16 position; half-surrogate and out-of-range edits are rejected."
+    },
+    "editorDocument": {
+      "type": "object", "additionalProperties": false, "required": ["path", "content", "revision", "version"],
+      "properties": {"path": {"$ref": "#/$defs/path"}, "content": {"type": "string"},
+        "revision": {"anyOf": [{"$ref": "#/$defs/revision"}, {"type": "null"}]},
+        "version": {"type": "integer", "minimum": 1, "maximum": 2147483647}}
+    },
+    "editorQuery": {
+      "type": "object", "additionalProperties": false, "required": ["operation", "path", "position", "documents"],
+      "properties": {
+        "operation": {"enum": ["completion", "hover", "definition", "references", "rename"]},
+        "path": {"$ref": "#/$defs/path"}, "position": {"$ref": "#/$defs/editorPosition"},
+        "documents": {"type": "array", "minItems": 1, "maxItems": 64, "items": {"$ref": "#/$defs/editorDocument"}},
+        "new_name": {"type": "string", "minLength": 1, "maxLength": 128}
+      },
+      "description": "Snapshot text is at most 2 MiB/file and 8 MiB total UTF-8. HTTP JSON body <=12 MiB. Runtime validates current disk revisions and source/config fingerprint; commands/options/URIs are never browser supplied."
+    },
+    "editorEditRequest": {
+      "type": "object", "additionalProperties": false, "required": ["id"],
+      "properties": {"id": {"type": "string", "pattern": "^[A-Za-z0-9_-]{16,128}$"}},
+      "description": "Server-issued preview or undo id only. No client-provided replacement bodies. Recovery instead takes an empty object."
+    },
     "cancelRequest": {"type": "object", "additionalProperties": false},
     "errorResponse": {
       "type": "object", "additionalProperties": false, "required": ["error"],

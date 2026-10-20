@@ -7,6 +7,57 @@ const hash = content => createHash('sha256').update(content).digest('hex');
 const draft = (path, content, revision, newline = '\n') => ({path, content, revision, newline});
 const exportOf = (...files) => ({schema: 'vwb.drafts/1', files});
 
+test('semantic snapshots preserve disk newlines and monotonically version draft content', async () => {
+  const {client} = setup({'src/top.sv': '\uFEFFmodule top;\r\nendmodule\r\n'});
+  const model = new WorkspaceModel(client);
+  await model.open('src/top.sv');
+  assert.deepEqual(model.editorDocuments().map(file => [file.path, file.content, file.version]), [
+    ['src/top.sv', '\uFEFFmodule top;\r\nendmodule\r\n', 1],
+  ]);
+  model.edit('src/top.sv', '\uFEFFmodule top;\n// draft\nendmodule\n');
+  assert.equal(model.editorDocuments()[0].content, '\uFEFFmodule top;\r\n// draft\r\nendmodule\r\n');
+  assert.equal(model.editorDocuments()[0].version, 2);
+});
+
+test('committed semantic edits update open buffers together and preserve unopened file state', async () => {
+  const {client} = setup({'src/a.py': 'a = 1\n', 'src/b.py': 'b = 2\n'});
+  const model = new WorkspaceModel(client);
+  await model.open('src/a.py'); await model.open('src/b.py');
+  model.acceptEditorFiles([{path: 'src/a.py', content: 'renamed = 1\n', revision: hash('renamed = 1\n')},
+    {path: 'src/b.py', content: 'b = 3\r\n', revision: hash('b = 3\r\n')},
+    {path: 'src/closed.py', content: 'other = 1\n', revision: hash('other = 1\n')}]);
+  assert.equal(model.buffers.get('src/a.py').content, 'renamed = 1\n');
+  assert.equal(model.buffers.get('src/b.py').newline, '\r\n');
+  assert.equal(model.buffers.get('src/b.py').dirty, false);
+  assert.equal(model.buffers.has('src/closed.py'), false);
+  assert.equal(model.editorDocuments()[0].version, 2);
+});
+
+test('semantic buffer refresh refuses a concurrent draft without partially replacing others', async () => {
+  const {client} = setup({'src/a.py': 'a = 1\n', 'src/b.py': 'b = 2\n'});
+  const model = new WorkspaceModel(client);
+  await model.open('src/a.py'); await model.open('src/b.py');
+  model.edit('src/b.py', 'my draft\n');
+  assert.throws(() => model.acceptEditorFiles([
+    {path: 'src/a.py', content: 'changed\n', revision: hash('changed\n')},
+    {path: 'src/b.py', content: 'changed\n', revision: hash('changed\n')},
+  ]), /draft/);
+  assert.equal(model.buffers.get('src/a.py').content, 'a = 1\n');
+  assert.equal(model.buffers.get('src/b.py').content, 'my draft\n');
+});
+
+test('a file open started before a committed rename cannot install its obsolete disk read', async () => {
+  let finish;
+  const client = {request: () => new Promise(resolve => { finish = resolve; })};
+  const model = new WorkspaceModel(client);
+  const pending = model.open('src/top.py');
+  model.acceptEditorFiles([{path: 'src/top.py', content: 'renamed = 1\n', revision: hash('renamed = 1\n')}]);
+  finish({path: 'src/top.py', content: 'old = 1\n', revision: hash('old = 1\n')});
+  const opened = await pending;
+  assert.equal(opened.content, 'renamed = 1\n');
+  assert.equal(opened.revision, hash('renamed = 1\n'));
+});
+
 function setup(contents = {'src/top.sv': 'module top;\nendmodule\n'}) {
   const disk = new Map(Object.entries(contents));
   const calls = [];

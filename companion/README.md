@@ -6,6 +6,8 @@ not a declaration that the website or six-platform release is finished.
 
 The [workspace development preview](../docs/WEB_WORKSPACE.md) uses this same
 bridge for multi-file editing, recovery, native jobs and artifact/VCD viewing.
+The [semantic editor extension](../docs/EDITOR_WORKSPACE.md) adds locally
+configured language services and reviewed cross-file rename transactions.
 The M0 proof remains available for focused connection checks.
 
 From a source checkout with Python 3.10 or newer:
@@ -70,9 +72,11 @@ the revision, then replace atomically. A companion lock serializes saves; a
 detected external edit returns 409. A process editing the file between the final
 revision check and replacement can still race this operation: portable filesystems
 do not provide a cross-process compare-and-swap replacement primitive. The
-companion does not claim transactional multi-file refactoring yet.
+editor extension adds staged multi-file edits with rollback and crash recovery;
+it cannot make replacements atomic against independent external processes.
 
-Text files are limited to 2 MiB and JSON request bodies to 3 MiB. Inventories are
+Text files are limited to 2 MiB and ordinary JSON request bodies to 3 MiB. Editor
+endpoints have a separate 12 MiB bound for document snapshots. Inventories are
 capped at 10,000 files, artifact downloads at 32 MiB. Only one job may run at a
 time; 32 recent jobs are retained, each limited to 300 seconds. Output keeps at
 most the final 1 MiB per stdout/stderr stream and reports truncation. A timeout

@@ -6,6 +6,11 @@ implementation. It establishes a candidate service route on small fixtures.
 It does **not** certify all six operating-system/CPU targets or implement the
 browser editor/LSP bridge.
 
+Development update, 2026-10-19: the [workspace semantic editor integration](EDITOR_WORKSPACE.md)
+now implements the browser/HTTP bridge, dirty snapshots, capability reporting
+and reviewed rename Apply/Undo/recovery using this service route. The original
+M0 evidence below is historical; broader construct and platform gates remain.
+
 ## Tested route
 
 | Language | Candidate and method routing | Completion / hover / definition | Cross-file references | Exact semantic rename preview | Post-edit check |

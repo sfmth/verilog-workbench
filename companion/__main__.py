@@ -1,6 +1,7 @@
 """Launch a native VWB project grant. No administrator rights required."""
 import argparse
 import json
+from pathlib import Path
 import signal
 import sys
 import threading
@@ -17,12 +18,20 @@ def main(argv=None):
     parser.add_argument("--src-dir", help="project-relative source directory")
     parser.add_argument("--test-dir", help="project-relative test directory")
     parser.add_argument("--build-dir", help="project-relative generated output directory")
+    parser.add_argument('--editor-config', type=Path, help='trusted local language-server JSON config (commands cannot be supplied by the browser)')
     args = parser.parse_args(argv)
     if not 0 <= args.port <= 65535:
         parser.error("port must be from 0 to 65535")
     try:
+        editor_config = None
+        if args.editor_config is not None:
+            with args.editor_config.open('rb') as source:
+                raw = source.read(65537)
+            if len(raw) > 65536:
+                raise ValueError('editor config exceeds 64 KiB')
+            editor_config = json.loads(raw)
         server = create_server(args.project, args.origin, port=args.port, src_dir=args.src_dir,
-                               test_dir=args.test_dir, build_dir=args.build_dir)
+                               test_dir=args.test_dir, build_dir=args.build_dir, editor_config=editor_config)
     except (OSError, ValueError, ProjectError) as exc:
         print(f"Cannot start companion: {exc}", file=sys.stderr)
         return 2
